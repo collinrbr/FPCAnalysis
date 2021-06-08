@@ -1,0 +1,206 @@
+# analysisfunctions.py>
+
+#functions related to computing correlation and other core analysis functions
+
+
+def make2dHistandCey(vmax, dv, x1, x2, y1, y2, dpar, dfields):
+    """
+    Makes distribution and takes correlation wrt Ey in a given box.
+
+    This function is '2d' as it projects out all z information. I.E. the box is
+    always the maximum size in zz and vz.
+
+    #WARNING: this will linearly average the fields within the specified bounds.
+    However, if there are no gridpoints within the specified bounds
+    it currently will *not* grab any field values and break.
+    TODO: use appropriate weighting to nearest field when range is not exactly
+    on the edges of the grid
+
+    Parameters
+    ----------
+    vmax : float
+        specifies signature domain in velocity space
+        (assumes square and centered about zero)
+    dv : float
+        velocity space grid spacing
+        (assumes square)
+    x1 : float
+        lower x bound
+    x2 : float
+        upper x bound
+    y1 : float
+        lower y bound
+    y2 : float
+        upper y bound
+    dpar : dict
+        xx vx yy vy data dictionary from readParticlesPosandVelocityOnly
+    dfields : dict
+        field data dictionary from field_loader
+    Returns
+    -------
+    vx : 2d array
+        vx velocity grid
+    vy : 2d array
+        vy velocity grid
+    totalPtcl : float
+        total number of particles in the correlation box
+    totalFieldpts : float
+        total number of field gridpoitns in the correlation box
+    Hxy : 2d array
+        distribution function in box
+    Cey : 2d array
+        velocity space sigature data
+    """
+
+    fieldkey = 'ey'
+
+    #find average E field based on provided bounds
+    gfieldptsx = (x1 <= dfields[fieldkey+'_xx'])  & (dfields[fieldkey+'_xx'] <= x2)
+    gfieldptsy = (y1 <= dfields[fieldkey+'_yy']) & (dfields[fieldkey+'_yy'] <= y2)
+
+    goodfieldpts = []
+    for i in range(0,len(dfields['ex_xx'])):
+        for j in range(0,len(dfields['ex_yy'])):
+            for k in range(0,len(dfields['ex_zz'])):
+                if(gfieldptsx[i] == True and gfieldptsy[j] == True):
+                    goodfieldpts.append(dfields[fieldkey][k][j][i])
+
+    #TODO?: consider forcing user to take correlation over only 1 cell
+    if(len(goodfieldpts)==0):
+        print("Using weighted_field_average...") #Debug
+        avgfield = weighted_field_average((x1+x2)/2.,(y1+y2)/2.,0,dfields,fieldkey) #TODO: make 3d i.e. *don't* just 'project' all z information out and take fields at z = 0
+    else:
+        avgfield = np.average(goodfieldpts) #TODO: call getfieldaverageinbox here instead
+    totalFieldpts = np.sum(goodfieldpts)
+
+    #define mask that includes particles within range
+    gptsparticle = (x1 < dpar['x1'] ) & (dpar['x1'] < x2) & (y1 < dpar['x2']) & (dpar['x2'] < y2)
+    totalPtcl = np.sum(gptsparticle)
+
+    #make bins
+    vxbins = np.arange(-vmax, vmax, dv)
+    vx = (vxbins[1:] + vxbins[:-1])/2.
+    vybins = np.arange(-vmax, vmax, dv)
+    vy = (vybins[1:] + vybins[:-1])/2.
+
+    #make the bins 2d arrays
+    _vx = np.zeros((len(vy),len(vx)))
+    _vy = np.zeros((len(vy),len(vx)))
+    for i in range(0,len(vy)):
+        for j in range(0,len(vx)):
+            _vx[i][j] = vx[j]
+
+    for i in range(0,len(vy)):
+        for j in range(0,len(vx)):
+            _vy[i][j] = vy[i]
+
+    vx = _vx
+    vy = _vy
+
+    #find distribution
+    Hxy,_,_ = np.histogram2d(dpar['p2'][gptsparticle],dpar['p1'][gptsparticle],
+                         bins=[vybins, vxbins])
+
+    #calculate correlation
+    Cey = -0.5*vy**2*np.gradient(Hxy, dv, edge_order=2, axis=0)*avgfield
+    return vx, vy, totalPtcl, totalFieldpts, Hxy, Cey
+
+def make2dHistandCex(vmax, dv, x1, x2, y1, y2, dpar, dfields, fieldkey):
+    """
+    Same as make2dHistandCey but takes correlation wrt Ex
+    """
+
+    fieldkey = 'ex'
+
+    #find average E field based on provided bounds
+    gfieldptsx = (x1 <= dfields[fieldkey+'_xx'])  & (dfields[fieldkey+'_xx'] <= x2)
+    gfieldptsy = (y1 <= dfields[fieldkey+'_yy']) & (dfields[fieldkey+'_yy'] <= y2)
+
+    goodfieldpts = []
+    for i in range(0,len(dfields['ex_xx'])):
+        for j in range(0,len(dfields['ex_yy'])):
+            for k in range(0,len(dfields['ex_zz'])):
+                if(gfieldptsx[i] == True and gfieldptsy[j] == True):
+                    goodfieldpts.append(dfields[fieldkey][k][j][i])
+
+    if(len(goodfieldpts)==0):
+        print("Warning, no field grid points in given box. Please increase box size or center around grid point.")
+
+    avgfield = np.average(goodfieldpts) #TODO: call getfieldaverageinbox here instead
+    totalFieldpts = np.sum(goodfieldpts)
+
+    #define mask that includes particles within range
+    gptsparticle = (x1 < dpar['x1'] ) & (dpar['x1'] < x2) & (y1 < dpar['x2']) & (dpar['x2'] < y2)
+    totalPtcl = np.sum(gptsparticle)
+
+    #make bins
+    vxbins = np.arange(-vmax, vmax, dv)
+    vx = (vxbins[1:] + vxbins[:-1])/2.
+    vybins = np.arange(-vmax, vmax, dv)
+    vy = (vybins[1:] + vybins[:-1])/2.
+
+    #make the bins 2d arrays
+    _vx = np.zeros((len(vy),len(vx)))
+    _vy = np.zeros((len(vy),len(vx)))
+    for i in range(0,len(vy)):
+        for j in range(0,len(vx)):
+            _vx[i][j] = vx[j]
+
+    for i in range(0,len(vy)):
+        for j in range(0,len(vx)):
+            _vy[i][j] = vy[i]
+
+    vx = _vx
+    vy = _vy
+
+    #find distribution
+    Hxy,_,_ = np.histogram2d(dpar['p2'][gptsparticle],dpar['p1'][gptsparticle],
+                         bins=[vybins, vxbins])
+
+    #calculate correlation
+    Cex = -0.5*vx**2*np.gradient(Hxy, dv, edge_order=2, axis=1)*avgfield
+    return vx, vy, totalPtcl, totalFieldpts, Hxy, Cex
+
+def getfieldaverageinbox(x1, x2, y1, y2, dfields, fieldkey):
+    """
+    Get linear average of fields in box from grid points within box.
+
+    Parameters
+    ----------
+    x1 : float
+        lower x bound
+    x2 : float
+        upper x bound
+    y1 : float
+        lower y bound
+    y2 : float
+        upper y bound
+    dfields : dict
+        field data dictionary from field_loader
+    fieldkey : str
+        name of field you are averaging (ex, ey, ez, bx, by, bz)
+
+    Returns
+    -------
+    avgfield : float
+        average field in box
+    """
+
+    #find average field based on provided bounds
+    gfieldptsx = (x1 <= dfields[fieldkey+'_xx'])  & (dfields[fieldkey+'_xx'] <= x2)
+    gfieldptsy = (y1 <= dfields[fieldkey+'_yy']) & (dfields[fieldkey+'_yy'] <= y2)
+
+    goodfieldpts = []
+    for i in range(0,len(dfields['ex_xx'])):
+        for j in range(0,len(dfields['ex_yy'])):
+            for k in range(0,len(dfields['ex_zz'])):
+                if(gfieldptsx[i] == True and gfieldptsy[j] == True):
+                    goodfieldpts.append(dfields[fieldkey][k][j][i])
+
+
+    # #debug
+    # print("numgridpts sampled: " + str(len(goodfieldpts)))
+
+
+    avgfield = np.average(goodfieldpts)
+    return avgfield
