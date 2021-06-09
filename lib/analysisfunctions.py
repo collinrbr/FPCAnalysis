@@ -2,6 +2,7 @@
 
 #functions related to computing correlation and other core analysis functions
 
+import numpy as np
 
 def make2dHistandCey(vmax, dv, x1, x2, y1, y2, dpar, dfields):
     """
@@ -105,7 +106,7 @@ def make2dHistandCey(vmax, dv, x1, x2, y1, y2, dpar, dfields):
     Cey = -0.5*vy**2*np.gradient(Hxy, dv, edge_order=2, axis=0)*avgfield
     return vx, vy, totalPtcl, totalFieldpts, Hxy, Cey
 
-def make2dHistandCex(vmax, dv, x1, x2, y1, y2, dpar, dfields, fieldkey):
+def make2dHistandCex(vmax, dv, x1, x2, y1, y2, dpar, dfields):
     """
     Same as make2dHistandCey but takes correlation wrt Ex
     """
@@ -204,3 +205,81 @@ def getfieldaverageinbox(x1, x2, y1, y2, dfields, fieldkey):
 
     avgfield = np.average(goodfieldpts)
     return avgfield
+
+
+def compute_correlation_over_x(dfields, dparticles, vmax, dv, dx):
+    """
+    Computes f(x; vy, vx), CEx(x; vy, vx), and CEx(x; vy, vx) along different slices of x
+
+    Parameters
+    ----------
+    dfields : dict
+        field data dictionary from field_loader
+    dpar : dict
+        xx vx yy vy data dictionary from readParticlesPosandVelocityOnly
+    vmax : float
+        specifies signature domain in velocity space
+        (assumes square and centered about zero)
+    dv : float
+        spacing between points we sample in velocity space. (Square in vx, vy)
+    dx : float
+        width of x slice
+
+    Returns
+    -------
+    CEx_out : 3d array
+        CEx(x; vy, vx) data
+    CEy_out : 3d array
+        CEy(x; vy, vx) data
+    x_out : 1d array
+        average x position of each slice
+    Hxy_out : 3d array
+        f(x; vy, vx) data
+    vx : 2d array
+        vx velocity grid
+    vy : 2d array
+        vy velocity grid
+    """
+
+    CEx_out = []
+    CEy_out = []
+    x_out = []
+    Hxy_out = []
+
+    xsweep = 0.0
+    for i in range(0,len(dfields['ex_xx'])):
+        print(str(dfields['ex_xx'][i]) +' of ' + str(dfields['ex_xx'][len(dfields['ex_xx'])-1]))
+        vx, vy, totalPtcl, totalFieldpts, Hxy, Cey = make2dHistandCey(vmax, dv, xsweep, xsweep+dx, dfields['ey_yy'][0], dfields['ey_yy'][1], dparticles, dfields)
+        vx, vy, totalPtcl, totalFieldpts, Hxy, Cex = make2dHistandCex(vmax, dv, xsweep, xsweep+dx, dfields['ey_yy'][0], dfields['ey_yy'][1], dparticles, dfields)
+        x_out.append(np.mean([xsweep,xsweep+dx]))
+        CEy_out.append(Cey)
+        CEx_out.append(Cex)
+        Hxy_out.append(Hxy)
+        xsweep+=dx
+
+    return CEx_out, CEy_out, x_out, Hxy_out, vx, vy
+
+def compute_energization(Cor,dv):
+    """
+    Computes energization of velocity signature by integrating over velocity space
+    This function assumes a square grid
+
+    Parameters
+    ----------
+    Cor : 2d array
+        x slice of velocity signature
+    dv : float
+        spacing between velocity grid points
+
+    Returns
+    -------
+    netE : float
+        net energization/ integral of C(x0; vy, vx)
+    """
+
+    netE = 0.
+    for i in range(0,len(Cor)):
+        for j in range(0,len(Cor)):
+            netE += Cor[i][j]*dv*dv #assumes square grid
+
+    return netE

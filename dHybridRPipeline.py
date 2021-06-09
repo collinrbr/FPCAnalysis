@@ -57,7 +57,8 @@ def field_loader(field_vars='all', components='all', num=None,
     _ivc_ = {v: k for k, v in iter(_field_choices_.items())}
     if components == 'all':
         components = 'xyz'
-    if path[-1] is not '/': path = path + '/'
+    if(len(path) > 0):
+        if path[-1] is not '/': path = path + '/'
     fpath = path+"Output/Fields/*"
     if field_vars == 'all':
         field_vars = [c[len(fpath)-1:] for c in glob.glob(fpath)]

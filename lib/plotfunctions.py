@@ -2,7 +2,11 @@
 
 # Here we have functions related to plotting dHybridR data
 
-def plot_field(dfields, fieldkey, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0):
+import numpy as np
+import matplotlib.pyplot as plt
+import os
+
+def plot_field(dfields, fieldkey, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0, axvx1 = float('nan'), axvx2 = float('nan')):
     """
     Plots field data at some static frame down a line along x,y,z for some
     selected field.
@@ -21,6 +25,10 @@ def plot_field(dfields, fieldkey, axis='_xx', xxindex = 0, yyindex = 0, zzindex 
         index of data along yy axis (ignored if axis = '_yy')
     zzindex : int, optional
         index of data along zz axis (ignored if axis = '_zz')
+    axvx1 : float, optional
+        x position of vertical line on plot
+    axvx2 : float, optional
+        x position of vertical line on plot
     """
 
 
@@ -40,24 +48,28 @@ def plot_field(dfields, fieldkey, axis='_xx', xxindex = 0, yyindex = 0, zzindex 
     plt.xlabel(xlbl)
     plt.ylabel(fieldkey)
     plt.plot(fieldcoord,fieldval)
+    if(not(axvx1 != axvx1)): #if not nan
+        plt.axvline(x=axvx1)
+    if(not(axvx2 != axvx2)): #if not nan
+        plt.axvline(x=axvx2)
     plt.show()
 
 def plot_all_fields(dfields, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0):
     """
-        Plots all field data at some static frame down a line along x,y,z.
+    Plots all field data at some static frame down a line along x,y,z.
 
-        Parameters
-        ----------
-        dfields : dict
-            field data dictionary from field_loader
-        axis : str, optional
-            name of axis you want to plot along (_xx, _yy, _zz)
-        xxindex : int, optional
-            index of data along xx axis (ignored if axis = '_xx')
-        yyindex : int, optional
-            index of data along yy axis (ignored if axis = '_yy')
-        zzindex : int, optional
-            index of data along zz axis (ignored if axis = '_zz')
+    Parameters
+    ----------
+    dfields : dict
+        field data dictionary from field_loader
+    axis : str, optional
+        name of axis you want to plot along (_xx, _yy, _zz)
+    xxindex : int, optional
+        index of data along xx axis (ignored if axis = '_xx')
+    yyindex : int, optional
+        index of data along yy axis (ignored if axis = '_yy')
+    zzindex : int, optional
+        index of data along zz axis (ignored if axis = '_zz')
     """
     if(axis == '_zz'):
         ex = np.asarray([dfields['ex'][i][yyindex][zzindex] for i in range(0,len(dfields['ex'+axis]))])
@@ -130,7 +142,7 @@ def plot_velsig(vx,vy,vmax,Ce,fieldkey,flnm = '',ttl=''):
     """
     plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
 
-    maxCe = max(np.max(Ce),np.max(abs(Ce)))
+    maxCe = max(np.max(Ce),abs(np.max(Ce)))
 
     #ordering when plotting is flipped
     #see https://matplotlib.org/3.1.1/api/_as_gen/matplotlib.pyplot.pcolormesh.html
@@ -190,7 +202,7 @@ def plot_velsig_wEcrossB(vx,vy,vmax,Ce,ExBvx,ExBvy,fieldkey,flnm = '',ttl=''):
 
     plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
 
-    maxCe = max(np.max(Ce),np.max(abs(Ce)))
+    maxCe = max(np.max(Ce),abs(np.min(Ce)))
 
     #ordering when plotting is flipped
     #see https://matplotlib.org/3.1.1/api/_as_gen/matplotlib.pyplot.pcolormesh.html
@@ -285,3 +297,319 @@ def makefieldpmesh(dfields,fieldkey,planename):
     plt.gcf().subplots_adjust(bottom=0.15)
     plt.show()
     plt.close()
+
+def plot_flow(dflow, flowkey, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0, axvx1 = float('nan'), axvx2 = float('nan')):
+    """
+    Plots flow data
+
+    Parameters
+    ----------
+    dflow : dict
+        flow data dictionary from flow_loader
+    flowkey : str
+        name of flow you want to plot (ux, uy, uz)
+    xxindex : int, optional
+        index of data along xx axis (ignored if axis = '_xx')
+    yyindex : int, optional
+        index of data along yy axis (ignored if axis = '_yy')
+    zzindex : int, optional
+        index of data along zz axis (ignored if axis = '_zz')
+    axvx1 : float, optional
+        x position of vertical line on plot
+    axvx2 : float, optional
+        x position of vertical line on plot
+    """
+    if(axis == '_zz'):
+        flowval = np.asarray([dflow[flowkey][i][yyindex][zzindex] for i in range(0,len(dflow[flowkey+axis]))])
+        xlbl = 'z'
+    elif(axis == '_yy'):
+        flowval = np.asarray([dflow[flowkey][xxindex][i][zzindex] for i in range(0,len(dflow[flowkey+axis]))])
+        xlbl = 'y'
+    elif(axis == '_xx'):
+        flowval = np.asarray([dflow[flowkey][xxindex][yyindex][i] for i in range(0,len(dflow[flowkey+axis]))])
+        xlbl = 'x'
+
+    flowcoord = np.asarray(dflow[flowkey+axis])
+
+    plt.figure(figsize=(20,10))
+    plt.xlabel(xlbl)
+    plt.ylabel(flowkey)
+    if(not(axvx1 != axvx1)): #if not nan
+        plt.axvline(x=axvx1)
+    if(not(axvx2 != axvx2)): #if not nan
+        plt.axvline(x=axvx2)
+    plt.plot(flowcoord,flowval)
+    plt.show()
+
+def plot_all_flow(dflow, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0, flnm = ''):
+    """
+    Plots all flow data at some static frame down a line along x,y,z.
+
+    Parameters
+    ----------
+    dflow : dict
+        flow data dictionary from flow_loader
+    axis : str, optional
+        name of axis you want to plot along (_xx, _yy, _zz)
+    xxindex : int, optional
+        index of data along xx axis (ignored if axis = '_xx')
+    yyindex : int, optional
+        index of data along yy axis (ignored if axis = '_yy')
+    zzindex : int, optional
+        index of data along zz axis (ignored if axis = '_zz')
+    """
+
+    if(axis == '_zz'):
+        ux = np.asarray([dflow['ux'][i][yyindex][zzindex] for i in range(0,len(dflow['ux'+axis]))])
+        uy = np.asarray([dflow['uy'][i][yyindex][zzindex] for i in range(0,len(dflow['uy'+axis]))])
+        uz = np.asarray([dflow['uz'][i][yyindex][zzindex] for i in range(0,len(dflow['uz'+axis]))])
+    elif(axis == '_yy'):
+        ux = np.asarray([dflow['ux'][xxindex][i][zzindex] for i in range(0,len(dflow['ux'+axis]))])
+        uy = np.asarray([dflow['uy'][xxindex][i][zzindex] for i in range(0,len(dflow['uy'+axis]))])
+        uz = np.asarray([dflow['uz'][xxindex][i][zzindex] for i in range(0,len(dflow['uz'+axis]))])
+    elif(axis == '_xx'):
+        ux = np.asarray([dflow['ux'][xxindex][yyindex][i] for i in range(0,len(dflow['ux'+axis]))])
+        uy = np.asarray([dflow['uy'][xxindex][yyindex][i] for i in range(0,len(dflow['uy'+axis]))])
+        uz = np.asarray([dflow['uz'][xxindex][yyindex][i] for i in range(0,len(dflow['uz'+axis]))])
+
+    fieldcoord = np.asarray(dflow['ux'+axis]) #assumes all fields have same coordinates
+
+    fig, axs = plt.subplots(3,figsize=(20,10))
+    axs[0].plot(fieldcoord,ux,label="vx")
+    axs[0].set_ylabel("$ux$")
+    axs[1].plot(fieldcoord,uy,label='vy')
+    axs[1].set_ylabel("$uy$")
+    axs[2].plot(fieldcoord,uz,label='vz')
+    axs[2].set_ylabel("$uz$")
+    if(axis == '_xx'):
+        axs[2].set_xlabel("$x$")
+    elif(axis == '_yy'):
+        axs[2].set_xlabel("$y$")
+    elif(axis == '_yy'):
+        axs[2].set_xlabel("$z$")
+    plt.subplots_adjust(hspace=0.5)
+    if(flnm != ''):
+        plt.savefig(flnm,format=png)
+    else:
+        plt.show()
+
+def plot_dist(vx, vy, vmax, H,flnm = '',ttl=''):
+    """
+    Plots distribution
+
+    Parameters
+    ----------
+    vx : 2d array
+        vx velocity grid
+    vy : 2d array
+        vy velocity grid
+    vmax : float
+        specifies signature domain in velocity space
+        (assumes square and centered about zero)
+    H : 2d array
+        distribution data
+    """
+    plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
+
+    plt.figure(figsize=(6.5,6))
+    plt.figure(figsize=(6.5,6))
+    plt.pcolormesh(vx, vy, Hxy_out[0], cmap="plasma", shading="gouraud")
+    plt.xlim(-vmax, vmax)
+    plt.ylim(-vmax, vmax)
+    plt.xticks(np.linspace(-vmax, vmax, 9))
+    plt.yticks(np.linspace(-vmax, vmax, 9))
+    if(ttl == ''):
+        plt.title(r"$f(v_x, v_y)$",loc="right")
+    else:
+        plt.title(ttl)
+    plt.xlabel(r"$v_x/v_{ti}$")
+    plt.ylabel(r"$v_y/v_{ti}$")
+    plt.grid(color="k", linestyle="-", linewidth=1.0, alpha=0.6)
+    plt.colorbar()
+    plt.gcf().subplots_adjust(bottom=0.15)
+    if(flnm != ''):
+        plt.savefig(flnm,format=png)
+    else:
+        plt.show()
+    plt.close()
+
+def plot_1d_dist(dparticles, parkey, vmax, x1, x2, y1, y2, flnm = ''):
+    """
+    Makes 1d distribution function of particle data within given spatial domain
+
+    Parameters
+    ----------
+    dparticles : dict
+        particle data dictionary
+    parkey : str
+        key of particle dictionary you want to plot (p1,p2,p3,x1,x2 or x3)
+    x1 : float
+        lower bound in xx space that you want to count
+    x2 : float
+        upper bound in xx space that you want to count
+    y1 : float
+        lower bound in xx space that you want to count
+    y2 : float
+        upper bound in xx space that you want to count
+    flnm : str, optional
+        specifies filename if plot is to be saved as png.
+        if set to default, plt.show() will be called instead
+    """
+
+    #TODO: make gpts particles work for spatial domain
+    gptsparticle = (x1 < dparticles['x1'] ) & (dparticles['x1'] < x2) & (y1 < dparticles['x2'] ) & (dparticles['x2'] < y2)
+    histdata = dparticles[parkey][gptsparticle]
+    binsplt = np.linspace(-vmax,vmax,1000)
+
+    plt.figure()
+    plt.hist(histdata, bins = binsplt)
+    plt.xlabel(parkey)
+    plt.ylabel('n')
+
+    if(flnm != ''):
+        plt.savefig(flnm,format=png)
+    else:
+        plt.show()
+
+    plt.figure()
+
+def make_velsig_gif(vx, vy, vmax, C, fieldkey, x_out, directory, flnm):
+    """
+    Makes gif of velocity space signatures that sweeps over x for C(x; vy, vx)
+
+    Parameters
+    ----------
+    vx : 2d array
+        vx velocity grid
+    vy : 2d array
+        vy velocity grid
+    vmax : float
+        specifies signature domain in velocity space
+        (assumes square and centered about zero)
+    C : 3d array
+        correlation data over x slices (C(x; vy, vx))
+    fieldkey : str
+        name of field you want to plot (ex, ey, ez, bx, by, bz)
+    x_out : 1d array
+        array of x position of C data
+    directory : str
+        name of directory you want to create and put plots into
+        (omit final '/')
+    flnm : str
+        filename of the final gif
+    """
+
+    #make plots of data and put into directory
+    try:
+        os.mkdir(directory)
+    except:
+        pass
+    for i in range(0,len(C)):
+        print('Making plot ' + str(i)+' of '+str(len(C)))
+        ttl = directory+'/'+str(i).zfill(6)
+        plot_velsig(vx,vy,vmax,C[i],fieldkey,flnm = ttl,ttl='x(di): '+str(x_out[i]))
+        plt.close('all')
+
+    #make gif
+    import imageio #should import here as it might not be installed on every machine
+    images = []
+    filenames =  os.listdir(directory)
+    filenames = sorted(filenames)
+    try:
+        filenames.remove('.DS_store')
+    except:
+        pass
+
+    for filename in filenames:
+        images.append(imageio.imread(directory+'/'+filename))
+    imageio.mimsave(flnm, images)
+
+def make_velsig_gif_with_EcrossB(vx, vy, vmax, C, fieldkey, x_out, dx, dfields, directory, flnm):
+    """
+    Makes gif of velocity space signatures that sweeps over x for C(x; vy, vx)
+
+    Parameters
+    ----------
+    vx : 2d array
+        vx velocity grid
+    vy : 2d array
+        vy velocity grid
+    vmax : float
+        specifies signature domain in velocity space
+        (assumes square and centered about zero)
+    C : 3d array
+        correlation data over x slices (C(x; vy, vx))
+    fieldkey : str
+        name of field you want to plot (ex, ey, ez, bx, by, bz)
+    x_out : 1d array
+        array of x position of C data
+    dx : float
+        width of x slice
+    dfields : dict
+        field data dictionary from field_loader
+    directory : str
+        name of directory you want to create and put plots into
+        (omit final '/')
+    flnm : str
+        filename of the final gif
+    """
+
+    from lib.sanityfunctions import calc_E_crossB
+
+    #make plots of data and put into directory
+    try:
+        os.mkdir(directory)
+    except:
+        pass
+    print("Warning: This function uses fields near the x axis. This should suffice for a quick sanity check, but please check averaging box bounds in this function if needed.")
+    xsweep = 0.
+    for i in range(0,len(C)):
+        print('Making plot ' + str(i)+' of '+str(len(C)))
+        ttl = directory+'/'+str(i).zfill(6)
+        ExBvx, ExBvy, _ = calc_E_crossB(dfields,xsweep,xsweep+dx,dfields[fieldkey+'_yy'][0],dfields[fieldkey+'_yy'][1])
+        plot_velsig_wEcrossB(vx,vy,vmax,C[i],ExBvx,ExBvy,fieldkey,flnm = ttl,ttl='x(di): '+str(x_out[i]))
+        xsweep += dx
+        plt.close('all')
+
+    #make gif
+    import imageio #should import here as it might not be installed on every machine
+    images = []
+    filenames =  os.listdir(directory)
+    filenames = sorted(filenames)
+    try:
+        filenames.remove('.DS_store')
+    except:
+        pass
+
+    for filename in filenames:
+        images.append(imageio.imread(directory+'/'+filename))
+    imageio.mimsave(flnm, images)
+
+def plot_field_time(dfieldsdict, fieldkey, xxindex = 0, yyindex = 0, zzindex = 0):
+    """
+    Plots field at static location as a function of time.
+
+    Parameters
+    ----------
+    dfieldsdict : dict
+        dictonary of dfields and corresponding frame number from all_field_loader
+    fieldkey : str
+        name of field you want to plot (ex, ey, ez, bx, by, bz)
+    xxindex : int
+        index of data along xx axis
+    yyindex : int
+        index of data along yy axis
+    zzindex : int
+        index of data along zz axis
+    """
+
+    fieldval = np.asarray([dfields[fieldkey][xxindex][yyindex][zzindex] for dfields in dfieldsdict['dfields']])
+    xlbl = 't'
+
+    fieldcoord = np.asarray(dfieldsdict['frame'])
+
+    plt.figure(figsize=(20,10))
+    plt.xlabel(xlbl)
+    plt.ylabel(fieldkey)
+    plt.plot(fieldcoord,fieldval)
+    plt.show()
