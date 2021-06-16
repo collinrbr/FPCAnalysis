@@ -47,7 +47,7 @@ def savedata(CEx_out, CEy_out, vx_out, vy_out, x_out, metadata_out = [], params 
     #define attributes
     for key in params:
         setattr(ncout,key,params[key])
-    ncout.description = 'dHybridR MLA data test 1'
+    ncout.description = 'dHybridR MLA data test 1' #TODO: report dHybridR pipeline version here
     ncout.generationtime = str(datetime.now())
 
     #make dimensions that dependent data must 'match'
@@ -127,23 +127,92 @@ def load_netcdf4(filename):
     from netCDF4 import Dataset
     from datetime import datetime
 
-    ncin = Dataset(flnm, 'r', format='NETCDF4')
+    ncin = Dataset(filename, 'r', format='NETCDF4')
 
     x_in = ncin.variables['x'][:]
-    vx = ncin.variables['vx'][:]
-    vy = ncin.variables['vy'][:]
-    CEx_in[:] = ncin.variables['C_Ex'][:]
-    CEy_in[:] = ncin.variables['C_Ey'][:]
-    metadata_in[:] = ncin.variables['metadata'][:]
-
-    #reconstruct vx, vy 2d arrays
-    vy_in = []
-    vx_in = []
+    vx_in = ncin.variables['vx'][:]
+    vy_in = ncin.variables['vy'][:]
+    CEx_in = ncin.variables['C_Ex'][:]
+    CEy_in = ncin.variables['C_Ey'][:]
+    metadata_in = ncin.variables['metadata'][:]
 
     #load parameters in
-    params_in = {}
+    params_in = ncin.__dict__
 
-    #test printing attributes
-    print(ncin.keys())
+    #reconstruct vx, vy 2d arrays
+    _vx = np.zeros((len(vy_in),len(vx_in)))
+    _vy = np.zeros((len(vy_in),len(vx_in)))
+    for i in range(0,len(vy_in)):
+        for j in range(0,len(vx_in)):
+            _vx[i][j] = vx_in[j]
+
+    for i in range(0,len(vy_in)):
+        for j in range(0,len(vx_in)):
+            _vy[i][j] = vy_in[i]
+
+    vx_in = _vx
+    vy_in = _vy
 
     return CEx_in, CEy_in, vx_in, vy_in, x_in, metadata_in, params_in
+
+def parse_input_file(path):
+    """
+    Puts dHybridR input file into dictionary.
+
+    Warning: only works if the input file is formatted like 'var=val0,val1,val2,...'
+    or 'var=val0'. I.e. input file must not have spaces between var val pairs
+
+    Warning: this function is ad hoc and doesn't work for all input parameters,
+    but it works for the ones we need it to
+
+    Parameters
+    ----------
+    path : string
+        path to directory containing simulation run
+
+    Returns
+    -------
+    dict : dict
+        dictionary containing input parameters
+    """
+    d = {}
+    blockname = ''
+
+    with open(path+'input/input') as f:
+        for line in f:
+            #get name of each block of input parameters
+            contents = line.split(' ')
+            speciescounter = 1 #used to handle having multiple species
+            if(len(contents) == 1 and contents[0] != '\n' and contents[0] != '\t\n' and not('{' in contents[0]) and not('}' in contents[0]) and not('!' in contents[0])):
+                blockname = contents[0].split('\n')[0]+'_'
+
+
+            #check if line contains equal sign
+            if '=' in line:
+                for cnt in contents:
+                    if '=' in cnt:
+                        varvalpair = cnt.split('=')
+                        if ',' in varvalpair[1]: #if multiple values, seperate and save
+                            vals = varvalpair[1].split(',')
+                            vals_out = []
+                            for k in range(0,len(vals)):
+                                vals[k] = vals[k].replace('"','')
+                                if(vals[k].isnumeric()):
+                                    vals_out.append(float(vals[k]))
+                                elif(not(vals[k]=='' or '\n' in vals[k] or '\t' in vals[k])):
+                                    vals_out.append(vals[k])
+
+                            if(blockname == 'species_'):
+                                if(blockname+str(speciescounter)+'_'+varvalpair[0] in d):
+                                    speciescounter += 1
+                                d[blockname+str(speciescounter)+'_'+varvalpair[0]] = vals_out
+
+                            else:
+                                d[blockname+varvalpair[0]] = vals_out
+                        else:
+                            val = varvalpair[1]
+                            if(val.isnumeric()):
+                                val = float(val)
+                            d[blockname+varvalpair[0]] = [val]
+
+    return d
