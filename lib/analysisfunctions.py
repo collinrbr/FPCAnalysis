@@ -283,3 +283,24 @@ def compute_energization(Cor,dv):
             netE += Cor[i][j]*dv*dv #assumes square grid
 
     return netE
+
+def find_nearest(array, value):
+    """
+    Finds index of element in array with value closest to given value
+
+    Paramters
+    ---------
+    array : 1d array
+        ordered array
+    value : float
+        value you want to approximately find in array
+
+    Returns
+    -------
+    idx : int
+        index of nearest element
+    """
+
+    array = np.asarray(array)
+    idx = (np.abs(array - value)).argmin()
+    return idx
