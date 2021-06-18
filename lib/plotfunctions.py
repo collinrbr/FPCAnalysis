@@ -33,13 +33,13 @@ def plot_field(dfields, fieldkey, axis='_xx', xxindex = 0, yyindex = 0, zzindex 
 
 
     if(axis == '_zz'):
-        fieldval = np.asarray([dfields[fieldkey][i][yyindex][zzindex] for i in range(0,len(dfields[fieldkey+axis]))])
+        fieldval = np.asarray([dfields[fieldkey][i][yyindex][xxindex] for i in range(0,len(dfields[fieldkey+axis]))])
         xlbl = 'z'
     elif(axis == '_yy'):
-        fieldval = np.asarray([dfields[fieldkey][xxindex][i][zzindex] for i in range(0,len(dfields[fieldkey+axis]))])
+        fieldval = np.asarray([dfields[fieldkey][zzindex][i][xxindex] for i in range(0,len(dfields[fieldkey+axis]))])
         xlbl = 'y'
     elif(axis == '_xx'):
-        fieldval = np.asarray([dfields[fieldkey][xxindex][yyindex][i] for i in range(0,len(dfields[fieldkey+axis]))])
+        fieldval = np.asarray([dfields[fieldkey][zzindex][yyindex][i] for i in range(0,len(dfields[fieldkey+axis]))])
         xlbl = 'x'
 
     fieldcoord = np.asarray(dfields[fieldkey+axis])
@@ -72,26 +72,26 @@ def plot_all_fields(dfields, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0):
         index of data along zz axis (ignored if axis = '_zz')
     """
     if(axis == '_zz'):
-        ex = np.asarray([dfields['ex'][i][yyindex][zzindex] for i in range(0,len(dfields['ex'+axis]))])
-        ey = np.asarray([dfields['ey'][i][yyindex][zzindex] for i in range(0,len(dfields['ey'+axis]))])
-        ez = np.asarray([dfields['ez'][i][yyindex][zzindex] for i in range(0,len(dfields['ez'+axis]))])
-        bx = np.asarray([dfields['bx'][i][yyindex][zzindex] for i in range(0,len(dfields['bx'+axis]))])
-        by = np.asarray([dfields['by'][i][yyindex][zzindex] for i in range(0,len(dfields['by'+axis]))])
-        bz = np.asarray([dfields['bz'][i][yyindex][zzindex] for i in range(0,len(dfields['bz'+axis]))])
+        ex = np.asarray([dfields['ex'][i][yyindex][xxindex] for i in range(0,len(dfields['ex'+axis]))])
+        ey = np.asarray([dfields['ey'][i][yyindex][xxindex] for i in range(0,len(dfields['ey'+axis]))])
+        ez = np.asarray([dfields['ez'][i][yyindex][xxindex] for i in range(0,len(dfields['ez'+axis]))])
+        bx = np.asarray([dfields['bx'][i][yyindex][xxindex] for i in range(0,len(dfields['bx'+axis]))])
+        by = np.asarray([dfields['by'][i][yyindex][xxindex] for i in range(0,len(dfields['by'+axis]))])
+        bz = np.asarray([dfields['bz'][i][yyindex][xxindex] for i in range(0,len(dfields['bz'+axis]))])
     elif(axis == '_yy'):
-        ex = np.asarray([dfields['ex'][xxindex][i][zzindex] for i in range(0,len(dfields['ex'+axis]))])
-        ey = np.asarray([dfields['ey'][xxindex][i][zzindex] for i in range(0,len(dfields['ex'+axis]))])
-        ez = np.asarray([dfields['ez'][xxindex][i][zzindex] for i in range(0,len(dfields['ex'+axis]))])
-        bx = np.asarray([dfields['bx'][xxindex][i][zzindex] for i in range(0,len(dfields['bx'+axis]))])
-        by = np.asarray([dfields['by'][xxindex][i][zzindex] for i in range(0,len(dfields['by'+axis]))])
-        bz = np.asarray([dfields['bz'][xxindex][i][zzindex] for i in range(0,len(dfields['bz'+axis]))])
+        ex = np.asarray([dfields['ex'][zzindex][i][xxindex] for i in range(0,len(dfields['ex'+axis]))])
+        ey = np.asarray([dfields['ey'][zzindex][i][xxindex] for i in range(0,len(dfields['ex'+axis]))])
+        ez = np.asarray([dfields['ez'][zzindex][i][xxindex] for i in range(0,len(dfields['ex'+axis]))])
+        bx = np.asarray([dfields['bx'][zzindex][i][xxindex] for i in range(0,len(dfields['bx'+axis]))])
+        by = np.asarray([dfields['by'][zzindex][i][xxindex] for i in range(0,len(dfields['by'+axis]))])
+        bz = np.asarray([dfields['bz'][zzindex][i][xxindex] for i in range(0,len(dfields['bz'+axis]))])
     elif(axis == '_xx'):
-        ex = np.asarray([dfields['ex'][xxindex][yyindex][i] for i in range(0,len(dfields['ex'+axis]))])
-        ey = np.asarray([dfields['ey'][xxindex][yyindex][i] for i in range(0,len(dfields['ex'+axis]))])
-        ez = np.asarray([dfields['ez'][xxindex][yyindex][i] for i in range(0,len(dfields['ex'+axis]))])
-        bx = np.asarray([dfields['bx'][xxindex][yyindex][i] for i in range(0,len(dfields['bx'+axis]))])
-        by = np.asarray([dfields['by'][xxindex][yyindex][i] for i in range(0,len(dfields['by'+axis]))])
-        bz = np.asarray([dfields['bz'][xxindex][yyindex][i] for i in range(0,len(dfields['bz'+axis]))])
+        ex = np.asarray([dfields['ex'][zzindex][yyindex][i] for i in range(0,len(dfields['ex'+axis]))])
+        ey = np.asarray([dfields['ey'][zzindex][yyindex][i] for i in range(0,len(dfields['ex'+axis]))])
+        ez = np.asarray([dfields['ez'][zzindex][yyindex][i] for i in range(0,len(dfields['ex'+axis]))])
+        bx = np.asarray([dfields['bx'][zzindex][yyindex][i] for i in range(0,len(dfields['bx'+axis]))])
+        by = np.asarray([dfields['by'][zzindex][yyindex][i] for i in range(0,len(dfields['by'+axis]))])
+        bz = np.asarray([dfields['bz'][zzindex][yyindex][i] for i in range(0,len(dfields['bz'+axis]))])
 
     fieldcoord = np.asarray(dfields['ex'+axis]) #assumes all fields have same coordinates
 
@@ -320,13 +320,13 @@ def plot_flow(dflow, flowkey, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0,
         x position of vertical line on plot
     """
     if(axis == '_zz'):
-        flowval = np.asarray([dflow[flowkey][i][yyindex][zzindex] for i in range(0,len(dflow[flowkey+axis]))])
+        flowval = np.asarray([dflow[flowkey][i][yyindex][xxindex] for i in range(0,len(dflow[flowkey+axis]))])
         xlbl = 'z'
     elif(axis == '_yy'):
-        flowval = np.asarray([dflow[flowkey][xxindex][i][zzindex] for i in range(0,len(dflow[flowkey+axis]))])
+        flowval = np.asarray([dflow[flowkey][zzindex][i][xxindex] for i in range(0,len(dflow[flowkey+axis]))])
         xlbl = 'y'
     elif(axis == '_xx'):
-        flowval = np.asarray([dflow[flowkey][xxindex][yyindex][i] for i in range(0,len(dflow[flowkey+axis]))])
+        flowval = np.asarray([dflow[flowkey][zzindex][yyindex][i] for i in range(0,len(dflow[flowkey+axis]))])
         xlbl = 'x'
 
     flowcoord = np.asarray(dflow[flowkey+axis])
@@ -360,17 +360,17 @@ def plot_all_flow(dflow, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0, flnm
     """
 
     if(axis == '_zz'):
-        ux = np.asarray([dflow['ux'][i][yyindex][zzindex] for i in range(0,len(dflow['ux'+axis]))])
-        uy = np.asarray([dflow['uy'][i][yyindex][zzindex] for i in range(0,len(dflow['uy'+axis]))])
-        uz = np.asarray([dflow['uz'][i][yyindex][zzindex] for i in range(0,len(dflow['uz'+axis]))])
+        ux = np.asarray([dflow['ux'][i][yyindex][xxindex] for i in range(0,len(dflow['ux'+axis]))])
+        uy = np.asarray([dflow['uy'][i][yyindex][xxindex] for i in range(0,len(dflow['uy'+axis]))])
+        uz = np.asarray([dflow['uz'][i][yyindex][xxindex] for i in range(0,len(dflow['uz'+axis]))])
     elif(axis == '_yy'):
-        ux = np.asarray([dflow['ux'][xxindex][i][zzindex] for i in range(0,len(dflow['ux'+axis]))])
-        uy = np.asarray([dflow['uy'][xxindex][i][zzindex] for i in range(0,len(dflow['uy'+axis]))])
-        uz = np.asarray([dflow['uz'][xxindex][i][zzindex] for i in range(0,len(dflow['uz'+axis]))])
+        ux = np.asarray([dflow['ux'][zzindex][i][xxindex] for i in range(0,len(dflow['ux'+axis]))])
+        uy = np.asarray([dflow['uy'][zzindex][i][xxindex] for i in range(0,len(dflow['uy'+axis]))])
+        uz = np.asarray([dflow['uz'][zzindex][i][xxindex] for i in range(0,len(dflow['uz'+axis]))])
     elif(axis == '_xx'):
-        ux = np.asarray([dflow['ux'][xxindex][yyindex][i] for i in range(0,len(dflow['ux'+axis]))])
-        uy = np.asarray([dflow['uy'][xxindex][yyindex][i] for i in range(0,len(dflow['uy'+axis]))])
-        uz = np.asarray([dflow['uz'][xxindex][yyindex][i] for i in range(0,len(dflow['uz'+axis]))])
+        ux = np.asarray([dflow['ux'][zzindex][yyindex][i] for i in range(0,len(dflow['ux'+axis]))])
+        uy = np.asarray([dflow['uy'][zzindex][yyindex][i] for i in range(0,len(dflow['uy'+axis]))])
+        uz = np.asarray([dflow['uz'][zzindex][yyindex][i] for i in range(0,len(dflow['uz'+axis]))])
 
     fieldcoord = np.asarray(dflow['ux'+axis]) #assumes all fields have same coordinates
 
@@ -603,7 +603,7 @@ def plot_field_time(dfieldsdict, fieldkey, xxindex = 0, yyindex = 0, zzindex = 0
         index of data along zz axis
     """
 
-    fieldval = np.asarray([dfields[fieldkey][xxindex][yyindex][zzindex] for dfields in dfieldsdict['dfields']])
+    fieldval = np.asarray([dfields[fieldkey][zzindex][yyindex][xxindex] for dfields in dfieldsdict['dfields']])
     xlbl = 't'
 
     fieldcoord = np.asarray(dfieldsdict['frame'])
@@ -612,4 +612,43 @@ def plot_field_time(dfieldsdict, fieldkey, xxindex = 0, yyindex = 0, zzindex = 0
     plt.xlabel(xlbl)
     plt.ylabel(fieldkey)
     plt.plot(fieldcoord,fieldval)
+    plt.show()
+
+def stack_line_plot(dfieldsdict, fieldkey, xshockvals = [], axis = '_xx', xxindex = 0, yyindex = 0, zzindex = 0):
+
+
+
+    # fig = plt.figure(figsize=(20,100))
+    # gs = fig.add_gridspec(len(dfielddict['frame']),1,hspace=0)
+    # axs = gs.subplots(sharex=True,sharey=True)
+
+    fig, axs = plt.subplots(len(dfieldsdict['frame']), sharex=True, sharey=True)
+    fieldcoord = np.asarray(dfieldsdict['dfields'][0][fieldkey+axis])
+    fig.set_size_inches(18.5, 30.)
+
+
+    #sbpltlocation = len(dfielddict['frame'])+10+1
+    for k in range(0,len(dfieldsdict['frame'])):
+
+        #_ax = plt.subplots(len(dfielddict['frame']),k,sharex=True)
+        if(axis == '_zz'):
+            fieldval = np.asarray([dfieldsdict['dfields'][k][fieldkey][i][yyindex][xxindex] for i in range(0,len(dfieldsdict['dfields'][k][fieldkey+axis]))])
+            xlbl = 'z'
+        elif(axis == '_yy'):
+            fieldval = np.asarray([dfieldsdict['dfields'][k][fieldkey][zzindex][i][xxindex] for i in range(0,len(dfieldsdict['dfields'][k][fieldkey+axis]))])
+            xlbl = 'y'
+        elif(axis == '_xx'):
+            fieldval = np.asarray([dfieldsdict['dfields'][k][fieldkey][xxindex][yyindex][i] for i in range(0,len(dfieldsdict['dfields'][k][fieldkey+axis]))])
+            xlbl = 'x'
+
+        axs[k].plot(fieldcoord,fieldval)
+        if(len(xshockvals) > 0):
+            axs[k].scatter([xshockvals[k]],[0.])
+        #axs[k].ylabel(fieldkey+'(frame = '+str(dfielddict['frame'][k])+')')
+
+
+    #plt.figure(figsize=(20,10))
+    # plt.xlabel(xlbl)
+    # plt.ylabel(fieldkey)
+    # plt.plot(fieldcoord,fieldval)
     plt.show()

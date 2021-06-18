@@ -15,14 +15,16 @@ def lorentz_transform_vx(dfields,vx):
     vx : float
         boost velocity along x
     """
+    from copy import copy
+
     dfieldslor = copy(dfields) #deep copy
 
     dfieldslor['ex'] = dfields['ex']
     dfieldslor['ey'] = dfields['ey']-vx*dfields['bz']
     dfieldslor['ez'] = dfields['ez']+vx*dfields['by']
     dfieldslor['bx'] = dfields['bx']
-    dfieldslor['by'] = dfiedls['by']#assume v/c^2 is small
-    dfieldslor['bz'] = dfiedls['bz']#assume v/c^2 is small
+    dfieldslor['by'] = dfields['by']#assume v/c^2 is small
+    dfieldslor['bz'] = dfields['bz']#assume v/c^2 is small
 
     return dfieldslor
 

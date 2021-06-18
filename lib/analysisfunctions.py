@@ -304,3 +304,54 @@ def find_nearest(array, value):
     array = np.asarray(array)
     idx = (np.abs(array - value)).argmin()
     return idx
+
+def estimate_shock_pos(dfields, yyindex = 0, zzindex = 0):
+    """
+    Estimates the position of the shock using first Ex, x axis crossing after the shock forms
+
+    Takes 'rightmost' (i.e. most upstream) significant (i.e. not just small fluctuations)
+    zerocrossing as the location of the shock
+
+    """
+
+    xposshock = 0.
+
+    #chop off upstream data by eliminating data to the right of the first
+    #significant (i.e >10% of the maximum) local maximimum
+    import numpy as np
+    from scipy.signal import argrelextrema
+
+    Exvals = np.asarray([dfields['ex'][zzindex][yyindex][i] for i in range(0,len(dfields['ex_xx']))])
+    xvals = np.asarray(dfields['ex_xx'])
+
+    if(len(xvals) != len(Exvals)): #debug
+        print("Error: shape of xvals does not match Exvals...")
+        return 0.
+
+    #find index of local maxima
+    xposcandidatesidx = argrelextrema(Exvals, np.greater)
+
+    #get absolute maxima and find shock front by assuming upstream local maxima
+    #are all small compared to this.
+    #I.e. locate first 'significantly' large local maxima
+    #TODO: instead of using maximum, to drop upstream,
+    #use physics relationship (from June 17 discussion with Dr. Howes) to find
+    Exmax = np.amax(Exvals)
+
+    sigfrac = .05 #minimum fraction relative to Exmax that the local max must be greater than to be considered significant
+    shockfrontidx = 0
+    for k in range(0,len(xposcandidatesidx[0])):
+        if(Exvals[xposcandidatesidx[0][k]] >= sigfrac*Exmax):
+            shockfrontidx = xposcandidatesidx[0][k]
+
+    #sweep back from shock front until we cross zero
+    zerocrossidx = shockfrontidx
+    while(not(Exvals[zerocrossidx] > 0 and Exvals[zerocrossidx-1] <= 0)):
+        zerocrossidx -= 1
+
+    #take idx closest to zero
+    if(Exvals[zerocrossidx] > abs(Exvals[zerocrossidx-1])):
+        zerocrossidx -= 1
+
+    xposshock = xvals[zerocrossidx]
+    return xposshock

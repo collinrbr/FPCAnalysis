@@ -270,7 +270,7 @@ def flow_loader(flow_vars=None, num=None, path='./', sp=1, verbose=False):
             kc = 'u'+k
             _ = f['DATA'].shape #python is fliped
             dim = len(_)
-            print(kc,_)
+            #print(kc,_)
             d[kc] = f['DATA'][:]
             if dim < 3:
                 _N2,_N1 = _
