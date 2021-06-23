@@ -24,7 +24,7 @@ def savedata(CEx_out, CEy_out, vx_out, vy_out, x_out, metadata_out = [], params 
         meta data array with length equal to x_out and axis 3 of correlation data
         normally needs to be made by hand
     params : dict, optional
-        dictionary containing global attributes relating to data.
+        dictionary containing parameters relating to data/ simulation input.
         contains mostly physical input parameters from original simulation
     filename : str, optional
         filename of netcdf4. Should be formatted like *.nc
@@ -44,9 +44,11 @@ def savedata(CEx_out, CEy_out, vx_out, vy_out, x_out, metadata_out = [], params 
 
 
     #save data in netcdf file-------------------------------------------------------
-    #define attributes
+    #define simulation parameters
     for key in params:
-        setattr(ncout,key,params[key])
+        #setattr(ncout,key,params[key])
+        _ = ncout.createVariable(key,None)
+        _ = params[key]
     ncout.description = 'dHybridR MLA data test 1' #TODO: report dHybridR pipeline version here
     ncout.generationtime = str(datetime.now())
 
@@ -129,15 +131,26 @@ def load_netcdf4(filename):
 
     ncin = Dataset(filename, 'r', format='NETCDF4')
 
-    x_in = ncin.variables['x'][:]
-    vx_in = ncin.variables['vx'][:]
-    vy_in = ncin.variables['vy'][:]
-    CEx_in = ncin.variables['C_Ex'][:]
-    CEy_in = ncin.variables['C_Ey'][:]
-    metadata_in = ncin.variables['metadata'][:]
+    params_in = {}
+    for key in ncin.variables.keys():
+        if(key == 'x')
+            x_in = ncin.variables['x'][:]
+        elif(key == 'vx'):
+            vx_in = ncin.variables['vx'][:]
+        elif(key == 'vy'):
+            vy_in = ncin.variables['vy'][:]
+        elif(key == 'C_Ex'):
+            CEx_in = ncin.variables['C_Ex'][:]
+        elif(key == 'C_Ey'):
+            CEy_in = ncin.variables['C_Ey'][:]
+        elif(key == 'sda'):
+            metadata_in = ncin.variables['sda'][:] #TODO: add ability to handle multiple types of metadata
+        else:
+            params_in[key] = params_in[key]
 
-    #load parameters in
-    params_in = ncin.__dict__
+    #add global attributes
+    params_in = Merge(ncin.__dict__, params_in)
+
 
     #reconstruct vx, vy 2d arrays
     _vx = np.zeros((len(vy_in),len(vx_in)))

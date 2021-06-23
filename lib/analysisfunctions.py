@@ -355,3 +355,28 @@ def estimate_shock_pos(dfields, yyindex = 0, zzindex = 0):
 
     xposshock = xvals[zerocrossidx]
     return xposshock
+
+def shockvel_from_compression_ratio(M):
+    """
+    Estimates shock velocity using compression ratio
+
+    Parameters
+    ----------
+    M : float
+        mach speed of inflow
+
+    Returns
+    -------
+    vshock : float
+        estimated mach speed of shock
+
+    """
+
+    def shock(M):
+        gamma = 5./3.
+        return lambda v:M/v-(gamma+1.)/((2./(M-v)**2)+gamma-1)
+
+    from scipy.optimize import fsolve
+    vshock = fsolve(shock(M),1.) #start search at vshock=2.
+
+    return vshock
