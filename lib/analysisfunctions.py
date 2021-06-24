@@ -4,7 +4,7 @@
 
 import numpy as np
 
-def make2dHistandCey(vmax, dv, x1, x2, y1, y2, dpar, dfields):
+def make2dHistandCey(vmax, dv, x1, x2, y1, y2, dpar, dfields, vshock):
     """
     Makes distribution and takes correlation wrt Ey in a given box.
 
@@ -37,6 +37,9 @@ def make2dHistandCey(vmax, dv, x1, x2, y1, y2, dpar, dfields):
         xx vx yy vy data dictionary from readParticlesPosandVelocityOnly
     dfields : dict
         field data dictionary from field_loader
+    vshock : float
+        velocity of shock in x direction
+
     Returns
     -------
     vx : 2d array
@@ -79,7 +82,7 @@ def make2dHistandCey(vmax, dv, x1, x2, y1, y2, dpar, dfields):
     totalPtcl = np.sum(gptsparticle)
 
     #make bins
-    vxbins = np.arange(-vmax, vmax, dv)
+    vxbins = np.arange(-vmax+vshock, vmax+vshock, dv) #shift bins to shock frame
     vx = (vxbins[1:] + vxbins[:-1])/2.
     vybins = np.arange(-vmax, vmax, dv)
     vy = (vybins[1:] + vybins[:-1])/2.
@@ -98,15 +101,20 @@ def make2dHistandCey(vmax, dv, x1, x2, y1, y2, dpar, dfields):
     vx = _vx
     vy = _vy
 
+    #shift particle data to shock frame
+    dpar_p2 = np.asarray(dpar['p2'][gptsparticle][:])
+    dpar_p1 = np.asarray(dpar['p1'][gptsparticle][:])
+    dpar_p1 += vshock
+
     #find distribution
-    Hxy,_,_ = np.histogram2d(dpar['p2'][gptsparticle],dpar['p1'][gptsparticle],
+    Hxy,_,_ = np.histogram2d(dpar_p2,dpar_p1,
                          bins=[vybins, vxbins])
 
     #calculate correlation
     Cey = -0.5*vy**2*np.gradient(Hxy, dv, edge_order=2, axis=0)*avgfield
     return vx, vy, totalPtcl, totalFieldpts, Hxy, Cey
 
-def make2dHistandCex(vmax, dv, x1, x2, y1, y2, dpar, dfields):
+def make2dHistandCex(vmax, dv, x1, x2, y1, y2, dpar, dfields, vshock):
     """
     Same as make2dHistandCey but takes correlation wrt Ex
     """
@@ -135,7 +143,7 @@ def make2dHistandCex(vmax, dv, x1, x2, y1, y2, dpar, dfields):
     totalPtcl = np.sum(gptsparticle)
 
     #make bins
-    vxbins = np.arange(-vmax, vmax, dv)
+    vxbins = np.arange(-vmax+vshock, vmax+vshock, dv)
     vx = (vxbins[1:] + vxbins[:-1])/2.
     vybins = np.arange(-vmax, vmax, dv)
     vy = (vybins[1:] + vybins[:-1])/2.
@@ -154,8 +162,13 @@ def make2dHistandCex(vmax, dv, x1, x2, y1, y2, dpar, dfields):
     vx = _vx
     vy = _vy
 
+    #shift particle data to shock frame
+    dpar_p2 = np.asarray(dpar['p2'][gptsparticle][:])
+    dpar_p1 = np.asarray(dpar['p1'][gptsparticle][:])
+    dpar_p1 += vshock
+
     #find distribution
-    Hxy,_,_ = np.histogram2d(dpar['p2'][gptsparticle],dpar['p1'][gptsparticle],
+    Hxy,_,_ = np.histogram2d(dpar_p2,dpar_p1,
                          bins=[vybins, vxbins])
 
     #calculate correlation
@@ -207,7 +220,7 @@ def getfieldaverageinbox(x1, x2, y1, y2, dfields, fieldkey):
     return avgfield
 
 
-def compute_correlation_over_x(dfields, dparticles, vmax, dv, dx):
+def compute_correlation_over_x(dfields, dparticles, vmax, dv, dx, vshock):
     """
     Computes f(x; vy, vx), CEx(x; vy, vx), and CEx(x; vy, vx) along different slices of x
 
@@ -224,6 +237,8 @@ def compute_correlation_over_x(dfields, dparticles, vmax, dv, dx):
         spacing between points we sample in velocity space. (Square in vx, vy)
     dx : float
         width of x slice
+    vshock : float
+        velocity of shock in x direction
 
     Returns
     -------
@@ -249,8 +264,8 @@ def compute_correlation_over_x(dfields, dparticles, vmax, dv, dx):
     xsweep = 0.0
     for i in range(0,len(dfields['ex_xx'])):
         print(str(dfields['ex_xx'][i]) +' of ' + str(dfields['ex_xx'][len(dfields['ex_xx'])-1]))
-        vx, vy, totalPtcl, totalFieldpts, Hxy, Cey = make2dHistandCey(vmax, dv, xsweep, xsweep+dx, dfields['ey_yy'][0], dfields['ey_yy'][1], dparticles, dfields)
-        vx, vy, totalPtcl, totalFieldpts, Hxy, Cex = make2dHistandCex(vmax, dv, xsweep, xsweep+dx, dfields['ey_yy'][0], dfields['ey_yy'][1], dparticles, dfields)
+        vx, vy, totalPtcl, totalFieldpts, Hxy, Cey = make2dHistandCey(vmax, dv, xsweep, xsweep+dx, dfields['ey_yy'][0], dfields['ey_yy'][1], dparticles, dfields, vshock)
+        vx, vy, totalPtcl, totalFieldpts, Hxy, Cex = make2dHistandCex(vmax, dv, xsweep, xsweep+dx, dfields['ey_yy'][0], dfields['ey_yy'][1], dparticles, dfields, vshock)
         x_out.append(np.mean([xsweep,xsweep+dx]))
         CEy_out.append(Cey)
         CEx_out.append(Cex)
@@ -380,3 +395,47 @@ def shockvel_from_compression_ratio(M):
     vshock = fsolve(shock(M),1.) #start search at vshock=2.
 
     return vshock
+
+def shock_from_ex_cross(all_fields,dt=0.01):
+    """
+    Estimates shock velocity by tracking the first 'signficant' Ex zero crossing
+
+    Parameters
+    ----------
+    all_fields : dict
+        dictionary containing all field information and location (for each time slice)
+        Fields are Ordered (z,y,x)
+        Contains key with frame number
+
+    dt : float
+        size of time step in inverse Omega_ci0
+
+    Returns
+    -------
+    vshock : float
+        shock velocity
+    xshockvals : array
+        x position of Ex crossing at each frame. Parallel to all_fields['frame']
+    """
+    #get all shock crossings
+    xshockvals = []
+    for k in range(0,len(all_fields['dfields'])):
+        xshockvals.append(estimate_shock_pos(all_fields['dfields'][k])) #note: doesn't work until shock forms
+
+    #get shock velocity
+    #assume that the shock forms after half the simulation TODO: do something better
+    startidx = int(len(all_fields['frame'])/2)
+
+    xvals = xshockvals[startidx:]
+    framevals = all_fields['frame'][startidx:]
+
+    #convert frame to time
+    print("Warning, using dt = 0.01 Omega^-1... TODO: automate loading this...")
+    tvals = []
+    for k in range(0, len(framevals)):
+        tvals.append(framevals[k]*dt)
+
+    #fit to line
+    vshock, v0 = np.polyfit(tvals, xvals, 1)
+
+    return vshock, xshockvals

@@ -47,29 +47,31 @@ def savedata(CEx_out, CEy_out, vx_out, vy_out, x_out, metadata_out = [], params 
     #define simulation parameters
     for key in params:
         #setattr(ncout,key,params[key])
-        _ = ncout.createVariable(key,None)
-        _ = params[key]
+        if(not(isinstance(params[key],str))):
+            _ = ncout.createVariable(key,None)
+            _[:] = params[key]
+
     ncout.description = 'dHybridR MLA data test 1' #TODO: report dHybridR pipeline version here
     ncout.generationtime = str(datetime.now())
 
     #make dimensions that dependent data must 'match'
-    ncout.createDimension('x', None)  # NONE <-> unlimited TODO: make limited if it saves memory or improves compression?
-    ncout.createDimension('vx', None)
-    ncout.createDimension('vy', None)
+    ncout.createDimension('nx', None)  # NONE <-> unlimited TODO: make limited if it saves memory or improves compression?
+    ncout.createDimension('nvx', None)
+    ncout.createDimension('nvy', None)
 
     vx_out = vx_out[0][:]
-    vx = ncout.createVariable('vx','f4', ('vx',))
+    vx = ncout.createVariable('vx','f4', ('nvx',))
     vx.nvx = len(vx_out)
     vx.longname = 'v_x/v_ti'
     vx[:] = vx_out[:]
 
     vy_out = np.asarray([vy_out[i][0] for i in range(0,len(vy_out))])
-    vy = ncout.createVariable('vy','f4', ('vy',))
+    vy = ncout.createVariable('vy','f4', ('nvy',))
     vy.nvy = len(vy_out)
     vy.longname = 'v_y/v_ti'
     vy[:] = vy_out[:]
 
-    x = ncout.createVariable('x','f4',('x',))
+    x = ncout.createVariable('x','f4',('nx',))
     x.nx = len(x_out)
     x[:] = x_out[:]
 
@@ -80,15 +82,15 @@ def savedata(CEx_out, CEy_out, vx_out, vy_out, x_out, metadata_out = [], params 
         tempCey = CEy_out[i].T
         CEy_out[i] = tempCey
 
-    C_ex = ncout.createVariable('C_Ex','f4', ('x', 'vx', 'vy'))
+    C_ex = ncout.createVariable('C_Ex','f4', ('nx', 'nvx', 'nvy'))
     C_ex.longname = 'C_{Ex}'
     C_ex[:] = CEx_out[:]
 
-    C_ey = ncout.createVariable('C_Ey','f4', ('x', 'vx', 'vy'))
+    C_ey = ncout.createVariable('C_Ey','f4', ('nx', 'nvx', 'nvy'))
     C_ey.longname = 'C_{Ey}'
     C_ey[:] = CEy_out[:]
 
-    metadata = ncout.createVariable('metadata','f4',('x',))
+    metadata = ncout.createVariable('sda','f4',('nx',))
     metadata.description = '1 = signature, 0 = no signature'
     metadata[:] = metadata_out[:]
 
@@ -133,7 +135,7 @@ def load_netcdf4(filename):
 
     params_in = {}
     for key in ncin.variables.keys():
-        if(key == 'x')
+        if(key == 'x'):
             x_in = ncin.variables['x'][:]
         elif(key == 'vx'):
             vx_in = ncin.variables['vx'][:]
@@ -146,10 +148,12 @@ def load_netcdf4(filename):
         elif(key == 'sda'):
             metadata_in = ncin.variables['sda'][:] #TODO: add ability to handle multiple types of metadata
         else:
-            params_in[key] = params_in[key]
+            if(not(isinstance(ncin.variables[key][:], str))):
+                params_in[key] = ncin.variables[key][:]
 
     #add global attributes
-    params_in = Merge(ncin.__dict__, params_in)
+    # print(params_in)
+    # params_in = params_in.update(ncin.__dict__)
 
 
     #reconstruct vx, vy 2d arrays
@@ -282,14 +286,14 @@ def build_params(inputdict, numframe):
     if(Bx != 0.):
         shocknormalangle = abs(math.atan((By**2.+Bz**2.)**0.5/Bx))*360./(2.0*math.pi)
     else:
-        shocknormalangle = 0.
+        shocknormalangle = 90.
 
     #define attributes/ simulation parameters
     params = {}
-    params["MachAlfven"] = float('nan')
+    params["MachAlfven"] = inputdict['plasma_injector_1_vdrift(1:3)'][0]
     params["MachAlfvenNote"] = 'TODO: compute mach alfven for this run'
-    params["ShockNormalAngle"] = shocknormalangle
-    params["ShockNormalAngledesc"] = 'units of degrees'
+    params["thetaBn"] = shocknormalangle
+    params["thetaBndesc"] = 'units of degrees'
     params["betaelec"] = betaelec
     params["betaion"] = betaion
     params["simtime"] = numframe*dt

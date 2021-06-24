@@ -70,10 +70,10 @@ def field_loader(field_vars='all', components='all', num=None,
     choices.sort()
     fpath = fpath.format(f='{f}', T='{T}', c='{c}', v='{v}', t='{t:08d}')
     d = {}
-    while num not in choices:
-        _ =  'Select from the following possible movie numbers: '\
-             '\n{0} '.format(choices)
-        num = int(input(_))
+    # while num not in choices:
+    #     _ =  'Select from the following possible movie numbers: '\
+    #          '\n{0} '.format(choices)
+    #     num = int(input(_))
     for k in field_vars:
         T = '' if k == 'J' else 'Total/'
         for c in components:
@@ -102,7 +102,7 @@ def field_loader(field_vars='all', components='all', num=None,
 
     return d
 
-def all_field_loader(field_vars='all', components='all', num=None,
+def all_dfield_loader(field_vars='all', components='all', num=None,
                  path='./', slc=None, verbose=False):
 
     """
@@ -293,3 +293,22 @@ def flow_loader(flow_vars=None, num=None, path='./', sp=1, verbose=False):
     _id = "{}:{}:{}".format(os.path.abspath(path), num, "".join(flow_vars))
     d['id'] = _id
     return d
+
+def analysis_input():
+    """
+    Loads text file that contains relevant FPC analysis parameters
+
+    Returns
+    -------
+    path : str
+        path to data
+    vmax : float
+        bounds of FPC analysis in velocity space (assumes square)
+    dv : float
+        bounds of FPC
+    """
+    flnm = 'analysisinput.txt'
+    
+
+
+    return path,vmax,dv
