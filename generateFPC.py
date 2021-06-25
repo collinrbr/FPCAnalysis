@@ -28,7 +28,7 @@ all_dfields = lf.all_dfield_loader(path=path_fields, verbose=False)
 # estimate shock vel and lorentz transform
 #-------------------------------------------------------------------------------
 print("Lorentz transforming fields...")
-vshock,_ = shock_from_ex_cross(all_fields,dt=0.01)
+vshock,_ = af.shock_from_ex_cross(all_fields,dt=0.01)
 
 #Lorentz transform fields
 dfields = ftf.lorentz_transform_vx(dfields,vx)
