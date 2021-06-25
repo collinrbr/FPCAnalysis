@@ -9,12 +9,12 @@ import sys
 
 try:
     startval = float(sys.argv[1])
-    endval = int(sys.argv[2])
+    endval = float(sys.argv[2])
 
 except:
     print("This generates a plot of the Ex(x,y=0,z=0) field with lines specified at the provided shock bounds (in units of di) and returns the xx index associated with the nearest element in the array to each bound.")
     print("Use these bounds with addMetadata to assign meta data")
-    print("usage: " + sys.argv[0] + "startindex endindex")
+    print("usage: " + sys.argv[0] + " startindex endindex")
     sys.exit()
 
 #load path
