@@ -308,7 +308,30 @@ def analysis_input():
         bounds of FPC
     """
     flnm = 'analysisinput.txt'
-    
 
+    #get file object
+    f = open("analysisinput.txt", "r")
 
-    return path,vmax,dv
+    while(True):
+        #read next line
+        line = f.readline()
+
+        if not line:
+        	break
+
+        line = line.strip()
+        line = line.split('=')
+
+        if(line[0]=='path'):
+            path = str(line[1].split("'")[1])
+        elif(line[0]=='vmax'):
+            vmax = float(line[1])
+        elif(line[0]=='dv'):
+            dv = float(line[1])
+        elif(line[0]=='numframe'):
+            numframe = int(line[1])
+
+    #close file
+    f.close()
+
+    return path,vmax,dv,numframe

@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 
-def plot_field(dfields, fieldkey, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0, axvx1 = float('nan'), axvx2 = float('nan')):
+def plot_field(dfields, fieldkey, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0, axvx1 = float('nan'), axvx2 = float('nan'), flnm = ''):
     """
     Plots field data at some static frame down a line along x,y,z for some
     selected field.
@@ -52,7 +52,11 @@ def plot_field(dfields, fieldkey, axis='_xx', xxindex = 0, yyindex = 0, zzindex 
         plt.axvline(x=axvx1)
     if(not(axvx2 != axvx2)): #if not nan
         plt.axvline(x=axvx2)
-    plt.show()
+    if(flnm == ''):
+        plt.show()
+    else:
+        plt.savefig(flnm,format='png')
+    plt.close()
 
 def plot_all_fields(dfields, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0):
     """
