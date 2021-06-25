@@ -31,7 +31,7 @@ print("Lorentz transforming fields...")
 vshock,_ = af.shock_from_ex_cross(all_dfields,dt=0.01)
 
 #Lorentz transform fields
-dfields = ftf.lorentz_transform_vx(dfields,vx)
+dfields = ftf.lorentz_transform_vx(dfields,vshock)
 _fields = []
 for k in range(0,len(all_dfields['dfields'])):
     _fields.append(ftf.lorentz_transform_vx(all_dfields['dfields'][k],vx))
