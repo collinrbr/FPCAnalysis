@@ -4,8 +4,53 @@
 
 import numpy as np
 
-def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dpar, dfields, vshock, axis, fieldkey, directionkey):
+def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dpar, dfields, vshock, fieldkey, directionkey):
     """
+    Computes distribution function and correlation wrt to given field
+
+    Parameters
+    ----------
+    vmax : float
+        specifies signature domain in velocity space
+        (assumes square and centered about zero)
+    dv : float
+        velocity space grid spacing
+        (assumes square)
+    x1 : float
+        lower x bound
+    x2 : float
+        upper x bound
+    y1 : float
+        lower y bound
+    y2 : float
+        upper y bound
+    z1 : float
+        lower y bound
+    z2 : float
+        upper y bound
+    dpar : dict
+        xx vx yy vy zz vz data dictionary from readParticles or readSliceOfParticles
+    dfields : dict
+        field data dictionary from field_loader
+    vshock : float
+        velocity of shock in x direction
+
+    Returns
+    -------
+    vx : 3d array
+        vx velocity grid
+    vy : 3d array
+        vy velocity grid
+    vz : 3d array
+        vz velocity grid
+    totalPtcl : float
+        total number of particles in the correlation box
+    totalFieldpts : float
+        total number of field gridpoitns in the correlation box
+    Hist : 3d array
+        distribution function in box
+    Cor : 3d array
+        velocity space sigature data in box
     """
 
     #find average E field based on provided bounds

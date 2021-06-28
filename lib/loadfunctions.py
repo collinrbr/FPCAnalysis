@@ -59,7 +59,6 @@ def readSliceOfParticles(path, num, x1, x2, y1, y2, z1, z2):
     -------
     pts : dict
         dictionary containing particle data
-
     """
 
     #dens_vars = 'p1 p2 p3 q tag x1 x2'.split()
@@ -133,11 +132,6 @@ def field_loader(field_vars='all', components='all', num=None,
         dictionary containing field information and location. Ordered (z,y,x)
     """
 
-    if(slc != None):
-        print("Warning: taking slices of field data is currently unavailable. TODO: fix")
-        return {}
-
-
     _field_choices_ = {'B':'Magnetic',
                        'E':'Electric',
                        'J':'CurrentDens'}
@@ -156,7 +150,7 @@ def field_loader(field_vars='all', components='all', num=None,
         elif not type(field_vars) in (list, tuple):
             field_vars = [field_vars]
     if slc is None:
-        slc = np.s_[:]
+        slc = [np.s_[:],np.s_[:],np.s_[:]]
     fpath = path+"Output/Fields/{f}/{T}{c}/{v}fld_{t}.h5"
     T = '' if field_vars[0] == 'J' else 'Total/'
     test_path = fpath.format(f = _field_choices_[field_vars[0]],
@@ -186,10 +180,10 @@ def field_loader(field_vars='all', components='all', num=None,
             kc = k.lower()+c
             if verbose: print(ffn)
             with h5py.File(ffn,'r') as f:
-                d[kc] = np.asarray(f['DATA'][slc],order='F')
+                d[kc] = np.asarray(f['DATA'],order='F')
                 d[kc] = np.ascontiguousarray(d[kc])
                 _N3,_N2,_N1 = f['DATA'].shape #python is fliped.
-                x1,x2,x3 = f['AXIS']['X1 AXIS'][:], f['AXIS']['X2 AXIS'][:], f['AXIS']['X3 AXIS'][:] #TODO: double check that x1->xx x2->yy x3->zz
+                x1,x2,x3 = f['AXIS']['X1 AXIS'][:], f['AXIS']['X2 AXIS'][:], f['AXIS']['X3 AXIS'][:]
                 dx1 = (x1[1]-x1[0])/_N1
                 dx2 = (x2[1]-x2[0])/_N2
                 dx3 = (x3[1]-x3[0])/_N3
@@ -198,8 +192,8 @@ def field_loader(field_vars='all', components='all', num=None,
                 d[kc+'_zz'] = dx3*np.arange(_N3) + dx3/2. + x3[0]
                 d[kc+'_xx'] = d[kc+'_xx'][slc[2]]
                 d[kc+'_yy'] = d[kc+'_yy'][slc[1]]
-                d[kc+'_zz'] = d[kc+'_zz'][slc[0]]  #TODO: check if this is correct. Dont understand the variable slc or how it's used
-
+                d[kc+'_zz'] = d[kc+'_zz'][slc[0]]
+                d[kc] = d[kc][slc]
 
     return d
 
@@ -233,11 +227,6 @@ def all_dfield_loader(field_vars='all', components='all', num=None,
         Contains key with frame number
     """
 
-    if(slc != None):
-        print("Warning: taking slices of field data is currently unavailable. TODO: fix")
-        return {}
-
-
     _field_choices_ = {'B':'Magnetic',
                        'E':'Electric',
                        'J':'CurrentDens'}
@@ -255,7 +244,7 @@ def all_dfield_loader(field_vars='all', components='all', num=None,
         elif not type(field_vars) in (list, tuple):
             field_vars = [field_vars]
     if slc is None:
-        slc = np.s_[:]
+        slc = [np.s_[:],np.s_[:],np.s_[:]]
     fpath = path+"Output/Fields/{f}/{T}{c}/{v}fld_{t}.h5"
     T = '' if field_vars[0] == 'J' else 'Total/'
     test_path = fpath.format(f = _field_choices_[field_vars[0]],
@@ -290,7 +279,7 @@ def all_dfield_loader(field_vars='all', components='all', num=None,
                 kc = k.lower()+c
                 if verbose: print(ffn)
                 with h5py.File(ffn,'r') as f:
-                    d[kc] = np.asarray(f['DATA'][slc],order='F')
+                    d[kc] = np.asarray(f['DATA'],order='F')
                     d[kc] = np.ascontiguousarray(d[kc])
                     _N3,_N2,_N1 = f['DATA'].shape #python is fliped.
                     x1,x2,x3 = f['AXIS']['X1 AXIS'][:], f['AXIS']['X2 AXIS'][:], f['AXIS']['X3 AXIS'][:] #TODO: double check that x1->xx x2->yy x3->zz
@@ -302,7 +291,8 @@ def all_dfield_loader(field_vars='all', components='all', num=None,
                     d[kc+'_zz'] = dx3*np.arange(_N3) + dx3/2. + x3[0]
                     d[kc+'_xx'] = d[kc+'_xx'][slc[2]]
                     d[kc+'_yy'] = d[kc+'_yy'][slc[1]]
-                    d[kc+'_zz'] = d[kc+'_zz'][slc[0]]  #TODO: check if this is correct. Dont understand the variable slc or how it's used
+                    d[kc+'_zz'] = d[kc+'_zz'][slc[0]]
+                    d[kc] = d[kc][slc]
         alld['dfields'].append(d)
         alld['frame'].append(num)
 
