@@ -4,6 +4,9 @@
 
 import numpy as np
 
+def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dpar, dfields, vshock, axis, fieldkey):
+    pass
+
 def make2dHistandCey(vmax, dv, x1, x2, y1, y2, dpar, dfields, vshock):
     """
     Makes distribution and takes correlation wrt Ey in a given box.
