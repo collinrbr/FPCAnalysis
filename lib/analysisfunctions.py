@@ -4,8 +4,210 @@
 
 import numpy as np
 
-def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dpar, dfields, vshock, axis, fieldkey):
-    pass
+def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dpar, dfields, vshock, axis, fieldkey, directionkey):
+    """
+    """
+
+    #find average E field based on provided bounds
+    gfieldptsx = (x1 <= dfields[fieldkey+'_xx']) & (dfields[fieldkey+'_xx'] <= x2)
+    gfieldptsy = (y1 <= dfields[fieldkey+'_yy']) & (dfields[fieldkey+'_yy'] <= y2)
+    gfieldptsz = (z1 <= dfields[fieldkey+'_zz']) & (dfields[fieldkey+'_zz'] <= z2)
+
+    goodfieldpts = []
+    for i in range(0,len(dfields['ex_xx'])):
+        for j in range(0,len(dfields['ex_yy'])):
+            for k in range(0,len(dfields['ex_zz'])):
+                if(gfieldptsx[i] == True and gfieldptsy[j] == True and gfieldptsz[k]):
+                    goodfieldpts.append(dfields[fieldkey][k][j][i])
+
+    #define mask that includes particles within range
+    gptsparticle = (x1 < dpar['x1'] ) & (dpar['x1'] < x2) & (y1 < dpar['x2']) & (dpar['x2'] < y2) & (z1 < dpar['x3']) & (dpar['x3'] < z2)
+    totalPtcl = np.sum(gptsparticle)
+
+    # #TODO?: consider forcing user to take correlation over only 1 cell
+    # if(len(goodfieldpts)==0):
+    #     print("Using weighted_field_average...") #Debug
+    #     avgfield = weighted_field_average((x1+x2)/2.,(y1+y2)/2.,0,dfields,fieldkey) #TODO: make 3d i.e. *don't* just 'project' all z information out and take fields at z = 0
+    # else:
+    avgfield = np.average(goodfieldpts) #TODO: call getfieldaverageinbox here instead
+    totalFieldpts = np.sum(goodfieldpts)
+
+    #make bins
+    vxbins = np.arange(-vmax+vshock, vmax+vshock, dv)
+    vx = (vxbins[1:] + vxbins[:-1])/2.
+    vybins = np.arange(-vmax, vmax, dv)
+    vy = (vybins[1:] + vybins[:-1])/2.
+    vzbins = np.arange(-vmax, vmax, dv)
+    vz = (vzbins[1:] + vzbins[:-1])/2.
+
+    #make the bins 3d arrays
+    _vx = np.zeros((len(vz),len(vy),len(vx)))
+    _vy = np.zeros((len(vz),len(vy),len(vx)))
+    _vz = np.zeros((len(vz),len(vy),len(vx)))
+    for i in range(0,len(vx)):
+        for j in range(0,len(vy)):
+            for k in range(0,len(vz)):
+                _vx[k][j][i] = vx[i]
+
+    for i in range(0,len(vx)):
+        for j in range(0,len(vy)):
+            for k in range(0,len(vz)):
+                _vy[k][j][i] = vy[j]
+
+    for i in range(0,len(vx)):
+        for j in range(0,len(vy)):
+            for k in range(0,len(vz)):
+                _vz[k][j][i] = vz[k]
+
+    #shift particle data to shock frame
+    dpar_p1 = np.asarray(dpar['p1'][gptsparticle][:])
+    dpar_p1 += vshock
+    dpar_p2 = np.asarray(dpar['p2'][gptsparticle][:])
+    dpar_p3 = np.asarray(dpar['p3'][gptsparticle][:])
+
+    #find distribution
+    Hist,_ = np.histogramdd((dpar_p3,dpar_p2,dpar_p1),
+                         bins=[vzbins,vybins,vxbins])
+
+    if(directionkey == 'x'):
+        axis = 2
+        vv = vx
+    elif(directionkey == 'y'):
+        axis = 1
+        vv = vy
+    elif(directionkey == 'z'):
+        axis = 0
+        vv = vz
+
+    #calculate correlation
+    Cor = -0.5*vv**2.*np.gradient(Hist, dv, edge_order=2, axis=axis)*avgfield
+    return vx, vy, vz, totalPtcl, totalFieldpts, Hist, Cor
+
+def threeVelToTwoVel(vx,vy,vz,planename):
+    """
+    Converts 3d velocity space arrays to 2d
+    Used for plotting
+
+    Parameters
+    ----------
+    vx : 3d array
+        3d vx velocity grid
+    vy : 3d array
+        3d vy velocity grid
+    vz : 3d array
+        3d vz velocity grid
+    planename : str
+        name of plane you want to get 2d grid of
+
+    Returns
+    -------
+    *Returns 2 of 3 of the following based on planename*
+    vx2d : 2d array
+        2d vx velocity grid
+    vy2d : 2d array
+        2d vy velocity grid
+    vz2d : 2d array
+        2d vz velocity grid
+    """
+
+    if(planename == 'xy'):
+        vx2d = np.zeros((len(vy),len(vx)))
+        vy2d = np.zeros((len(vy),len(vx)))
+        for i in range(0,len(vy)):
+            for j in range(0,len(vx)):
+                vx2d[i][j] = vx[0][i][j]
+        for i in range(0,len(vy)):
+            for j in range(0,len(vx)):
+                vy2d[i][j] = vy[0][i][j]
+
+        return vx2d, vy2d
+
+    elif(planename == 'xz'):
+        vx2d = np.zeros((len(vz),len(vx)))
+        vz2d = np.zeros((len(vz),len(vx)))
+        for i in range(0,len(vz)):
+            for j in range(0,len(vx)):
+                vx2d[i][j] = vx[i][0][j]
+        for i in range(0,len(vz)):
+            for j in range(0,len(vx)):
+                vz2d[i][j] = vz[i][0][j]
+
+        return vx2d, vz2d
+
+    elif(planename == 'yz'):
+        vy2d = np.zeros((len(vz),len(vy)))
+        vz2d = np.zeros((len(vz),len(vy)))
+        for i in range(0,len(vz)):
+            for j in range(0,len(vy)):
+                vy2d[i][j] = vy[i][j][0]
+        for i in range(0,len(vz)):
+            for j in range(0,len(vy)):
+                vz2d[i][j] = vz[i][j][0]
+
+        return vy2d, vz2d
+
+def threeHistToTwoHist(Hist,planename):
+    """
+    Converts 3d Histogram to 2d Histogram by projecting additional axis information onto plane
+    Probably should using for plotting only
+
+    Parameters
+    ----------
+    Cor : 3d array
+        3d correlation data
+    planename : str
+        name of plane you want to project onto
+
+    Returns
+    -------
+    Hist2d : 2d array
+        2d projection of the distribution
+    """
+    Hist2d = np.zeros((len(Hist),len(Hist[0])))
+    if(planename == 'xy'):
+        for i in range(0,len(Hist)):
+            for j in range(0,len(Hist[i])):
+                for k in range(0,len(Hist[i][j])):
+                    Hist2d[k][j] += Hist[i][j][k]
+
+        return Hist2d
+
+    elif(planename == 'xz'):
+        for i in range(0,len(Hist)):
+            for j in range(0,len(Hist[i])):
+                for k in range(0,len(Hist[i][j])):
+                    Hist2d[k][i] += Hist[i][j][k] #TODO: check this
+
+        return Hist2d
+
+    elif(planename == 'yz'):
+        for i in range(0,len(Hist)):
+            for j in range(0,len(Hist[i])):
+                for k in range(0,len(Hist[i][j])):
+                    Hist2d[j][i] += Hist[i][j][k] #TODO: check this
+
+        return Hist2d
+    else:
+        print("Please enter xy, xz, or yz for planename...")
+
+
+def threeCorToTwoCor(Cor,planename):
+    """
+    Converts 3d correlation to 2d correlation
+
+    Parameters
+    ----------
+    Cor : 3d array
+        3d correlation data
+    planename : str
+        name of plane you want to project onto
+
+    Returns
+    -------
+    2d array
+        2d projection of the correlation
+    """
+    return threeHistToTwoHist(Cor,planename)
 
 def make2dHistandCey(vmax, dv, x1, x2, y1, y2, dpar, dfields, vshock):
     """
