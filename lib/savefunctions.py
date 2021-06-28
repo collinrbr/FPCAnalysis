@@ -4,7 +4,7 @@
 
 import numpy as np
 
-def savedata(CEx_out, CEy_out, vx_out, vy_out, x_out, metadata_out = [], params = {}, filename = 'dHybridRSDAtest.nc' ):
+def savedata(CEx_out, CEy_out, vx_out, vy_out, x_out, enerCEx_out, enerCEy_out, metadata_out = [], params = {}, filename = 'dHybridRSDAtest.nc' ):
     """
     Creates netcdf4 data of normalized correlation data to send to MLA algo.
 
@@ -20,6 +20,10 @@ def savedata(CEx_out, CEy_out, vx_out, vy_out, x_out, metadata_out = [], params 
         velocity space grid created by analysis functions
     x_out : 1d array
         x slice position data created by analysis functions
+    enerCEx_out : 1d array
+        integral over velocity space of CEx
+    enerCEy_out : 1d array
+        integral over velocity space of CEy
     metadata_out : 1d array, optional
         meta data array with length equal to x_out and axis 3 of correlation data
         normally needs to be made by hand
@@ -94,6 +98,14 @@ def savedata(CEx_out, CEy_out, vx_out, vy_out, x_out, metadata_out = [], params 
     metadata.description = '1 = signature, 0 = no signature'
     metadata[:] = metadata_out[:]
 
+    enerCEx = ncout.createVariable('E_CEx','f4',('nx',))
+    enerCEx.description = 'Energization computed by integrating over CEx in velocity space'
+    enerCEx[:] = enerCEx_out
+
+    enerCEy = ncout.createVariable('E_CEy','f4',('nx',))
+    enerCEy.description = 'Energization computed by integrating over CEy in velocity space'
+    enerCEy[:] = enerCEy_out
+
     #Save data into netcdf4 file-----------------------------------------------------
     print("Saving data into netcdf4 file")
 
@@ -121,6 +133,10 @@ def load_netcdf4(filename):
         velocity space grid created by analysis functions
     x_in : 1d array
         x slice position data created by analysis functions
+    enerCEx_out : 1d array
+        integral over velocity space of CEx
+    enerCEy_out : 1d array
+        integral over velocity space of CEy
     metadata_in : 1d array, optional
         meta data array with length equal to x_out and axis 3 of correlation data
         normally needs to be made by hand
@@ -147,6 +163,10 @@ def load_netcdf4(filename):
             CEy_in = ncin.variables['C_Ey'][:]
         elif(key == 'sda'):
             metadata_in = ncin.variables['sda'][:] #TODO: add ability to handle multiple types of metadata
+        elif(key == 'E_CEx'):
+            enerCEx_in = ncin.variables['E_CEx'][:]
+        elif(key == 'E_CEy'):
+            enerCEy_in = ncin.variables['E_CEy'][:]
         else:
             if(not(isinstance(ncin.variables[key][:], str))):
                 params_in[key] = ncin.variables[key][:]
@@ -170,7 +190,7 @@ def load_netcdf4(filename):
     vx_in = _vx
     vy_in = _vy
 
-    return CEx_in, CEy_in, vx_in, vy_in, x_in, metadata_in, params_in
+    return CEx_in, CEy_in, vx_in, vy_in, x_in, enerCEx_in, enerCEy_in, metadata_in, params_in
 
 def parse_input_file(path):
     """

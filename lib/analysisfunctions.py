@@ -262,7 +262,9 @@ def compute_correlation_over_x(dfields, dparticles, vmax, dv, dx, vshock):
     Hxy_out = []
 
     xsweep = 0.0
-    for i in range(0,len(dfields['ex_xx'])):
+    i = 0
+    # for i in range(0,len(dfields['ex_xx'])):
+    while(xsweep < dfields['ex_xx'][-1]):
         print(str(dfields['ex_xx'][i]) +' of ' + str(dfields['ex_xx'][len(dfields['ex_xx'])-1]))
         vx, vy, totalPtcl, totalFieldpts, Hxy, Cey = make2dHistandCey(vmax, dv, xsweep, xsweep+dx, dfields['ey_yy'][0], dfields['ey_yy'][1], dparticles, dfields, vshock)
         vx, vy, totalPtcl, totalFieldpts, Hxy, Cex = make2dHistandCex(vmax, dv, xsweep, xsweep+dx, dfields['ey_yy'][0], dfields['ey_yy'][1], dparticles, dfields, vshock)
@@ -271,6 +273,7 @@ def compute_correlation_over_x(dfields, dparticles, vmax, dv, dx, vshock):
         CEx_out.append(Cex)
         Hxy_out.append(Hxy)
         xsweep+=dx
+        i+=1
 
     return CEx_out, CEy_out, x_out, Hxy_out, vx, vy
 
@@ -294,10 +297,33 @@ def compute_energization(Cor,dv):
 
     netE = 0.
     for i in range(0,len(Cor)):
-        for j in range(0,len(Cor)):
+        for j in range(0,len(Cor[i])):
             netE += Cor[i][j]*dv*dv #assumes square grid
 
     return netE
+
+def compute_energization_over_x(Cor_array,dv):
+    """
+    Runs compute_energization for each x slice of data
+
+    Parameters
+    ----------
+    Cor_array : 3d array
+        array of x slices of velocity signatures
+    dv : float
+        spacing between velocity grid points
+
+    Returns
+    -------
+    C_E_out : 1d array
+        array of net energization/ integral of C(x0; vy, vx) for each slice of x
+    """
+
+    C_E_out = []
+    for k in range(0,len(Cor_array)):
+        C_E_out.append(compute_energization(Cor_array[k],dv))
+
+    return np.asarray(C_E_out)
 
 def find_nearest(array, value):
     """
