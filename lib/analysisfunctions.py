@@ -116,13 +116,13 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dpar, dfields, vshock
 
     if(directionkey == 'x'):
         axis = 2
-        vv = vx
+        vv = _vx
     elif(directionkey == 'y'):
         axis = 1
-        vv = vy
+        vv = _vy
     elif(directionkey == 'z'):
         axis = 0
-        vv = vz
+        vv = _vz
 
     #calculate correlation
     Cor = -0.5*vv**2.*np.gradient(Hist, dv, edge_order=2, axis=axis)*avgfield
