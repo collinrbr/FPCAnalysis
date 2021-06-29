@@ -78,7 +78,7 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dpar, dfields, vshock
     totalFieldpts = np.sum(goodfieldpts)
 
     #make bins
-    vxbins = np.arange(-vmax+vshock, vmax+vshock, dv)
+    vxbins = np.arange(-vmax, vmax, dv)
     vx = (vxbins[1:] + vxbins[:-1])/2.
     vybins = np.arange(-vmax, vmax, dv)
     vy = (vybins[1:] + vybins[:-1])/2.
