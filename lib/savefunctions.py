@@ -100,11 +100,11 @@ def savedata(CEx_out, CEy_out, vx_out, vy_out, x_out, enerCEx_out, enerCEy_out, 
 
     enerCEx = ncout.createVariable('E_CEx','f4',('nx',))
     enerCEx.description = 'Energization computed by integrating over CEx in velocity space'
-    enerCEx[:] = enerCEx_out
+    enerCEx[:] = enerCEx_out[:]
 
     enerCEy = ncout.createVariable('E_CEy','f4',('nx',))
     enerCEy.description = 'Energization computed by integrating over CEy in velocity space'
-    enerCEy[:] = enerCEy_out
+    enerCEy[:] = enerCEy_out[:]
 
     #Save data into netcdf4 file-----------------------------------------------------
     print("Saving data into netcdf4 file")

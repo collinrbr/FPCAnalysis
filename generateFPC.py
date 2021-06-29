@@ -44,6 +44,10 @@ print("Doing FPC analysis for each slice of x...")
 dx = dfields['ex_xx'][1]-dfields['ex_xx'][0] #assumes rectangular grid thats uniform for all fields
 CEx_out, CEy_out, x_out, Hxy_out, vx_out, vy_out = af.compute_correlation_over_x(dfields, dparticles, vmax, dv, dx, vshock)
 
+#compute energization from correlations
+enerCEx_out = af.compute_energization_over_x(CEx_out,dv)
+enerCEy_out = af.compute_energization_over_x(CEy_out,dv)
+
 #-------------------------------------------------------------------------------
 # Save data with relevant input parameters
 #-------------------------------------------------------------------------------
@@ -52,5 +56,5 @@ inputdict = svf.parse_input_file(path)
 params = svf.build_params(inputdict,numframe)
 
 flnm = 'FPCnometadata.nc'
-svf.savedata(CEx_out, CEy_out, vx_out, vy_out, x_out, metadata_out = [], params = params, filename = flnm)
+svf.savedata(CEx_out, CEy_out, vx_out, vy_out, x_out, enerCEx_out, enerCEy_out, metadata_out = [], params = params, filename = flnm)
 print("Done! Please use findShock.py and addMetadata to assign metadata.")
