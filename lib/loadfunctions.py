@@ -66,18 +66,11 @@ def readSliceOfParticles(path, num, x1, x2, y1, y2, z1, z2):
 
     pts = {}
     with h5py.File(path.format(num),'r') as f:
+        gptsx = (x1 < f['x1'][:] ) & (f['x1'][:] < x2)
+        gptsy = (y1 < f['x2'][:] ) & (f['x2'][:] < y2)
+        gptsz = (z1 < f['x3'][:] ) & (f['x3'][:] < z2)
         for k in dens_vars:
-            if():
-                if(k == 'x1'):
-                    gpts = (x1 < f[k][:] ) & (f[k][:] < x2)
-                elif(k == 'x2'):
-                    gpts = (y1 < f[k][:] ) & (f[k][:] < y2)
-                elif(k == 'x3'):
-                    gpts = (z1 < f[k][:] ) & (f[k][:] < z2)
-                pts[k] = f[k][gpts][:]
-            else:
-                pts[k] = f[k][:]
-
+                pts[k] = f[k][gptsx & gptsy & gptsz][:]
     return pts
 
 def readParticlesPosandVelocityOnly(path, num):

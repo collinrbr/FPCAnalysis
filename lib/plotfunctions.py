@@ -417,7 +417,7 @@ def plot_dist(vx, vy, vmax, H,flnm = '',ttl=''):
 
     plt.figure(figsize=(6.5,6))
     plt.figure(figsize=(6.5,6))
-    plt.pcolormesh(vx, vy, Hxy_out[0], cmap="plasma", shading="gouraud")
+    plt.pcolormesh(vy, vx, H, cmap="plasma", shading="gouraud")
     plt.xlim(-vmax, vmax)
     plt.ylim(-vmax, vmax)
     plt.xticks(np.linspace(-vmax, vmax, 9))
@@ -619,12 +619,9 @@ def plot_field_time(dfieldsdict, fieldkey, xxindex = 0, yyindex = 0, zzindex = 0
     plt.show()
 
 def stack_line_plot(dfieldsdict, fieldkey, xshockvals = [], axis = '_xx', xxindex = 0, yyindex = 0, zzindex = 0):
+    """
 
-
-
-    # fig = plt.figure(figsize=(20,100))
-    # gs = fig.add_gridspec(len(dfielddict['frame']),1,hspace=0)
-    # axs = gs.subplots(sharex=True,sharey=True)
+    """
 
     fig, axs = plt.subplots(len(dfieldsdict['frame']), sharex=True, sharey=True)
     fieldcoord = np.asarray(dfieldsdict['dfields'][0][fieldkey+axis])
@@ -656,3 +653,101 @@ def stack_line_plot(dfieldsdict, fieldkey, xshockvals = [], axis = '_xx', xxinde
     # plt.ylabel(fieldkey)
     # plt.plot(fieldcoord,fieldval)
     plt.show()
+
+#(vx,vy,vmax,Ce,fieldkey,flnm = '',ttl='')
+def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
+                                H_xy, H_xz, H_yz,
+                                CEx_xy,CEx_xz, CEx_yz,
+                                CEy_xy,CEy_xz, CEy_yz,
+                                CEz_xy,CEz_xz, CEz_yz,
+                                flnm = '', ttl = ''):
+    """
+
+    """
+    from lib.analysisfunctions import threeVelToTwoVel
+
+    plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
+
+    fig, axs = plt.subplots(4,3,figsize=(4*5,3*5))
+
+    vx_xy, vy_xy = threeVelToTwoVel(vx,vy,vz,'xy')
+    vx_xz, vz_xz = threeVelToTwoVel(vx,vy,vz,'xz')
+    vy_yz, vz_yz = threeVelToTwoVel(vx,vy,vz,'yz')
+
+    #H_xy
+    axs[0,0].pcolormesh(vy_xy, vx_xy, H_xy, cmap="plasma", shading="gouraud")
+    axs[0,0].set_title(r"$f(v_x, v_y)$")
+    axs[0,0].set_xlabel(r"$v_x/v_{ti}$")
+    axs[0,0].set_ylabel(r"$v_y/v_{ti}$")
+    #H_xz
+    axs[0,1].pcolormesh(vz_xz, vx_xz, H_xz, cmap="plasma", shading="gouraud")
+    axs[0,1].set_title(r"$f(v_x, v_z)$")
+    axs[0,1].set_xlabel(r"$v_x/v_{ti}$")
+    axs[0,1].set_ylabel(r"$v_z/v_{ti}$")
+    #H_yz
+    axs[0,2].pcolormesh(vz_yz, vy_yz, H_yz, cmap="plasma", shading="gouraud")
+    axs[0,2].set_title(r"$f(v_y, v_z)$")
+    axs[0,2].set_xlabel(r"$v_y/v_{ti}$")
+    axs[0,2].set_ylabel(r"$v_z/v_{ti}$")
+    #CEx_xy
+    maxCe = max(np.max(CEx_xy),abs(np.max(CEx_xy)))
+    axs[1,0].pcolormesh(vy_xy,vx_xy,CEx_xy,vmax=maxCe,vmin=-maxCe,cmap="seismic", shading="gouraud")
+    axs[1,0].set_title('CEx')
+    axs[1,0].set_xlabel(r"$v_x/v_{ti}$")
+    axs[1,0].set_ylabel(r"$v_y/v_{ti}$")
+    #CEx_xz
+    maxCe = max(np.max(CEx_xz),abs(np.max(CEx_xz)))
+    axs[1,1].pcolormesh(vz_xz,vx_xz,CEx_xz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
+    axs[1,1].set_title('CEx')
+    axs[1,1].set_xlabel(r"$v_x/v_{ti}$")
+    axs[1,1].set_ylabel(r"$v_z/v_{ti}$")
+    #CEx_yz
+    maxCe = max(np.max(CEx_yz),abs(np.max(CEx_yz)))
+    axs[1,2].pcolormesh(vz_yz,vy_yz,CEx_yz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
+    axs[1,2].set_title('CEx')
+    axs[1,2].set_xlabel(r"$v_y/v_{ti}$")
+    axs[1,2].set_ylabel(r"$v_z/v_{ti}$")
+    #CEy_xy
+    maxCe = max(np.max(CEy_xy),abs(np.max(CEy_xy)))
+    axs[2,0].pcolormesh(vy_xy,vx_xy,CEy_xy,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
+    axs[2,0].set_title('CEy')
+    axs[2,0].set_xlabel(r"$v_x/v_{ti}$")
+    axs[2,0].set_ylabel(r"$v_y/v_{ti}$")
+    #CEy_xz
+    maxCe = max(np.max(CEy_xz),abs(np.max(CEy_xz)))
+    axs[2,1].pcolormesh(vz_xz,vx_xz,CEy_xz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
+    axs[2,1].set_title('CEy')
+    axs[2,1].set_xlabel(r"$v_x/v_{ti}$")
+    axs[2,1].set_ylabel(r"$v_z/v_{ti}$")
+    #CEy_yz
+    maxCe = max(np.max(CEy_yz),abs(np.max(CEy_yz)))
+    axs[2,2].pcolormesh(vz_yz,vy_yz,CEy_yz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
+    axs[2,2].set_title('CEy')
+    axs[2,2].set_xlabel(r"$v_y/v_{ti}$")
+    axs[2,2].set_ylabel(r"$v_z/v_{ti}$")
+    #CEz_xy
+    maxCe = max(np.max(CEz_xy),abs(np.max(CEz_xy)))
+    axs[3,0].pcolormesh(vy_xy,vx_xy,CEz_xy,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
+    axs[3,0].set_title('CEz')
+    axs[3,0].set_xlabel(r"$v_x/v_{ti}$")
+    axs[3,0].set_ylabel(r"$v_y/v_{ti}$")
+    #CEz_xz
+    maxCe = max(np.max(CEz_xz),abs(np.max(CEz_xz)))
+    axs[3,1].pcolormesh(vz_xz,vx_xz,CEz_xz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
+    axs[3,1].set_title('CEz')
+    axs[3,1].set_xlabel(r"$v_x/v_{ti}$")
+    axs[3,1].set_ylabel(r"$v_z/v_{ti}$")
+    #CEz_yz
+    maxCe = max(np.max(CEz_yz),abs(np.max(CEz_yz)))
+    axs[3,2].pcolormesh(vz_yz,vy_yz,CEz_yz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
+    axs[3,2].set_title('CEz')
+    axs[3,2].set_xlabel(r"$v_y/v_{ti}$")
+    axs[3,2].set_ylabel(r"$v_z/v_{ti}$")
+
+    plt.subplots_adjust(wspace=.5,hspace=.5)
+    if(flnm != ''):
+        plt.savefig(flnm+'.png',format='png')
+        plt.close('all') #saves RAM
+    else:
+        plt.show()
+    plt.close()

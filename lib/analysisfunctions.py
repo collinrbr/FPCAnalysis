@@ -34,6 +34,13 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dpar, dfields, vshock
         field data dictionary from field_loader
     vshock : float
         velocity of shock in x direction
+    fieldkey : str
+        name of the field you want to correlate with
+        ex,ey,ez,bx,by, or bz
+    directionkey : str
+        name of direction you want to take the gradient with respect to
+        x,y,or z
+        *should match the direction of the fieldkey* TODO: check for this automatically
 
     Returns
     -------
@@ -78,11 +85,11 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dpar, dfields, vshock
     totalFieldpts = np.sum(goodfieldpts)
 
     #make bins
-    vxbins = np.arange(-vmax, vmax, dv)
+    vxbins = np.arange(-vmax-dv, vmax+dv, dv)
     vx = (vxbins[1:] + vxbins[:-1])/2.
-    vybins = np.arange(-vmax, vmax, dv)
+    vybins = np.arange(-vmax-dv, vmax+dv, dv)
     vy = (vybins[1:] + vybins[:-1])/2.
-    vzbins = np.arange(-vmax, vmax, dv)
+    vzbins = np.arange(-vmax-dv, vmax+dv, dv)
     vz = (vzbins[1:] + vzbins[:-1])/2.
 
     #make the bins 3d arrays
@@ -104,6 +111,10 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dpar, dfields, vshock
             for k in range(0,len(vz)):
                 _vz[k][j][i] = vz[k]
 
+    vx = _vx
+    vy = _vy
+    vz = _vz
+
     #shift particle data to shock frame
     dpar_p1 = np.asarray(dpar['p1'][gptsparticle][:])
     dpar_p1 += vshock
@@ -116,13 +127,13 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dpar, dfields, vshock
 
     if(directionkey == 'x'):
         axis = 2
-        vv = _vx
+        vv = vx
     elif(directionkey == 'y'):
         axis = 1
-        vv = _vy
+        vv = vy
     elif(directionkey == 'z'):
         axis = 0
-        vv = _vz
+        vv = vz
 
     #calculate correlation
     Cor = -0.5*vv**2.*np.gradient(Hist, dv, edge_order=2, axis=axis)*avgfield
