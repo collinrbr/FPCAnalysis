@@ -569,9 +569,9 @@ def make_velsig_gif_with_EcrossB(vx, vy, vmax, C, fieldkey, x_out, dx, dfields, 
     xsweep = 0.
     for i in range(0,len(C)):
         print('Making plot ' + str(i)+' of '+str(len(C)))
-        ttl = directory+'/'+str(i).zfill(6)
+        flnm = directory+'/'+str(i).zfill(6)
         ExBvx, ExBvy, _ = calc_E_crossB(dfields,xsweep,xsweep+dx,dfields[fieldkey+'_yy'][0],dfields[fieldkey+'_yy'][1])
-        plot_velsig_wEcrossB(vx,vy,vmax,C[i],ExBvx,ExBvy,fieldkey,flnm = ttl,ttl='x(di): '+str(x_out[i]))
+        plot_velsig_wEcrossB(vx,vy,vmax,C[i],ExBvx,ExBvy,fieldkey,flnm = flnm,ttl='x(di): '+str(x_out[i]))
         xsweep += dx
         plt.close('all')
 
@@ -674,9 +674,10 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     vx_xz, vz_xz = threeVelToTwoVel(vx,vy,vz,'xz')
     vy_yz, vz_yz = threeVelToTwoVel(vx,vy,vz,'yz')
 
+    fig.suptitle(ttl)
     #H_xy
     axs[0,0].pcolormesh(vy_xy, vx_xy, H_xy, cmap="plasma", shading="gouraud")
-    axs[0,0].set_title(r"$f(v_x, v_y)$")
+    axs[0,0].set_title(r"$f(v_x, v_y)$ ")
     axs[0,0].set_xlabel(r"$v_x/v_{ti}$")
     axs[0,0].set_ylabel(r"$v_y/v_{ti}$")
     #H_xz
@@ -751,3 +752,58 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     else:
         plt.show()
     plt.close()
+
+def make_superplot_gif(vx, vy, vz, vmax, Hist, CEx, CEy, CEz, x, directory, flnm):
+    #make plots of data and put into directory
+
+    from lib.analysisfunctions import threeHistToTwoHist
+    from lib.analysisfunctions import threeCorToTwoCor
+
+    try:
+        os.mkdir(directory)
+    except:
+        pass
+
+    for i in range(0,len(x)):
+        print('Making plot ' + str(i)+' of '+str(len(x)))
+        flnm = directory+'/'+str(i).zfill(6)
+
+        #Project onto 2d axis
+        H_xy = threeHistToTwoHist(Hist[i],'xy')
+        H_xz = threeHistToTwoHist(Hist[i],'xz')
+        H_yz = threeHistToTwoHist(Hist[i],'yz')
+        CEx_xy = threeCorToTwoCor(CEx[i],'xy')
+        CEx_xz = threeCorToTwoCor(CEx[i],'xz')
+        CEx_yz = threeCorToTwoCor(CEx[i],'yz')
+        CEy_xy = threeCorToTwoCor(CEy[i],'xy')
+        CEy_xz = threeCorToTwoCor(CEy[i],'xz')
+        CEy_yz = threeCorToTwoCor(CEy[i],'yz')
+        CEz_xy = threeCorToTwoCor(CEz[i],'xy')
+        CEz_xz = threeCorToTwoCor(CEz[i],'xz')
+        CEz_yz = threeCorToTwoCor(CEz[i],'yz')
+
+        plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
+                                        H_xy, H_xz, H_yz,
+                                        CEx_xy,CEx_xz, CEx_yz,
+                                        CEy_xy,CEy_xz, CEy_yz,
+                                        CEz_xy,CEz_xz, CEz_yz,
+                                        flnm = flnm, ttl = 'x(di): ' + str(x[i]))
+        plt.close('all') #saves RAM
+
+def make_gif_from_folder(directory,flnm):
+    #Not sure why this is necessary to break this up into a seperate function rather than including in make_superplot_gif
+    #make gif
+    import imageio #should import here as it might not be installed on every machine
+    images = []
+    filenames = os.listdir(directory)
+    filenames = sorted(filenames)
+    try:
+        filenames.remove('.DS_store')
+    except:
+        pass
+
+    print(filenames)
+
+    for filename in filenames:
+        images.append(imageio.imread(directory+'/'+filename))
+    imageio.mimsave(flnm, images)

@@ -503,40 +503,54 @@ def compute_correlation_over_x(dfields, dparticles, vmax, dv, dx, vshock):
 
     Returns
     -------
-    CEx_out : 3d array
-        CEx(x; vy, vx) data
-    CEy_out : 3d array
-        CEy(x; vy, vx) data
+    CEx_out : 4d array
+        CEx(x; vz, vy, vx) data
+    CEy_out : 4d array
+        CEy(x; vz, vy, vx) data
+    CEz_out : 4d array
+        CEz(x; vz, vy, vx) data
     x_out : 1d array
         average x position of each slice
-    Hxy_out : 3d array
-        f(x; vy, vx) data
-    vx : 2d array
+    Hist_out : 4d array
+        f(x; vz, vy, vx) data
+    vx : 3d array
         vx velocity grid
-    vy : 2d array
+    vy : 3d array
         vy velocity grid
+    vz : 3d array
+        vz velocity grid
     """
 
     CEx_out = []
     CEy_out = []
+    CEz_out = []
     x_out = []
-    Hxy_out = []
+    Hist_out = []
 
-    xsweep = 0.0
+    #TODO: make these an input parameters
+    x1 = dfields['ex_xx'][0]
+    x2 = dfields['ex_xx'][1]
+    y1 = dfields['ex_yy'][0]
+    y2 = dfields['ex_yy'][1]
+    z1 = dfields['ex_zz'][0]
+    z2 = dfields['ex_zz'][1]
+
     i = 0
-    # for i in range(0,len(dfields['ex_xx'])):
-    while(xsweep < dfields['ex_xx'][-1]):
+    while(x2 <= dfields['ex_xx'][-1]):
         print(str(dfields['ex_xx'][i]) +' of ' + str(dfields['ex_xx'][len(dfields['ex_xx'])-1]))
-        vx, vy, totalPtcl, totalFieldpts, Hxy, Cey = make2dHistandCey(vmax, dv, xsweep, xsweep+dx, dfields['ey_yy'][0], dfields['ey_yy'][1], dparticles, dfields, vshock)
-        vx, vy, totalPtcl, totalFieldpts, Hxy, Cex = make2dHistandCex(vmax, dv, xsweep, xsweep+dx, dfields['ey_yy'][0], dfields['ey_yy'][1], dparticles, dfields, vshock)
-        x_out.append(np.mean([xsweep,xsweep+dx]))
-        CEy_out.append(Cey)
-        CEx_out.append(Cex)
-        Hxy_out.append(Hxy)
-        xsweep+=dx
+        vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock, 'ex', 'x')
+        vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEy = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock, 'ey', 'y')
+        vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEz = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock, 'ez', 'z')
+        x_out.append(np.mean([x1,x2]))
+        CEx_out.append(CEx)
+        CEy_out.append(CEy)
+        CEz_out.append(CEz)
+        Hist_out.append(Hist)
+        x1+=dx
+        x2+=dx
         i+=1
 
-    return CEx_out, CEy_out, x_out, Hxy_out, vx, vy
+    return CEx_out, CEy_out, CEz_out, x_out, Hist_out, vx, vy, vz
 
 def compute_energization(Cor,dv):
     """
