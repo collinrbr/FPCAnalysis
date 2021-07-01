@@ -18,11 +18,11 @@ print("Loading data...")
 #load relevant time slice fields
 dfields = lf.field_loader(path=path_fields,num=numframe)
 
-#load particle data
-dparticles = lf.readParticlesPosandVelocityOnly(path_particles, numframe)
-
 #Load all fields along all time slices
 all_dfields = lf.all_dfield_loader(path=path_fields, verbose=False)
+
+#Load slice of particle data
+dparticles = lf.readSliceOfParticles(path_particles, numframe, dfields['ex_xx'][0], dfields['ex_xx'][-1], dfields['ex_yy'][0], dfields['ex_yy'][1], dfields['ex_zz'][0], dfields['ex_zz'][1])
 
 #-------------------------------------------------------------------------------
 # estimate shock vel and lorentz transform
@@ -42,7 +42,26 @@ all_dfields['dfields'] = _fields
 #-------------------------------------------------------------------------------
 print("Doing FPC analysis for each slice of x...")
 dx = dfields['ex_xx'][1]-dfields['ex_xx'][0] #assumes rectangular grid thats uniform for all fields
-CEx_out, CEy_out, x_out, Hxy_out, vx_out, vy_out = af.compute_correlation_over_x(dfields, dparticles, vmax, dv, dx, vshock)
+CEx, CEy, CEz, x, Hist, vx, vy, vz = af.compute_correlation_over_x(dfields, dparticles, vmax, dv, dx, vshock)
+
+#-------------------------------------------------------------------------------
+# Convert to old format
+#-------------------------------------------------------------------------------
+#for now, we just do CEx_xy CEy_xy
+#Here we convert to the previous 2d format
+#TODO: this takes a minute, probably only want to project once
+CEx_out = []
+CEy_out = []
+for i in range(0,len(CEx)):
+    CEx_xy = af.threeCorToTwoCor(CEx[i],'xy')
+    CEy_xy = af.threeCorToTwoCor(CEy[i],'xy')
+    CEx_out.append(CEx_xy)
+    CEy_out.append(CEy_xy)
+vx_xy, vy_xy = af.threeVelToTwoVel(vx,vy,vz,'xy')
+vx_out = vx_xy
+vy_out = vy_xy
+x_out = x
+
 
 #-------------------------------------------------------------------------------
 # Save data with relevant input parameters
