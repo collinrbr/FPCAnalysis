@@ -82,9 +82,9 @@ def make2dHistandCey(vmax, dv, x1, x2, y1, y2, dpar, dfields, vshock):
     totalPtcl = np.sum(gptsparticle)
 
     #make bins
-    vxbins = np.arange(-vmax, vmax, dv) #shift bins to shock frame
+    vxbins = np.arange(-vmax-dv, vmax+dv, dv) #shift bins to shock frame
     vx = (vxbins[1:] + vxbins[:-1])/2.
-    vybins = np.arange(-vmax, vmax, dv)
+    vybins = np.arange(-vmax-dv, vmax+dv, dv)
     vy = (vybins[1:] + vybins[:-1])/2.
 
     #make the bins 2d arrays
@@ -143,9 +143,9 @@ def make2dHistandCex(vmax, dv, x1, x2, y1, y2, dpar, dfields, vshock):
     totalPtcl = np.sum(gptsparticle)
 
     #make bins
-    vxbins = np.arange(-vmax+vshock, vmax+vshock, dv)
+    vxbins = np.arange(-vmax-dv, vmax+dv, dv) #shift bins to shock frame
     vx = (vxbins[1:] + vxbins[:-1])/2.
-    vybins = np.arange(-vmax, vmax, dv)
+    vybins = np.arange(-vmax-dv, vmax+dv, dv)
     vy = (vybins[1:] + vybins[:-1])/2.
 
     #make the bins 2d arrays

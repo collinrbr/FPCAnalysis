@@ -417,7 +417,7 @@ def plot_dist(vx, vy, vmax, H,flnm = '',ttl=''):
 
     plt.figure(figsize=(6.5,6))
     plt.figure(figsize=(6.5,6))
-    plt.pcolormesh(vx, vy, Hxy_out[0], cmap="plasma", shading="gouraud")
+    plt.pcolormesh(vy, vx, H, cmap="plasma", shading="gouraud")
     plt.xlim(-vmax, vmax)
     plt.ylim(-vmax, vmax)
     plt.xticks(np.linspace(-vmax, vmax, 9))
