@@ -436,7 +436,7 @@ def make2dHistandCex(vmax, dv, x1, x2, y1, y2, dpar, dfields, vshock):
     Cex = -0.5*vx**2*np.gradient(Hxy, dv, edge_order=2, axis=1)*avgfield
     return vx, vy, totalPtcl, totalFieldpts, Hxy, Cex
 
-def getfieldaverageinbox(x1, x2, y1, y2, dfields, fieldkey):
+def getfieldaverageinbox(x1, x2, y1, y2, z1, z2, dfields, fieldkey):
     """
     Get linear average of fields in box from grid points within box.
 
@@ -450,6 +450,10 @@ def getfieldaverageinbox(x1, x2, y1, y2, dfields, fieldkey):
         lower y bound
     y2 : float
         upper y bound
+    z1 : float
+        lower z bound
+    z2 : float
+        upper z bound
     dfields : dict
         field data dictionary from field_loader
     fieldkey : str
@@ -464,18 +468,14 @@ def getfieldaverageinbox(x1, x2, y1, y2, dfields, fieldkey):
     #find average field based on provided bounds
     gfieldptsx = (x1 <= dfields[fieldkey+'_xx'])  & (dfields[fieldkey+'_xx'] <= x2)
     gfieldptsy = (y1 <= dfields[fieldkey+'_yy']) & (dfields[fieldkey+'_yy'] <= y2)
+    gfieldptsz = (z1 <= dfields[fieldkey+'_zz']) & (dfields[fieldkey+'_zz'] <= z2)
 
     goodfieldpts = []
     for i in range(0,len(dfields['ex_xx'])):
         for j in range(0,len(dfields['ex_yy'])):
             for k in range(0,len(dfields['ex_zz'])):
-                if(gfieldptsx[i] == True and gfieldptsy[j] == True):
+                if(gfieldptsx[i] == True and gfieldptsy[j] == True and gfieldptsz[k] == True):
                     goodfieldpts.append(dfields[fieldkey][k][j][i])
-
-
-    # #debug
-    # print("numgridpts sampled: " + str(len(goodfieldpts)))
-
 
     avgfield = np.average(goodfieldpts)
     return avgfield
