@@ -493,4 +493,5 @@ def get_git_head():
 
     ["wc", "-l", "sorted_list.dat"]
     proc = subprocess.Popen(['git', 'rev-parse', 'HEAD'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    tmp = proc.stdout.read()
     return str(tmp)[2:-3]
