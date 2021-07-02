@@ -58,7 +58,7 @@ def plot_field(dfields, fieldkey, axis='_xx', xxindex = 0, yyindex = 0, zzindex 
         plt.savefig(flnm,format='png')
     plt.close()
 
-def plot_all_fields(dfields, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0):
+def plot_all_fields(dfields, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0, flnm = ''):
     """
     Plots all field data at some static frame down a line along x,y,z.
 
@@ -119,7 +119,11 @@ def plot_all_fields(dfields, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0):
     elif(axis == '_yy'):
         axs[5].set_xlabel("$z$")
     plt.subplots_adjust(hspace=0.5)
-    plt.show()
+    if(flnm == ''):
+        plt.show()
+    else:
+        plt.savefig(flnm,format='png')
+    plt.close()
 
 def plot_velsig(vx,vy,vmax,Ce,fieldkey,flnm = '',ttl=''):
     """
@@ -302,7 +306,7 @@ def makefieldpmesh(dfields,fieldkey,planename):
     plt.show()
     plt.close()
 
-def plot_flow(dflow, flowkey, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0, axvx1 = float('nan'), axvx2 = float('nan')):
+def plot_flow(dflow, flowkey, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0, axvx1 = float('nan'), axvx2 = float('nan'), flnm = ''):
     """
     Plots flow data
 
@@ -343,7 +347,11 @@ def plot_flow(dflow, flowkey, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0,
     if(not(axvx2 != axvx2)): #if not nan
         plt.axvline(x=axvx2)
     plt.plot(flowcoord,flowval)
-    plt.show()
+    if(flnm == ''):
+        plt.show()
+    else:
+        plt.savefig(flnm,format='png')
+    plt.close()
 
 def plot_all_flow(dflow, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0, flnm = ''):
     """
@@ -393,7 +401,7 @@ def plot_all_flow(dflow, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0, flnm
         axs[2].set_xlabel("$z$")
     plt.subplots_adjust(hspace=0.5)
     if(flnm != ''):
-        plt.savefig(flnm,format=png)
+        plt.savefig(flnm,format='png')
     else:
         plt.show()
 
@@ -432,7 +440,7 @@ def plot_dist(vx, vy, vmax, H,flnm = '',ttl=''):
     plt.colorbar()
     plt.gcf().subplots_adjust(bottom=0.15)
     if(flnm != ''):
-        plt.savefig(flnm,format=png)
+        plt.savefig(flnm,format='png')
     else:
         plt.show()
     plt.close()
@@ -471,7 +479,7 @@ def plot_1d_dist(dparticles, parkey, vmax, x1, x2, y1, y2, flnm = ''):
     plt.ylabel('n')
 
     if(flnm != ''):
-        plt.savefig(flnm,format=png)
+        plt.savefig(flnm,format='png')
     else:
         plt.show()
 

@@ -30,7 +30,7 @@ def getflowaverageinbox(x1,x2,y1,y2,z1,z2,dflow,flowkey):
 
     """
 
-    gflowptsx = (x1 <= dflow[flowkey+'_xx'])  & (dflow[flowkey+'_xx'] <= x2)
+    gflowptsx = (x1 <= dflow[flowkey+'_xx']) & (dflow[flowkey+'_xx'] <= x2)
     gflowptsy = (y1 <= dflow[flowkey+'_yy']) & (dflow[flowkey+'_yy'] <= y2)
     gflowptsz = (z1 <= dflow[flowkey+'_zz']) & (dflow[flowkey+'_zz'] <= z2)
 
