@@ -578,7 +578,7 @@ def make_velsig_gif_with_EcrossB(vx, vy, vmax, C, fieldkey, x_out, dx, dfields, 
     for i in range(0,len(C)):
         print('Making plot ' + str(i)+' of '+str(len(C)))
         flnm = directory+'/'+str(i).zfill(6)
-        ExBvx, ExBvy, _ = calc_E_crossB(dfields,xsweep,xsweep+dx,dfields[fieldkey+'_yy'][0],dfields[fieldkey+'_yy'][1])
+        ExBvx, ExBvy, _ = calc_E_crossB(dfields,xsweep,xsweep+dx,dfields[fieldkey+'_yy'][0],dfields[fieldkey+'_yy'][1],dfields[fieldkey+'_zz'][0],dfields[fieldkey+'_zz'][1])
         plot_velsig_wEcrossB(vx,vy,vmax,C[i],ExBvx,ExBvy,fieldkey,flnm = flnm,ttl='x(di): '+str(x_out[i]))
         xsweep += dx
         plt.close('all')
@@ -593,9 +593,9 @@ def make_velsig_gif_with_EcrossB(vx, vy, vmax, C, fieldkey, x_out, dx, dfields, 
     except:
         pass
 
-    for filename in filenames:
-        images.append(imageio.imread(directory+'/'+filename))
-    imageio.mimsave(flnm, images)
+    # for filename in filenames:
+    #     images.append(imageio.imread(directory+'/'+filename))
+    # imageio.mimsave(flnm, images)
 
 def plot_field_time(dfieldsdict, fieldkey, xxindex = 0, yyindex = 0, zzindex = 0):
     """
