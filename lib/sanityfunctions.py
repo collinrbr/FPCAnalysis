@@ -212,8 +212,8 @@ def get_abs_max_velocity(dparticles):
         abs max of vz array
     """
 
-    maxspeedx = np.max(np.abs(dparticles['x1']))
-    maxspeedy = np.max(np.abs(dparticles['x2']))
-    maxspeedz = np.max(np.abs(dparticles['x3']))
+    maxspeedx = np.max(np.abs(dparticles['p1']))
+    maxspeedy = np.max(np.abs(dparticles['p2']))
+    maxspeedz = np.max(np.abs(dparticles['p3']))
 
     return maxspeedx, maxspeedy, maxspeedz
