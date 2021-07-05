@@ -22,7 +22,7 @@ dfields = lf.field_loader(path=path_fields,num=numframe)
 all_dfields = lf.all_dfield_loader(path=path_fields, verbose=False)
 
 #Load slice of particle data
-dparticles = lf.readSliceOfParticles(path_particles, numframe, dfields['ex_xx'][0], dfields['ex_xx'][-1], dfields['ex_yy'][0], dfields['ex_yy'][1], dfields['ex_zz'][0], dfields['ex_zz'][1])
+dparticles = lf.readSliceOfParticles(path_particles, numframe, dfields['ex_xx'][0], dfields['ex_xx'][-1], dfields['ex_yy'][0], dfields['ex_yy'][3], dfields['ex_zz'][0], dfields['ex_zz'][3])
 
 #-------------------------------------------------------------------------------
 # estimate shock vel and lorentz transform
