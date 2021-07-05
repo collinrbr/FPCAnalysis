@@ -1,4 +1,4 @@
-path='run0/'
+path='M12/'
 vmax=15
 dv=0.25
 numframe=1000

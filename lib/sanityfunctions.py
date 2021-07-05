@@ -192,3 +192,28 @@ def calc_JdotE(dfields, dflow, x1, x2, y1, y2, z1, z2):
 
     JdE = ux*exf+uy*eyf+uz*ezf #TODO: check units (have definitely omitted q here)
     return JdE
+
+def get_abs_max_velocity(dparticles):
+    """
+    Returns the max of the absolute value of each velocity component array
+
+    Parameters
+    ----------
+    dparticles : dict
+        particle data dictionary
+
+    Returns
+    -------
+    maxspeedx : float
+        abs max of vx array
+    maxspeedy : float
+        abs max of vy array
+    maxspeedz : float
+        abs max of vz array
+    """
+
+    maxspeedx = np.max(np.abs(dparticles['x1']))
+    maxspeedy = np.max(np.abs(dparticles['x2']))
+    maxspeedz = np.max(np.abs(dparticles['x3']))
+
+    return maxspeedx, maxspeedy, maxspeedz
