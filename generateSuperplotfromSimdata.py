@@ -22,7 +22,7 @@ dfields = lf.field_loader(path=path_fields,num=numframe)
 all_dfields = lf.all_dfield_loader(path=path_fields, verbose=False)
 
 #Load slice of particle data
-dparticles = lf.readSliceOfParticles(path_particles, numframe, dfields['ex_xx'][0], dfields['ex_xx'][-1], dfields['ex_yy'][0], dfields['ex_yy'][1], dfields['ex_zz'][0], dfields['ex_zz'][1])
+dparticles = lf.readSliceOfParticles(path_particles, numframe, dfields['ex_xx'][0], dfields['ex_xx'][-1], dfields['ex_yy'][0], dfields['ex_yy'][3], dfields['ex_zz'][0], dfields['ex_zz'][3])
 
 #-------------------------------------------------------------------------------
 # estimate shock vel and lorentz transform
@@ -40,40 +40,11 @@ all_dfields['dfields'] = _fields
 #-------------------------------------------------------------------------------
 # do FPC analysis
 #-------------------------------------------------------------------------------
-print("Doing FPC analysis for each slice of x...")
+#Define parameters related to analysis
 dx = dfields['ex_xx'][1]-dfields['ex_xx'][0] #assumes rectangular grid thats uniform for all fields
 CEx, CEy, CEz, x, Hist, vx, vy, vz = af.compute_correlation_over_x(dfields, dparticles, vmax, dv, dx, vshock)
 
 #-------------------------------------------------------------------------------
-# Convert to old format
+# make superplot
 #-------------------------------------------------------------------------------
-#for now, we just do CEx_xy CEy_xy
-#Here we convert to the previous 2d format
-#TODO: this takes a minute, probably only want to project once
-CEx_out = []
-CEy_out = []
-for i in range(0,len(CEx)):
-    CEx_xy = af.threeCorToTwoCor(CEx[i],'xy')
-    CEy_xy = af.threeCorToTwoCor(CEy[i],'xy')
-    CEx_out.append(CEx_xy)
-    CEy_out.append(CEy_xy)
-vx_xy, vy_xy = af.threeVelToTwoVel(vx,vy,vz,'xy')
-vx_out = vx_xy
-vy_out = vy_xy
-x_out = x
-
-
-#compute energization from correlations
-enerCEx_out = af.compute_energization_over_x(CEx_out,dv)
-enerCEy_out = af.compute_energization_over_x(CEy_out,dv)
-
-#-------------------------------------------------------------------------------
-# Save data with relevant input parameters
-#-------------------------------------------------------------------------------
-print("Saving results in netcdf4 file...")
-inputdict = svf.parse_input_file(path)
-params = svf.build_params(inputdict,numframe)
-
-flnm = 'FPCnometadata.nc'
-svf.savedata(CEx_out, CEy_out, vx_out, vy_out, x_out, enerCEx_out, enerCEy_out, metadata_out = [], params = params, filename = flnm)
-print("Done! Please use findShock.py and addMetadata to assign metadata.")
+pf.make_superplot_gif(vx, vy, vz, vmax, Hist, CEx, CEy, CEz, x, 'superplotGraphs', 'superplottest.gif')

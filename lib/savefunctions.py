@@ -1,6 +1,6 @@
 # savefunctions.py>
 
-#functions related making netcdf4 file to pass to MLA algo and loading netcdf4 files
+#functions related making and loading netcdf4 file to pass to MLA algo and loading netcdf4 files
 
 import numpy as np
 
@@ -57,6 +57,7 @@ def savedata(CEx_out, CEy_out, vx_out, vy_out, x_out, enerCEx_out, enerCEy_out, 
 
     ncout.description = 'dHybridR MLA data test 1' #TODO: report dHybridR pipeline version here
     ncout.generationtime = str(datetime.now())
+    ncout.version = get_git_head()
 
     #make dimensions that dependent data must 'match'
     ncout.createDimension('nx', None)  # NONE <-> unlimited TODO: make limited if it saves memory or improves compression?
@@ -172,8 +173,8 @@ def load_netcdf4(filename):
                 params_in[key] = ncin.variables[key][:]
 
     #add global attributes
-    # print(params_in)
-    # params_in = params_in.update(ncin.__dict__)
+    print(params_in)
+    params_in = params_in.update(ncin.__dict__)
 
     #tranpose data back to match dHybridR pipeline ordering
     for i in range(0,len(CEx_in)):
@@ -477,3 +478,20 @@ def _isfloat(value):
         return True
     except ValueError:
         return False
+
+def get_git_head():
+    """
+    Gets the hash string of the current head of the git repo for version management
+
+    Returns
+    -------
+    temp : str
+        hash string of current git head
+    """
+
+    import subprocess
+
+    ["wc", "-l", "sorted_list.dat"]
+    proc = subprocess.Popen(['git', 'rev-parse', 'HEAD'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    tmp = proc.stdout.read()
+    return str(tmp)[2:-3]

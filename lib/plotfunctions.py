@@ -58,7 +58,7 @@ def plot_field(dfields, fieldkey, axis='_xx', xxindex = 0, yyindex = 0, zzindex 
         plt.savefig(flnm,format='png')
     plt.close()
 
-def plot_all_fields(dfields, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0):
+def plot_all_fields(dfields, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0, flnm = ''):
     """
     Plots all field data at some static frame down a line along x,y,z.
 
@@ -119,7 +119,11 @@ def plot_all_fields(dfields, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0):
     elif(axis == '_yy'):
         axs[5].set_xlabel("$z$")
     plt.subplots_adjust(hspace=0.5)
-    plt.show()
+    if(flnm == ''):
+        plt.show()
+    else:
+        plt.savefig(flnm,format='png')
+    plt.close()
 
 def plot_velsig(vx,vy,vmax,Ce,fieldkey,flnm = '',ttl=''):
     """
@@ -236,7 +240,7 @@ def plot_velsig_wEcrossB(vx,vy,vmax,Ce,ExBvx,ExBvy,fieldkey,flnm = '',ttl=''):
         plt.show()
     plt.close()
 
-def makefieldpmesh(dfields,fieldkey,planename):
+def makefieldpmesh(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, xxindex=float('nan'), yyindex=float('nan'), zzindex=float('nan')):
     """
     Makes pmesh of given field
 
@@ -248,33 +252,53 @@ def makefieldpmesh(dfields,fieldkey,planename):
         name of field you want to plot (ex, ey, ez, bx, by, bz)
     planename : str
         name of plane you want to plot (xy, xz, yz)
-
+    flnm : str
+        filename of output file
+    takeaxisaverage : bool, optional
+        if true, take average along axis not included in planename
+    xxindex : int, optional
+        index of data along xx axis (ignored if axis = '_xx')
+    yyindex : int, optional
+        index of data along yy axis (ignored if axis = '_yy')
+    zzindex : int, optional
+        index of data along zz axis (ignored if axis = '_zz')
     """
+
     if(planename=='xy'):
         ttl = fieldkey+'(x,y)'
         xlbl = 'x (di)'
         ylbl = 'y (di)'
-        fieldpmesh = np.mean(dfields[fieldkey],axis=0)
         xplot1d = dfields[fieldkey+'_xx'][:]
         yplot1d = dfields[fieldkey+'_yy'][:]
+        axisidx = 0 #used to take average along z if no index is specified
+        axis = '_zz'
 
     elif(planename=='xz'):
         ttl = fieldkey+'(x,z)'
         xlbl = 'x (di)'
         ylbl = 'z (di)'
-        fieldpmesh = np.mean(dfields[fieldkey],axis=1)
         xplot1d = dfields[fieldkey+'_xx'][:]
         yplot1d = dfields[fieldkey+'_zz'][:]
-
-
+        axisidx = 1 #used to take average along y if no index is specified
+        axis = '_yy'
 
     elif(planename=='yz'):
         ttl = fieldkey+'(y,z)'
         xlbl = 'y (di)'
         ylbl = 'z (di)'
-        fieldpmesh = np.mean(dfields[fieldkey],axis=2)
         xplot1d = dfields[fieldkey+'_yy'][:]
         yplot1d = dfields[fieldkey+'_zz'][:]
+        axisidx = 2 #used to take average along x if no index is specified
+        axis = '_xx'
+
+    if(takeaxisaverage):
+        fieldpmesh = np.mean(dfields[fieldkey],axis=axisidx)
+    elif(planename == 'xy'):
+        fieldpmesh = np.asarray(dfields[fieldkey])[zzindex,:,:]
+    elif(planename == 'xz'):
+        fieldpmesh = np.asarray(dfields[fieldkey])[:,yyindex,:]
+    elif(planename == 'yz'):
+        fieldpmesh = np.asarray(dfields[fieldkey])[:,:,xxindex]
 
     #make 2d arrays for more explicit plotting
     xplot = np.zeros((len(yplot1d),len(xplot1d)))
@@ -291,7 +315,14 @@ def makefieldpmesh(dfields,fieldkey,planename):
     plt.figure(figsize=(6.5,6))
     plt.figure(figsize=(6.5,6))
     plt.pcolormesh(xplot, yplot, fieldpmesh, cmap="inferno", shading="gouraud")
-    plt.title(ttl,loc="right")
+    if(takeaxisaverage):
+        plt.title(ttl,loc="right")
+    elif(planename == 'xy'):
+        plt.title(ttl+' z (di): '+str(dfields[fieldkey+axis][zzindex]),loc="right")
+    elif(planename == 'xz'):
+        plt.title(ttl+' y (di): '+str(dfields[fieldkey+axis][yyindex]),loc="right")
+    elif(planename == 'yz'):
+        plt.title(ttl+' x (di): '+str(dfields[fieldkey+axis][xxindex]),loc="right")
     plt.xlabel(xlbl)
     plt.ylabel(ylbl)
     plt.grid(color="k", linestyle="-", linewidth=1.0, alpha=0.6)
@@ -299,10 +330,14 @@ def makefieldpmesh(dfields,fieldkey,planename):
     plt.colorbar()
     #plt.setp(plt.gca(), aspect=1.0)
     plt.gcf().subplots_adjust(bottom=0.15)
-    plt.show()
-    plt.close()
+    if(flnm != ''):
+        plt.savefig(flnm+'.png',format='png')
+        plt.close('all')#saves RAM
+    else:
+        plt.show()
+        plt.close()
 
-def plot_flow(dflow, flowkey, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0, axvx1 = float('nan'), axvx2 = float('nan')):
+def plot_flow(dflow, flowkey, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0, axvx1 = float('nan'), axvx2 = float('nan'), flnm = ''):
     """
     Plots flow data
 
@@ -343,7 +378,11 @@ def plot_flow(dflow, flowkey, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0,
     if(not(axvx2 != axvx2)): #if not nan
         plt.axvline(x=axvx2)
     plt.plot(flowcoord,flowval)
-    plt.show()
+    if(flnm == ''):
+        plt.show()
+    else:
+        plt.savefig(flnm,format='png')
+    plt.close()
 
 def plot_all_flow(dflow, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0, flnm = ''):
     """
@@ -393,7 +432,7 @@ def plot_all_flow(dflow, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0, flnm
         axs[2].set_xlabel("$z$")
     plt.subplots_adjust(hspace=0.5)
     if(flnm != ''):
-        plt.savefig(flnm,format=png)
+        plt.savefig(flnm,format='png')
     else:
         plt.show()
 
@@ -432,7 +471,7 @@ def plot_dist(vx, vy, vmax, H,flnm = '',ttl=''):
     plt.colorbar()
     plt.gcf().subplots_adjust(bottom=0.15)
     if(flnm != ''):
-        plt.savefig(flnm,format=png)
+        plt.savefig(flnm,format='png')
     else:
         plt.show()
     plt.close()
@@ -471,7 +510,7 @@ def plot_1d_dist(dparticles, parkey, vmax, x1, x2, y1, y2, flnm = ''):
     plt.ylabel('n')
 
     if(flnm != ''):
-        plt.savefig(flnm,format=png)
+        plt.savefig(flnm,format='png')
     else:
         plt.show()
 
@@ -569,9 +608,9 @@ def make_velsig_gif_with_EcrossB(vx, vy, vmax, C, fieldkey, x_out, dx, dfields, 
     xsweep = 0.
     for i in range(0,len(C)):
         print('Making plot ' + str(i)+' of '+str(len(C)))
-        ttl = directory+'/'+str(i).zfill(6)
-        ExBvx, ExBvy, _ = calc_E_crossB(dfields,xsweep,xsweep+dx,dfields[fieldkey+'_yy'][0],dfields[fieldkey+'_yy'][1])
-        plot_velsig_wEcrossB(vx,vy,vmax,C[i],ExBvx,ExBvy,fieldkey,flnm = ttl,ttl='x(di): '+str(x_out[i]))
+        flnm = directory+'/'+str(i).zfill(6)
+        ExBvx, ExBvy, _ = calc_E_crossB(dfields,xsweep,xsweep+dx,dfields[fieldkey+'_yy'][0],dfields[fieldkey+'_yy'][1],dfields[fieldkey+'_zz'][0],dfields[fieldkey+'_zz'][1])
+        plot_velsig_wEcrossB(vx,vy,vmax,C[i],ExBvx,ExBvy,fieldkey,flnm = flnm,ttl='x(di): '+str(x_out[i]))
         xsweep += dx
         plt.close('all')
 
@@ -585,9 +624,9 @@ def make_velsig_gif_with_EcrossB(vx, vy, vmax, C, fieldkey, x_out, dx, dfields, 
     except:
         pass
 
-    for filename in filenames:
-        images.append(imageio.imread(directory+'/'+filename))
-    imageio.mimsave(flnm, images)
+    # for filename in filenames:
+    #     images.append(imageio.imread(directory+'/'+filename))
+    # imageio.mimsave(flnm, images)
 
 def plot_field_time(dfieldsdict, fieldkey, xxindex = 0, yyindex = 0, zzindex = 0):
     """
@@ -619,12 +658,9 @@ def plot_field_time(dfieldsdict, fieldkey, xxindex = 0, yyindex = 0, zzindex = 0
     plt.show()
 
 def stack_line_plot(dfieldsdict, fieldkey, xshockvals = [], axis = '_xx', xxindex = 0, yyindex = 0, zzindex = 0):
+    """
 
-
-
-    # fig = plt.figure(figsize=(20,100))
-    # gs = fig.add_gridspec(len(dfielddict['frame']),1,hspace=0)
-    # axs = gs.subplots(sharex=True,sharey=True)
+    """
 
     fig, axs = plt.subplots(len(dfieldsdict['frame']), sharex=True, sharey=True)
     fieldcoord = np.asarray(dfieldsdict['dfields'][0][fieldkey+axis])
@@ -656,3 +692,278 @@ def stack_line_plot(dfieldsdict, fieldkey, xshockvals = [], axis = '_xx', xxinde
     # plt.ylabel(fieldkey)
     # plt.plot(fieldcoord,fieldval)
     plt.show()
+
+#(vx,vy,vmax,Ce,fieldkey,flnm = '',ttl='')
+def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
+                                H_xy, H_xz, H_yz,
+                                CEx_xy,CEx_xz, CEx_yz,
+                                CEy_xy,CEy_xz, CEy_yz,
+                                CEz_xy,CEz_xz, CEz_yz,
+                                flnm = '', ttl = ''):
+    """
+
+    """
+    from lib.analysisfunctions import threeVelToTwoVel
+
+    plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
+
+    fig, axs = plt.subplots(4,3,figsize=(4*5,3*5))
+
+    vx_xy, vy_xy = threeVelToTwoVel(vx,vy,vz,'xy')
+    vx_xz, vz_xz = threeVelToTwoVel(vx,vy,vz,'xz')
+    vy_yz, vz_yz = threeVelToTwoVel(vx,vy,vz,'yz')
+
+    fig.suptitle(ttl)
+    #H_xy
+    axs[0,0].pcolormesh(vy_xy, vx_xy, H_xy, cmap="plasma", shading="gouraud")
+    axs[0,0].set_title(r"$f(v_x, v_y)$ ")
+    axs[0,0].set_xlabel(r"$v_x/v_{ti}$")
+    axs[0,0].set_ylabel(r"$v_y/v_{ti}$")
+    #H_xz
+    axs[0,1].pcolormesh(vz_xz, vx_xz, H_xz, cmap="plasma", shading="gouraud")
+    axs[0,1].set_title(r"$f(v_x, v_z)$")
+    axs[0,1].set_xlabel(r"$v_x/v_{ti}$")
+    axs[0,1].set_ylabel(r"$v_z/v_{ti}$")
+    #H_yz
+    axs[0,2].pcolormesh(vz_yz, vy_yz, H_yz, cmap="plasma", shading="gouraud")
+    axs[0,2].set_title(r"$f(v_y, v_z)$")
+    axs[0,2].set_xlabel(r"$v_y/v_{ti}$")
+    axs[0,2].set_ylabel(r"$v_z/v_{ti}$")
+    #CEx_xy
+    maxCe = max(np.max(CEx_xy),abs(np.max(CEx_xy)))
+    axs[1,0].pcolormesh(vy_xy,vx_xy,CEx_xy,vmax=maxCe,vmin=-maxCe,cmap="seismic", shading="gouraud")
+    axs[1,0].set_title('CEx')
+    axs[1,0].set_xlabel(r"$v_x/v_{ti}$")
+    axs[1,0].set_ylabel(r"$v_y/v_{ti}$")
+    #CEx_xz
+    maxCe = max(np.max(CEx_xz),abs(np.max(CEx_xz)))
+    axs[1,1].pcolormesh(vz_xz,vx_xz,CEx_xz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
+    axs[1,1].set_title('CEx')
+    axs[1,1].set_xlabel(r"$v_x/v_{ti}$")
+    axs[1,1].set_ylabel(r"$v_z/v_{ti}$")
+    #CEx_yz
+    maxCe = max(np.max(CEx_yz),abs(np.max(CEx_yz)))
+    axs[1,2].pcolormesh(vz_yz,vy_yz,CEx_yz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
+    axs[1,2].set_title('CEx')
+    axs[1,2].set_xlabel(r"$v_y/v_{ti}$")
+    axs[1,2].set_ylabel(r"$v_z/v_{ti}$")
+    #CEy_xy
+    maxCe = max(np.max(CEy_xy),abs(np.max(CEy_xy)))
+    axs[2,0].pcolormesh(vy_xy,vx_xy,CEy_xy,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
+    axs[2,0].set_title('CEy')
+    axs[2,0].set_xlabel(r"$v_x/v_{ti}$")
+    axs[2,0].set_ylabel(r"$v_y/v_{ti}$")
+    #CEy_xz
+    maxCe = max(np.max(CEy_xz),abs(np.max(CEy_xz)))
+    axs[2,1].pcolormesh(vz_xz,vx_xz,CEy_xz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
+    axs[2,1].set_title('CEy')
+    axs[2,1].set_xlabel(r"$v_x/v_{ti}$")
+    axs[2,1].set_ylabel(r"$v_z/v_{ti}$")
+    #CEy_yz
+    maxCe = max(np.max(CEy_yz),abs(np.max(CEy_yz)))
+    axs[2,2].pcolormesh(vz_yz,vy_yz,CEy_yz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
+    axs[2,2].set_title('CEy')
+    axs[2,2].set_xlabel(r"$v_y/v_{ti}$")
+    axs[2,2].set_ylabel(r"$v_z/v_{ti}$")
+    #CEz_xy
+    maxCe = max(np.max(CEz_xy),abs(np.max(CEz_xy)))
+    axs[3,0].pcolormesh(vy_xy,vx_xy,CEz_xy,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
+    axs[3,0].set_title('CEz')
+    axs[3,0].set_xlabel(r"$v_x/v_{ti}$")
+    axs[3,0].set_ylabel(r"$v_y/v_{ti}$")
+    #CEz_xz
+    maxCe = max(np.max(CEz_xz),abs(np.max(CEz_xz)))
+    axs[3,1].pcolormesh(vz_xz,vx_xz,CEz_xz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
+    axs[3,1].set_title('CEz')
+    axs[3,1].set_xlabel(r"$v_x/v_{ti}$")
+    axs[3,1].set_ylabel(r"$v_z/v_{ti}$")
+    #CEz_yz
+    maxCe = max(np.max(CEz_yz),abs(np.max(CEz_yz)))
+    axs[3,2].pcolormesh(vz_yz,vy_yz,CEz_yz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
+    axs[3,2].set_title('CEz')
+    axs[3,2].set_xlabel(r"$v_y/v_{ti}$")
+    axs[3,2].set_ylabel(r"$v_z/v_{ti}$")
+
+    plt.subplots_adjust(wspace=.5,hspace=.5)
+    if(flnm != ''):
+        plt.savefig(flnm+'.png',format='png')
+        plt.close('all') #saves RAM
+    else:
+        plt.show()
+    plt.close()
+
+#TODO: remove flnm parameter, the passed value is not used
+def make_superplot_gif(vx, vy, vz, vmax, Hist, CEx, CEy, CEz, x, directory, flnm):
+    #make plots of data and put into directory
+
+    from lib.analysisfunctions import threeHistToTwoHist
+    from lib.analysisfunctions import threeCorToTwoCor
+
+    try:
+        os.mkdir(directory)
+    except:
+        pass
+
+    for i in range(0,len(x)):
+        print('Making plot ' + str(i)+' of '+str(len(x)))
+        flnm = directory+'/'+str(i).zfill(6)
+
+        #Project onto 2d axis
+        H_xy = threeHistToTwoHist(Hist[i],'xy')
+        H_xz = threeHistToTwoHist(Hist[i],'xz')
+        H_yz = threeHistToTwoHist(Hist[i],'yz')
+        CEx_xy = threeCorToTwoCor(CEx[i],'xy')
+        CEx_xz = threeCorToTwoCor(CEx[i],'xz')
+        CEx_yz = threeCorToTwoCor(CEx[i],'yz')
+        CEy_xy = threeCorToTwoCor(CEy[i],'xy')
+        CEy_xz = threeCorToTwoCor(CEy[i],'xz')
+        CEy_yz = threeCorToTwoCor(CEy[i],'yz')
+        CEz_xy = threeCorToTwoCor(CEz[i],'xy')
+        CEz_xz = threeCorToTwoCor(CEz[i],'xz')
+        CEz_yz = threeCorToTwoCor(CEz[i],'yz')
+
+        plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
+                                        H_xy, H_xz, H_yz,
+                                        CEx_xy,CEx_xz, CEx_yz,
+                                        CEy_xy,CEy_xz, CEy_yz,
+                                        CEz_xy,CEz_xz, CEz_yz,
+                                        flnm = flnm, ttl = 'x(di): ' + str(x[i]))
+        plt.close('all') #saves RAM
+
+def make_fieldpmesh_sweep(dfields,fieldkey,planename,directory):
+    """
+
+    """
+
+    try:
+        os.mkdir(directory)
+    except:
+        pass
+
+    #sweep along 'third' axis
+    if(planename=='yz'):
+        sweepvar = dfields[fieldkey+'_xx'][:]
+    elif(planename=='xz'):
+        sweepvar = dfields[fieldkey+'_yy'][:]
+    elif(planename=='xy'):
+        sweepvar = dfields[fieldkey+'_zz'][:]
+
+    for i in range(0,len(sweepvar)):
+        print('Making plot '+str(i)+' of '+str(len(sweepvar)))
+        flnm = directory+'/'+str(i).zfill(6)
+        if(planename=='yz'):
+            makefieldpmesh(dfields,fieldkey,planename,flnm = flnm,takeaxisaverage=False,xxindex=i)
+        elif(planename=='xz'):
+            makefieldpmesh(dfields,fieldkey,planename,flnm = flnm,takeaxisaverage=False,yyindex=i)
+        elif(planename=='xy'):
+            makefieldpmesh(dfields,fieldkey,planename,flnm = flnm,takeaxisaverage=False,zzindex=i)
+        else:
+            print("Please enter a valid planename...")
+            break
+
+def make_gif_from_folder(directory,flnm):
+    #Not sure why this is necessary to break this up into a seperate function rather than including in make_superplot_gif
+    #make gif
+    import imageio #should import here as it might not be installed on every machine
+    images = []
+    filenames = os.listdir(directory)
+    filenames = sorted(filenames)
+    try:
+        filenames.remove('.DS_store')
+    except:
+        pass
+
+    print(filenames)
+
+    for filename in filenames:
+        images.append(imageio.imread(directory+'/'+filename))
+    imageio.mimsave(flnm, images)
+
+
+def plot_fft_dampening(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, xxindex=float('nan'), yyindex=float('nan'), zzindex=float('nan')):
+    """
+
+
+    """
+    from lib.analysisfunctions import take_fft2
+
+    if(planename=='xy'):
+        ttl = fieldkey+'(x,y)'
+        xlbl = 'x (di)'
+        ylbl = 'y (di)'
+        axisidx = 0 #used to take average along z if no index is specified
+        axis = '_zz'
+        daxis0 = dfields[fieldkey+'_yy'][1]-dfields[fieldkey+'_yy'][0]
+        daxis1 = dfields[fieldkey+'_xx'][1]-dfields[fieldkey+'_xx'][0]
+
+    elif(planename=='xz'):
+        ttl = fieldkey+'(x,z)'
+        xlbl = 'x (di)'
+        ylbl = 'z (di)'
+        axisidx = 1 #used to take average along y if no index is specified
+        axis = '_yy'
+        daxis0 = dfields[fieldkey+'_zz'][1]-dfields[fieldkey+'_zz'][0]
+        daxis1 = dfields[fieldkey+'_xx'][1]-dfields[fieldkey+'_xx'][0]
+
+    elif(planename=='yz'):
+        ttl = fieldkey+'(y,z)'
+        xlbl = 'y (di)'
+        ylbl = 'z (di)'
+        axisidx = 2 #used to take average along x if no index is specified
+        axis = '_xx'
+        daxis0 = dfields[fieldkey+'_zz'][1]-dfields[fieldkey+'_zz'][0]
+        daxis1 = dfields[fieldkey+'_yy'][1]-dfields[fieldkey+'_yy'][0]
+
+    if(takeaxisaverage):
+        fieldpmesh = np.mean(dfields[fieldkey],axis=axisidx)
+    elif(planename == 'xy'):
+        fieldpmesh = np.asarray(dfields[fieldkey])[zzindex,:,:]
+    elif(planename == 'xz'):
+        fieldpmesh = np.asarray(dfields[fieldkey])[:,yyindex,:]
+    elif(planename == 'yz'):
+        fieldpmesh = np.asarray(dfields[fieldkey])[:,:,xxindex]
+
+    #take fft of data and pull out dampening factor, gamma (omega = omega_r - i gamma)
+    k0, k1, fieldpmesh = take_fft2(fieldpmesh,daxis0,daxis1)
+    fieldpmesh = -1.*np.imag(fieldpmesh)
+
+    #make 2d arrays for more explicit plotting
+    xplot = np.zeros((len(k1),len(k0)))
+    yplot = np.zeros((len(k1),len(k0)))
+    for i in range(0,len(k1)):
+        for j in range(0,len(k0)):
+            xplot[i][j] = k0[j]
+
+    for i in range(0,len(k1)):
+        for j in range(0,len(k0)):
+            yplot[i][j] = k1[i]
+
+    print(xplot.shape)
+
+    plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
+    plt.figure(figsize=(6.5,6))
+    plt.figure(figsize=(6.5,6))
+    plt.pcolormesh(xplot, yplot, fieldpmesh, cmap="Spectral", shading="gouraud")
+    if(takeaxisaverage):
+        plt.title(ttl,loc="right")
+    elif(planename == 'xy'):
+        plt.title(ttl+' z (di): '+str(dfields[fieldkey+axis][zzindex]),loc="right")
+    elif(planename == 'xz'):
+        plt.title(ttl+' y (di): '+str(dfields[fieldkey+axis][yyindex]),loc="right")
+    elif(planename == 'yz'):
+        plt.title(ttl+' x (di): '+str(dfields[fieldkey+axis][xxindex]),loc="right")
+    plt.xlabel(xlbl)
+    plt.ylabel(ylbl)
+    plt.grid(color="k", linestyle="-", linewidth=1.0, alpha=0.6)
+    #clb = plt.colorbar(format="%.1f", ticks=np.linspace(-maxCe, maxCe, 8), fraction=0.046, pad=0.04) #TODO: make static colorbar based on max range of C
+    plt.colorbar()
+    #plt.setp(plt.gca(), aspect=1.0)
+    plt.gcf().subplots_adjust(bottom=0.15)
+    if(flnm != ''):
+        plt.savefig(flnm+'.png',format='png')
+        plt.close('all')#saves RAM
+    else:
+        plt.show()
+        plt.close()
+
+    return k0, k1, fieldpmesh #debug. TODO: remove

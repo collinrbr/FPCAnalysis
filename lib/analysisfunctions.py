@@ -4,18 +4,9 @@
 
 import numpy as np
 
-def make2dHistandCey(vmax, dv, x1, x2, y1, y2, dpar, dfields, vshock):
+def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dpar, dfields, vshock, fieldkey, directionkey):
     """
-    Makes distribution and takes correlation wrt Ey in a given box.
-
-    This function is '2d' as it projects out all z information. I.E. the box is
-    always the maximum size in zz and vz.
-
-    #WARNING: this will linearly average the fields within the specified bounds.
-    However, if there are no gridpoints within the specified bounds
-    it currently will *not* grab any field values and break.
-    TODO: use appropriate weighting to nearest field when range is not exactly
-    on the edges of the grid
+    Computes distribution function and correlation wrt to given field
 
     Parameters
     ----------
@@ -33,149 +24,248 @@ def make2dHistandCey(vmax, dv, x1, x2, y1, y2, dpar, dfields, vshock):
         lower y bound
     y2 : float
         upper y bound
+    z1 : float
+        lower y bound
+    z2 : float
+        upper y bound
     dpar : dict
-        xx vx yy vy data dictionary from readParticlesPosandVelocityOnly
+        xx vx yy vy zz vz data dictionary from readParticles or readSliceOfParticles
     dfields : dict
         field data dictionary from field_loader
     vshock : float
         velocity of shock in x direction
+    fieldkey : str
+        name of the field you want to correlate with
+        ex,ey,ez,bx,by, or bz
+    directionkey : str
+        name of direction you want to take the gradient with respect to
+        x,y,or z
+        *should match the direction of the fieldkey* TODO: check for this automatically
 
     Returns
     -------
-    vx : 2d array
+    vx : 3d array
         vx velocity grid
-    vy : 2d array
+    vy : 3d array
         vy velocity grid
+    vz : 3d array
+        vz velocity grid
     totalPtcl : float
         total number of particles in the correlation box
     totalFieldpts : float
         total number of field gridpoitns in the correlation box
-    Hxy : 2d array
+    Hist : 3d array
         distribution function in box
-    Cey : 2d array
-        velocity space sigature data
+    Cor : 3d array
+        velocity space sigature data in box
     """
 
-    fieldkey = 'ey'
-
     #find average E field based on provided bounds
-    gfieldptsx = (x1 <= dfields[fieldkey+'_xx'])  & (dfields[fieldkey+'_xx'] <= x2)
+    gfieldptsx = (x1 <= dfields[fieldkey+'_xx']) & (dfields[fieldkey+'_xx'] <= x2)
     gfieldptsy = (y1 <= dfields[fieldkey+'_yy']) & (dfields[fieldkey+'_yy'] <= y2)
+    gfieldptsz = (z1 <= dfields[fieldkey+'_zz']) & (dfields[fieldkey+'_zz'] <= z2)
 
     goodfieldpts = []
     for i in range(0,len(dfields['ex_xx'])):
         for j in range(0,len(dfields['ex_yy'])):
             for k in range(0,len(dfields['ex_zz'])):
-                if(gfieldptsx[i] == True and gfieldptsy[j] == True):
+                if(gfieldptsx[i] == True and gfieldptsy[j] == True and gfieldptsz[k]):
                     goodfieldpts.append(dfields[fieldkey][k][j][i])
-
-    #TODO?: consider forcing user to take correlation over only 1 cell
-    if(len(goodfieldpts)==0):
-        print("Using weighted_field_average...") #Debug
-        avgfield = weighted_field_average((x1+x2)/2.,(y1+y2)/2.,0,dfields,fieldkey) #TODO: make 3d i.e. *don't* just 'project' all z information out and take fields at z = 0
-    else:
-        avgfield = np.average(goodfieldpts) #TODO: call getfieldaverageinbox here instead
-    totalFieldpts = np.sum(goodfieldpts)
 
     #define mask that includes particles within range
-    gptsparticle = (x1 < dpar['x1'] ) & (dpar['x1'] < x2) & (y1 < dpar['x2']) & (dpar['x2'] < y2)
+    gptsparticle = (x1 < dpar['x1'] ) & (dpar['x1'] < x2) & (y1 < dpar['x2']) & (dpar['x2'] < y2) & (z1 < dpar['x3']) & (dpar['x3'] < z2)
     totalPtcl = np.sum(gptsparticle)
 
-    #make bins
-    vxbins = np.arange(-vmax-dv, vmax+dv, dv) #shift bins to shock frame
-    vx = (vxbins[1:] + vxbins[:-1])/2.
-    vybins = np.arange(-vmax-dv, vmax+dv, dv)
-    vy = (vybins[1:] + vybins[:-1])/2.
-
-    #make the bins 2d arrays
-    _vx = np.zeros((len(vy),len(vx)))
-    _vy = np.zeros((len(vy),len(vx)))
-    for i in range(0,len(vy)):
-        for j in range(0,len(vx)):
-            _vx[i][j] = vx[j]
-
-    for i in range(0,len(vy)):
-        for j in range(0,len(vx)):
-            _vy[i][j] = vy[i]
-
-    vx = _vx
-    vy = _vy
-
-    #shift particle data to shock frame
-    dpar_p2 = np.asarray(dpar['p2'][gptsparticle][:])
-    dpar_p1 = np.asarray(dpar['p1'][gptsparticle][:])
-    dpar_p1 += vshock
-
-    #find distribution
-    Hxy,_,_ = np.histogram2d(dpar_p2,dpar_p1,
-                         bins=[vybins, vxbins])
-
-    #calculate correlation
-    Cey = -0.5*vy**2*np.gradient(Hxy, dv, edge_order=2, axis=0)*avgfield
-    return vx, vy, totalPtcl, totalFieldpts, Hxy, Cey
-
-def make2dHistandCex(vmax, dv, x1, x2, y1, y2, dpar, dfields, vshock):
-    """
-    Same as make2dHistandCey but takes correlation wrt Ex
-    """
-
-    fieldkey = 'ex'
-
-    #find average E field based on provided bounds
-    gfieldptsx = (x1 <= dfields[fieldkey+'_xx'])  & (dfields[fieldkey+'_xx'] <= x2)
-    gfieldptsy = (y1 <= dfields[fieldkey+'_yy']) & (dfields[fieldkey+'_yy'] <= y2)
-
-    goodfieldpts = []
-    for i in range(0,len(dfields['ex_xx'])):
-        for j in range(0,len(dfields['ex_yy'])):
-            for k in range(0,len(dfields['ex_zz'])):
-                if(gfieldptsx[i] == True and gfieldptsy[j] == True):
-                    goodfieldpts.append(dfields[fieldkey][k][j][i])
-
-    if(len(goodfieldpts)==0):
-        print("Warning, no field grid points in given box. Please increase box size or center around grid point.")
-
+    # #TODO?: consider forcing user to take correlation over only 1 cell
+    # if(len(goodfieldpts)==0):
+    #     print("Using weighted_field_average...") #Debug
+    #     avgfield = weighted_field_average((x1+x2)/2.,(y1+y2)/2.,0,dfields,fieldkey) #TODO: make 3d i.e. *don't* just 'project' all z information out and take fields at z = 0
+    # else:
     avgfield = np.average(goodfieldpts) #TODO: call getfieldaverageinbox here instead
     totalFieldpts = np.sum(goodfieldpts)
 
-    #define mask that includes particles within range
-    gptsparticle = (x1 < dpar['x1'] ) & (dpar['x1'] < x2) & (y1 < dpar['x2']) & (dpar['x2'] < y2)
-    totalPtcl = np.sum(gptsparticle)
-
     #make bins
-    vxbins = np.arange(-vmax-dv, vmax+dv, dv) #shift bins to shock frame
+    vxbins = np.arange(-vmax-dv, vmax+dv, dv)
     vx = (vxbins[1:] + vxbins[:-1])/2.
     vybins = np.arange(-vmax-dv, vmax+dv, dv)
     vy = (vybins[1:] + vybins[:-1])/2.
+    vzbins = np.arange(-vmax-dv, vmax+dv, dv)
+    vz = (vzbins[1:] + vzbins[:-1])/2.
 
-    #make the bins 2d arrays
-    _vx = np.zeros((len(vy),len(vx)))
-    _vy = np.zeros((len(vy),len(vx)))
-    for i in range(0,len(vy)):
-        for j in range(0,len(vx)):
-            _vx[i][j] = vx[j]
+    #make the bins 3d arrays
+    _vx = np.zeros((len(vz),len(vy),len(vx)))
+    _vy = np.zeros((len(vz),len(vy),len(vx)))
+    _vz = np.zeros((len(vz),len(vy),len(vx)))
+    for i in range(0,len(vx)):
+        for j in range(0,len(vy)):
+            for k in range(0,len(vz)):
+                _vx[k][j][i] = vx[i]
 
-    for i in range(0,len(vy)):
-        for j in range(0,len(vx)):
-            _vy[i][j] = vy[i]
+    for i in range(0,len(vx)):
+        for j in range(0,len(vy)):
+            for k in range(0,len(vz)):
+                _vy[k][j][i] = vy[j]
+
+    for i in range(0,len(vx)):
+        for j in range(0,len(vy)):
+            for k in range(0,len(vz)):
+                _vz[k][j][i] = vz[k]
 
     vx = _vx
     vy = _vy
+    vz = _vz
 
     #shift particle data to shock frame
-    dpar_p2 = np.asarray(dpar['p2'][gptsparticle][:])
     dpar_p1 = np.asarray(dpar['p1'][gptsparticle][:])
-    dpar_p1 += vshock
+    dpar_p1 -= vshock
+    dpar_p2 = np.asarray(dpar['p2'][gptsparticle][:])
+    dpar_p3 = np.asarray(dpar['p3'][gptsparticle][:])
 
     #find distribution
-    Hxy,_,_ = np.histogram2d(dpar_p2,dpar_p1,
-                         bins=[vybins, vxbins])
+    Hist,_ = np.histogramdd((dpar_p3,dpar_p2,dpar_p1),
+                         bins=[vzbins,vybins,vxbins])
+
+    if(directionkey == 'x'):
+        axis = 2
+        vv = vx
+    elif(directionkey == 'y'):
+        axis = 1
+        vv = vy
+    elif(directionkey == 'z'):
+        axis = 0
+        vv = vz
 
     #calculate correlation
-    Cex = -0.5*vx**2*np.gradient(Hxy, dv, edge_order=2, axis=1)*avgfield
-    return vx, vy, totalPtcl, totalFieldpts, Hxy, Cex
+    Cor = -0.5*vv**2.*np.gradient(Hist, dv, edge_order=2, axis=axis)*avgfield
+    return vx, vy, vz, totalPtcl, totalFieldpts, Hist, Cor
 
-def getfieldaverageinbox(x1, x2, y1, y2, dfields, fieldkey):
+def threeVelToTwoVel(vx,vy,vz,planename):
+    """
+    Converts 3d velocity space arrays to 2d
+    Used for plotting
+
+    Parameters
+    ----------
+    vx : 3d array
+        3d vx velocity grid
+    vy : 3d array
+        3d vy velocity grid
+    vz : 3d array
+        3d vz velocity grid
+    planename : str
+        name of plane you want to get 2d grid of
+
+    Returns
+    -------
+    *Returns 2 of 3 of the following based on planename*
+    vx2d : 2d array
+        2d vx velocity grid
+    vy2d : 2d array
+        2d vy velocity grid
+    vz2d : 2d array
+        2d vz velocity grid
+    """
+
+    if(planename == 'xy'):
+        vx2d = np.zeros((len(vy),len(vx)))
+        vy2d = np.zeros((len(vy),len(vx)))
+        for i in range(0,len(vy)):
+            for j in range(0,len(vx)):
+                vx2d[i][j] = vx[0][i][j]
+        for i in range(0,len(vy)):
+            for j in range(0,len(vx)):
+                vy2d[i][j] = vy[0][i][j]
+
+        return vx2d, vy2d
+
+    elif(planename == 'xz'):
+        vx2d = np.zeros((len(vz),len(vx)))
+        vz2d = np.zeros((len(vz),len(vx)))
+        for i in range(0,len(vz)):
+            for j in range(0,len(vx)):
+                vx2d[i][j] = vx[i][0][j]
+        for i in range(0,len(vz)):
+            for j in range(0,len(vx)):
+                vz2d[i][j] = vz[i][0][j]
+
+        return vx2d, vz2d
+
+    elif(planename == 'yz'):
+        vy2d = np.zeros((len(vz),len(vy)))
+        vz2d = np.zeros((len(vz),len(vy)))
+        for i in range(0,len(vz)):
+            for j in range(0,len(vy)):
+                vy2d[i][j] = vy[i][j][0]
+        for i in range(0,len(vz)):
+            for j in range(0,len(vy)):
+                vz2d[i][j] = vz[i][j][0]
+
+        return vy2d, vz2d
+
+def threeHistToTwoHist(Hist,planename):
+    """
+    Converts 3d Histogram to 2d Histogram by projecting additional axis information onto plane
+    Probably should using for plotting only
+
+    Parameters
+    ----------
+    Cor : 3d array
+        3d correlation data
+    planename : str
+        name of plane you want to project onto
+
+    Returns
+    -------
+    Hist2d : 2d array
+        2d projection of the distribution
+    """
+    Hist2d = np.zeros((len(Hist),len(Hist[0])))
+    if(planename == 'xy'):
+        for i in range(0,len(Hist)):
+            for j in range(0,len(Hist[i])):
+                for k in range(0,len(Hist[i][j])):
+                    Hist2d[k][j] += Hist[i][j][k]
+
+        return Hist2d
+
+    elif(planename == 'xz'):
+        for i in range(0,len(Hist)):
+            for j in range(0,len(Hist[i])):
+                for k in range(0,len(Hist[i][j])):
+                    Hist2d[k][i] += Hist[i][j][k] #TODO: check this
+
+        return Hist2d
+
+    elif(planename == 'yz'):
+        for i in range(0,len(Hist)):
+            for j in range(0,len(Hist[i])):
+                for k in range(0,len(Hist[i][j])):
+                    Hist2d[j][i] += Hist[i][j][k] #TODO: check this
+
+        return Hist2d
+    else:
+        print("Please enter xy, xz, or yz for planename...")
+
+
+def threeCorToTwoCor(Cor,planename):
+    """
+    Converts 3d correlation to 2d correlation
+
+    Parameters
+    ----------
+    Cor : 3d array
+        3d correlation data
+    planename : str
+        name of plane you want to project onto
+
+    Returns
+    -------
+    2d array
+        2d projection of the correlation
+    """
+    return threeHistToTwoHist(Cor,planename)
+
+def getfieldaverageinbox(x1, x2, y1, y2, z1, z2, dfields, fieldkey):
     """
     Get linear average of fields in box from grid points within box.
 
@@ -189,6 +279,10 @@ def getfieldaverageinbox(x1, x2, y1, y2, dfields, fieldkey):
         lower y bound
     y2 : float
         upper y bound
+    z1 : float
+        lower z bound
+    z2 : float
+        upper z bound
     dfields : dict
         field data dictionary from field_loader
     fieldkey : str
@@ -203,18 +297,14 @@ def getfieldaverageinbox(x1, x2, y1, y2, dfields, fieldkey):
     #find average field based on provided bounds
     gfieldptsx = (x1 <= dfields[fieldkey+'_xx'])  & (dfields[fieldkey+'_xx'] <= x2)
     gfieldptsy = (y1 <= dfields[fieldkey+'_yy']) & (dfields[fieldkey+'_yy'] <= y2)
+    gfieldptsz = (z1 <= dfields[fieldkey+'_zz']) & (dfields[fieldkey+'_zz'] <= z2)
 
     goodfieldpts = []
     for i in range(0,len(dfields['ex_xx'])):
         for j in range(0,len(dfields['ex_yy'])):
             for k in range(0,len(dfields['ex_zz'])):
-                if(gfieldptsx[i] == True and gfieldptsy[j] == True):
+                if(gfieldptsx[i] == True and gfieldptsy[j] == True and gfieldptsz[k] == True):
                     goodfieldpts.append(dfields[fieldkey][k][j][i])
-
-
-    # #debug
-    # print("numgridpts sampled: " + str(len(goodfieldpts)))
-
 
     avgfield = np.average(goodfieldpts)
     return avgfield
@@ -242,40 +332,54 @@ def compute_correlation_over_x(dfields, dparticles, vmax, dv, dx, vshock):
 
     Returns
     -------
-    CEx_out : 3d array
-        CEx(x; vy, vx) data
-    CEy_out : 3d array
-        CEy(x; vy, vx) data
+    CEx_out : 4d array
+        CEx(x; vz, vy, vx) data
+    CEy_out : 4d array
+        CEy(x; vz, vy, vx) data
+    CEz_out : 4d array
+        CEz(x; vz, vy, vx) data
     x_out : 1d array
         average x position of each slice
-    Hxy_out : 3d array
-        f(x; vy, vx) data
-    vx : 2d array
+    Hist_out : 4d array
+        f(x; vz, vy, vx) data
+    vx : 3d array
         vx velocity grid
-    vy : 2d array
+    vy : 3d array
         vy velocity grid
+    vz : 3d array
+        vz velocity grid
     """
 
     CEx_out = []
     CEy_out = []
+    CEz_out = []
     x_out = []
-    Hxy_out = []
+    Hist_out = []
 
-    xsweep = 0.0
+    #TODO: make these an input parameters
+    x1 = dfields['ex_xx'][0]
+    x2 = dfields['ex_xx'][1]
+    y1 = dfields['ex_yy'][0]
+    y2 = dfields['ex_yy'][1]
+    z1 = dfields['ex_zz'][0]
+    z2 = dfields['ex_zz'][1]
+
     i = 0
-    # for i in range(0,len(dfields['ex_xx'])):
-    while(xsweep < dfields['ex_xx'][-1]):
+    while(x2 <= dfields['ex_xx'][-1]):
         print(str(dfields['ex_xx'][i]) +' of ' + str(dfields['ex_xx'][len(dfields['ex_xx'])-1]))
-        vx, vy, totalPtcl, totalFieldpts, Hxy, Cey = make2dHistandCey(vmax, dv, xsweep, xsweep+dx, dfields['ey_yy'][0], dfields['ey_yy'][1], dparticles, dfields, vshock)
-        vx, vy, totalPtcl, totalFieldpts, Hxy, Cex = make2dHistandCex(vmax, dv, xsweep, xsweep+dx, dfields['ey_yy'][0], dfields['ey_yy'][1], dparticles, dfields, vshock)
-        x_out.append(np.mean([xsweep,xsweep+dx]))
-        CEy_out.append(Cey)
-        CEx_out.append(Cex)
-        Hxy_out.append(Hxy)
-        xsweep+=dx
+        vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock, 'ex', 'x')
+        vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEy = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock, 'ey', 'y')
+        vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEz = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock, 'ez', 'z')
+        x_out.append(np.mean([x1,x2]))
+        CEx_out.append(CEx)
+        CEy_out.append(CEy)
+        CEz_out.append(CEz)
+        Hist_out.append(Hist)
+        x1+=dx
+        x2+=dx
         i+=1
 
-    return CEx_out, CEy_out, x_out, Hxy_out, vx, vy
+    return CEx_out, CEy_out, CEz_out, x_out, Hist_out, vx, vy, vz
 
 def compute_energization(Cor,dv):
     """
@@ -465,3 +569,15 @@ def shock_from_ex_cross(all_fields,dt=0.01):
     vshock, v0 = np.polyfit(tvals, xvals, 1)
 
     return vshock, xshockvals
+
+def take_fft2(data,daxisx0,daxis1):
+    """
+    Takes fft2 and returns wavenumber coordiantes
+    """
+
+    k0 = 2.*np.pi*np.fft.fftfreq(len(data),daxisx0)
+    k1 = 2.*np.pi*np.fft.fftfreq(len(data[1]),daxis1)
+
+    fftdata = np.fft.fft2(data)
+
+    return k0, k1, fftdata
