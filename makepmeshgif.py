@@ -29,6 +29,6 @@ dfields = lf.field_loader(path=path_fields,num=numframe)
 # pf.make_velsig_gif_with_EcrossB(vx_in, vy_in, vmax, CEy_in, 'ey', x_in, dx, dfields,  'CExFrame'+str(numframe)+'ExB', 'CExFrame'+str(numframe)+'ExB.gif')
 
 #make gif from pngs
-directory = fieldkey+planename+'frame'+numframe
+directory = fieldkey+planename+'frame'+str(numframe)
 pf.make_fieldpmesh_sweep(dfields,fieldkey,planename,directory)
 pf.make_gif_from_folder(directory,directory+'.gif')
