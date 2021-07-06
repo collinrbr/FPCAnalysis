@@ -932,11 +932,11 @@ def plot_fft_dampening(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True
     yplot = np.zeros((len(k1),len(k0)))
     for i in range(0,len(k1)):
         for j in range(0,len(k0)):
-            xplot[i][j] = k0[j]
+            xplot[i][j] = k1[j]
 
     for i in range(0,len(k1)):
         for j in range(0,len(k0)):
-            yplot[i][j] = k1[i]
+            yplot[i][j] = k0[i]
 
     print(xplot.shape)
 
