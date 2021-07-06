@@ -63,6 +63,10 @@ vy_out = vy_xy
 x_out = x
 
 
+#compute energization from correlations
+enerCEx_out = af.compute_energization_over_x(CEx_out,dv)
+enerCEy_out = af.compute_energization_over_x(CEy_out,dv)
+
 #-------------------------------------------------------------------------------
 # Save data with relevant input parameters
 #-------------------------------------------------------------------------------
@@ -71,5 +75,5 @@ inputdict = svf.parse_input_file(path)
 params = svf.build_params(inputdict,numframe)
 
 flnm = 'FPCnometadata.nc'
-svf.savedata(CEx_out, CEy_out, vx_out, vy_out, x_out, metadata_out = [], params = params, filename = flnm)
+svf.savedata(CEx_out, CEy_out, vx_out, vy_out, x_out, enerCEx_out, enerCEy_out, metadata_out = [], params = params, filename = flnm)
 print("Done! Please use findShock.py and addMetadata to assign metadata.")
