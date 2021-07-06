@@ -878,3 +878,92 @@ def make_gif_from_folder(directory,flnm):
     for filename in filenames:
         images.append(imageio.imread(directory+'/'+filename))
     imageio.mimsave(flnm, images)
+
+
+def plot_fft_dampening(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, xxindex=float('nan'), yyindex=float('nan'), zzindex=float('nan')):
+    """
+
+
+    """
+    from lib.analysisfunctions import take_fft2
+
+    if(planename=='xy'):
+        ttl = fieldkey+'(x,y)'
+        xlbl = 'x (di)'
+        ylbl = 'y (di)'
+        axisidx = 0 #used to take average along z if no index is specified
+        axis = '_zz'
+        daxis0 = dfields[fieldkey+'_yy'][1]-dfields[fieldkey+'_yy'][0]
+        daxis1 = dfields[fieldkey+'_xx'][1]-dfields[fieldkey+'_xx'][0]
+
+    elif(planename=='xz'):
+        ttl = fieldkey+'(x,z)'
+        xlbl = 'x (di)'
+        ylbl = 'z (di)'
+        axisidx = 1 #used to take average along y if no index is specified
+        axis = '_yy'
+        daxis0 = dfields[fieldkey+'_zz'][1]-dfields[fieldkey+'_zz'][0]
+        daxis1 = dfields[fieldkey+'_xx'][1]-dfields[fieldkey+'_xx'][0]
+
+    elif(planename=='yz'):
+        ttl = fieldkey+'(y,z)'
+        xlbl = 'y (di)'
+        ylbl = 'z (di)'
+        axisidx = 2 #used to take average along x if no index is specified
+        axis = '_xx'
+        daxis0 = dfields[fieldkey+'_zz'][1]-dfields[fieldkey+'_zz'][0]
+        daxis1 = dfields[fieldkey+'_yy'][1]-dfields[fieldkey+'_yy'][0]
+
+    if(takeaxisaverage):
+        fieldpmesh = np.mean(dfields[fieldkey],axis=axisidx)
+    elif(planename == 'xy'):
+        fieldpmesh = np.asarray(dfields[fieldkey])[zzindex,:,:]
+    elif(planename == 'xz'):
+        fieldpmesh = np.asarray(dfields[fieldkey])[:,yyindex,:]
+    elif(planename == 'yz'):
+        fieldpmesh = np.asarray(dfields[fieldkey])[:,:,xxindex]
+
+    #take fft of data and pull out dampening factor, gamma (omega = omega_r - i gamma)
+    k0, k1, fieldpmesh = take_fft2(fieldpmesh,daxis0,daxis1)
+    fieldpmesh = -1.*np.imag(fieldpmesh)
+
+    #make 2d arrays for more explicit plotting
+    xplot = np.zeros((len(k1),len(k0)))
+    yplot = np.zeros((len(k1),len(k0)))
+    for i in range(0,len(k1)):
+        for j in range(0,len(k0)):
+            xplot[i][j] = k0[j]
+
+    for i in range(0,len(k1)):
+        for j in range(0,len(k0)):
+            yplot[i][j] = k1[i]
+
+    print(xplot.shape)
+
+    plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
+    plt.figure(figsize=(6.5,6))
+    plt.figure(figsize=(6.5,6))
+    plt.pcolormesh(xplot, yplot, fieldpmesh, cmap="Spectral", shading="gouraud")
+    if(takeaxisaverage):
+        plt.title(ttl,loc="right")
+    elif(planename == 'xy'):
+        plt.title(ttl+' z (di): '+str(dfields[fieldkey+axis][zzindex]),loc="right")
+    elif(planename == 'xz'):
+        plt.title(ttl+' y (di): '+str(dfields[fieldkey+axis][yyindex]),loc="right")
+    elif(planename == 'yz'):
+        plt.title(ttl+' x (di): '+str(dfields[fieldkey+axis][xxindex]),loc="right")
+    plt.xlabel(xlbl)
+    plt.ylabel(ylbl)
+    plt.grid(color="k", linestyle="-", linewidth=1.0, alpha=0.6)
+    #clb = plt.colorbar(format="%.1f", ticks=np.linspace(-maxCe, maxCe, 8), fraction=0.046, pad=0.04) #TODO: make static colorbar based on max range of C
+    plt.colorbar()
+    #plt.setp(plt.gca(), aspect=1.0)
+    plt.gcf().subplots_adjust(bottom=0.15)
+    if(flnm != ''):
+        plt.savefig(flnm+'.png',format='png')
+        plt.close('all')#saves RAM
+    else:
+        plt.show()
+        plt.close()
+
+    return k0, k1, fieldpmesh #debug. TODO: remove

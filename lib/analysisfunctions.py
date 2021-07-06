@@ -569,3 +569,15 @@ def shock_from_ex_cross(all_fields,dt=0.01):
     vshock, v0 = np.polyfit(tvals, xvals, 1)
 
     return vshock, xshockvals
+
+def take_fft2(data,daxisx0,daxis1):
+    """
+    Takes fft2 and returns wavenumber coordiantes
+    """
+
+    k0 = 2.*np.pi*np.fft.fftfreq(len(data),daxisx0)
+    k1 = 2.*np.pi*np.fft.fftfreq(len(data[1]),daxis1)
+
+    fftdata = np.fft.fft2(data)
+
+    return k0, k1, fftdata
