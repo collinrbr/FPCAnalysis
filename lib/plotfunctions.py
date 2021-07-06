@@ -240,7 +240,7 @@ def plot_velsig_wEcrossB(vx,vy,vmax,Ce,ExBvx,ExBvy,fieldkey,flnm = '',ttl=''):
         plt.show()
     plt.close()
 
-def makefieldpmesh(dfields,fieldkey,planename):
+def makefieldpmesh(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, xxindex=float('nan'), yyindex=float('nan'), zzindex=float('nan')):
     """
     Makes pmesh of given field
 
@@ -252,33 +252,53 @@ def makefieldpmesh(dfields,fieldkey,planename):
         name of field you want to plot (ex, ey, ez, bx, by, bz)
     planename : str
         name of plane you want to plot (xy, xz, yz)
-
+    flnm : str
+        filename of output file
+    takeaxisaverage : bool, optional
+        if true, take average along axis not included in planename
+    xxindex : int, optional
+        index of data along xx axis (ignored if axis = '_xx')
+    yyindex : int, optional
+        index of data along yy axis (ignored if axis = '_yy')
+    zzindex : int, optional
+        index of data along zz axis (ignored if axis = '_zz')
     """
+
     if(planename=='xy'):
         ttl = fieldkey+'(x,y)'
         xlbl = 'x (di)'
         ylbl = 'y (di)'
-        fieldpmesh = np.mean(dfields[fieldkey],axis=0)
         xplot1d = dfields[fieldkey+'_xx'][:]
         yplot1d = dfields[fieldkey+'_yy'][:]
+        axisidx = 0 #used to take average along z if no index is specified
+        axis = '_zz'
 
     elif(planename=='xz'):
         ttl = fieldkey+'(x,z)'
         xlbl = 'x (di)'
         ylbl = 'z (di)'
-        fieldpmesh = np.mean(dfields[fieldkey],axis=1)
         xplot1d = dfields[fieldkey+'_xx'][:]
         yplot1d = dfields[fieldkey+'_zz'][:]
-
-
+        axisidx = 1 #used to take average along y if no index is specified
+        axis = '_yy'
 
     elif(planename=='yz'):
         ttl = fieldkey+'(y,z)'
         xlbl = 'y (di)'
         ylbl = 'z (di)'
-        fieldpmesh = np.mean(dfields[fieldkey],axis=2)
         xplot1d = dfields[fieldkey+'_yy'][:]
         yplot1d = dfields[fieldkey+'_zz'][:]
+        axisidx = 2 #used to take average along x if no index is specified
+        axis = '_xx'
+
+    if(takeaxisaverage):
+        fieldpmesh = np.mean(dfields[fieldkey],axis=axisidx)
+    elif(planename == 'xy'):
+        fieldpmesh = np.asarray(dfields[fieldkey])[zzindex,:,:]
+    elif(planename == 'xz'):
+        fieldpmesh = np.asarray(dfields[fieldkey])[:,yyindex,:]
+    elif(planename == 'yz'):
+        fieldpmesh = np.asarray(dfields[fieldkey])[:,:,xxindex]
 
     #make 2d arrays for more explicit plotting
     xplot = np.zeros((len(yplot1d),len(xplot1d)))
@@ -295,7 +315,14 @@ def makefieldpmesh(dfields,fieldkey,planename):
     plt.figure(figsize=(6.5,6))
     plt.figure(figsize=(6.5,6))
     plt.pcolormesh(xplot, yplot, fieldpmesh, cmap="inferno", shading="gouraud")
-    plt.title(ttl,loc="right")
+    if(takeaxisaverage):
+        plt.title(ttl,loc="right")
+    elif(planename == 'xy'):
+        plt.title(ttl+' z (di): '+str(dfields[fieldkey+axis][zzindex]),loc="right")
+    elif(planename == 'xz'):
+        plt.title(ttl+' y (di): '+str(dfields[fieldkey+axis][yyindex]),loc="right")
+    elif(planename == 'yz'):
+        plt.title(ttl+' x (di): '+str(dfields[fieldkey+axis][xxindex]),loc="right")
     plt.xlabel(xlbl)
     plt.ylabel(ylbl)
     plt.grid(color="k", linestyle="-", linewidth=1.0, alpha=0.6)
@@ -303,8 +330,12 @@ def makefieldpmesh(dfields,fieldkey,planename):
     plt.colorbar()
     #plt.setp(plt.gca(), aspect=1.0)
     plt.gcf().subplots_adjust(bottom=0.15)
-    plt.show()
-    plt.close()
+    if(flnm != ''):
+        plt.savefig(flnm+'.png',format='png')
+        plt.close('all')#saves RAM
+    else:
+        plt.show()
+        plt.close()
 
 def plot_flow(dflow, flowkey, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0, axvx1 = float('nan'), axvx2 = float('nan'), flnm = ''):
     """
@@ -761,6 +792,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         plt.show()
     plt.close()
 
+#TODO: remove flnm parameter, the passed value is not used
 def make_superplot_gif(vx, vy, vz, vmax, Hist, CEx, CEy, CEz, x, directory, flnm):
     #make plots of data and put into directory
 
@@ -797,6 +829,37 @@ def make_superplot_gif(vx, vy, vz, vmax, Hist, CEx, CEy, CEz, x, directory, flnm
                                         CEz_xy,CEz_xz, CEz_yz,
                                         flnm = flnm, ttl = 'x(di): ' + str(x[i]))
         plt.close('all') #saves RAM
+
+def make_fieldpmesh_sweep(dfields,fieldkey,planename,directory):
+    """
+
+    """
+
+    try:
+        os.mkdir(directory)
+    except:
+        pass
+
+    #sweep along 'third' axis
+    if(planename=='yz'):
+        sweepvar = dfields[fieldkey+'_xx'][:]
+    elif(planename=='xz'):
+        sweepvar = dfields[fieldkey+'_yy'][:]
+    elif(planename=='xy'):
+        sweepvar = dfields[fieldkey+'_zz'][:]
+
+    for i in range(0,len(sweepvar)):
+        print('Making plot '+str(i)+' of '+str(len(sweepvar)))
+        flnm = directory+'/'+str(i).zfill(6)
+        if(planename=='yz'):
+            makefieldpmesh(dfields,fieldkey,planename,flnm = flnm,takeaxisaverage=False,xxindex=i)
+        elif(planename=='xz'):
+            makefieldpmesh(dfields,fieldkey,planename,flnm = flnm,takeaxisaverage=False,yyindex=i)
+        elif(planename=='xy'):
+            makefieldpmesh(dfields,fieldkey,planename,flnm = flnm,takeaxisaverage=False,zzindex=i)
+        else:
+            print("Please enter a valid planename...")
+            break
 
 def make_gif_from_folder(directory,flnm):
     #Not sure why this is necessary to break this up into a seperate function rather than including in make_superplot_gif
