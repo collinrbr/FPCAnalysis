@@ -374,7 +374,7 @@ def analysis_input():
     flnm = 'analysisinput.txt'
 
     # Get file object
-    f = open("analysisinput.txt", "r")
+    f = open(flnm, "r")
     # Initialize optional input arguments to None
     dx = None
     xlim = None

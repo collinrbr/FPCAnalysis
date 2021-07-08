@@ -240,7 +240,7 @@ def plot_velsig_wEcrossB(vx,vy,vmax,Ce,ExBvx,ExBvy,fieldkey,flnm = '',ttl=''):
         plt.show()
     plt.close()
 
-def makefieldpmesh(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, xxindex=float('nan'), yyindex=float('nan'), zzindex=float('nan')):
+def makefieldpmesh(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, xxindex=float('nan'), yyindex=float('nan'), zzindex=float('nan'), xlimmin=None,xlimmax=None):
     """
     Makes pmesh of given field
 
@@ -330,6 +330,8 @@ def makefieldpmesh(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, xx
     plt.colorbar()
     #plt.setp(plt.gca(), aspect=1.0)
     plt.gcf().subplots_adjust(bottom=0.15)
+    if(xlimmin != None and xlimmax != None):
+        plt.xlim(xlimmin, xlimmax)
     if(flnm != ''):
         plt.savefig(flnm+'.png',format='png')
         plt.close('all')#saves RAM
@@ -666,7 +668,6 @@ def stack_line_plot(dfieldsdict, fieldkey, xshockvals = [], axis = '_xx', xxinde
     fieldcoord = np.asarray(dfieldsdict['dfields'][0][fieldkey+axis])
     fig.set_size_inches(18.5, 30.)
 
-
     #sbpltlocation = len(dfielddict['frame'])+10+1
     for k in range(0,len(dfieldsdict['frame'])):
 
@@ -830,7 +831,7 @@ def make_superplot_gif(vx, vy, vz, vmax, Hist, CEx, CEy, CEz, x, directory, flnm
                                         flnm = flnm, ttl = 'x(di): ' + str(x[i]))
         plt.close('all') #saves RAM
 
-def make_fieldpmesh_sweep(dfields,fieldkey,planename,directory):
+def make_fieldpmesh_sweep(dfields,fieldkey,planename,directory,xlimmin=None,xlimmax=None):
     """
 
     """
@@ -852,11 +853,11 @@ def make_fieldpmesh_sweep(dfields,fieldkey,planename,directory):
         print('Making plot '+str(i)+' of '+str(len(sweepvar)))
         flnm = directory+'/'+str(i).zfill(6)
         if(planename=='yz'):
-            makefieldpmesh(dfields,fieldkey,planename,flnm = flnm,takeaxisaverage=False,xxindex=i)
+            makefieldpmesh(dfields,fieldkey,planename,flnm = flnm,takeaxisaverage=False,xxindex=i,xlimmin=xlimmin,xlimmax=xlimmax)
         elif(planename=='xz'):
-            makefieldpmesh(dfields,fieldkey,planename,flnm = flnm,takeaxisaverage=False,yyindex=i)
+            makefieldpmesh(dfields,fieldkey,planename,flnm = flnm,takeaxisaverage=False,yyindex=i,xlimmin=xlimmin,xlimmax=xlimmax)
         elif(planename=='xy'):
-            makefieldpmesh(dfields,fieldkey,planename,flnm = flnm,takeaxisaverage=False,zzindex=i)
+            makefieldpmesh(dfields,fieldkey,planename,flnm = flnm,takeaxisaverage=False,zzindex=i,xlimmin=xlimmin,xlimmax=xlimmax)
         else:
             print("Please enter a valid planename...")
             break

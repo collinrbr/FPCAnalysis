@@ -14,21 +14,25 @@ try:
 
 except:
     print("This script pmesh field sweep gifs along axis normal to given plane")
-    print("usage: " + sys.argv[0] + " fieldkey planename")
+    print("usage: " + sys.argv[0] + " fieldkey planename (xplotlimmin xplotlimmax)")
     sys.exit()
 
 #load relevant time slice fields
-path,vmax,dv,numframe = lf.analysis_input()
+path,vmax,dv,numframe,dx,_,_,_ = lf.analysis_input()
 path_fields = path
 
 #load fields
 dfields = lf.field_loader(path=path_fields,num=numframe)
 
-# #make gif with ExB for given time frame
-# pf.make_velsig_gif_with_EcrossB(vx_in, vy_in, vmax, CEx_in, 'ex', x_in, dx, dfields,  'CExFrame'+str(numframe)+'ExB', 'CExFrame'+str(numframe)+'ExB.gif')
-# pf.make_velsig_gif_with_EcrossB(vx_in, vy_in, vmax, CEy_in, 'ey', x_in, dx, dfields,  'CExFrame'+str(numframe)+'ExB', 'CExFrame'+str(numframe)+'ExB.gif')
-
 #make gif from pngs
-directory = fieldkey+planename+'frame'+str(numframe)
-pf.make_fieldpmesh_sweep(dfields,fieldkey,planename,directory)
+try:
+    xplotlimmin = float(sys.argv[3])
+    xplotlimmax = float(sys.argv[4])
+    directory = fieldkey+planename+'zoomedin_frame'+str(numframe)
+    pf.make_fieldpmesh_sweep(dfields,fieldkey,planename,directory,xlimmin=xplotlimmin,xlimmax=xplotlimmax)
+
+except:
+    directory = fieldkey+planename+'frame'+str(numframe)
+    pf.make_fieldpmesh_sweep(dfields,fieldkey,planename,directory)
+
 pf.make_gif_from_folder(directory,directory+'.gif')

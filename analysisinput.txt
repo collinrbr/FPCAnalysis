@@ -1,4 +1,4 @@
-path='/srv/data/simulation/dHybridR/2021.05.Perp_Shocks/Batch02/M06_th45/'
+path='M06_th45/'
 vmax=25
 dv=0.5
 numframe=2000
