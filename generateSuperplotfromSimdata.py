@@ -10,7 +10,7 @@ import lib.fieldtransformfunctions as ftf
 # load data
 #-------------------------------------------------------------------------------
 #load path
-path,vmax,dv,numframe = lf.analysis_input()
+path,vmax,dv,numframe,dx,xlim,ylim,zlim = lf.analysis_input()
 path_fields = path
 path_particles = path+"Output/Raw/Sp01/raw_sp01_{:08d}.h5"
 
@@ -22,8 +22,14 @@ dfields = lf.field_loader(path=path_fields,num=numframe)
 all_dfields = lf.all_dfield_loader(path=path_fields, verbose=False)
 
 #Load slice of particle data
-dparticles = lf.readSliceOfParticles(path_particles, numframe, dfields['ex_xx'][0], dfields['ex_xx'][-1], dfields['ex_yy'][0], dfields['ex_yy'][3], dfields['ex_zz'][0], dfields['ex_zz'][3])
-
+if xlim is not None and ylim is not None and zlim is not None:
+    dparticles = lf.readSliceOfParticles(path_particles, numframe, xlim[0], xlim[1], ylim[0], ylim[1], zlim[0], zlim[1])
+#Load only a slice in x but all of y and z
+elif xlim is not None and ylim is None and zlim is None:
+    dparticles = lf.readSliceOfParticles(path_particles, numframe, xlim[0], xlim[1], dfields['ex_yy'][0], dfields['ex_yy'][-1], dfields['ex_zz'][0], dfields['ex_zz'][-1])
+#Load all the particles
+else:
+    dparticles = lf.readParticles(path_particles, numframe)
 #-------------------------------------------------------------------------------
 # estimate shock vel and lorentz transform
 #-------------------------------------------------------------------------------
@@ -41,8 +47,11 @@ all_dfields['dfields'] = _fields
 # do FPC analysis
 #-------------------------------------------------------------------------------
 #Define parameters related to analysis
-dx = dfields['ex_xx'][1]-dfields['ex_xx'][0] #assumes rectangular grid thats uniform for all fields
-CEx, CEy, CEz, x, Hist, vx, vy, vz = af.compute_correlation_over_x(dfields, dparticles, vmax, dv, dx, vshock)
+if dx is None:
+    #Assumes rectangular grid that is uniform for all fields
+    #If dx not specified, just use the grid cell spacing for the EM fields
+    dx = dfields['ex_xx'][1]-dfields['ex_xx'][0]
+CEx, CEy, CEz, x, Hist, vx, vy, vz = af.compute_correlation_over_x(dfields, dparticles, vmax, dv, dx, vshock, xlim, ylim, zlim)
 
 #-------------------------------------------------------------------------------
 # make superplot

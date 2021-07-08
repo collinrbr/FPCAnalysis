@@ -1,4 +1,8 @@
-path='M03/'
-vmax=15
-dv=0.25
-numframe=1000
+path='/srv/data/simulation/dHybridR/2021.05.Perp_Shocks/Batch02/M06_th45/'
+vmax=25
+dv=0.5
+numframe=2000
+dx=0.5
+xlim=39.0,43.0
+ylim=0.0,3.0
+zlim=0.0,3.0

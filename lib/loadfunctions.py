@@ -373,8 +373,13 @@ def analysis_input():
     """
     flnm = 'analysisinput.txt'
 
-    #get file object
+    # Get file object
     f = open("analysisinput.txt", "r")
+    # Initialize optional input arguments to None
+    dx = None
+    xlim = None
+    ylim = None
+    zlim = None
 
     while(True):
         #read next line
@@ -394,8 +399,16 @@ def analysis_input():
             dv = float(line[1])
         elif(line[0]=='numframe'):
             numframe = int(line[1])
+        elif(line[0]=='dx'):
+            dx = float(line[1])
+        elif(line[0]=='xlim'):
+            xlim = [float(line[1].split(",")[0]), float(line[1].split(",")[1])]
+        elif(line[0]=='ylim'):
+            ylim = [float(line[1].split(",")[0]), float(line[1].split(",")[1])]
+        elif(line[0]=='zlim'):
+            zlim = [float(line[1].split(",")[0]), float(line[1].split(",")[1])]
 
     #close file
     f.close()
 
-    return path,vmax,dv,numframe
+    return path,vmax,dv,numframe,dx,xlim,ylim,zlim
