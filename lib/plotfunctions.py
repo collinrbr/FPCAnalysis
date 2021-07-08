@@ -880,7 +880,7 @@ def make_gif_from_folder(directory,flnm):
     imageio.mimsave(flnm, images)
 
 
-def plot_fft_dampening(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, xxindex=float('nan'), yyindex=float('nan'), zzindex=float('nan')):
+def plot_fft_norm(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, xxindex=float('nan'), yyindex=float('nan'), zzindex=float('nan'), plotlog = True):
     """
 
 
@@ -889,8 +889,8 @@ def plot_fft_dampening(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True
 
     if(planename=='xy'):
         ttl = fieldkey+'(x,y)'
-        xlbl = 'x (di)'
-        ylbl = 'y (di)'
+        xlbl = 'kx (di)'
+        ylbl = 'ky (di)'
         axisidx = 0 #used to take average along z if no index is specified
         axis = '_zz'
         daxis0 = dfields[fieldkey+'_yy'][1]-dfields[fieldkey+'_yy'][0]
@@ -898,8 +898,8 @@ def plot_fft_dampening(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True
 
     elif(planename=='xz'):
         ttl = fieldkey+'(x,z)'
-        xlbl = 'x (di)'
-        ylbl = 'z (di)'
+        xlbl = 'kx (di)'
+        ylbl = 'kz (di)'
         axisidx = 1 #used to take average along y if no index is specified
         axis = '_yy'
         daxis0 = dfields[fieldkey+'_zz'][1]-dfields[fieldkey+'_zz'][0]
@@ -907,8 +907,8 @@ def plot_fft_dampening(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True
 
     elif(planename=='yz'):
         ttl = fieldkey+'(y,z)'
-        xlbl = 'y (di)'
-        ylbl = 'z (di)'
+        xlbl = 'ky (di)'
+        ylbl = 'kz (di)'
         axisidx = 2 #used to take average along x if no index is specified
         axis = '_xx'
         daxis0 = dfields[fieldkey+'_zz'][1]-dfields[fieldkey+'_zz'][0]
@@ -923,22 +923,52 @@ def plot_fft_dampening(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True
     elif(planename == 'yz'):
         fieldpmesh = np.asarray(dfields[fieldkey])[:,:,xxindex]
 
-    #take fft of data and pull out dampening factor, gamma (omega = omega_r - i gamma)
+    #take fft of data and compute power
     k0, k1, fieldpmesh = take_fft2(fieldpmesh,daxis0,daxis1)
-    fieldpmesh = -1.*np.imag(fieldpmesh)
+    fieldpmesh = np.real(fieldpmesh*np.conj(fieldpmesh))/(float(len(k0)*len(k1))) #convert to power
+
+    #plot wavelength (with infinity at 0) for debug
+    # k0 = 1./k0
+    # k1 = 1./k1
+    #
+    # for k in range(0,len(k0)):
+    #     if(np.isinf(k0[k])):
+    #         k0[k] = 0.
+    #
+    # for k in range(0,len(k1)):
+    #     if(np.isinf(k1[k])):
+    #         k1[k] = 0.
+    #
+    # print(k0)
 
     #make 2d arrays for more explicit plotting
-    xplot = np.zeros((len(k1),len(k0)))
-    yplot = np.zeros((len(k1),len(k0)))
+    xplot = np.zeros((len(k0),len(k1)))
+    yplot = np.zeros((len(k0),len(k1)))
     for i in range(0,len(k1)):
         for j in range(0,len(k0)):
-            xplot[i][j] = k1[j]
+            xplot[j][i] = k1[i]
 
     for i in range(0,len(k1)):
         for j in range(0,len(k0)):
-            yplot[i][j] = k0[i]
+            yplot[j][i] = k0[j]
 
-    print(xplot.shape)
+    #sort data so we can plot it
+    xplot, yplot, fieldpmesh = _sort_for_contour(xplot, yplot, fieldpmesh)
+
+    if(plotlog):
+        #get x index where data is zero
+        #get y index where data is zero
+        #get subset based on this
+
+        xzeroidx = np.where(xplot[0] == 0.)[0][0]
+        yzeroidx = np.where(yplot[:,0] == 0.)[0][0]
+        fieldpmesh = fieldpmesh[xzeroidx+1:,yzeroidx+1:]
+        xplot = xplot[xzeroidx+1:,yzeroidx+1:]
+        yplot = yplot[xzeroidx+1:,yzeroidx+1:]
+
+    # xzeroidx = np.where(xplot[0] == 0.)[0][0]
+    # yzeroidx = np.where(yplot[:,0] == 0.)[0][0]
+    # fieldpmesh[xzeroidx,yzeroidx] = 0.
 
     plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
     plt.figure(figsize=(6.5,6))
@@ -954,9 +984,14 @@ def plot_fft_dampening(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True
         plt.title(ttl+' x (di): '+str(dfields[fieldkey+axis][xxindex]),loc="right")
     plt.xlabel(xlbl)
     plt.ylabel(ylbl)
+    if(plotlog):
+        plt.xscale('log')
+        plt.yscale('log')
     plt.grid(color="k", linestyle="-", linewidth=1.0, alpha=0.6)
     #clb = plt.colorbar(format="%.1f", ticks=np.linspace(-maxCe, maxCe, 8), fraction=0.046, pad=0.04) #TODO: make static colorbar based on max range of C
     plt.colorbar()
+    # plt.xlim(0,.5)
+    # plt.ylim(0,.5)
     #plt.setp(plt.gca(), aspect=1.0)
     plt.gcf().subplots_adjust(bottom=0.15)
     if(flnm != ''):
@@ -966,4 +1001,57 @@ def plot_fft_dampening(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True
         plt.show()
         plt.close()
 
-    return k0, k1, fieldpmesh #debug. TODO: remove
+    return k0, k1, fieldpmesh, xplot, yplot #debug. TODO: remove
+
+def _sort_for_contour(xcoord,ycoord,dheight):
+    """
+    Sorts data for use in matplotlibs' countourf/ pmeshgrid plotting functions.
+    Sorts xcoord by column (rows are identical), ycoord by row (columns are identical)
+    and maintians parallelization with dheight.
+
+    Countourf and pmesh grid are most explicitly plotted when 3 2d arrays are
+    passed to it, xcoords ycoords dheight. The 3 2d arrays xxcoords
+    are parrallel such that dheight(xcoord[i][j],ycoord[i][j]) = dheight[i][j].
+    In some routines (particularly in our fft routine), we build these three arrays
+    such that the coordinate arrays are out of order (but all 3 are parallel).
+    Thus, we must sort these arrays while maintaining their parallelization
+
+    Parameters
+    ----------
+    """
+
+    temprowx = xcoord[0]
+    xsort = np.argsort(temprowx)
+    tempcoly = ycoord[:,0]
+    ysort = np.argsort(tempcoly)
+    for i in range(0,len(dheight)): #sort by col
+        dheight[i] = dheight[i][xsort]
+    dheight = dheight[ysort] #sort by row
+    xcoord = np.sort(xcoord) #sort x data
+    ycoord = np.sort(ycoord,axis=0) #sort y data
+
+    return xcoord, ycoord, dheight
+
+def plot_stack_field_along_x(dfields,fieldkey,stackaxis,yyindex=0,zzindex=0,xlow=None,xhigh=None):
+    """
+
+    """
+    if(stackaxis != '_yy' and stackaxis != '_zz'):
+        print("Please stack along _yy or _zz")
+
+    plt.figure()
+    fieldcoord = np.asarray(dfields[fieldkey+'_xx'])
+    for k in range(0,len(dfields[fieldkey+stackaxis])):
+        fieldval = np.asarray([dfields[fieldkey][zzindex][yyindex][i] for i in range(0,len(dfields[fieldkey+'_xx']))])
+        if(stackaxis == '_yy'):
+            yyindex += 1
+        elif(stackaxis == '_zz'):
+            zzindex += 1
+        plt.xlabel('x')
+        plt.ylabel(fieldkey)
+        if(xlow != None and xhigh != None):
+            plt.xlim(xlow,xhigh)
+        plt.plot(fieldcoord,fieldval)
+
+    plt.show()
+    plt.close()
