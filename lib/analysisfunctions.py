@@ -310,7 +310,7 @@ def getfieldaverageinbox(x1, x2, y1, y2, z1, z2, dfields, fieldkey):
     return avgfield
 
 
-def compute_correlation_over_x(dfields, dparticles, vmax, dv, dx, vshock):
+def compute_correlation_over_x(dfields, dparticles, vmax, dv, dx, vshock, xlim=None, ylim=None, zlim=None):
     """
     Computes f(x; vy, vx), CEx(x; vy, vx), and CEx(x; vy, vx) along different slices of x
 
@@ -318,7 +318,7 @@ def compute_correlation_over_x(dfields, dparticles, vmax, dv, dx, vshock):
     ----------
     dfields : dict
         field data dictionary from field_loader
-    dpar : dict
+    dparticles : dict
         xx vx yy vy data dictionary from readParticlesPosandVelocityOnly
     vmax : float
         specifies signature domain in velocity space
@@ -329,6 +329,12 @@ def compute_correlation_over_x(dfields, dparticles, vmax, dv, dx, vshock):
         width of x slice
     vshock : float
         velocity of shock in x direction
+    xlim : array
+        array of limits in x, defaults to None
+    ylim : array
+        array of limits in y, defaults to None
+    zlim : array
+        array of limits in z, defaults to None
 
     Returns
     -------
@@ -356,17 +362,34 @@ def compute_correlation_over_x(dfields, dparticles, vmax, dv, dx, vshock):
     x_out = []
     Hist_out = []
 
-    #TODO: make these an input parameters
-    x1 = dfields['ex_xx'][0]
-    x2 = dfields['ex_xx'][1]
-    y1 = dfields['ex_yy'][0]
-    y2 = dfields['ex_yy'][1]
-    z1 = dfields['ex_zz'][0]
-    z2 = dfields['ex_zz'][1]
+    if xlim is not None:
+        x1 = xlim[0]
+        x2 = x1+dx
+        xEnd = xlim[1]
+    # If xlim is None, use lower x edge to upper x edge extents
+    else:
+        x1 = dfields['ex_xx'][0]
+        x2 = x1 + dx
+        xEnd = dfields['ex_xx'][-1]
+    if ylim is not None:
+        y1 = ylim[0]
+        y2 = ylim[1]
+    # If ylim is None, use lower y edge to lower y edge + dx extents
+    else:
+        y1 = dfields['ex_yy'][0]
+        y2 = y1 + dx
+    if zlim is not None:
+        z1 = zlim[0]
+        z2 = zlim[1]
+    # If zlim is None, use lower z edge to lower z edge + dx extents
+    else:
+        z1 = dfields['ex_zz'][0]
+        z2 = z1 + dx 
 
-    i = 0
-    while(x2 <= dfields['ex_xx'][-1]):
-        print(str(dfields['ex_xx'][i]) +' of ' + str(dfields['ex_xx'][len(dfields['ex_xx'])-1]))
+    #i = 0
+    while(x2 <= xEnd):
+        # This print statement is no longer correct now that we are taking the start points as inputs
+        #print(str(dfields['ex_xx'][i]) +' of ' + str(dfields['ex_xx'][len(dfields['ex_xx'])-1]))
         vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock, 'ex', 'x')
         vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEy = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock, 'ey', 'y')
         vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEz = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock, 'ez', 'z')
@@ -377,7 +400,7 @@ def compute_correlation_over_x(dfields, dparticles, vmax, dv, dx, vshock):
         Hist_out.append(Hist)
         x1+=dx
         x2+=dx
-        i+=1
+        #i+=1
 
     return CEx_out, CEy_out, CEz_out, x_out, Hist_out, vx, vy, vz
 
