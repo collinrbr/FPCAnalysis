@@ -23,68 +23,68 @@ def find_nearest(array, value):
     idx = (np.abs(array - value)).argmin()
     return idx
 
-def mesh_3d_to_2d(vx,vy,vz,planename):
+def mesh_3d_to_2d(meshx,meshy,meshz,planename):
     """
     Converts 3d velocity space arrays to 2d
     Used for plotting
 
     Parameters
     ----------
-    vx : 3d array
-        3d vx velocity grid
-    vy : 3d array
-        3d vy velocity grid
-    vz : 3d array
-        3d vz velocity grid
+    meshx : 3d array
+        3d meshx grid
+    meshy : 3d array
+        3d meshy grid
+    meshz : 3d array
+        3d meshz grid
     planename : str
         name of plane you want to get 2d grid of
 
     Returns
     -------
     *Returns 2 of 3 of the following based on planename*
-    vx2d : 2d array
-        2d vx velocity grid
-    vy2d : 2d array
-        2d vy velocity grid
-    vz2d : 2d array
-        2d vz velocity grid
+    meshx2d : 2d array
+        2d meshx grid
+    meshy2d : 2d array
+        2d meshy grid
+    meshz2d : 2d array
+        2d meshz grid
     """
 
     if(planename == 'xy'):
-        vx2d = np.zeros((len(vy),len(vx)))
-        vy2d = np.zeros((len(vy),len(vx)))
-        for i in range(0,len(vy)):
-            for j in range(0,len(vx)):
-                vx2d[i][j] = vx[0][i][j]
-        for i in range(0,len(vy)):
-            for j in range(0,len(vx)):
-                vy2d[i][j] = vy[0][i][j]
+        meshx2d = np.zeros((len(meshy),len(meshx)))
+        meshy2d = np.zeros((len(meshy),len(meshx)))
+        for i in range(0,len(meshy)):
+            for j in range(0,len(meshx)):
+                meshx2d[i][j] = meshx[0][i][j]
+        for i in range(0,len(meshy)):
+            for j in range(0,len(meshx)):
+                mesh2d[i][j] = meshy[0][i][j]
 
-        return vx2d, vy2d
+        return mesh2d, mesh2d
 
     elif(planename == 'xz'):
-        vx2d = np.zeros((len(vz),len(vx)))
-        vz2d = np.zeros((len(vz),len(vx)))
-        for i in range(0,len(vz)):
-            for j in range(0,len(vx)):
-                vx2d[i][j] = vx[i][0][j]
-        for i in range(0,len(vz)):
-            for j in range(0,len(vx)):
-                vz2d[i][j] = vz[i][0][j]
+        meshx2d = np.zeros((len(meshz),len(meshx)))
+        meshz2d = np.zeros((len(meshz),len(meshx)))
+        for i in range(0,len(meshz)):
+            for j in range(0,len(meshx)):
+                meshx2d[i][j] = meshx[i][0][j]
+        for i in range(0,len(meshz)):
+            for j in range(0,len(meshx)):
+                meshz2d[i][j] = meshz[i][0][j]
 
-        return vx2d, vz2d
+        return meshx2d, meshz2d
 
     elif(planename == 'yz'):
-        vy2d = np.zeros((len(vz),len(vy)))
-        vz2d = np.zeros((len(vz),len(vy)))
-        for i in range(0,len(vz)):
-            for j in range(0,len(vy)):
-                vy2d[i][j] = vy[i][j][0]
-        for i in range(0,len(vz)):
-            for j in range(0,len(vy)):
-                vz2d[i][j] = vz[i][j][0]
+        meshy2d = np.zeros((len(meshz),len(meshy)))
+        meshz2d = np.zeros((len(meshz),len(meshy)))
+        for i in range(0,len(meshz)):
+            for j in range(0,len(meshy)):
+                meshy2d[i][j] = meshy[i][j][0]
+        for i in range(0,len(meshz)):
+            for j in range(0,len(meshy)):
+                meshz2d[i][j] = meshz[i][j][0]
 
-        return vy2d, vz2d
+        return meshy2d, meshz2d
 
 def array_3d_to_2d(arr3d,planename):
     """

@@ -216,7 +216,6 @@ def compute_correlation_over_x(dfields, dparticles, vmax, dv, dx, vshock, xlim=N
         z1 = dfields['ex_zz'][0]
         z2 = z1 + dx
 
-    #i = 0
     while(x2 <= xEnd):
         # This print statement is no longer correct now that we are taking the start points as inputs
         #print(str(dfields['ex_xx'][i]) +' of ' + str(dfields['ex_xx'][len(dfields['ex_xx'])-1]))
@@ -230,7 +229,6 @@ def compute_correlation_over_x(dfields, dparticles, vmax, dv, dx, vshock, xlim=N
         Hist_out.append(Hist)
         x1+=dx
         x2+=dx
-        #i+=1
 
     return CEx_out, CEy_out, CEz_out, x_out, Hist_out, vx, vy, vz
 
