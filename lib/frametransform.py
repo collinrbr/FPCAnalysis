@@ -27,27 +27,3 @@ def lorentz_transform_vx(dfields,vx):
     dfieldslor['bz'] = dfields['bz']#assume v/c^2 is small
 
     return dfieldslor
-
-def getcompressionration(dfields,xShock):
-    """
-    Find ratio of downstream bz and upstream bz
-
-    Parameters
-    ----------
-    dfields : dict
-        field data dictionary from field_loader
-    xShock : float
-        x position of shock
-    """
-    bzsumdownstrm = 0.
-    bzsumupstrm = 0.
-
-    for i in range(0,len(dfields['bz'])):
-        for j in range(0,len(dfields['bz'][i])):
-            for k in range(0,len(dfields['bz'][i][j])):
-                if(dfields['bz_xx'][k] > xShock):
-                    bzsumupstrm += dfields['bz'][i][j][k]
-                else:
-                    bzsumdownstrm += dfields['bz'][i][j][k]
-
-    return bzsumdownstrm/bzsumupstrm
