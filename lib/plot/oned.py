@@ -328,3 +328,45 @@ def plot_stack_field_along_x(dfields,fieldkey,stackaxis,yyindex=0,zzindex=0,xlow
 
     plt.show()
     plt.close()
+
+def plot_compression_ratio(dfields, upstreambound, downstreambound, xxindex=0, yyindex=0, zzindex=0, flnm=''):
+    """
+    Plots Bz(x), along with vertical lines at the provided upstream and downstream
+    bounds.
+
+    Parameters
+    ----------
+    dfields : dict
+        field data dictionary from field_loader
+    downstreambound : float
+        x position of the end of the upstream position
+    upstreambound : float
+        x position of the end of the downstream position
+    """
+
+    from lib.frametransform import get_comp_ratio
+
+    ratio,bzdown,bzup = get_comp_ratio(dfields,upstreambound, downstreambound)
+
+    fieldkey = 'bz'
+    axis='_xx'
+
+    plt.figure(figsize=(20,10))
+    fieldval = np.asarray([dfields[fieldkey][zzindex][yyindex][i] for i in range(0,len(dfields[fieldkey+axis]))])
+    xlbl = 'x'
+
+    fieldcoord = np.asarray(dfields[fieldkey+axis])
+
+    plt.figure(figsize=(20,10))
+    plt.xlabel(xlbl)
+    plt.ylabel(fieldkey)
+    plt.plot(fieldcoord,fieldval)
+    plt.axvline(x=upstreambound)
+    plt.axvline(x=downstreambound)
+    plt.plot([dfields[fieldkey+axis][0],downstreambound],[bzdown,bzdown]) #line showing average bz downstream
+    plt.plot([upstreambound,dfields[fieldkey+axis][-1]],[bzup,bzup]) #line showing average bz upstream
+    if(flnm == ''):
+        plt.show()
+    else:
+        plt.savefig(flnm+'.png',format='png')
+    plt.close()
