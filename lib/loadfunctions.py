@@ -115,7 +115,8 @@ def field_loader(field_vars='all', components='all', num=None,
         path to data folder
     slc : 1d array
         index tuple that specifies loading subset of fields spatially
-        form of [np.s_[z0idx,z1idx],np.s_[y0idx,y1idx],np.s_[x0idx,x1idx]]
+        form of (slice(z0idx,z1idx, 1),slice(y0idx,y1idx, 1),slice(x0idx,x1idx, 1))
+        where idx is an integer index
     verbose : boolean
         if true, prints debug information
 
@@ -143,7 +144,7 @@ def field_loader(field_vars='all', components='all', num=None,
         elif not type(field_vars) in (list, tuple):
             field_vars = [field_vars]
     if slc is None:
-        slc = [np.s_[:],np.s_[:],np.s_[:]]
+        slc = (np.s_[:],np.s_[:],np.s_[:])
     fpath = path+"Output/Fields/{f}/{T}{c}/{v}fld_{t}.h5"
     T = '' if field_vars[0] == 'J' else 'Total/'
     test_path = fpath.format(f = _field_choices_[field_vars[0]],

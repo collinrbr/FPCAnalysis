@@ -28,26 +28,53 @@ def lorentz_transform_vx(dfields,vx):
 
     return dfieldslor
 
-def getcompressionration(dfields,xShock):
+def getcompressionratio(dfields,upstreambound,downstreambound):
     """
     Find ratio of downstream bz and upstream bz
+
+    Note, typically upstreambound != downstream bound. We should exclude the
+    the fields within the shock.
 
     Parameters
     ----------
     dfields : dict
         field data dictionary from field_loader
-    xShock : float
-        x position of shock
+    downstreambound : float
+        x position of the end of the upstream position
+    upstreambound : float
+        x position of the end of the downstream position
+
+    Returns
+    -------
+    ratio : float
+        compression ratio computed from compression of bz field
+    bzdownstrm : float
+        average bz downstream
+    bzupstrm : float
+        average bz upstream
     """
+
+    if(upstreambound < downstreambound):
+        print('Error, upstream bound should not be less than downstream bound...')
+        return
+
     bzsumdownstrm = 0.
+    numupstreampoints = 0.
     bzsumupstrm = 0.
+    numdownstreampoints = 0.
 
     for i in range(0,len(dfields['bz'])):
         for j in range(0,len(dfields['bz'][i])):
             for k in range(0,len(dfields['bz'][i][j])):
-                if(dfields['bz_xx'][k] > xShock):
+                if(dfields['bz_xx'][k] >= upstreambound):
                     bzsumupstrm += dfields['bz'][i][j][k]
-                else:
+                    numupstreampoints += 1.
+                elif(dfields['bz_xx'][k] <= downstreambound):
                     bzsumdownstrm += dfields['bz'][i][j][k]
+                    numdownstreampoints += 1.
 
-    return bzsumdownstrm/bzsumupstrm
+    bzdownstrm = bzsumdownstrm/numdownstreampoints
+    bzupstrm = bzsumupstrm/numupstreampoints
+    ratio = bzdownstrm/bzupstrm
+
+    return ratio, bzdownstrm, bzupstrm

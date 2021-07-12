@@ -240,7 +240,7 @@ def plot_velsig_wEcrossB(vx,vy,vmax,Ce,ExBvx,ExBvy,fieldkey,flnm = '',ttl=''):
         plt.show()
     plt.close()
 
-def makefieldpmesh(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, xxindex=float('nan'), yyindex=float('nan'), zzindex=float('nan'), xlimmin=None,xlimmax=None):
+def makefieldpmesh(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, xxindex=float('nan'), yyindex=float('nan'), zzindex=float('nan')):
     """
     Makes pmesh of given field
 
@@ -330,8 +330,6 @@ def makefieldpmesh(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, xx
     plt.colorbar()
     #plt.setp(plt.gca(), aspect=1.0)
     plt.gcf().subplots_adjust(bottom=0.15)
-    if(xlimmin != None and xlimmax != None):
-        plt.xlim(xlimmin, xlimmax)
     if(flnm != ''):
         plt.savefig(flnm+'.png',format='png')
         plt.close('all')#saves RAM
@@ -668,6 +666,7 @@ def stack_line_plot(dfieldsdict, fieldkey, xshockvals = [], axis = '_xx', xxinde
     fieldcoord = np.asarray(dfieldsdict['dfields'][0][fieldkey+axis])
     fig.set_size_inches(18.5, 30.)
 
+
     #sbpltlocation = len(dfielddict['frame'])+10+1
     for k in range(0,len(dfieldsdict['frame'])):
 
@@ -831,7 +830,7 @@ def make_superplot_gif(vx, vy, vz, vmax, Hist, CEx, CEy, CEz, x, directory, flnm
                                         flnm = flnm, ttl = 'x(di): ' + str(x[i]))
         plt.close('all') #saves RAM
 
-def make_fieldpmesh_sweep(dfields,fieldkey,planename,directory,xlimmin=None,xlimmax=None):
+def make_fieldpmesh_sweep(dfields,fieldkey,planename,directory):
     """
 
     """
@@ -853,11 +852,11 @@ def make_fieldpmesh_sweep(dfields,fieldkey,planename,directory,xlimmin=None,xlim
         print('Making plot '+str(i)+' of '+str(len(sweepvar)))
         flnm = directory+'/'+str(i).zfill(6)
         if(planename=='yz'):
-            makefieldpmesh(dfields,fieldkey,planename,flnm = flnm,takeaxisaverage=False,xxindex=i,xlimmin=xlimmin,xlimmax=xlimmax)
+            makefieldpmesh(dfields,fieldkey,planename,flnm = flnm,takeaxisaverage=False,xxindex=i)
         elif(planename=='xz'):
-            makefieldpmesh(dfields,fieldkey,planename,flnm = flnm,takeaxisaverage=False,yyindex=i,xlimmin=xlimmin,xlimmax=xlimmax)
+            makefieldpmesh(dfields,fieldkey,planename,flnm = flnm,takeaxisaverage=False,yyindex=i)
         elif(planename=='xy'):
-            makefieldpmesh(dfields,fieldkey,planename,flnm = flnm,takeaxisaverage=False,zzindex=i,xlimmin=xlimmin,xlimmax=xlimmax)
+            makefieldpmesh(dfields,fieldkey,planename,flnm = flnm,takeaxisaverage=False,zzindex=i)
         else:
             print("Please enter a valid planename...")
             break
@@ -881,7 +880,7 @@ def make_gif_from_folder(directory,flnm):
     imageio.mimsave(flnm, images)
 
 
-def plot_fft_norm(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, xxindex=float('nan'), yyindex=float('nan'), zzindex=float('nan'), plotlog = True):
+def plot_fft_dampening(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, xxindex=float('nan'), yyindex=float('nan'), zzindex=float('nan')):
     """
 
 
@@ -890,8 +889,8 @@ def plot_fft_norm(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, xxi
 
     if(planename=='xy'):
         ttl = fieldkey+'(x,y)'
-        xlbl = 'kx (di)'
-        ylbl = 'ky (di)'
+        xlbl = 'x (di)'
+        ylbl = 'y (di)'
         axisidx = 0 #used to take average along z if no index is specified
         axis = '_zz'
         daxis0 = dfields[fieldkey+'_yy'][1]-dfields[fieldkey+'_yy'][0]
@@ -899,8 +898,8 @@ def plot_fft_norm(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, xxi
 
     elif(planename=='xz'):
         ttl = fieldkey+'(x,z)'
-        xlbl = 'kx (di)'
-        ylbl = 'kz (di)'
+        xlbl = 'x (di)'
+        ylbl = 'z (di)'
         axisidx = 1 #used to take average along y if no index is specified
         axis = '_yy'
         daxis0 = dfields[fieldkey+'_zz'][1]-dfields[fieldkey+'_zz'][0]
@@ -908,8 +907,8 @@ def plot_fft_norm(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, xxi
 
     elif(planename=='yz'):
         ttl = fieldkey+'(y,z)'
-        xlbl = 'ky (di)'
-        ylbl = 'kz (di)'
+        xlbl = 'y (di)'
+        ylbl = 'z (di)'
         axisidx = 2 #used to take average along x if no index is specified
         axis = '_xx'
         daxis0 = dfields[fieldkey+'_zz'][1]-dfields[fieldkey+'_zz'][0]
@@ -924,52 +923,22 @@ def plot_fft_norm(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, xxi
     elif(planename == 'yz'):
         fieldpmesh = np.asarray(dfields[fieldkey])[:,:,xxindex]
 
-    #take fft of data and compute power
+    #take fft of data and pull out dampening factor, gamma (omega = omega_r - i gamma)
     k0, k1, fieldpmesh = take_fft2(fieldpmesh,daxis0,daxis1)
-    fieldpmesh = np.real(fieldpmesh*np.conj(fieldpmesh))/(float(len(k0)*len(k1))) #convert to power
-
-    #plot wavelength (with infinity at 0) for debug
-    # k0 = 1./k0
-    # k1 = 1./k1
-    #
-    # for k in range(0,len(k0)):
-    #     if(np.isinf(k0[k])):
-    #         k0[k] = 0.
-    #
-    # for k in range(0,len(k1)):
-    #     if(np.isinf(k1[k])):
-    #         k1[k] = 0.
-    #
-    # print(k0)
+    fieldpmesh = -1.*np.imag(fieldpmesh)
 
     #make 2d arrays for more explicit plotting
-    xplot = np.zeros((len(k0),len(k1)))
-    yplot = np.zeros((len(k0),len(k1)))
+    xplot = np.zeros((len(k1),len(k0)))
+    yplot = np.zeros((len(k1),len(k0)))
     for i in range(0,len(k1)):
         for j in range(0,len(k0)):
-            xplot[j][i] = k1[i]
+            xplot[i][j] = k0[j]
 
     for i in range(0,len(k1)):
         for j in range(0,len(k0)):
-            yplot[j][i] = k0[j]
+            yplot[i][j] = k1[i]
 
-    #sort data so we can plot it
-    xplot, yplot, fieldpmesh = _sort_for_contour(xplot, yplot, fieldpmesh)
-
-    if(plotlog):
-        #get x index where data is zero
-        #get y index where data is zero
-        #get subset based on this
-
-        xzeroidx = np.where(xplot[0] == 0.)[0][0]
-        yzeroidx = np.where(yplot[:,0] == 0.)[0][0]
-        fieldpmesh = fieldpmesh[xzeroidx+1:,yzeroidx+1:]
-        xplot = xplot[xzeroidx+1:,yzeroidx+1:]
-        yplot = yplot[xzeroidx+1:,yzeroidx+1:]
-
-    # xzeroidx = np.where(xplot[0] == 0.)[0][0]
-    # yzeroidx = np.where(yplot[:,0] == 0.)[0][0]
-    # fieldpmesh[xzeroidx,yzeroidx] = 0.
+    print(xplot.shape)
 
     plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
     plt.figure(figsize=(6.5,6))
@@ -985,14 +954,9 @@ def plot_fft_norm(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, xxi
         plt.title(ttl+' x (di): '+str(dfields[fieldkey+axis][xxindex]),loc="right")
     plt.xlabel(xlbl)
     plt.ylabel(ylbl)
-    if(plotlog):
-        plt.xscale('log')
-        plt.yscale('log')
     plt.grid(color="k", linestyle="-", linewidth=1.0, alpha=0.6)
     #clb = plt.colorbar(format="%.1f", ticks=np.linspace(-maxCe, maxCe, 8), fraction=0.046, pad=0.04) #TODO: make static colorbar based on max range of C
     plt.colorbar()
-    # plt.xlim(0,.5)
-    # plt.ylim(0,.5)
     #plt.setp(plt.gca(), aspect=1.0)
     plt.gcf().subplots_adjust(bottom=0.15)
     if(flnm != ''):
@@ -1002,57 +966,46 @@ def plot_fft_norm(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, xxi
         plt.show()
         plt.close()
 
-    return k0, k1, fieldpmesh, xplot, yplot #debug. TODO: remove
+    return k0, k1, fieldpmesh #debug. TODO: remove
 
-def _sort_for_contour(xcoord,ycoord,dheight):
+def plot_compression_ratio(dfields, upstreambound, downstreambound, xxindex=0, yyindex=0, zzindex=0, flnm=''):
     """
-    Sorts data for use in matplotlibs' countourf/ pmeshgrid plotting functions.
-    Sorts xcoord by column (rows are identical), ycoord by row (columns are identical)
-    and maintians parallelization with dheight.
-
-    Countourf and pmesh grid are most explicitly plotted when 3 2d arrays are
-    passed to it, xcoords ycoords dheight. The 3 2d arrays xxcoords
-    are parrallel such that dheight(xcoord[i][j],ycoord[i][j]) = dheight[i][j].
-    In some routines (particularly in our fft routine), we build these three arrays
-    such that the coordinate arrays are out of order (but all 3 are parallel).
-    Thus, we must sort these arrays while maintaining their parallelization
+    Plots Bz(x), along with vertical lines at the provided upstream and downstream
+    bounds.
 
     Parameters
     ----------
+    dfields : dict
+        field data dictionary from field_loader
+    downstreambound : float
+        x position of the end of the upstream position
+    upstreambound : float
+        x position of the end of the downstream position
     """
 
-    temprowx = xcoord[0]
-    xsort = np.argsort(temprowx)
-    tempcoly = ycoord[:,0]
-    ysort = np.argsort(tempcoly)
-    for i in range(0,len(dheight)): #sort by col
-        dheight[i] = dheight[i][xsort]
-    dheight = dheight[ysort] #sort by row
-    xcoord = np.sort(xcoord) #sort x data
-    ycoord = np.sort(ycoord,axis=0) #sort y data
+    from lib.fieldtransformfunctions import getcompressionratio
 
-    return xcoord, ycoord, dheight
+    ratio,bzdown,bzup = getcompressionratio(dfields,upstreambound, downstreambound)
 
-def plot_stack_field_along_x(dfields,fieldkey,stackaxis,yyindex=0,zzindex=0,xlow=None,xhigh=None):
-    """
+    fieldkey = 'bz'
+    axis='_xx'
 
-    """
-    if(stackaxis != '_yy' and stackaxis != '_zz'):
-        print("Please stack along _yy or _zz")
+    plt.figure(figsize=(20,10))
+    fieldval = np.asarray([dfields[fieldkey][zzindex][yyindex][i] for i in range(0,len(dfields[fieldkey+axis]))])
+    xlbl = 'x'
 
-    plt.figure()
-    fieldcoord = np.asarray(dfields[fieldkey+'_xx'])
-    for k in range(0,len(dfields[fieldkey+stackaxis])):
-        fieldval = np.asarray([dfields[fieldkey][zzindex][yyindex][i] for i in range(0,len(dfields[fieldkey+'_xx']))])
-        if(stackaxis == '_yy'):
-            yyindex += 1
-        elif(stackaxis == '_zz'):
-            zzindex += 1
-        plt.xlabel('x')
-        plt.ylabel(fieldkey)
-        if(xlow != None and xhigh != None):
-            plt.xlim(xlow,xhigh)
-        plt.plot(fieldcoord,fieldval)
+    fieldcoord = np.asarray(dfields[fieldkey+axis])
 
-    plt.show()
+    plt.figure(figsize=(20,10))
+    plt.xlabel(xlbl)
+    plt.ylabel(fieldkey)
+    plt.plot(fieldcoord,fieldval)
+    plt.axvline(x=upstreambound)
+    plt.axvline(x=downstreambound)
+    plt.plot([dfields[fieldkey+axis][0],downstreambound],[bzdown,bzdown]) #line showing average bz downstream
+    plt.plot([upstreambound,dfields[fieldkey+axis][-1]],[bzup,bzup]) #line showing average bz upstream
+    if(flnm == ''):
+        plt.show()
+    else:
+        plt.savefig(flnm+'.png',format='png')
     plt.close()

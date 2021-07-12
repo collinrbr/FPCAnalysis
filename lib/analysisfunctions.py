@@ -384,7 +384,7 @@ def compute_correlation_over_x(dfields, dparticles, vmax, dv, dx, vshock, xlim=N
     # If zlim is None, use lower z edge to lower z edge + dx extents
     else:
         z1 = dfields['ex_zz'][0]
-        z2 = z1 + dx 
+        z2 = z1 + dx
 
     #i = 0
     while(x2 <= xEnd):
@@ -604,3 +604,67 @@ def take_fft2(data,daxisx0,daxis1):
     fftdata = np.fft.fft2(data)
 
     return k0, k1, fftdata
+
+# def get_dfields_subset(dfields,xlimmin=None,xlimmax=None,ylimmin=None,ylimmax=None,zlimmin=None,zlimmax=None):
+#     """
+#     Gets subset of dfields
+#
+#     Bounds are in physical units (di)
+#     """
+#
+#     dfieldssubset = {}
+#
+#     #get indexes of bounds
+#     #assumes grid is same for all fields
+#     if()
+#         xlimminidx = find_nearest(dfields['ex_xx'], xlimmin)
+#         xlimmaxidx = find_nearest(dfields['ex_xx'], xlimmax)
+#     ylimminidx = find_nearest(dfields['ex_yy'], ylimmin)
+#     ylimmaxidx = find_nearest(dfields['ex_yy'], ylimmax)
+#     ylimminidx = find_nearest(dfields['ex_zz'], ylimmin)
+#     ylimmaxidx = find_nearest(dfields['ex_zz'], ylimmax)
+
+
+def estimate_ripple_amp(dfields, fieldkey, stackaxis, xshocklowerbound, xshockupperbound, yyindex=0, zzindex=0):
+    """
+    Estimates ripple amplitude, by stacking field (normally bz) wrt yy or zz
+    and looking at the trough to crest difference
+    """
+
+    xlimminidx = find_nearest(dfields[fieldkey+'_xx'], xshocklowerbound)
+    xlimmaxidx = find_nearest(dfields[fieldkey+'_xx'], xshockupperbound)
+
+    if(stackaxis != '_yy' and stackaxis != '_zz'):
+        print("Please stack along _yy or _zz")
+
+    fieldsarr = []
+    fieldcoord = np.asarray(dfields[fieldkey+'_xx'][xlimminidx:xlimmaxidx+1])
+    for k in range(0,len(dfields[fieldkey+stackaxis])):
+        fieldval = np.asarray([dfields[fieldkey][zzindex][yyindex][i] for i in range(xlimminidx,xlimmaxidx+1)])
+        fieldsarr.append(fieldval)
+        if(stackaxis == '_yy'):
+            yyindex += 1
+        elif(stackaxis == '_zz'):
+            zzindex += 1
+    fieldsarr = np.asarray(fieldsarr)
+
+    avgfldval = np.average(fieldsarr)
+
+    shockposarr = [] #position of shocks for each field in field arr
+    for i in range(0,len(fieldsarr)):
+        #assume right most intercept is at shock
+        tempidx = _array_intercept_idx(fieldsarr[i],avgfldval)[-1]
+        print(fieldcoord[_array_intercept_idx(fieldsarr[i],avgfldval)])
+        shockposarr.append(fieldcoord[tempidx])
+
+    rippleamp = np.max(shockposarr)-np.min(shockposarr)
+    return rippleamp, avgfldval, fieldsarr
+
+def _array_intercept_idx(arr,val):
+    temparr = np.asarray(arr)-val
+    outidx = []
+    for k in range(0,len(temparr)-1):
+        if((temparr[k]>=0 and temparr[k+1] <= 0) or (temparr[k]<=0 and temparr[k+1] >= 0)):
+            outidx.append(k)
+
+    return outidx
