@@ -2,6 +2,7 @@
 
 #functions related to lorentz transforming field and computing shock veloicty
 
+import numpy as np
 
 def lorentz_transform_vx(dfields,vx):
     """

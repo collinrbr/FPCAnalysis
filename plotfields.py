@@ -18,18 +18,18 @@ import sys
 #     sys.exit()
 
 #load path
-path,vmax,dv,numframe = lf.analysis_input()
+path,vmax,dv,numframe = ao.analysis_input()
 path_fields = path
 path_particles = path+"Output/Raw/Sp01/raw_sp01_{:08d}.h5"
 
 #load relevant time slice fields
-dfields = lf.field_loader(path=path_fields,num=numframe)
+dfields = dh5.field_loader(path=path_fields,num=numframe)
 
 #load flow data
-dflow = lf.flow_loader(path=path,num=numframe)
+dflow = dh5.flow_loader(path=path,num=numframe)
 
 ## plots Ex field with lines at specified x pos prints indexes of shock bounds
 # pf.plot_field(dfields, 'ex', axis='_xx', yyindex = yyindex, zzindex = zzindex, axvx1 = startval, axvx2 = endval,flnm=path+'Ex(x)_shockbounds.png')
 
-pf.plot_all_fields(dfields, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0 ,flnm = 'fields.png')
-pf.plot_all_flow(dflow, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0, flnm = 'flow.png')
+dh5.plot_all_fields(dfields, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0 ,flnm = 'fields.png')
+dh5.plot_all_flow(dflow, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0, flnm = 'flow.png')

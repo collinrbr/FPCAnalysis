@@ -23,7 +23,11 @@ def build_metadata(dfields,startval,endval):
         binary metadata
     """
 
-    from lib.analysisfunctions import find_nearest
+    from lib.array_ops import find_nearest
+
+    if(startval > endval):
+        print("Error, startval should be less than end val...")
+        return []
 
     startidx = find_nearest(dfields['ex_xx'], startval)
     endidx = find_nearest(dfields['ex_xx'], endval)

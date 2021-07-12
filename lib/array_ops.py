@@ -2,6 +2,8 @@
 
 #functions that manipulate or operate arrays
 
+import numpy as np
+
 def find_nearest(array, value):
     """
     Finds index of element in array with value closest to given value
@@ -58,9 +60,9 @@ def mesh_3d_to_2d(meshx,meshy,meshz,planename):
                 meshx2d[i][j] = meshx[0][i][j]
         for i in range(0,len(meshy)):
             for j in range(0,len(meshx)):
-                mesh2d[i][j] = meshy[0][i][j]
+                meshy2d[i][j] = meshy[0][i][j]
 
-        return mesh2d, mesh2d
+        return meshx2d, meshy2d
 
     elif(planename == 'xz'):
         meshx2d = np.zeros((len(meshz),len(meshx)))

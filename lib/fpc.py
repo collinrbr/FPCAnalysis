@@ -2,6 +2,8 @@
 
 #functions related to computing FPC
 
+import numpy as np
+
 def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dpar, dfields, vshock, fieldkey, directionkey):
     """
     Computes distribution function and correlation wrt to given field

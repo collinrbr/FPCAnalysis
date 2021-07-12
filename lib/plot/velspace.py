@@ -283,15 +283,15 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     """
 
     """
-    from lib.analysisfunctions import threeVelToTwoVel
+    from lib.array_ops import mesh_3d_to_2d
 
     plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
 
     fig, axs = plt.subplots(4,3,figsize=(4*5,3*5))
 
-    vx_xy, vy_xy = threeVelToTwoVel(vx,vy,vz,'xy')
-    vx_xz, vz_xz = threeVelToTwoVel(vx,vy,vz,'xz')
-    vy_yz, vz_yz = threeVelToTwoVel(vx,vy,vz,'yz')
+    vx_xy, vy_xy = mesh_3d_to_2d(vx,vy,vz,'xy')
+    vx_xz, vz_xz = mesh_3d_to_2d(vx,vy,vz,'xz')
+    vy_yz, vz_yz = mesh_3d_to_2d(vx,vy,vz,'yz')
 
     fig.suptitle(ttl)
     #H_xy
@@ -375,8 +375,8 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
 def make_superplot_gif(vx, vy, vz, vmax, Hist, CEx, CEy, CEz, x, directory, flnm):
     #make plots of data and put into directory
 
-    from lib.analysisfunctions import threeHistToTwoHist
-    from lib.analysisfunctions import threeCorToTwoCor
+    from lib.array_ops import array_3d_to_2d
+    from lib.array_ops import array_3d_to_2d
 
     try:
         os.mkdir(directory)
@@ -388,18 +388,18 @@ def make_superplot_gif(vx, vy, vz, vmax, Hist, CEx, CEy, CEz, x, directory, flnm
         flnm = directory+'/'+str(i).zfill(6)
 
         #Project onto 2d axis
-        H_xy = threeHistToTwoHist(Hist[i],'xy')
-        H_xz = threeHistToTwoHist(Hist[i],'xz')
-        H_yz = threeHistToTwoHist(Hist[i],'yz')
-        CEx_xy = threeCorToTwoCor(CEx[i],'xy')
-        CEx_xz = threeCorToTwoCor(CEx[i],'xz')
-        CEx_yz = threeCorToTwoCor(CEx[i],'yz')
-        CEy_xy = threeCorToTwoCor(CEy[i],'xy')
-        CEy_xz = threeCorToTwoCor(CEy[i],'xz')
-        CEy_yz = threeCorToTwoCor(CEy[i],'yz')
-        CEz_xy = threeCorToTwoCor(CEz[i],'xy')
-        CEz_xz = threeCorToTwoCor(CEz[i],'xz')
-        CEz_yz = threeCorToTwoCor(CEz[i],'yz')
+        H_xy = array_3d_to_2d(Hist[i],'xy')
+        H_xz = array_3d_to_2d(Hist[i],'xz')
+        H_yz = array_3d_to_2d(Hist[i],'yz')
+        CEx_xy = array_3d_to_2d(CEx[i],'xy')
+        CEx_xz = array_3d_to_2d(CEx[i],'xz')
+        CEx_yz = array_3d_to_2d(CEx[i],'yz')
+        CEy_xy = array_3d_to_2d(CEy[i],'xy')
+        CEy_xz = array_3d_to_2d(CEy[i],'xz')
+        CEy_yz = array_3d_to_2d(CEy[i],'yz')
+        CEz_xy = array_3d_to_2d(CEz[i],'xy')
+        CEz_xz = array_3d_to_2d(CEz[i],'xz')
+        CEz_yz = array_3d_to_2d(CEz[i],'yz')
 
         plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
                                         H_xy, H_xz, H_yz,
