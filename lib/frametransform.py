@@ -139,7 +139,7 @@ def shock_from_ex_cross(all_fields,dt=0.01):
 
 def shockvel_from_compression_ratio(M):
     """
-    Estimates shock velocity using compression ratio
+    Estimates shock velocity
 
     Parameters
     ----------
@@ -160,3 +160,54 @@ def shockvel_from_compression_ratio(M):
     vshock = fsolve(shock(M),1.) #start search at vshock=2.
 
     return vshock
+
+def get_comp_ratio(dfields,upstreambound,downstreambound):
+    """
+    Find ratio of downstream bz and upstream bz
+
+    Note, typically upstreambound != downstream bound. We should exclude the
+    the fields within the shock.
+
+    Parameters
+    ----------
+    dfields : dict
+        field data dictionary from field_loader
+    downstreambound : float
+        x position of the end of the upstream position
+    upstreambound : float
+        x position of the end of the downstream position
+
+    Returns
+    -------
+    ratio : float
+        compression ratio computed from compression of bz field
+    bzdownstrm : float
+        average bz downstream
+    bzupstrm : float
+        average bz upstream
+    """
+
+    if(upstreambound < downstreambound):
+        print('Error, upstream bound should not be less than downstream bound...')
+        return
+
+    bzsumdownstrm = 0.
+    numupstreampoints = 0.
+    bzsumupstrm = 0.
+    numdownstreampoints = 0.
+
+    for i in range(0,len(dfields['bz'])):
+        for j in range(0,len(dfields['bz'][i])):
+            for k in range(0,len(dfields['bz'][i][j])):
+                if(dfields['bz_xx'][k] >= upstreambound):
+                    bzsumupstrm += dfields['bz'][i][j][k]
+                    numupstreampoints += 1.
+                elif(dfields['bz_xx'][k] <= downstreambound):
+                    bzsumdownstrm += dfields['bz'][i][j][k]
+                    numdownstreampoints += 1.
+
+    bzdownstrm = bzsumdownstrm/numdownstreampoints
+    bzupstrm = bzsumupstrm/numupstreampoints
+    ratio = bzdownstrm/bzupstrm
+
+    return ratio, bzdownstrm, bzupstrm
