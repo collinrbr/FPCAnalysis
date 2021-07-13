@@ -18,14 +18,18 @@ import os
 import math
 import numpy as np
 
+import h5py
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.colors as colors
 #-------------------------------------------------------------------------------
 # load data
 #-------------------------------------------------------------------------------
 #TODO: get pathing from analysis input
 # path_particles = "/Users/JunoRavin/Documents/PIC-Analysis/tristan/prtl.tot.{:03d}"
 # path_fields = "/Users/JunoRavin/Documents/PIC-Analysis/tristan/flds.tot.{:03d}"
-path_particles = "/Users/JunoRavin/Documents/PIC-Analysis/tristan/prtl.tot.{:03d}"
-path_fields = "/Users/JunoRavin/Documents/PIC-Analysis/tristan/flds.tot.{:03d}"
+path_particles = "/Users/collbrown/Desktop/temp/mach12_2000/prtl.tot.007"
+path_fields = "/Users/collbrown/Desktop/temp/mach12_2000/flds.tot.{:03d}"
 # NOTE: First pass through TRISTAN data makes it seems like TRISTAN field data
 #       has less metadata. Need to check with Colby and Anatoly (JJ 07/10/21)
 #       For right now, just read in raw field data.
@@ -40,10 +44,10 @@ with h5py.File(path_fields.format(7),'r') as f:
 #plt.figure()
 #plt.plot(field['by'][0,0,:])
 #plt.show()
-dparticles_elc, dparticles_ion = data_h5.readTristanParticles(path_particles, 7)
+dparticles_elc, dparticles_ion = dh5.readTristanParticles(path_particles, 7)
 vmaxIon = 0.4
 dvIon = 0.01
-vxIon, vyIon, vzIon, totalPtclIon, HistIon = data_h5.makeHistFromTristanData(vmaxIon, dvIon, 9500, 10000, 3.0, 4.0, 3.0, 4.0, dparticles_ion, species='i')
+vxIon, vyIon, vzIon, totalPtclIon, HistIon = dh5.makeHistFromTristanData(vmaxIon, dvIon, 9500, 10000, 3.0, 4.0, 3.0, 4.0, dparticles_ion, species='i')
 
 #vmaxElc = 2.0
 #dvElc = 0.1
@@ -58,17 +62,17 @@ CorIonVz = -0.5*vzIon**2.*np.gradient(HistIon, dvIon, edge_order=2, axis=2)
 #CorElcVy = 0.5*vyIon**2.*np.gradient(HistElc, dvElc, edge_order=2, axis=1)
 #CorElcVz = 0.5*vzElc**2.*np.gradient(HistElc, dvElc, edge_order=2, axis=2)
 
-vxIon_xy, vyIon_xy = af.threeVelToTwoVel(vxIon,vyIon,vzIon,'xy')
-vxIon_xz, vzIon_xz = af.threeVelToTwoVel(vxIon,vyIon,vzIon,'xz')
-vyIon_yz, vzIon_yz = af.threeVelToTwoVel(vxIon,vyIon,vzIon,'yz')
+vxIon_xy, vyIon_xy = ao.mesh_3d_to_2d(vxIon,vyIon,vzIon,'xy')
+vxIon_xz, vzIon_xz = ao.mesh_3d_to_2d(vxIon,vyIon,vzIon,'xz')
+vyIon_yz, vzIon_yz = ao.mesh_3d_to_2d(vxIon,vyIon,vzIon,'yz')
 
-HIon_xy = af.threeHistToTwoHist(HistIon,'xy')
-HIon_xz = af.threeHistToTwoHist(HistIon,'xz')
-HIon_yz = af.threeHistToTwoHist(HistIon,'yz')
+HIon_xy = ao.array_3d_to_2d(HistIon,'xy')
+HIon_xz = ao.array_3d_to_2d(HistIon,'xz')
+HIon_yz = ao.array_3d_to_2d(HistIon,'yz')
 
-CorIonVz_xy = af.threeHistToTwoHist(CorIonVz,'xy')
-CorIonVz_xz = af.threeHistToTwoHist(CorIonVz,'xz')
-CorIonVz_yz = af.threeHistToTwoHist(CorIonVz,'yz')
+CorIonVz_xy = ao.array_3d_to_2d(CorIonVz,'xy')
+CorIonVz_xz = ao.array_3d_to_2d(CorIonVz,'xz')
+CorIonVz_yz = ao.array_3d_to_2d(CorIonVz,'yz')
 
 norm = colors.LogNorm(vmin=1.0, vmax=np.max(HIon_xy))
 fig, axs = plt.subplots(2,3,figsize=(3*5,2*5))
