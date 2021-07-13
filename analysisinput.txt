@@ -1,4 +1,4 @@
-path='M06_th45/'
+path='M03/'
 vmax=25
 dv=0.5
 numframe=2000
