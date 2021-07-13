@@ -22,7 +22,7 @@ import numpy as np
 # load data
 #-------------------------------------------------------------------------------
 #load path
-path,vmax,dv,numframe = ao.analysis_input() #TODO: update this and read_box_of_particles parameters
+path,vmax,dv,numframe,dx,xlim,ylim,zlim = ao.analysis_input()
 path_fields = path
 path_particles = path+"Output/Raw/Sp01/raw_sp01_{:08d}.h5"
 
@@ -34,7 +34,7 @@ dfields = dh5.field_loader(path=path_fields,num=numframe)
 all_dfields = dh5.all_dfield_loader(path=path_fields, verbose=False)
 
 #Load slice of particle data
-dparticles = dh5.read_box_of_particles(path_particles, numframe, dfields['ex_xx'][0], dfields['ex_xx'][-1], dfields['ex_yy'][0], dfields['ex_yy'][3], dfields['ex_zz'][0], dfields['ex_zz'][3])
+dparticles = dh5.read_box_of_particles(path_particles, numframe, xlim[0], xlim[1], ylim[0], ylim[1], zlim[0], zlim[1])
 
 #-------------------------------------------------------------------------------
 # estimate shock vel and lorentz transform

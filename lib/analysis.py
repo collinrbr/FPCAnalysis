@@ -63,6 +63,7 @@ def analysis_input(flnm = 'analysisinput.txt'):
 
     return path,vmax,dv,numframe,dx,xlim,ylim,zlim
 
+#TODO: check shape of Cor (make sure this is a list of 2d projections rather than 3d.)
 def compute_energization(Cor,dv):
     """
     Computes energization of velocity signature by integrating over velocity space

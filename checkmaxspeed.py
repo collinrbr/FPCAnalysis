@@ -22,7 +22,7 @@ import numpy as np
 # load data
 #-------------------------------------------------------------------------------
 #load path
-path,vmax,dv,numframe = anl.analysis_input()
+path,vmax,dv,numframe,dx,xlim,ylim,zlim = anl.analysis_input()
 path_fields = path
 path_particles = path+"Output/Raw/Sp01/raw_sp01_{:08d}.h5"
 

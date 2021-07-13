@@ -69,7 +69,7 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dpar, dfields, vshock
     for i in range(0,len(dfields['ex_xx'])):
         for j in range(0,len(dfields['ex_yy'])):
             for k in range(0,len(dfields['ex_zz'])):
-                if(gfieldptsx[i] == True and gfieldptsy[j] == True and gfieldptsz[k]):
+                if(gfieldptsx[i] == True and gfieldptsy[j] == True and gfieldptsz[k] == True):
                     goodfieldpts.append(dfields[fieldkey][k][j][i])
 
     #define mask that includes particles within range
@@ -209,14 +209,16 @@ def compute_correlation_over_x(dfields, dparticles, vmax, dv, dx, vshock, xlim=N
     # If ylim is None, use lower y edge to lower y edge + dx extents
     else:
         y1 = dfields['ex_yy'][0]
-        y2 = y1 + dx
+        #y2 = y1 + dx
+        y2 = dfields['ex_yy'][5]
     if zlim is not None:
         z1 = zlim[0]
         z2 = zlim[1]
     # If zlim is None, use lower z edge to lower z edge + dx extents
     else:
         z1 = dfields['ex_zz'][0]
-        z2 = z1 + dx
+        #z2 = z1 + dx
+        z2 = dfields['ex_zz'][5]
 
     while(x2 <= xEnd):
         # This print statement is no longer correct now that we are taking the start points as inputs
@@ -224,6 +226,8 @@ def compute_correlation_over_x(dfields, dparticles, vmax, dv, dx, vshock, xlim=N
         vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock, 'ex', 'x')
         vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEy = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock, 'ey', 'y')
         vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEz = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock, 'ez', 'z')
+        print(x1,x2,y1,y2,z1,z2)
+        print(totalPtcl)
         x_out.append(np.mean([x1,x2]))
         CEx_out.append(CEx)
         CEy_out.append(CEy)

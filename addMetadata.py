@@ -28,7 +28,7 @@ except:
     sys.exit()
 
 #load relevant time slice fields
-path,vmax,dv,numframe = anl.analysis_input()
+path,vmax,dv,numframe,dx,xlim,ylim,zlim = anl.analysis_input()
 path_fields = path
 path_particles = path+"Output/Raw/Sp01/raw_sp01_{:08d}.h5"
 dfields = dh5.field_loader(path=path_fields,num=numframe)

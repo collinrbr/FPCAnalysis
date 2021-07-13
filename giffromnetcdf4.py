@@ -17,7 +17,7 @@ except:
     sys.exit()
 
 #load relevant time slice fields
-path,vmax,dv,numframe = lf.analysis_input()
+path,vmax,dv,numframe,dx,xlim,ylim,zlim = lf.analysis_input()
 
 #load original netcdf4 file
 CEx_in, CEy_in, vx_in, vy_in, x_in, enerCEx_in, enerCEy_in, _, params_in = svf.load_netcdf4(filename)
