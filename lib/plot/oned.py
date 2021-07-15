@@ -325,7 +325,7 @@ def plot_stack_field_along_x(dfields,fieldkey,stackaxis,yyindex=0,zzindex=0,xlow
         if(xlow != None and xhigh != None):
             plt.xlim(xlow,xhigh)
         plt.plot(fieldcoord,fieldval)
-
+    plt.grid()
     plt.show()
     plt.close()
 

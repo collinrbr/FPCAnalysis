@@ -27,8 +27,16 @@ def lorentz_transform_vx(dfields,vx):
     dfieldslor['bx'] = dfields['bx']
     dfieldslor['by'] = dfields['by']#assume v/c^2 is small
     dfieldslor['bz'] = dfields['bz']#assume v/c^2 is small
+    dfieldslor['Vframe_relative_to_sim'] = dfields['Vframe_relative_to_sim'] - vx
 
     return dfieldslor
+
+#TODO: check if linear frame shift if appropriate here and in lorentz_transform_vx
+def transform_flow():
+    """
+    Transforms frame of flow data
+    """
+    pass
 
 def shift_particles():
     """

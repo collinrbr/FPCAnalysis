@@ -173,7 +173,7 @@ def plot_velsig_wEcrossB(vx,vy,vmax,Ce,ExBvx,ExBvy,fieldkey,flnm = '',ttl=''):
     plt.close()
 
 
-def make_velsig_gif_with_EcrossB(vx, vy, vmax, C, dx, fieldkey, x_out, dx, dfields, directory, flnm, xlim = None, ylim = None, zlim = None):
+def make_velsig_gif_with_EcrossB(vx, vy, vmax, C, fieldkey, x_out, dx, dfields, directory, flnm, xlim = None, ylim = None, zlim = None):
     """
     Makes gif of velocity space signatures that sweeps over x for C(x; vy, vx)
 
@@ -209,7 +209,7 @@ def make_velsig_gif_with_EcrossB(vx, vy, vmax, C, dx, fieldkey, x_out, dx, dfiel
         array of limits in z, defaults to None
     """
 
-    from lib.sanityfunctions import calc_E_crossB
+    from lib.analysis import calc_E_crossB
 
     #set up sweeping box
     if xlim is not None:
@@ -241,7 +241,8 @@ def make_velsig_gif_with_EcrossB(vx, vy, vmax, C, dx, fieldkey, x_out, dx, dfiel
         os.mkdir(directory)
     except:
         pass
-    print("Warning: This function uses fields near the x axis. This should suffice for a quick sanity check, but please check averaging box bounds in this function if needed.")
+    
+    i = 0
     while(x2 <= xEnd):
         print('Making plot ' + str(i)+' of '+str(len(C)))
         flnm = directory+'/'+str(i).zfill(6)
@@ -249,6 +250,7 @@ def make_velsig_gif_with_EcrossB(vx, vy, vmax, C, dx, fieldkey, x_out, dx, dfiel
         plot_velsig_wEcrossB(vx,vy,vmax,C[i],ExBvx,ExBvy,fieldkey,flnm = flnm,ttl='x(di): '+str(x_out[i]))
         x1 += dx
         x2 += dx
+        i += 1
         plt.close('all')
 
     #make gif

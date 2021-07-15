@@ -162,11 +162,11 @@ def get_average_in_box(x1, x2, y1, y2, z1, z2, datadict, dictkey):
     gptsy = (y1 <= datadict[dictkey+'_yy']) & (datadict[dictkey+'_yy'] <= y2)
     gptsz = (z1 <= datadict[dictkey+'_zz']) & (datadict[dictkey+'_zz'] <= z2)
 
-    goodfieldpts = []
-    for i in range(0,len(datadict[dictkey])):
-        for j in range(0,len(datadict[dictkey][i])):
-            for k in range(0,len(datadict[dictkey][i][j])):
-                if(gptsx[i] == True and gptsy[j] == True and gptsz[k] == True):
+    goodpts = []
+    for i in range(0,len(gptsx)):
+        for j in range(0,len(gptsy)):
+            for k in range(0,len(gptsz)):
+                if(gptsx[i] and gptsy[j] and gptsz[k]):
                     goodpts.append(datadict[dictkey][k][j][i])
 
     avg = np.average(goodpts)
