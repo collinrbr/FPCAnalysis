@@ -32,17 +32,25 @@ def lorentz_transform_vx(dfields,vx):
     return dfieldslor
 
 #TODO: check if linear frame shift if appropriate here and in lorentz_transform_vx
-def transform_flow():
+def transform_flow(dflow,vx):
     """
     Transforms frame of flow data
     """
-    pass
+    dflowtransform = copy(dflow) #deep copy
+    dflowtransform['ux'] = dflow['ux']-vx
+    dflowtransform['Vframe_relative_to_sim'] = dflow['Vframe_relative_to_sim'] - vx
 
-def shift_particles():
+    return dflowtransform
+
+def shift_particles(dparticles,vx):
     """
     Transforms velocity frame of particles
     """
-    pass
+    dparticlestransform = copy(dparticles) #deep copy
+    dparticlestransform['p1'] = dparticles['p1'] - vx #TODO: check units here
+    dparticlestransform['Vframe_relative_to_sim'] = dparticles['Vframe_relative_to_sim'] - vx
+
+    return dparticlestransform
 
 def shift_hist():
     """

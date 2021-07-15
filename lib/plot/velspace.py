@@ -241,7 +241,7 @@ def make_velsig_gif_with_EcrossB(vx, vy, vmax, C, fieldkey, x_out, dx, dfields, 
         os.mkdir(directory)
     except:
         pass
-    
+
     i = 0
     while(x2 <= xEnd):
         print('Making plot ' + str(i)+' of '+str(len(C)))
@@ -329,7 +329,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     fig.suptitle(ttl)
     #H_xy
     axs[0,0].pcolormesh(vy_xy, vx_xy, H_xy, cmap="plasma", shading="gouraud")
-    axs[0,0].set_title(r"$f(v_x, v_y)$ ")
+    axs[0,0].set_title(r"$f(v_x, v_y)$")
     axs[0,0].set_xlabel(r"$v_x/v_{ti}$")
     axs[0,0].set_ylabel(r"$v_y/v_{ti}$")
     #H_xz

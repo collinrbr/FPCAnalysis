@@ -8,6 +8,9 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dpar, dfields, vshock
     """
     Computes distribution function and correlation wrt to given field
 
+    Function will automatically shift frame of particles if particles are in simulation frame.
+    However, it is more efficient to shift particles before calling this function.
+
     Parameters
     ----------
     vmax : float
@@ -115,11 +118,17 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dpar, dfields, vshock
     vy = _vy
     vz = _vz
 
-    #shift particle data to shock frame
-    dpar_p1 = np.asarray(dpar['p1'][gptsparticle][:])
-    dpar_p1 -= vshock
-    dpar_p2 = np.asarray(dpar['p2'][gptsparticle][:])
-    dpar_p3 = np.asarray(dpar['p3'][gptsparticle][:])
+    if(dfields['Vframe_relative_to_sim' != vshock]):
+        "WARNING: dfields is not in the same frame as the provided vshock"
+
+    #shift particle data to shock frame if needed
+    if(dfields['Vframe_relative_to_sim' != vshock] and dpar['Vframe_relative_to_sim'] == 0.): #TODO: use shift particles function
+        dpar_p1 = np.asarray(dpar['p1'][gptsparticle][:])
+        dpar_p1 -= vshock
+        dpar_p2 = np.asarray(dpar['p2'][gptsparticle][:])
+        dpar_p3 = np.asarray(dpar['p3'][gptsparticle][:])
+    elif(dpar['Vframe_relative_to_sim'] != vshock):
+        "WARNING: particles were not in simulation frame or provided vshock frame. This FPC is probably incorrect..."
 
     #find distribution
     Hist,_ = np.histogramdd((dpar_p3,dpar_p2,dpar_p1),

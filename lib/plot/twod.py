@@ -135,3 +135,116 @@ def make_fieldpmesh_sweep(dfields,fieldkey,planename,directory,xlimmin=None,xlim
         else:
             print("Please enter a valid planename...")
             break
+
+def compare_pmesh_fields_yz(dfields, flnm = '', ttl ='', takeaxisaverage=False, xxindex=float('nan')):
+    """
+
+    """
+
+    plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
+    fig, axs = plt.subplots(2,3,figsize=(4*5,3*5))
+
+    #plot x,y-------------------------------------------------------------------
+    xlbl = 'y (di)'
+    ylbl = 'z (di)'
+    xplot1d = dfields['ex_yy'][:]
+    yplot1d = dfields['ex_zz'][:]
+    axisidx = 2 #used to take average along z if no index is specified
+    axis = '_zz'
+    if(takeaxisaverage):
+        fieldpmeshex = np.mean(dfields['ex'],axis=axisidx) #TODO: convert averaging to box average
+        fieldpmeshey = np.mean(dfields['ey'],axis=axisidx)
+        fieldpmeshez = np.mean(dfields['ez'],axis=axisidx)
+        fieldpmeshbx = np.mean(dfields['bx'],axis=axisidx)
+        fieldpmeshby = np.mean(dfields['by'],axis=axisidx)
+        fieldpmeshbz = np.mean(dfields['bz'],axis=axisidx)
+    else:
+        fieldpmeshex = np.asarray(dfields['ex'])[:,:,xxindex]
+        fieldpmeshey = np.asarray(dfields['ey'])[:,:,xxindex]
+        fieldpmeshez = np.asarray(dfields['ez'])[:,:,xxindex]
+        fieldpmeshbx = np.asarray(dfields['bx'])[:,:,xxindex]
+        fieldpmeshby = np.asarray(dfields['by'])[:,:,xxindex]
+        fieldpmeshbz = np.asarray(dfields['bz'])[:,:,xxindex]
+
+    #make 2d arrays for more explicit plotting #TODO: use mesh_3d_to_2d here
+    xplot = np.zeros((len(yplot1d),len(xplot1d)))
+    yplot = np.zeros((len(yplot1d),len(xplot1d)))
+    for i in range(0,len(yplot1d)):
+        for j in range(0,len(xplot1d)):
+            xplot[i][j] = xplot1d[j]
+    for i in range(0,len(yplot1d)):
+        for j in range(0,len(xplot1d)):
+            yplot[i][j] = yplot1d[i]
+
+    axs[0,0].pcolormesh(xplot, yplot, fieldpmeshex, cmap="inferno", shading="gouraud")
+    axs[0,0].grid(color="k", linestyle="-", linewidth=1.0, alpha=0.6)
+    axs[0,0].set_title('Ex(y,z)')
+    axs[0,0].set_xlabel(xlbl)
+    axs[0,0].set_ylabel(ylbl)
+    axs[0,1].pcolormesh(xplot, yplot, fieldpmeshey, cmap="inferno", shading="gouraud")
+    axs[0,1].grid(color="k", linestyle="-", linewidth=1.0, alpha=0.6)
+    axs[0,1].set_title('Ey(y,z)')
+    axs[0,1].set_xlabel(xlbl)
+    axs[0,1].set_ylabel(ylbl)
+    axs[0,2].pcolormesh(xplot, yplot, fieldpmeshez, cmap="inferno", shading="gouraud")
+    axs[0,2].grid(color="k", linestyle="-", linewidth=1.0, alpha=0.6)
+    axs[0,2].set_title('Ez(y,z)')
+    axs[0,2].set_xlabel(xlbl)
+    axs[0,2].set_ylabel(ylbl)
+    axs[1,0].pcolormesh(xplot, yplot, fieldpmeshbx, cmap="inferno", shading="gouraud")
+    axs[1,0].grid(color="k", linestyle="-", linewidth=1.0, alpha=0.6)
+    axs[1,0].set_title('Bx(y,z)')
+    axs[1,0].set_xlabel(xlbl)
+    axs[1,0].set_ylabel(ylbl)
+    axs[1,1].pcolormesh(xplot, yplot, fieldpmeshby, cmap="inferno", shading="gouraud")
+    axs[1,1].grid(color="k", linestyle="-", linewidth=1.0, alpha=0.6)
+    axs[1,1].set_title('By(y,z)')
+    axs[1,1].set_xlabel(xlbl)
+    axs[1,1].set_ylabel(ylbl)
+    axs[1,2].pcolormesh(xplot, yplot, fieldpmeshbz, cmap="inferno", shading="gouraud")
+    axs[1,2].grid(color="k", linestyle="-", linewidth=1.0, alpha=0.6)
+    axs[1,2].set_title('Bz(y,z)')
+    axs[1,2].set_xlabel(xlbl)
+    axs[1,2].set_ylabel(ylbl)
+
+    fig.suptitle(ttl)
+    #TODO: add position in title
+    # if(takeaxisaverage):
+    #     plt.title(ttl,loc="right")
+    # elif(planename == 'xy'):
+    #     plt.title(ttl+' z (di): '+str(dfields[fieldkey+axis][zzindex]),loc="right")
+    # elif(planename == 'xz'):
+    #     plt.title(ttl+' y (di): '+str(dfields[fieldkey+axis][yyindex]),loc="right")
+    # elif(planename == 'yz'):
+    #     plt.title(ttl+' x (di): '+str(dfields[fieldkey+axis][xxindex]),loc="right")
+
+    #TODO: add colorbars
+    #clb = plt.colorbar(format="%.1f", ticks=np.linspace(-maxCe, maxCe, 8), fraction=0.046, pad=0.04) #TODO: make static colorbar based on max range of C
+    #plt.colorbar()
+    #plt.setp(plt.gca(), aspect=1.0)
+
+    #TODO: add limits to plots
+    # if(xlimmin != None and xlimmax != None):
+    #     plt.xlim(xlimmin, xlimmax)
+
+    plt.gcf().subplots_adjust(bottom=0.15)
+    if(flnm != ''):
+        plt.savefig(flnm+'.png',format='png')
+        plt.close('all')#saves RAM
+    else:
+        plt.show()
+        plt.close()
+
+def compare_pmesh_fields_yz_sweep(dfields,directory):
+    """
+
+    """
+    try:
+        os.mkdir(directory)
+    except:
+        pass
+
+    for i in range(0,len(dfields['ex_xx'])):
+        print('Making plot '+str(i)+' of '+str(len(dfields['ex_xx'])))
+        flnm = directory+'/'+str(i).zfill(6)
+        compare_pmesh_fields_yz(dfields, flnm = flnm, ttl ='x (di): ' + str(dfields['ex_xx'][i]), takeaxisaverage=False, xxindex=i)
