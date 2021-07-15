@@ -287,7 +287,7 @@ def field_loader(field_vars='all', components='all', num=None,
                 d[kc+'_yy'] = d[kc+'_yy'][slc[1]]
                 d[kc+'_zz'] = d[kc+'_zz'][slc[0]]
                 d[kc] = d[kc][slc]
-
+    d['Vframe_relative_to_sim'] = 0.
     return d
 
 def all_dfield_loader(field_vars='all', components='all', num=None,
@@ -386,6 +386,7 @@ def all_dfield_loader(field_vars='all', components='all', num=None,
                     d[kc+'_yy'] = d[kc+'_yy'][slc[1]]
                     d[kc+'_zz'] = d[kc+'_zz'][slc[0]]
                     d[kc] = d[kc][slc]
+                d['Vframe_relative_to_sim'] = 0.
         alld['dfields'].append(d)
         alld['frame'].append(num)
 
@@ -456,4 +457,5 @@ def flow_loader(flow_vars=None, num=None, path='./', sp=1, verbose=False):
                 d[kc+'_zz'] = dx3*np.arange(_N3) + dx3/2. + x3[0]
     _id = "{}:{}:{}".format(os.path.abspath(path), num, "".join(flow_vars))
     d['id'] = _id
+    d['Vframe_relative_to_sim'] = 0.
     return d

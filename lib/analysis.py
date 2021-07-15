@@ -207,7 +207,7 @@ def calc_E_crossB(dfields,x1,x2,y1,y2,z1,z2):
     ExBvz : float
         z component of E cross B drift
     """
-    from lib.fpc import get_average_in_box
+    from lib.array_ops import get_average_in_box
 
     exf = get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'ex')
     eyf = get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'ey')

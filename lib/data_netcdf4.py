@@ -4,7 +4,7 @@
 
 import numpy as np
 
-def savedata(CEx_out, CEy_out, vx_out, vy_out, x_out, enerCEx_out, enerCEy_out, metadata_out = [], params = {}, filename = 'dHybridRSDAtest.nc' ):
+def savedata(CEx_out, CEy_out, vx_out, vy_out, x_out, enerCEx_out, enerCEy_out, Vframe_relative_to_sim_out, metadata_out = [], params = {}, filename = 'dHybridRSDAtest.nc' ):
     """
     Creates netcdf4 data of normalized correlation data to send to MLA algo.
 
@@ -107,6 +107,9 @@ def savedata(CEx_out, CEy_out, vx_out, vy_out, x_out, enerCEx_out, enerCEy_out, 
     enerCEy.description = 'Energization computed by integrating over CEy in velocity space'
     enerCEy[:] = enerCEy_out[:]
 
+    Vframe_relative_to_sim = ncout.createVariable('Vframe_relative_to_sim', 'f4')
+    Vframe_relative_to_sim[:] = Vframe_relative_to_sim_out
+
     #Save data into netcdf4 file-----------------------------------------------------
     print("Saving data into netcdf4 file")
 
@@ -149,6 +152,7 @@ def load_netcdf4(filename):
     from datetime import datetime
 
     ncin = Dataset(filename, 'r', format='NETCDF4')
+    ncin.set_auto_mask(False)
 
     params_in = {}
     for key in ncin.variables.keys():
@@ -168,20 +172,21 @@ def load_netcdf4(filename):
             enerCEx_in = ncin.variables['E_CEx'][:]
         elif(key == 'E_CEy'):
             enerCEy_in = ncin.variables['E_CEy'][:]
+        elif(key == 'Vframe_relative_to_sim'):
+            Vframe_relative_to_sim_in = ncin.variables['Vframe_relative_to_sim'][:]
         else:
             if(not(isinstance(ncin.variables[key][:], str))):
                 params_in[key] = ncin.variables[key][:]
 
     #add global attributes
-    print(params_in)
     params_in = params_in.update(ncin.__dict__)
 
     #tranpose data back to match dHybridR pipeline ordering
-    for i in range(0,len(CEx_in)):
-        tempCex = CEx_in[i].T
-        CEx_in[i] = tempCex
-        tempCey = CEy_in[i].T
-        CEy_in[i] = tempCey
+    # for i in range(0,len(CEx_in)):
+    #     tempCex = CEx_in[i].T
+    #     CEx_in[i] = tempCex
+    #     tempCey = CEy_in[i].T
+    #     CEy_in[i] = tempCey
 
     #reconstruct vx, vy 2d arrays
     _vx = np.zeros((len(vy_in),len(vx_in)))
@@ -197,7 +202,7 @@ def load_netcdf4(filename):
     vx_in = _vx
     vy_in = _vy
 
-    return CEx_in, CEy_in, vx_in, vy_in, x_in, enerCEx_in, enerCEy_in, metadata_in, params_in
+    return CEx_in, CEy_in, vx_in, vy_in, x_in, enerCEx_in, enerCEy_in, Vframe_relative_to_sim_in, metadata_in, params_in
 
 #TODO: parse_input_file and read_input tries to do the same thing. However,
 # both functions have different potential flaws. Need to make parse function
