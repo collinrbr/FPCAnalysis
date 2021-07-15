@@ -173,7 +173,7 @@ def plot_velsig_wEcrossB(vx,vy,vmax,Ce,ExBvx,ExBvy,fieldkey,flnm = '',ttl=''):
     plt.close()
 
 
-def make_velsig_gif_with_EcrossB(vx, vy, vmax, C, fieldkey, x_out, dx, dfields, directory, flnm):
+def make_velsig_gif_with_EcrossB(vx, vy, vmax, C, dx, fieldkey, x_out, dx, dfields, directory, flnm, xlim = None, ylim = None, zlim = None):
     """
     Makes gif of velocity space signatures that sweeps over x for C(x; vy, vx)
 
@@ -201,9 +201,40 @@ def make_velsig_gif_with_EcrossB(vx, vy, vmax, C, fieldkey, x_out, dx, dfields, 
         (omit final '/')
     flnm : str
         filename of the final gif
+    xlim : array
+        array of limits in x, defaults to None
+    ylim : array
+        array of limits in y, defaults to None
+    zlim : array
+        array of limits in z, defaults to None
     """
 
     from lib.sanityfunctions import calc_E_crossB
+
+    #set up sweeping box
+    if xlim is not None:
+        x1 = xlim[0]
+        x2 = x1+dx
+        xEnd = xlim[1]
+    # If xlim is None, use lower x edge to upper x edge extents
+    else:
+        x1 = dfields['ex_xx'][0]
+        x2 = x1 + dx
+        xEnd = dfields['ex_xx'][-1]
+    if ylim is not None:
+        y1 = ylim[0]
+        y2 = ylim[1]
+    # If ylim is None, use lower y edge to lower y edge + dx extents
+    else:
+        y1 = dfields['ex_yy'][0]
+        y2 = y1 + dx
+    if zlim is not None:
+        z1 = zlim[0]
+        z2 = zlim[1]
+    # If zlim is None, use lower z edge to lower z edge + dx extents
+    else:
+        z1 = dfields['ex_zz'][0]
+        z2 = z1 + dx
 
     #make plots of data and put into directory
     try:
@@ -211,13 +242,13 @@ def make_velsig_gif_with_EcrossB(vx, vy, vmax, C, fieldkey, x_out, dx, dfields, 
     except:
         pass
     print("Warning: This function uses fields near the x axis. This should suffice for a quick sanity check, but please check averaging box bounds in this function if needed.")
-    xsweep = 0.
-    for i in range(0,len(C)):
+    while(x2 <= xEnd):
         print('Making plot ' + str(i)+' of '+str(len(C)))
         flnm = directory+'/'+str(i).zfill(6)
-        ExBvx, ExBvy, _ = calc_E_crossB(dfields,xsweep,xsweep+dx,dfields[fieldkey+'_yy'][0],dfields[fieldkey+'_yy'][1],dfields[fieldkey+'_zz'][0],dfields[fieldkey+'_zz'][1])
+        ExBvx, ExBvy, _ = calc_E_crossB(dfields,x1,x2,y1,y2,z1,z2)
         plot_velsig_wEcrossB(vx,vy,vmax,C[i],ExBvx,ExBvy,fieldkey,flnm = flnm,ttl='x(di): '+str(x_out[i]))
-        xsweep += dx
+        x1 += dx
+        x2 += dx
         plt.close('all')
 
     #make gif

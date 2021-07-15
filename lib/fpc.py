@@ -209,16 +209,14 @@ def compute_correlation_over_x(dfields, dparticles, vmax, dv, dx, vshock, xlim=N
     # If ylim is None, use lower y edge to lower y edge + dx extents
     else:
         y1 = dfields['ex_yy'][0]
-        #y2 = y1 + dx
-        y2 = dfields['ex_yy'][5]
+        y2 = y1 + dx
     if zlim is not None:
         z1 = zlim[0]
         z2 = zlim[1]
     # If zlim is None, use lower z edge to lower z edge + dx extents
     else:
         z1 = dfields['ex_zz'][0]
-        #z2 = z1 + dx
-        z2 = dfields['ex_zz'][5]
+        z2 = z1 + dx
 
     while(x2 <= xEnd):
         # This print statement is no longer correct now that we are taking the start points as inputs

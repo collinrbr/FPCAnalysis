@@ -198,12 +198,14 @@ def calc_E_crossB(dfields,x1,x2,y1,y2,z1,z2):
     ExBvz : float
         z component of E cross B drift
     """
-    exf = getfieldaverageinbox(x1, x2, y1, y2, z1, z2, dfields, 'ex')
-    eyf = getfieldaverageinbox(x1, x2, y1, y2, z1, z2, dfields, 'ey')
-    ezf = getfieldaverageinbox(x1, x2, y1, y2, z1, z2, dfields, 'ez')
-    bxf = getfieldaverageinbox(x1, x2, y1, y2, z1, z2, dfields, 'bx')
-    byf = getfieldaverageinbox(x1, x2, y1, y2, z1, z2, dfields, 'by')
-    bzf = getfieldaverageinbox(x1, x2, y1, y2, z1, z2, dfields, 'bz')
+    from lib.fpc import get_average_in_box
+
+    exf = get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'ex')
+    eyf = get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'ey')
+    ezf = get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'ez')
+    bxf = get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'bx')
+    byf = get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'by')
+    bzf = get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'bz')
 
     #E cross B / B^2
     magB = bxf**2.+byf**2.+bzf**2.
@@ -233,12 +235,14 @@ def calc_JdotE(dfields, dflow, x1, x2, y1, y2, z1, z2):
         upper y bound
     """
 
-    ux = getflowaverageinbox(x1, x2, y1, y2, z1, z2, dflow,'ux')
-    uy = getflowaverageinbox(x1, x2, y1, y2, z1, z2, dflow,'uy')
-    uz = getflowaverageinbox(x1, x2, y1, y2, z1, z2, dflow,'uz')
-    exf = getfieldaverageinbox(x1, x2, y1, y2, z1, z2, dfields, 'ex')
-    eyf = getfieldaverageinbox(x1, x2, y1, y2, z1, z2, dfields, 'ey')
-    ezf = getfieldaverageinbox(x1, x2, y1, y2, z1, z2, dfields, 'ez')
+    from lib.fpc import get_average_in_box
+
+    ux = get_average_in_box(x1, x2, y1, y2, z1, z2, dflow,'ux')
+    uy = get_average_in_box(x1, x2, y1, y2, z1, z2, dflow,'uy')
+    uz = get_average_in_box(x1, x2, y1, y2, z1, z2, dflow,'uz')
+    exf = get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'ex')
+    eyf = get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'ey')
+    ezf = get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'ez')
 
     JdE = ux*exf+uy*eyf+uz*ezf #TODO: check units (have definitely omitted q here)
     return JdE
