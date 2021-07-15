@@ -112,7 +112,7 @@ def compute_energization_over_x(Cor_array,dv):
 
     return np.asarray(C_E_out)
 
-def get_compression_ratio(dfields,xShock):
+def get_compression_ratio(dfields,upstreambound,downstreambound):
     """
     Find ratio of downstream bz and upstream bz
 
@@ -123,18 +123,27 @@ def get_compression_ratio(dfields,xShock):
     xShock : float
         x position of shock
     """
-    bzsumdownstrm = 0.
+    numupstream = 0.
     bzsumupstrm = 0.
+    numdownstream = 0.
+    bzsumdownstrm = 0.
 
     for i in range(0,len(dfields['bz'])):
         for j in range(0,len(dfields['bz'][i])):
             for k in range(0,len(dfields['bz'][i][j])):
-                if(dfields['bz_xx'][k] > xShock):
+                if(dfields['bz_xx'][k] >= upstreambound):
                     bzsumupstrm += dfields['bz'][i][j][k]
-                else:
+                    numupstream += 1.
+                elif(dfields['bz_xx'][k] <= downstreambound):
                     bzsumdownstrm += dfields['bz'][i][j][k]
+                    numdownstream += 1.
 
-    return bzsumdownstrm/bzsumupstrm
+    bzupstrm = bzsumdownstrm/numupstream
+    bzdownstrm = bzsumupstrm/numdownstream
+
+    ratio = bzdownstrm/bzupstrm
+
+    return ratio,bzupstrm,bzdownstrm
 
 def get_num_par_in_box(dparticles,x1,x2,y1,y2,z1,z2):
     """
@@ -198,12 +207,14 @@ def calc_E_crossB(dfields,x1,x2,y1,y2,z1,z2):
     ExBvz : float
         z component of E cross B drift
     """
-    exf = getfieldaverageinbox(x1, x2, y1, y2, z1, z2, dfields, 'ex')
-    eyf = getfieldaverageinbox(x1, x2, y1, y2, z1, z2, dfields, 'ey')
-    ezf = getfieldaverageinbox(x1, x2, y1, y2, z1, z2, dfields, 'ez')
-    bxf = getfieldaverageinbox(x1, x2, y1, y2, z1, z2, dfields, 'bx')
-    byf = getfieldaverageinbox(x1, x2, y1, y2, z1, z2, dfields, 'by')
-    bzf = getfieldaverageinbox(x1, x2, y1, y2, z1, z2, dfields, 'bz')
+    from lib.fpc import get_average_in_box
+
+    exf = get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'ex')
+    eyf = get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'ey')
+    ezf = get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'ez')
+    bxf = get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'bx')
+    byf = get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'by')
+    bzf = get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'bz')
 
     #E cross B / B^2
     magB = bxf**2.+byf**2.+bzf**2.
@@ -233,12 +244,14 @@ def calc_JdotE(dfields, dflow, x1, x2, y1, y2, z1, z2):
         upper y bound
     """
 
-    ux = getflowaverageinbox(x1, x2, y1, y2, z1, z2, dflow,'ux')
-    uy = getflowaverageinbox(x1, x2, y1, y2, z1, z2, dflow,'uy')
-    uz = getflowaverageinbox(x1, x2, y1, y2, z1, z2, dflow,'uz')
-    exf = getfieldaverageinbox(x1, x2, y1, y2, z1, z2, dfields, 'ex')
-    eyf = getfieldaverageinbox(x1, x2, y1, y2, z1, z2, dfields, 'ey')
-    ezf = getfieldaverageinbox(x1, x2, y1, y2, z1, z2, dfields, 'ez')
+    from lib.fpc import get_average_in_box
+
+    ux = get_average_in_box(x1, x2, y1, y2, z1, z2, dflow,'ux')
+    uy = get_average_in_box(x1, x2, y1, y2, z1, z2, dflow,'uy')
+    uz = get_average_in_box(x1, x2, y1, y2, z1, z2, dflow,'uz')
+    exf = get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'ex')
+    eyf = get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'ey')
+    ezf = get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'ez')
 
     JdE = ux*exf+uy*eyf+uz*ezf #TODO: check units (have definitely omitted q here)
     return JdE
