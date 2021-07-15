@@ -37,10 +37,10 @@ dfields = dh5.field_loader(path=path_fields,num=numframe)
 metadata = md.build_metadata(dfields, startval, endval)
 
 #load original netcdf4 file
-CEx_in, CEy_in, vx_in, vy_in, x_in, enerCEx_in, enerCEy_in, _, params_in = dnc.load_netcdf4(filename)
+CEx_in, CEy_in, vx_in, vy_in, x_in, enerCEx_in, enerCEy_in, Vframe_relative_to_sim, _, params_in = dnc.load_netcdf4(filename)
 
 #make new file with updated metadata
-dnc.savedata(CEx_in, CEy_in, vx_in, vy_in, x_in, enerCEx_in, enerCEy_in, metadata_out = metadata, params = params_in, filename = filename+'.withmetadata')
+dnc.savedata(CEx_in, CEy_in, vx_in, vy_in, x_in, enerCEx_in, enerCEy_in, Vframe_relative_to_sim, metadata_out = metadata, params = params_in, filename = filename+'.withmetadata')
 
 #replace old file
 os.system('rm '+filename)

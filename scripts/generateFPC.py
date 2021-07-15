@@ -83,7 +83,6 @@ vx_out = vx_xy
 vy_out = vy_xy
 x_out = x
 
-
 #compute energization from correlations
 enerCEx_out = anl.compute_energization_over_x(CEx_out,dv)
 enerCEy_out = anl.compute_energization_over_x(CEy_out,dv)
@@ -96,5 +95,5 @@ inputdict = dnc.parse_input_file(path)
 params = dnc.build_params(inputdict,numframe)
 
 flnm = 'FPCnometadata.nc'
-dnc.savedata(CEx_out, CEy_out, vx_out, vy_out, x_out, enerCEx_out, enerCEy_out, metadata_out = [], params = params, filename = flnm)
+dnc.savedata(CEx_out, CEy_out, vx_out, vy_out, x_out, enerCEx_out, enerCEy_out, dfields['Vframe_relative_to_sim'], metadata_out = [], params = params, filename = flnm)
 print("Done! Please use findShock.py and addMetadata to assign metadata...")

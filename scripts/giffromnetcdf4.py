@@ -20,7 +20,7 @@ except:
 path,vmax,dv,numframe,dx,xlim,ylim,zlim = lf.analysis_input()
 
 #load original netcdf4 file
-CEx_in, CEy_in, vx_in, vy_in, x_in, enerCEx_in, enerCEy_in, _, params_in = svf.load_netcdf4(filename)
+CEx_in, CEy_in, vx_in, vy_in, x_in, enerCEx_in, enerCEy_in, Vframe_relative_to_sim, _, params_in = svf.load_netcdf4(filename)
 
 #TODO: make this show ExB
 pf.make_velsig_gif(vx_in, vy_in, vmax, CEx_in, 'ex', x_in, 'CExFrame'+str(numframe), 'CExFrame'+str(numframe)+'.gif')
