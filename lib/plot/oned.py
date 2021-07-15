@@ -346,7 +346,7 @@ def plot_compression_ratio(dfields, upstreambound, downstreambound, xxindex=0, y
 
     from lib.frametransform import get_comp_ratio
 
-    ratio,bzdown,bzup = get_comp_ratio(dfields,upstreambound, downstreambound)
+    ratio,bzup,bzdown = get_comp_ratio(dfields,upstreambound,downstreambound)
 
     fieldkey = 'bz'
     axis='_xx'

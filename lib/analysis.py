@@ -112,7 +112,7 @@ def compute_energization_over_x(Cor_array,dv):
 
     return np.asarray(C_E_out)
 
-def get_compression_ratio(dfields,xShock):
+def get_compression_ratio(dfields,upstreambound,downstreambound):
     """
     Find ratio of downstream bz and upstream bz
 
@@ -123,18 +123,27 @@ def get_compression_ratio(dfields,xShock):
     xShock : float
         x position of shock
     """
-    bzsumdownstrm = 0.
+    numupstream = 0.
     bzsumupstrm = 0.
+    numdownstream = 0.
+    bzsumdownstrm = 0.
 
     for i in range(0,len(dfields['bz'])):
         for j in range(0,len(dfields['bz'][i])):
             for k in range(0,len(dfields['bz'][i][j])):
-                if(dfields['bz_xx'][k] > xShock):
+                if(dfields['bz_xx'][k] >= upstreambound):
                     bzsumupstrm += dfields['bz'][i][j][k]
-                else:
+                    numupstream += 1.
+                elif(dfields['bz_xx'][k] <= downstreambound):
                     bzsumdownstrm += dfields['bz'][i][j][k]
+                    numdownstream += 1.
 
-    return bzsumdownstrm/bzsumupstrm
+    bzupstrm = bzsumdownstrm/numupstream
+    bzdownstrm = bzsumupstrm/numdownstream
+
+    ratio = bzdownstrm/bzupstrm
+
+    return ratio,bzupstrm,bzdownstrm
 
 def get_num_par_in_box(dparticles,x1,x2,y1,y2,z1,z2):
     """
