@@ -36,6 +36,8 @@ def transform_flow(dflow,vx):
     """
     Transforms frame of flow data
     """
+    from copy import copy
+
     dflowtransform = copy(dflow) #deep copy
     dflowtransform['ux'] = dflow['ux']-vx
     dflowtransform['Vframe_relative_to_sim'] = dflow['Vframe_relative_to_sim'] - vx
@@ -46,6 +48,8 @@ def shift_particles(dparticles,vx):
     """
     Transforms velocity frame of particles
     """
+    from copy import copy
+
     dparticlestransform = copy(dparticles) #deep copy
     dparticlestransform['p1'] = dparticles['p1'] - vx #TODO: check units here
     dparticlestransform['Vframe_relative_to_sim'] = dparticles['Vframe_relative_to_sim'] - vx
