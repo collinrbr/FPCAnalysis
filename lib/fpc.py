@@ -122,7 +122,7 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dpar, dfields, vshock
         "WARNING: dfields is not in the same frame as the provided vshock"
 
     #shift particle data to shock frame if needed
-    if(dfields['Vframe_relative_to_sim' != vshock] and dpar['Vframe_relative_to_sim'] == 0.): #TODO: use shift particles function
+    if(dfields['Vframe_relative_to_sim'] != vshock and dpar['Vframe_relative_to_sim'] == 0.): #TODO: use shift particles function
         dpar_p1 = np.asarray(dpar['p1'][gptsparticle][:])
         dpar_p1 -= vshock
         dpar_p2 = np.asarray(dpar['p2'][gptsparticle][:])
