@@ -43,4 +43,4 @@ dfields = dh5.field_loader(path=path_fields,num=numframe)
 #plots Ex field with lines at specified x pos prints indexes of shock bounds
 yyindex = 0
 zzindex = 0
-plt1d.plot_field(dfields, 'ex', axis='_xx', yyindex = yyindex, zzindex = zzindex, axvx1 = startval, axvx2 = endval,flnm=path+'Ex(x)_shockbounds.png')
+plt1d.plot_field(dfields, 'ex', axis='_xx', yyindex = yyindex, zzindex = zzindex, axvx1 = startval, axvx2 = endval,flnm='Ex(x)_shockbounds.png')
