@@ -118,7 +118,7 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dpar, dfields, vshock
     vy = _vy
     vz = _vz
 
-    if(dfields['Vframe_relative_to_sim' != vshock]):
+    if(dfields['Vframe_relative_to_sim'] != vshock):
         "WARNING: dfields is not in the same frame as the provided vshock"
 
     #shift particle data to shock frame if needed
