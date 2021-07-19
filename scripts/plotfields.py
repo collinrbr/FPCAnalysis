@@ -46,5 +46,5 @@ dflow = dh5.flow_loader(path=path,num=numframe)
 ## plots Ex field with lines at specified x pos prints indexes of shock bounds
 # pf.plot_field(dfields, 'ex', axis='_xx', yyindex = yyindex, zzindex = zzindex, axvx1 = startval, axvx2 = endval,flnm=path+'Ex(x)_shockbounds.png')
 
-dh5.plot_all_fields(dfields, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0 ,flnm = 'fields.png')
-dh5.plot_all_flow(dflow, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0, flnm = 'flow.png')
+plt1d.plot_all_fields(dfields, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0 ,flnm = 'fields.png')
+plt1d.plot_all_flow(dflow, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0, flnm = 'flow.png')
