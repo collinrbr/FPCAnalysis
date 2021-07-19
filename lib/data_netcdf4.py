@@ -116,6 +116,126 @@ def savedata(CEx_out, CEy_out, vx_out, vy_out, x_out, enerCEx_out, enerCEy_out, 
     #save file
     ncout.close()
 
+def savefulldata(CEx_out, CEy_out, CEz_out, vx_out, vy_out, vz_out, x_out, enerCEx_out, enerCEy_out, energCEz_out, Vframe_relative_to_sim_out, metadata_out = [], params = {}, filename = 'dHybridRSDAtest.nc' ):
+    """
+    Creates netcdf4 data of normalized correlation data to send to MLA algo.
+
+    Parameters
+    ----------
+    CEx_out : 4d array
+        Ex correlation data created by fpc correlation functions
+    CEy_out : 4d array
+        Ey correlation data created by fpc correlation functions
+    vx_out : 3d array
+        velocity space grid created by fpc correlation functions
+    vy_out : 3d array
+        velocity space grid created by fpc correlation functions
+    vz_out : 3d array
+        velocity space grid created by fpc correlation functions
+    x_out : 1d array
+        x slice position data created by fpc correlation functions
+    enerCEx_out : 1d array
+        integral over velocity space of CEx
+    enerCEy_out : 1d array
+        integral over velocity space of CEy
+    enerCEz_out : 1d array
+        integral over velocity space of CEy
+    metadata_out : 1d array, optional
+        meta data array with length equal to x_out and axis 3 of correlation data
+        normally needs to be made by hand
+    params : dict, optional
+        dictionary containing parameters relating to data/ simulation input.
+        contains mostly physical input parameters from original simulation
+    filename : str, optional
+        filename of netcdf4. Should be formatted like *.nc
+    """
+
+    from netCDF4 import Dataset
+    from datetime import datetime
+
+    #normalize CEx, CEy to 1-------------------------------------------------------
+    #Here we normalize to the maximum value in either CEx, CEy, CEz
+    maxCval = max(np.amax(np.abs(CEx_out)),np.amax(np.abs(CEy_out)))
+    maxCval = max(maxCval,np.amax(np.abs(CEz_out)))
+    CEx_out /= maxCval
+    CEy_out /= maxCval
+    CEz_out /= maxCval
+
+    # open a netCDF file to write
+    ncout = Dataset(filename, 'w', format='NETCDF4')
+
+    #save data in netcdf file-------------------------------------------------------
+    #define simulation parameters
+    for key in params:
+        #setattr(ncout,key,params[key])
+        if(not(isinstance(params[key],str))):
+            _ = ncout.createVariable(key,None)
+            _[:] = params[key]
+
+    ncout.description = 'dHybridR MLA data test 2'
+    ncout.generationtime = str(datetime.now())
+    ncout.version = get_git_head()
+
+    #make dimensions that dependent data must 'match'
+    ncout.createDimension('nx', None)  # NONE <-> unlimited TODO: make limited if it saves memory or improves compression?
+    ncout.createDimension('nvx', None)
+    ncout.createDimension('nvy', None)
+    ncout.createDimension('nvz', None)
+
+    vx_out = vx_out[0][0][:]
+    vx = ncout.createVariable('vx','f4', ('nvx',))
+    vx.nvx = len(vx_out)
+    vx.longname = 'v_x/v_ti'
+    vx[:] = vx_out[:]
+
+    vy_out = np.asarray([vy_out[0][i][0] for i in range(0,len(vy_out))])
+    vy = ncout.createVariable('vy','f4', ('nvy',))
+    vy.nvy = len(vy_out)
+    vy.longname = 'v_y/v_ti'
+    vy[:] = vy_out[:]
+
+    vz_out = np.asarray([vz_out[i][0][0] for i in range(0,len(vz_out))]) #assumes same number of data points along all axis in vz_out mesh var
+
+    x = ncout.createVariable('x','f4',('nx',))
+    x.nx = len(x_out)
+    x[:] = x_out[:]
+
+    #tranpose data to match previous netcdf4 formatting
+    for i in range(0,len(CEx_out)):
+        tempCex = CEx_out[i].T
+        CEx_out[i] = tempCex
+        tempCey = CEy_out[i].T
+        CEy_out[i] = tempCey
+
+    C_ex = ncout.createVariable('C_Ex','f4', ('nx', 'nvx', 'nvy'))
+    C_ex.longname = 'C_{Ex}'
+    C_ex[:] = CEx_out[:]
+
+    C_ey = ncout.createVariable('C_Ey','f4', ('nx', 'nvx', 'nvy'))
+    C_ey.longname = 'C_{Ey}'
+    C_ey[:] = CEy_out[:]
+
+    metadata = ncout.createVariable('sda','f4',('nx',))
+    metadata.description = '1 = signature, 0 = no signature'
+    metadata[:] = metadata_out[:]
+
+    enerCEx = ncout.createVariable('E_CEx','f4',('nx',))
+    enerCEx.description = 'Energization computed by integrating over CEx in velocity space'
+    enerCEx[:] = enerCEx_out[:]
+
+    enerCEy = ncout.createVariable('E_CEy','f4',('nx',))
+    enerCEy.description = 'Energization computed by integrating over CEy in velocity space'
+    enerCEy[:] = enerCEy_out[:]
+
+    Vframe_relative_to_sim = ncout.createVariable('Vframe_relative_to_sim', 'f4')
+    Vframe_relative_to_sim[:] = Vframe_relative_to_sim_out
+
+    #Save data into netcdf4 file-----------------------------------------------------
+    print("Saving data into netcdf4 file")
+
+    #save file
+    ncout.close()
+
 def load_netcdf4(filename):
     """
     Loads netcdf4 data created by savedata function
