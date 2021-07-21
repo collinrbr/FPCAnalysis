@@ -28,7 +28,7 @@ try:
 
 except:
     print("This script assigns metadata of 1 inbetween the bounds and 0 elsewhere")
-    print("usage: " + sys.argv[0] + " netcdf4flnm startindex endindex")
+    print("usage: " + sys.argv[0] + " netcdf4flnm startval endval")
     sys.exit()
 
 #load relevant time slice fields

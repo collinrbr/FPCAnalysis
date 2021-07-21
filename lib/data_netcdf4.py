@@ -299,7 +299,7 @@ def load_netcdf4(filename):
                 params_in[key] = ncin.variables[key][:]
 
     #add global attributes
-    params_in = params_in.update(ncin.__dict__)
+    params_in.update(ncin.__dict__)
 
     #tranpose data back to match dHybridR pipeline ordering #TODO: remove this if no bugs show up. Unsure if ordering is consistent everywhere
     for i in range(0,len(CEx_in)):
