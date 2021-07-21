@@ -302,11 +302,11 @@ def load_netcdf4(filename):
     params_in = params_in.update(ncin.__dict__)
 
     #tranpose data back to match dHybridR pipeline ordering #TODO: remove this if no bugs show up. Unsure if ordering is consistent everywhere
-    # for i in range(0,len(CEx_in)):
-    #     tempCex = CEx_in[i].T
-    #     CEx_in[i] = tempCex
-    #     tempCey = CEy_in[i].T
-    #     CEy_in[i] = tempCey
+    for i in range(0,len(CEx_in)):
+        tempCex = CEx_in[i].T
+        CEx_in[i] = tempCex
+        tempCey = CEy_in[i].T
+        CEy_in[i] = tempCey
 
     #reconstruct vx, vy 2d arrays
     _vx = np.zeros((len(vy_in),len(vx_in)))

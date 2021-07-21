@@ -369,15 +369,14 @@ def compute_cprime(dparticles,dfields,fieldkey,vmax,dv):
 
 
     #compute cprime for each particle
-    cprime = [] #TODO: not sure what to call this (this is technically not cprime until we bin)
+    cprimew = [] #TODO: not sure what to call this (this is technically not cprime until we bin)
     for i in range(0, len(dparticles['x1'])):
         if(i % 10000 == 0):
             print(str(i) + ' of ' + str(len(dparticles['x1'])))
         fieldval = weighted_field_average(dparticles['x1'][i], dparticles['x2'][i], dparticles['x3'][i], dfields, fieldkey)
         q = 1. #WARNING: might not always be true TODO: automate grabbing q and fix this
-        cprime.append(q*dparticles[vvkey][i]*fieldval)
-        #cprime.append(q*fieldval)
-    cprime = np.asarray(cprime)
+        cprimew.append(q*dparticles[vvkey][i]*fieldval)
+    cprimew = np.asarray(cprimew)
 
     #bin into cprime(vx,vy,vz)
     vxbins = np.arange(-vmax, vmax+dv, dv)
@@ -387,8 +386,9 @@ def compute_cprime(dparticles,dfields,fieldkey,vmax,dv):
     vzbins = np.arange(-vmax, vmax+dv, dv)
     vz = (vzbins[1:] + vzbins[:-1])/2.
 
-    cprimebinned = binned_statistic_dd((dparticles['p3'],dparticles['p2'],dparticles['p1']),cprime,'sum',bins=[vzbins,vybins,vxbins])
-    cprimebinned = cprimebinned.statistic
+    # cprimebinned = binned_statistic_dd((dparticles['p3'],dparticles['p2'],dparticles['p1']),cprime,'sum',bins=[vzbins,vybins,vxbins])
+    # cprimebinned = cprimebinned.statistic
+    cprimebinned,_ = np.histogramdd((dparticles['p3'],dparticles['p2'],dparticles['p1']),bins=[vzbins,vybins,vxbins],weights=cprimew)
 
     # for i in range(0,len(cprimebinned)):
     #     for j in range(0,len(cprimebinned[i])):
@@ -419,16 +419,16 @@ def compute_cprime(dparticles,dfields,fieldkey,vmax,dv):
     vy = _vy
     vz = _vz
 
-    #scale with velocity
+    #scale with velocity #TODO: clean
     if(fieldkey == 'ex' or fieldkey == 'bx'):
-        cprimebinned = vx*cprimebinned
-        return cprime,cprimebinned,vx,vy,vz
+        cprimebinned = cprimebinned
+        return cprimew,cprimebinned,vx,vy,vz
     elif(fieldkey == 'ey' or fieldkey == 'by'):
-        cprimebinned = vy*cprimebinned
-        return cprime,cprimebinned,vx,vy,vz
+        cprimebinned = cprimebinned
+        return cprimew,cprimebinned,vx,vy,vz
     elif(fieldkey == 'ez' or fieldkey == 'bz'):
-        cprimebinned = vz*cprimebinned
-        return cprime,cprimebinned,vx,vy,vz
+        cprimebinned = cprimebinned
+        return cprimew,cprimebinned,vx,vy,vz
     else:
         print("Warning: invalid field key used...")
 
