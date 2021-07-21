@@ -3,6 +3,6 @@ vmax=25
 dv=0.5
 numframe=1000
 dx=0.5
-xlim=17.0,18.0
+xlim=19.0,20.0
 ylim=0.0,1.
 zlim=0.0,1.

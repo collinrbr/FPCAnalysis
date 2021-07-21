@@ -356,7 +356,7 @@ def compute_cprime(dparticles,dfields,fieldkey,vmax,dv):
     Computes cprime for all particles passed to it
     """
 
-    #-----------------TODO: shift particles to correctframe-----------
+    #-TODO: shift particles to correctframe-----------
 
     from scipy.stats import binned_statistic_dd
 
@@ -375,8 +375,8 @@ def compute_cprime(dparticles,dfields,fieldkey,vmax,dv):
             print(str(i) + ' of ' + str(len(dparticles['x1'])))
         fieldval = weighted_field_average(dparticles['x1'][i], dparticles['x2'][i], dparticles['x3'][i], dfields, fieldkey)
         q = 1. #WARNING: might not always be true TODO: automate grabbing q and fix this
-        #cprime.append(q*dparticles[vvkey][i]*fieldval)
-        cprime.append(q*fieldval)
+        cprime.append(q*dparticles[vvkey][i]*fieldval)
+        #cprime.append(q*fieldval)
     cprime = np.asarray(cprime)
 
     #bin into cprime(vx,vy,vz)
