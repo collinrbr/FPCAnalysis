@@ -25,6 +25,23 @@ def find_nearest(array, value):
     idx = (np.abs(array - value)).argmin()
     return idx
 
+def find_two_nearest(array, value):
+    """
+    finds the index of the two elements in an array closest to some given value
+    assumes given array is ordered
+    """
+    array = np.asarray(array)
+    idx1 = (np.abs(array - value)).argmin()
+    if(idx1 == 0): #if on left boundary
+        idx2 = 1
+    elif(idx1 == len(array)-1): #if on right boundary
+        idx2 = len(array)-2
+    elif(np.abs(array[idx1+1]-value) < np.abs(array[idx1-1]-value)):
+        idx2 = idx1+1
+    else:
+        idx2 = idx1-1
+    return idx1,idx2
+
 def mesh_3d_to_2d(meshx,meshy,meshz,planename):
     """
     Converts 3d velocity space arrays to 2d

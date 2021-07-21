@@ -88,11 +88,11 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dpar, dfields, vshock
     totalFieldpts = np.sum(goodfieldpts)
 
     #make bins
-    vxbins = np.arange(-vmax-dv, vmax+dv, dv)
+    vxbins = np.arange(-vmax, vmax+dv, dv)
     vx = (vxbins[1:] + vxbins[:-1])/2.
-    vybins = np.arange(-vmax-dv, vmax+dv, dv)
+    vybins = np.arange(-vmax, vmax+dv, dv)
     vy = (vybins[1:] + vybins[:-1])/2.
-    vzbins = np.arange(-vmax-dv, vmax+dv, dv)
+    vzbins = np.arange(-vmax, vmax+dv, dv)
     vz = (vzbins[1:] + vzbins[:-1])/2.
 
     #make the bins 3d arrays
@@ -122,13 +122,17 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dpar, dfields, vshock
         "WARNING: dfields is not in the same frame as the provided vshock"
 
     #shift particle data to shock frame if needed
-    if(dfields['Vframe_relative_to_sim'] != vshock and dpar['Vframe_relative_to_sim'] == 0.): #TODO: use shift particles function
+    if(dfields['Vframe_relative_to_sim'] == vshock and dpar['Vframe_relative_to_sim'] == 0.): #TODO: use shift particles function
         dpar_p1 = np.asarray(dpar['p1'][gptsparticle][:])
         dpar_p1 -= vshock
         dpar_p2 = np.asarray(dpar['p2'][gptsparticle][:])
         dpar_p3 = np.asarray(dpar['p3'][gptsparticle][:])
     elif(dpar['Vframe_relative_to_sim'] != vshock):
         "WARNING: particles were not in simulation frame or provided vshock frame. This FPC is probably incorrect..."
+    else:
+        dpar_p1 = np.asarray(dpar['p1'][gptsparticle][:])
+        dpar_p2 = np.asarray(dpar['p2'][gptsparticle][:])
+        dpar_p3 = np.asarray(dpar['p3'][gptsparticle][:])
 
     #find distribution
     Hist,_ = np.histogramdd((dpar_p3,dpar_p2,dpar_p1),
@@ -247,3 +251,198 @@ def compute_correlation_over_x(dfields, dparticles, vmax, dv, dx, vshock, xlim=N
 
 def compute_all_correlation_over_x():
     pass
+
+def get_3d_weights(xx,yy,zz,idxxx1,idxxx2,idxyy1,idxyy2,idxzz1,idxzz2,dfields,fieldkey):
+    #get weights by 'volume fraction' of cell
+    w1 = abs((dfields[fieldkey+'_xx'][idxxx1]-xx)*(dfields[fieldkey+'_yy'][idxyy1]-yy)*(dfields[fieldkey+'_zz'][idxzz1]-zz))
+    w2 = abs((dfields[fieldkey+'_xx'][idxxx2]-xx)*(dfields[fieldkey+'_yy'][idxyy1]-yy)*(dfields[fieldkey+'_zz'][idxzz1]-zz))
+    w3 = abs((dfields[fieldkey+'_xx'][idxxx1]-xx)*(dfields[fieldkey+'_yy'][idxyy2]-yy)*(dfields[fieldkey+'_zz'][idxzz1]-zz))
+    w4 = abs((dfields[fieldkey+'_xx'][idxxx1]-xx)*(dfields[fieldkey+'_yy'][idxyy1]-yy)*(dfields[fieldkey+'_zz'][idxzz2]-zz))
+    w5 = abs((dfields[fieldkey+'_xx'][idxxx2]-xx)*(dfields[fieldkey+'_yy'][idxyy2]-yy)*(dfields[fieldkey+'_zz'][idxzz1]-zz))
+    w6 = abs((dfields[fieldkey+'_xx'][idxxx2]-xx)*(dfields[fieldkey+'_yy'][idxyy2]-yy)*(dfields[fieldkey+'_zz'][idxzz2]-zz))
+    w7 = abs((dfields[fieldkey+'_xx'][idxxx1]-xx)*(dfields[fieldkey+'_yy'][idxyy2]-yy)*(dfields[fieldkey+'_zz'][idxzz2]-zz))
+    w8 = abs((dfields[fieldkey+'_xx'][idxxx2]-xx)*(dfields[fieldkey+'_yy'][idxyy1]-yy)*(dfields[fieldkey+'_zz'][idxzz2]-zz))
+
+    # #get volume
+    # #Here we must find opposite corners of the box to ensure we get a 3d volume
+    # #We find opposite corners by  sides of the box are all in either the xy,xz, or yz plane
+    # #Note: this might only work when the cell walls are in the xy,xz,yz planes
+    # maxxx = max(dfields[fieldkey+'_xx'][idxxx1],dfields[fieldkey+'_xx'][idxxx2])
+    # maxyy = max(dfields[fieldkey+'_yy'][idxyy1],dfields[fieldkey+'_yy'][idxyy2])
+    # maxzz = max(dfields[fieldkey+'_zz'][idxzz1],dfields[fieldkey+'_zz'][idxzz2])
+    # minxx = min(dfields[fieldkey+'_xx'][idxxx1],dfields[fieldkey+'_xx'][idxxx2])
+    # minyy = min(dfields[fieldkey+'_yy'][idxyy1],dfields[fieldkey+'_yy'][idxyy2])
+    # minzz = min(dfields[fieldkey+'_zz'][idxzz1],dfields[fieldkey+'_zz'][idxzz2])
+    # vol = abs((maxxx-minxx)*(maxyy-minyy)*(maxzz-minzz))
+    vol = w1+w2+w3+w4+w5+w6+w7+w8
+
+    if(vol == 0.):
+        print("Error in getting weights! Found a zero volume.")
+
+    #normalize to one
+    w1 /= vol
+    w2 /= vol
+    w3 /= vol
+    w4 /= vol
+    w5 /= vol
+    w6 /= vol
+    w7 /= vol
+    w8 /= vol
+
+    #debug (should sum to 1)
+    if(False):
+        print('sum of weights: ' + str(w1+w2+w3+w4+w5+w6+w7+w8))
+
+    return w1,w2,w3,w4,w5,w6,w7,w8
+
+#estimates the field at some point within a cell by taking a weighted average of the surronding grid points
+#NOTE: this assumes the sides of the box are all in either the xy,xz, or yz plane
+#TODO:FIX (weight is no longer 1?)
+def weighted_field_average(xx, yy, zz, dfields, fieldkey):
+    """
+
+    """
+
+    from lib.array_ops import find_two_nearest
+
+    idxxx1, idxxx2 = find_two_nearest(dfields[fieldkey+'_xx'],xx)
+    idxyy1, idxyy2 = find_two_nearest(dfields[fieldkey+'_yy'],yy)
+    idxzz1, idxzz2 = find_two_nearest(dfields[fieldkey+'_zz'],zz)
+
+    #find weights
+    w1,w2,w3,w4,w5,w6,w7,w8 = get_3d_weights(xx,yy,zz,idxxx1,idxxx2,idxyy1,idxyy2,idxzz1,idxzz2,dfields,fieldkey)
+
+
+    #TODO: fix indexing here
+    #take average of field
+    tolerance = 0.001
+    if(abs(w1+w2+w3+w4+w5+w6+w7+w8-1.0) >= tolerance):
+        print("Warning: sum of weights in trilinear interpolation was not close enought to 1. Value was: " + str(w1+w2+w3+w4+w5+w6+w7+w8))
+    fieldaverage = w1*dfields[fieldkey][idxzz1][idxyy1][idxxx1]
+    fieldaverage +=w2*dfields[fieldkey][idxzz1][idxyy1][idxxx2]
+    fieldaverage +=w3*dfields[fieldkey][idxzz1][idxyy2][idxxx1]
+    fieldaverage +=w4*dfields[fieldkey][idxzz2][idxyy1][idxxx1]
+    fieldaverage +=w5*dfields[fieldkey][idxzz1][idxyy2][idxxx2]
+    fieldaverage +=w6*dfields[fieldkey][idxzz2][idxyy2][idxxx2]
+    fieldaverage +=w7*dfields[fieldkey][idxzz2][idxyy2][idxxx1]
+    fieldaverage +=w8*dfields[fieldkey][idxzz2][idxyy1][idxxx2]
+
+    # #debug
+    # if(True):
+    #     print('fields:')
+    #     print(dfields[fieldkey][idxzz1][idxyy1][idxxx1])
+    #     print(dfields[fieldkey][idxzz1][idxyy1][idxxx2])
+    #     print(dfields[fieldkey][idxzz1][idxyy2][idxxx1])
+    #     print(dfields[fieldkey][idxzz2][idxyy1][idxxx1])
+    #     print(dfields[fieldkey][idxzz1][idxyy2][idxxx2])
+    #     print(dfields[fieldkey][idxzz2][idxyy2][idxxx2])
+    #     print(dfields[fieldkey][idxzz2][idxyy2][idxxx1])
+    #     print(dfields[fieldkey][idxzz2][idxyy1][idxxx2])
+    #     print(fieldaverage)
+    #     print('weights')
+    #     print(w1)
+    #     print(w2)
+    #     print(w3)
+    #     print(w4)
+    #     print(w5)
+    #     print(w6)
+    #     print(w7)
+    #     print(w8)
+
+    return fieldaverage
+
+def compute_cprime(dparticles,dfields,fieldkey,vmax,dv):
+    """
+    Computes cprime for all particles passed to it
+    """
+
+    #-----------------TODO: shift particles to correctframe-----------
+
+    from scipy.stats import binned_statistic_dd
+
+    if(fieldkey == 'ex' or fieldkey == 'bx'):
+        vvkey = 'p1'
+    elif(fieldkey == 'ey' or fieldkey == 'by'):
+        vvkey = 'p2'
+    elif(fieldkey == 'ez' or fieldkey == 'bz'):
+        vvkey = 'p3'
+
+
+    #compute cprime for each particle
+    cprime = [] #TODO: not sure what to call this (this is technically not cprime until we bin)
+    for i in range(0, len(dparticles['x1'])):
+        if(i % 10000 == 0):
+            print(str(i) + ' of ' + str(len(dparticles['x1'])))
+        fieldval = weighted_field_average(dparticles['x1'][i], dparticles['x2'][i], dparticles['x3'][i], dfields, fieldkey)
+        q = 1. #WARNING: might not always be true TODO: automate grabbing q and fix this
+        #cprime.append(q*dparticles[vvkey][i]*fieldval)
+        cprime.append(q*fieldval)
+    cprime = np.asarray(cprime)
+
+    #bin into cprime(vx,vy,vz)
+    vxbins = np.arange(-vmax, vmax+dv, dv)
+    vx = (vxbins[1:] + vxbins[:-1])/2.
+    vybins = np.arange(-vmax, vmax+dv, dv)
+    vy = (vybins[1:] + vybins[:-1])/2.
+    vzbins = np.arange(-vmax, vmax+dv, dv)
+    vz = (vzbins[1:] + vzbins[:-1])/2.
+
+    cprimebinned = binned_statistic_dd((dparticles['p3'],dparticles['p2'],dparticles['p1']),cprime,'sum',bins=[vzbins,vybins,vxbins])
+    cprimebinned = cprimebinned.statistic
+
+    # for i in range(0,len(cprimebinned)):
+    #     for j in range(0,len(cprimebinned[i])):
+    #         for k in range(0,len(cprimebinned[j])):
+    #             if(np.isnan(cprimebinned[i][j][k])):
+    #                 cprimebinned[i][j][k] = 0.
+
+    #make the bins 3d arrays
+    _vx = np.zeros((len(vz),len(vy),len(vx)))
+    _vy = np.zeros((len(vz),len(vy),len(vx)))
+    _vz = np.zeros((len(vz),len(vy),len(vx)))
+    for i in range(0,len(vx)):
+        for j in range(0,len(vy)):
+            for k in range(0,len(vz)):
+                _vx[k][j][i] = vx[i]
+
+    for i in range(0,len(vx)):
+        for j in range(0,len(vy)):
+            for k in range(0,len(vz)):
+                _vy[k][j][i] = vy[j]
+
+    for i in range(0,len(vx)):
+        for j in range(0,len(vy)):
+            for k in range(0,len(vz)):
+                _vz[k][j][i] = vz[k]
+
+    vx = _vx
+    vy = _vy
+    vz = _vz
+
+    #scale with velocity
+    if(fieldkey == 'ex' or fieldkey == 'bx'):
+        cprimebinned = vx*cprimebinned
+        return cprime,cprimebinned,vx,vy,vz
+    elif(fieldkey == 'ey' or fieldkey == 'by'):
+        cprimebinned = vy*cprimebinned
+        return cprime,cprimebinned,vx,vy,vz
+    elif(fieldkey == 'ez' or fieldkey == 'bz'):
+        cprimebinned = vz*cprimebinned
+        return cprime,cprimebinned,vx,vy,vz
+    else:
+        print("Warning: invalid field key used...")
+
+def compute_cor_from_cprime(cprimebinned,vx,vy,vz,dv,directionkey):
+    #TODO: figure way to automatically handle direction of taking derivative
+    if(directionkey == 'x'):
+        axis = 2
+        vv = vx
+    elif(directionkey == 'y'):
+        axis = 1
+        vv = vy
+    elif(directionkey == 'z'):
+        axis = 0
+        vv = vz
+
+    cor = -vv/2.*np.gradient(cprimebinned, dv, edge_order=2, axis=axis)+cprimebinned/2
+    return cor
