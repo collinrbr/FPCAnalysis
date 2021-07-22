@@ -36,10 +36,21 @@ except:
 
 #load relevant time slice fields
 path,resultsdir,vmax,dv,numframe,dx,xlim,ylim,zlim = anl.analysis_input(flnm = analysisinputflnm)
+dfields = dh5.field_loader(path=path,num=numframe)
 
 #load original netcdf4 file
-CEx_in, CEy_in, vx_in, vy_in, x_in, enerCEx_in, enerCEy_in, Vframe_relative_to_sim, _, params_in = dnc.load_netcdf4(filename)
+CEx, CEy, CEz, vx, vy, vz, x, enerCEx, enerCEy, enerCEz, Vframe_relative_to_sim, _, params_in = dnc.load3Vnetcdf4(filename)
 
-#TODO: make this show ExB
-pltvv.make_velsig_gif(vx_in, vy_in, vmax, CEx_in, 'ex', x_in, resultsdir+'CExFrame'+str(numframe), resultsdir+'CExFrame'+str(numframe)+'.gif')
-pltvv.make_velsig_gif(vx_in, vy_in, vmax, CEy_in, 'ey', x_in, resultsdir+'CEyFrame'+str(numframe), resultsdir+'CEyFrame'+str(numframe)+'.gif')
+# #TODO: make this show ExB
+# pltvv.make_velsig_gif(vx_in, vy_in, vmax, CEx_in, 'ex', x_in, 'CExFrame'+str(numframe), 'CExFrame'+str(numframe)+'.gif')
+# pltvv.make_velsig_gif(vx_in, vy_in, vmax, CEy_in, 'ey', x_in, 'CEyFrame'+str(numframe), 'CEyFrame'+str(numframe)+'.gif')
+
+CEx_xy = [ao.array_3d_to_2d(CEx[i],'xy') for i in range(0,len(CEx))]
+vx_xy, vy_xy = ao.mesh_3d_to_2d(vx,vy,vz,'xy')
+pltvv.make_velsig_gif_with_EcrossB(vx_xy, vy_xy, vmax, CEx_xy, 'ex', x, dx, dfields, resultsdir+'CExExB', resultsdir+'CExExB.gif', xlim = xlim, ylim = ylim, zlim = zlim)
+rsltmng.make_gif_from_folder('CExExB', 'CExExB.gif')
+
+CEy_xy = [ao.array_3d_to_2d(CEy[i],'xy') for i in range(0,len(CEy))]
+vx_xy, vy_xy = ao.mesh_3d_to_2d(vx,vy,vz,'xy')
+pltvv.make_velsig_gif_with_EcrossB(vx_xy, vy_xy, vmax, CEy_xy, 'ey', x, dx, dfields, resultsdir+'CEyExB', resultsdir+'CEyExB.gif', xlim = xlim, ylim = ylim, zlim = zlim)
+rsltmng.make_gif_from_folder('CEyExB', 'CEyExB.gif')
