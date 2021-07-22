@@ -4,14 +4,14 @@
 
 import numpy as np
 
-def build_metadata(dfields,startval,endval):
+def build_metadata(xlim,dx,startval,endval):
     """
     Builds binary metadata for SDA
 
     Parameters
     ----------
-    dfields : dict
-        field data dictionary from field_loader
+    xlim : 2d array
+        [lowerxbound, upperxbound]
     startval : float
         lower bound for metadata = 1 (units of di)
     endval : float
@@ -29,10 +29,12 @@ def build_metadata(dfields,startval,endval):
         print("Error, startval should be less than end val...")
         return []
 
-    startidx = find_nearest(dfields['ex_xx'], startval)
-    endidx = find_nearest(dfields['ex_xx'], endval)
+    array = np.arange(xlim[0],xlim[1],dx)
 
-    metadata = np.zeros(len(dfields['ex_xx']))
+    startidx = find_nearest(array, startval)
+    endidx = find_nearest(array, endval)
+
+    metadata = np.zeros(len(array))
     metadata = metadata.astype(int)
 
     for i in range(0,len(metadata)):
