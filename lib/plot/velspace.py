@@ -35,8 +35,8 @@ def plot_velsig(vx,vy,vmax,Ce,fieldkey,flnm = '',ttl=''):
 
     #ordering when plotting is flipped
     #see https://matplotlib.org/3.1.1/api/_as_gen/matplotlib.pyplot.pcolormesh.html
-    plotv1 = vx
-    plotv2 = vy
+    plotv1 = vy
+    plotv2 = vx
 
     plt.figure(figsize=(6.5,6))
     plt.figure(figsize=(6.5,6))
@@ -146,8 +146,8 @@ def plot_velsig_wEcrossB(vx,vy,vmax,Ce,ExBvx,ExBvy,fieldkey,flnm = '',ttl=''):
 
     #ordering when plotting is flipped
     #see https://matplotlib.org/3.1.1/api/_as_gen/matplotlib.pyplot.pcolormesh.html
-    plotv1 = vx
-    plotv2 = vy
+    plotv1 = vy
+    plotv2 = vx
 
     plt.figure(figsize=(6.5,6))
     plt.figure(figsize=(6.5,6))

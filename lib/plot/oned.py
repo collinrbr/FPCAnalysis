@@ -58,7 +58,7 @@ def plot_field(dfields, fieldkey, axis='_xx', xxindex = 0, yyindex = 0, zzindex 
         plt.savefig(flnm,format='png')
     plt.close()
 
-def plot_all_fields(dfields, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0, flnm = ''):
+def plot_all_fields(dfields, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0, flnm = '',lowxlim=None, highxlim=None):
     """
     Plots all field data at some static frame down a line along x,y,z.
 
@@ -102,16 +102,34 @@ def plot_all_fields(dfields, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0, 
     fig, axs = plt.subplots(6,figsize=(20,10))
     axs[0].plot(fieldcoord,ex,label="ex")
     axs[0].set_ylabel("$ex$")
+    axs[0].grid()
+    if(lowxlim != None and highxlim != None):
+        axs[0].set_xlim(lowxlim,highxlim)
     axs[1].plot(fieldcoord,ey,label='ey')
     axs[1].set_ylabel("$ey$")
+    axs[1].grid()
+    if(lowxlim is not None and highxlim is not None):
+        axs[1].set_xlim(lowxlim,highxlim)
     axs[2].plot(fieldcoord,ez,label='ez')
     axs[2].set_ylabel("$ez$")
+    axs[2].grid()
+    if(lowxlim is not None and highxlim is not None):
+        axs[2].set_xlim(lowxlim,highxlim)
     axs[3].plot(fieldcoord,bx,label='bx')
     axs[3].set_ylabel("$bx$")
+    axs[3].grid()
+    if(lowxlim is not None and highxlim is not None):
+        axs[3].set_xlim(lowxlim,highxlim)
     axs[4].plot(fieldcoord,by,label='by')
     axs[4].set_ylabel("$by$")
+    axs[4].grid()
+    if(lowxlim is not None and highxlim is not None):
+        axs[4].set_xlim(lowxlim,highxlim)
     axs[5].plot(fieldcoord,bz,label='bz')
     axs[5].set_ylabel("$bz$")
+    axs[5].grid()
+    if(lowxlim is not None and highxlim is not None):
+        axs[5].set_xlim(lowxlim,highxlim)
     if(axis == '_xx'):
         axs[5].set_xlabel("$x$")
     elif(axis == '_yy'):

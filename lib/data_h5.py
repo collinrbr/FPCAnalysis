@@ -30,7 +30,7 @@ def read_particles(path, num):
     with h5py.File(path.format(num),'r') as f:
         for k in dens_vars:
             pts[k] = f[k][:]
-    d['Vframe_relative_to_sim'] = 0.
+    pts['Vframe_relative_to_sim'] = 0.
     return pts
 
 #TODO: rename to read_dhybridr_box_of_par
@@ -76,6 +76,7 @@ def read_box_of_particles(path, num, x1, x2, y1, y2, z1, z2):
         gptsz = (z1 < f['x3'][:] ) & (f['x3'][:] < z2)
         for k in dens_vars:
                 pts[k] = f[k][gptsx & gptsy & gptsz][:]
+    pts['Vframe_relative_to_sim'] = 0.
     return pts
 
 def readTristanParticles(path, num):

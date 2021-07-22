@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+
+import sys
+sys.path.append(".")
+
 import lib.analysis as anl
 import lib.array_ops as ao
 import lib.data_h5 as dh5
@@ -24,7 +28,7 @@ try:
 
 except:
     print("This script assigns metadata of 1 inbetween the bounds and 0 elsewhere")
-    print("usage: " + sys.argv[0] + " netcdf4flnm startindex endindex")
+    print("usage: " + sys.argv[0] + " netcdf4flnm startval endval")
     sys.exit()
 
 #load relevant time slice fields

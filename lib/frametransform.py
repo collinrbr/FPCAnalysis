@@ -27,7 +27,7 @@ def lorentz_transform_vx(dfields,vx):
     dfieldslor['bx'] = dfields['bx']
     dfieldslor['by'] = dfields['by']#assume v/c^2 is small
     dfieldslor['bz'] = dfields['bz']#assume v/c^2 is small
-    dfieldslor['Vframe_relative_to_sim'] = dfields['Vframe_relative_to_sim'] - vx
+    dfieldslor['Vframe_relative_to_sim'] = dfields['Vframe_relative_to_sim'] + vx
 
     return dfieldslor
 
@@ -36,9 +36,11 @@ def transform_flow(dflow,vx):
     """
     Transforms frame of flow data
     """
+    from copy import copy
+
     dflowtransform = copy(dflow) #deep copy
     dflowtransform['ux'] = dflow['ux']-vx
-    dflowtransform['Vframe_relative_to_sim'] = dflow['Vframe_relative_to_sim'] - vx
+    dflowtransform['Vframe_relative_to_sim'] = dflow['Vframe_relative_to_sim'] + vx
 
     return dflowtransform
 
@@ -46,9 +48,11 @@ def shift_particles(dparticles,vx):
     """
     Transforms velocity frame of particles
     """
+    from copy import copy
+
     dparticlestransform = copy(dparticles) #deep copy
     dparticlestransform['p1'] = dparticles['p1'] - vx #TODO: check units here
-    dparticlestransform['Vframe_relative_to_sim'] = dparticles['Vframe_relative_to_sim'] - vx
+    dparticlestransform['Vframe_relative_to_sim'] = dparticles['Vframe_relative_to_sim'] + vx
 
     return dparticlestransform
 

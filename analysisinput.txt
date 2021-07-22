@@ -1,8 +1,8 @@
-path='M06_th45/'
-vmax=25
+path='M03/'
+vmax=15
 dv=0.5
-numframe=2000
+numframe=1000
 dx=0.5
-xlim=39.0,43.0
-ylim=0.0,3.0
-zlim=0.0,3.0
+xlim=15.0,30.
+ylim=0.0,1.
+zlim=0.0,1.

@@ -224,9 +224,9 @@ def calc_E_crossB(dfields,x1,x2,y1,y2,z1,z2):
 
     return ExBvx,ExBvy,ExBvz
 
-def calc_JdotE(dfields, dflow, x1, x2, y1, y2, z1, z2):
+def calc_Ji_Ei(dfields, dflow, x1, x2, y1, y2, z1, z2):
     """
-    Calculated JdotE in given box
+    Calculates JdotE in given box
 
     Parameters
     ----------
@@ -244,7 +244,11 @@ def calc_JdotE(dfields, dflow, x1, x2, y1, y2, z1, z2):
         upper y bound
     """
 
-    from lib.fpc import get_average_in_box
+    from lib.array_ops import get_average_in_box
+
+    if(dfields['Vframe_relative_to_sim'] != dflow['Vframe_relative_to_sim']):
+        print("Error, fields and flow are not in the same frame...")
+        return
 
     ux = get_average_in_box(x1, x2, y1, y2, z1, z2, dflow,'ux')
     uy = get_average_in_box(x1, x2, y1, y2, z1, z2, dflow,'uy')
@@ -253,8 +257,10 @@ def calc_JdotE(dfields, dflow, x1, x2, y1, y2, z1, z2):
     eyf = get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'ey')
     ezf = get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'ez')
 
-    JdE = ux*exf+uy*eyf+uz*ezf #TODO: check units (have definitely omitted q here)
-    return JdE
+    JxEx = ux*exf #TODO: check units (could have definitely omitted q here)
+    JyEy = uy*eyf
+    JzEz = uz*ezf
+    return JxEx, JyEy, JzEz
 
 def get_abs_max_velocity(dparticles):
     """
@@ -280,6 +286,48 @@ def get_abs_max_velocity(dparticles):
     maxspeedz = np.max(np.abs(dparticles['p3']))
 
     return maxspeedx, maxspeedy, maxspeedz
+
+#prints warnings if analysis is set up in an unexpected way
+#WIP
+def check_input_and_sim_stability():
+    path,vmax,dv,numframe,dx,xlim,ylim,zlim = analysis_input()
+
+    #check if max velocity is numerical stable (make optional to save time)
+
+    #check if vmax is reasonable
+
+    #check that xlim ylim and zlim fall on grid mesh
+    pass
+
+#TODO: check if/force startval/endval to be at discrete location that matches the field positions we have
+def deconvolve_for_fft(dfields,fieldkey,startval,endval):
+    """
+    Fits ramp to line and subtracts line
+    """
+    from lib.array_ops import find_nearest
+
+    #grab field in ramp
+    startvalidx = ao.find_nearest(startval,dfields[fieldkey])
+    endvalidx = ao.find_nearest(endval,dfields[fieldkey])
+    fieldinramp = dfields[fieldkey][:,:,startvalidx:endvalidx]
+    fieldposinramp = dfields[fieldkey+'_xx'][startvalidx:endvalidx]
+
+    #fit to line (y = mx+b)
+    m, b = np.polyfit(tvals, xvals, 1)
+    #TODO: this needs to fit to a plane... not a line
+    #or maybe we should fit slices to a line...
+
+    fieldvalsdeconvolved = []
+    for i in range(0,len(fieldposinramp)):
+        decon_field = fieldinramp[i]-m*fieldposinramp[i]-b
+        fieldvalsdeconvolved.append(decon_field)
+
+
+    fieldvalsdeconvolved = np.asarray(fieldvalsdeconvolved)
+    print(fieldposinramp)
+    print(fieldvalsdeconvolved)
+
+    return fieldvalsdeconvolved
 
 def take_fft2(data,daxisx0,daxis1):
     """
