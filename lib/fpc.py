@@ -338,7 +338,7 @@ def compute_cprime_hist(dparticles,dfields,fieldkey,vmax,dv):
     vzbins = np.arange(-vmax, vmax+dv, dv)
     vz = (vzbins[1:] + vzbins[:-1])/2.
 
-    hist,_ = np.histogramdd((dparticles['x3'],dparticles['x2'],dparticles['x1']),bins=[vzbins,vybins,vxbins])
+    hist,_ = np.histogramdd((dparticles['p3'],dparticles['p2'],dparticles['p1']),bins=[vzbins,vybins,vxbins])
     cprimebinned,_ = np.histogramdd((dparticles['p3'],dparticles['p2'],dparticles['p1']),bins=[vzbins,vybins,vxbins],weights=cprimew)
 
     #make the bins 3d arrays
