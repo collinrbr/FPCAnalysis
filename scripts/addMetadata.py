@@ -38,13 +38,13 @@ path_particles = path+"Output/Raw/Sp01/raw_sp01_{:08d}.h5"
 dfields = dh5.field_loader(path=path_fields,num=numframe)
 
 #build metadata
-metadata = md.build_metadata(dfields, startval, endval)
+metadata = md.build_metadata(xlim, startval, endval)
 
 #load original netcdf4 file
-CEx_in, CEy_in, vx_in, vy_in, x_in, enerCEx_in, enerCEy_in, Vframe_relative_to_sim, _, params_in = dnc.load_netcdf4(filename)
+Hist, CEx, CEy, CEz, vx, vy, vz, x, enerCEx, enerCEy, enerCEz, Vframe_relative_to_sim, _, params_in = dnc.load3Vnetcdf4(filename)
 
 #make new file with updated metadata
-dnc.savedata(CEx_in, CEy_in, vx_in, vy_in, x_in, enerCEx_in, enerCEy_in, Vframe_relative_to_sim, metadata_out = metadata, params = params_in, filename = filename+'.withmetadata')
+dnc.save3vdata(Hist, CEx, CEy, CEz, vx, vy, vz, x, enerCEx, enerCEy, enerCEz, Vframe_relative_to_sim, metadata_out = metadata, params = params_in, filename = filename+'.withmetadata')
 
 #replace old file
 os.system('rm '+filename)
