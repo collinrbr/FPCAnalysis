@@ -26,15 +26,16 @@ import math
 import numpy as np
 
 try:
-    filename = sys.argv[1]
+    analysisinputflnm = sys.argv[1]
+    filename = sys.argv[2]
 
 except:
     print("This script generates correlation sweep gifs as along xx")
-    print("usage: " + sys.argv[0] + " netcdf4flnm")
+    print("usage: " + sys.argv[0] + " analysisinputflnm netcdf4flnm")
     sys.exit()
 
 #load relevant time slice fields
-path,vmax,dv,numframe,dx,xlim,ylim,zlim = anl.analysis_input()
+path,resultsdir,vmax,dv,numframe,dx,xlim,ylim,zlim = anl.analysis_input(flnm = analysisinputflnm)
 dfields = dh5.field_loader(path=path,num=numframe)
 
 #load original netcdf4 file
@@ -46,10 +47,10 @@ CEx, CEy, CEz, vx, vy, vz, x, enerCEx, enerCEy, enerCEz, Vframe_relative_to_sim,
 
 CEx_xy = [ao.array_3d_to_2d(CEx[i],'xy') for i in range(0,len(CEx))]
 vx_xy, vy_xy = ao.mesh_3d_to_2d(vx,vy,vz,'xy')
-pltvv.make_velsig_gif_with_EcrossB(vx_xy, vy_xy, vmax, CEx_xy, 'ex', x, dx, dfields, 'CExExB', 'CExExB.gif', xlim = xlim, ylim = ylim, zlim = zlim)
-rsltmng.make_gif_from_folder('CExExB', 'CExExB.gif')
+pltvv.make_velsig_gif_with_EcrossB(vx_xy, vy_xy, vmax, CEx_xy, 'ex', x, dx, dfields, resultsdir+'CExExB', resultsdir+'CExExB.gif', xlim = xlim, ylim = ylim, zlim = zlim)
+rsltmng.make_gif_from_folder(resultsdir+'CExExB', resultsdir+'CExExB.gif')
 
 CEy_xy = [ao.array_3d_to_2d(CEy[i],'xy') for i in range(0,len(CEy))]
 vx_xy, vy_xy = ao.mesh_3d_to_2d(vx,vy,vz,'xy')
-pltvv.make_velsig_gif_with_EcrossB(vx_xy, vy_xy, vmax, CEy_xy, 'ey', x, dx, dfields, 'CEyExB', 'CEyExB.gif', xlim = xlim, ylim = ylim, zlim = zlim)
-rsltmng.make_gif_from_folder('CEyExB', 'CEyExB.gif')
+pltvv.make_velsig_gif_with_EcrossB(vx_xy, vy_xy, vmax, CEy_xy, 'ey', x, dx, dfields, resultsdir+'CEyExB', resultsdir+'CEyExB.gif', xlim = xlim, ylim = ylim, zlim = zlim)
+rsltmng.make_gif_from_folder(resultsdir+'CEyExB', resultsdir+'CEyExB.gif')

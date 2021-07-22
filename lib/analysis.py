@@ -30,6 +30,7 @@ def analysis_input(flnm = 'analysisinput.txt'):
     xlim = None
     ylim = None
     zlim = None
+    resultsdir = 'results/'
 
     while(True):
         #read next line
@@ -57,11 +58,29 @@ def analysis_input(flnm = 'analysisinput.txt'):
             ylim = [float(line[1].split(",")[0]), float(line[1].split(",")[1])]
         elif(line[0]=='zlim'):
             zlim = [float(line[1].split(",")[0]), float(line[1].split(",")[1])]
+        elif(line[0]=='resultsdir'):
+            resultsdir = str(line[1].split("'")[1])
 
     #close file
     f.close()
 
-    return path,vmax,dv,numframe,dx,xlim,ylim,zlim
+    #copy this textfile into results directory
+    import os
+
+    try:
+        isdiff = not(filecmp.cmp(flnm, flnm+resultsdir))
+    except:
+        isdiff = False #file not found, so can copy it
+
+    if(isdiff):
+        print("WANRING: the resultsdir is already used by another analysis input!!!")
+        print("Please make a new resultsdir or risk overwriting/ mixing up results")
+        return
+    else:
+        os.system('mkdir '+str(resultsdir))
+        os.system('cp '+str(flnm)+' '+str(resultsdir))
+
+    return path,resultsdir,vmax,dv,numframe,dx,xlim,ylim,zlim
 
 #TODO: check shape of Cor (make sure this is a list of 2d projections rather than 3d.)
 def compute_energization(Cor,dv):

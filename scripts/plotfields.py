@@ -31,9 +31,15 @@ import numpy as np
 #     print("Use these bounds with addMetadata to assign meta data")
 #     print("usage: " + sys.argv[0] + " startindex endindex")
 #     sys.exit()
+try:
+    analysisinputflnm = sys.argv[1]
+except:
+    print("This generates a plot of the Ex(x,y=0,z=0) field with lines.")
+    print("usage: " + sys.argv[0] + " analysisinputflnm")
+    sys.exit()
 
 #load path
-path,vmax,dv,numframe,dx,xlim,ylim,zlim = anl.analysis_input()
+path,resultsdir,vmax,dv,numframe,dx,xlim,ylim,zlim = anl.analysis_input(flnm = analysisinputflnm)
 path_fields = path
 path_particles = path+"Output/Raw/Sp01/raw_sp01_{:08d}.h5"
 
@@ -46,5 +52,5 @@ dflow = dh5.flow_loader(path=path,num=numframe)
 ## plots Ex field with lines at specified x pos prints indexes of shock bounds
 # pf.plot_field(dfields, 'ex', axis='_xx', yyindex = yyindex, zzindex = zzindex, axvx1 = startval, axvx2 = endval,flnm=path+'Ex(x)_shockbounds.png')
 
-plt1d.plot_all_fields(dfields, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0 ,flnm = 'fields.png')
-plt1d.plot_all_flow(dflow, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0, flnm = 'flow.png')
+plt1d.plot_all_fields(dfields, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0 ,flnm = resultsdir+'fields.png')
+plt1d.plot_all_flow(dflow, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0, flnm = resultsdir+'flow.png')
