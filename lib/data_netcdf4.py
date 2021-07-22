@@ -116,12 +116,14 @@ def savedata(CEx_out, CEy_out, vx_out, vy_out, x_out, enerCEx_out, enerCEy_out, 
     #save file
     ncout.close()
 
-def save3Vdata(CEx_out, CEy_out, CEz_out, vx_out, vy_out, vz_out, x_out, enerCEx_out, enerCEy_out, enerCEz_out, Vframe_relative_to_sim_out, metadata_out = [], params = {}, filename = 'full3Vdata.nc' ):
+def save3Vdata(Hist_out, CEx_out, CEy_out, CEz_out, vx_out, vy_out, vz_out, x_out, enerCEx_out, enerCEy_out, enerCEz_out, Vframe_relative_to_sim_out, metadata_out = [], params = {}, filename = 'full3Vdata.nc' ):
     """
     Creates netcdf4 data of normalized correlation data to send to MLA algo.
 
     Parameters
     ----------
+    Hist_out : 4d array
+        Hist created by fpc correlation functions
     CEx_out : 4d array
         Ex correlation data created by fpc correlation functions
     CEy_out : 4d array
@@ -217,6 +219,10 @@ def save3Vdata(CEx_out, CEy_out, CEz_out, vx_out, vy_out, vz_out, x_out, enerCEx
     C_ez = ncout.createVariable('C_Ez','f4', ('nx', 'nvz', 'nvy', 'nvx'))
     C_ez.longname = 'C_{Ez}'
     C_ez[:] = CEz_out[:]
+
+    Hist = ncout.createVariable('Hist','f4', ('nx', 'nvz', 'nvy', 'nvx'))
+    Hist.longname = 'Hist'
+    Hist[:] = Hist_out[:]
 
     sda = ncout.createVariable('sda','f4',('nx',))
     sda.description = '1 = signature, 0 = no signature'
@@ -358,6 +364,8 @@ def load3Vnetcdf4(filename):
             CEy_in = ncin.variables['C_Ey'][:]
         elif(key == 'C_Ez'):
             CEz_in = ncin.variables['C_Ez'][:]
+        elif(key == 'Hist'):
+            Hist_in = ncin.variables['Hist'][:]
         elif(key == 'sda'):
             metadata_in = ncin.variables['sda'][:] #TODO: add ability to handle multiple types of metadata
         elif(key == 'E_CEx'):
@@ -398,7 +406,7 @@ def load3Vnetcdf4(filename):
     vy = _vy
     vz = _vz
 
-    return CEx_in, CEy_in, CEz_in, vx, vy, vz, x_in, enerCEx_in, enerCEy_in, enerCEz_in, Vframe_relative_to_sim_in, metadata_in, params_in
+    return Hist_in, CEx_in, CEy_in, CEz_in, vx, vy, vz, x_in, enerCEx_in, enerCEy_in, enerCEz_in, Vframe_relative_to_sim_in, metadata_in, params_in
 
 
 #TODO: parse_input_file and read_input tries to do the same thing. However,
