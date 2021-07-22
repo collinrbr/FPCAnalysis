@@ -1,8 +1,8 @@
 path='M03/'
-vmax=25
+vmax=15
 dv=0.5
 numframe=1000
 dx=0.5
-xlim=19.0,20.0
+xlim=15.0,30.
 ylim=0.0,1.
 zlim=0.0,1.
