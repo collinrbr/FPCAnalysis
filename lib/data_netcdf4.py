@@ -116,7 +116,7 @@ def savedata(CEx_out, CEy_out, vx_out, vy_out, x_out, enerCEx_out, enerCEy_out, 
     #save file
     ncout.close()
 
-def savefulldata(CEx_out, CEy_out, CEz_out, vx_out, vy_out, vz_out, x_out, enerCEx_out, enerCEy_out, energCEz_out, Vframe_relative_to_sim_out, metadata_out = [], params = {}, filename = 'dHybridRSDAtest.nc' ):
+def save3Vdata(CEx_out, CEy_out, CEz_out, vx_out, vy_out, vz_out, x_out, enerCEx_out, enerCEy_out, enerCEz_out, Vframe_relative_to_sim_out, metadata_out = [], params = {}, filename = 'full3Vdata.nc' ):
     """
     Creates netcdf4 data of normalized correlation data to send to MLA algo.
 
@@ -126,6 +126,8 @@ def savefulldata(CEx_out, CEy_out, CEz_out, vx_out, vy_out, vz_out, x_out, enerC
         Ex correlation data created by fpc correlation functions
     CEy_out : 4d array
         Ey correlation data created by fpc correlation functions
+    CEz_out : 4d array
+        Ez correlation data created by fpc correlation functions
     vx_out : 3d array
         velocity space grid created by fpc correlation functions
     vy_out : 3d array
@@ -172,7 +174,7 @@ def savefulldata(CEx_out, CEy_out, CEz_out, vx_out, vy_out, vz_out, x_out, enerC
             _ = ncout.createVariable(key,None)
             _[:] = params[key]
 
-    ncout.description = 'dHybridR MLA data test 2'
+    ncout.description = 'dHybridR MLA data test 3'
     ncout.generationtime = str(datetime.now())
     ncout.version = get_git_head()
 
@@ -195,29 +197,30 @@ def savefulldata(CEx_out, CEy_out, CEz_out, vx_out, vy_out, vz_out, x_out, enerC
     vy[:] = vy_out[:]
 
     vz_out = np.asarray([vz_out[i][0][0] for i in range(0,len(vz_out))]) #assumes same number of data points along all axis in vz_out mesh var
+    vz = ncout.createVariable('vz','f4', ('nvz',))
+    vz.nvz = len(vz_out)
+    vz.longname = 'v_z/v_ti'
+    vz[:] = vz_out[:]
 
     x = ncout.createVariable('x','f4',('nx',))
     x.nx = len(x_out)
     x[:] = x_out[:]
 
-    #tranpose data to match previous netcdf4 formatting
-    for i in range(0,len(CEx_out)):
-        tempCex = CEx_out[i].T
-        CEx_out[i] = tempCex
-        tempCey = CEy_out[i].T
-        CEy_out[i] = tempCey
-
-    C_ex = ncout.createVariable('C_Ex','f4', ('nx', 'nvx', 'nvy'))
+    C_ex = ncout.createVariable('C_Ex','f4', ('nx', 'nvz', 'nvy', 'nvx'))
     C_ex.longname = 'C_{Ex}'
     C_ex[:] = CEx_out[:]
 
-    C_ey = ncout.createVariable('C_Ey','f4', ('nx', 'nvx', 'nvy'))
+    C_ey = ncout.createVariable('C_Ey','f4', ('nx', 'nvz', 'nvy', 'nvx'))
     C_ey.longname = 'C_{Ey}'
     C_ey[:] = CEy_out[:]
 
-    metadata = ncout.createVariable('sda','f4',('nx',))
-    metadata.description = '1 = signature, 0 = no signature'
-    metadata[:] = metadata_out[:]
+    C_ez = ncout.createVariable('C_Ez','f4', ('nx', 'nvz', 'nvy', 'nvx'))
+    C_ez.longname = 'C_{Ez}'
+    C_ez[:] = CEz_out[:]
+
+    sda = ncout.createVariable('sda','f4',('nx',))
+    sda.description = '1 = signature, 0 = no signature'
+    sda[:] = metadata_out[:]
 
     enerCEx = ncout.createVariable('E_CEx','f4',('nx',))
     enerCEx.description = 'Energization computed by integrating over CEx in velocity space'
@@ -226,6 +229,10 @@ def savefulldata(CEx_out, CEy_out, CEz_out, vx_out, vy_out, vz_out, x_out, enerC
     enerCEy = ncout.createVariable('E_CEy','f4',('nx',))
     enerCEy.description = 'Energization computed by integrating over CEy in velocity space'
     enerCEy[:] = enerCEy_out[:]
+
+    enerCEz = ncout.createVariable('E_CEz','f4',('nx',))
+    enerCEz.description = 'Energization computed by integrating over CEy in velocity space'
+    enerCEz[:] = enerCEz_out[:]
 
     Vframe_relative_to_sim = ncout.createVariable('Vframe_relative_to_sim', 'f4')
     Vframe_relative_to_sim[:] = Vframe_relative_to_sim_out
@@ -323,6 +330,76 @@ def load_netcdf4(filename):
     vy_in = _vy
 
     return CEx_in, CEy_in, vx_in, vy_in, x_in, enerCEx_in, enerCEy_in, Vframe_relative_to_sim_in, metadata_in, params_in
+
+def load3Vnetcdf4(filename):
+    """
+    Loads 3v netcdf4 data created by save3Vdata function
+
+    """
+    from netCDF4 import Dataset
+    from datetime import datetime
+
+    ncin = Dataset(filename, 'r', format='NETCDF4')
+    ncin.set_auto_mask(False)
+
+    params_in = {}
+    for key in ncin.variables.keys():
+        if(key == 'x'):
+            x_in = ncin.variables['x'][:]
+        elif(key == 'vx'):
+            vx_in = ncin.variables['vx'][:]
+        elif(key == 'vy'):
+            vy_in = ncin.variables['vy'][:]
+        elif(key == 'vz'):
+            vz_in = ncin.variables['vz'][:]
+        elif(key == 'C_Ex'):
+            CEx_in = ncin.variables['C_Ex'][:]
+        elif(key == 'C_Ey'):
+            CEy_in = ncin.variables['C_Ey'][:]
+        elif(key == 'C_Ez'):
+            CEz_in = ncin.variables['C_Ez'][:]
+        elif(key == 'sda'):
+            metadata_in = ncin.variables['sda'][:] #TODO: add ability to handle multiple types of metadata
+        elif(key == 'E_CEx'):
+            enerCEx_in = ncin.variables['E_CEx'][:]
+        elif(key == 'E_CEy'):
+            enerCEy_in = ncin.variables['E_CEy'][:]
+        elif(key == 'E_CEz'):
+            enerCEz_in = ncin.variables['E_CEz'][:]
+        elif(key == 'Vframe_relative_to_sim'):
+            Vframe_relative_to_sim_in = ncin.variables['Vframe_relative_to_sim'][:]
+        else:
+            if(not(isinstance(ncin.variables[key][:], str))):
+                params_in[key] = ncin.variables[key][:]
+
+    #add global attributes
+    params_in.update(ncin.__dict__)
+
+    #reconstruct vx, vy, vz 3d arrays
+    _vx = np.zeros((len(vz_in),len(vy_in),len(vx_in)))
+    _vy = np.zeros((len(vz_in),len(vy_in),len(vx_in)))
+    _vz = np.zeros((len(vz_in),len(vy_in),len(vx_in)))
+    for i in range(0,len(vx_in)):
+        for j in range(0,len(vy_in)):
+            for k in range(0,len(vz_in)):
+                _vx[k][j][i] = vx_in[i]
+
+    for i in range(0,len(vx_in)):
+        for j in range(0,len(vy_in)):
+            for k in range(0,len(vz_in)):
+                _vy[k][j][i] = vy_in[j]
+
+    for i in range(0,len(vx_in)):
+        for j in range(0,len(vy_in)):
+            for k in range(0,len(vz_in)):
+                _vz[k][j][i] = vz_in[k]
+
+    vx = _vx
+    vy = _vy
+    vz = _vz
+
+    return CEx_in, CEy_in, CEz_in, vx, vy, vz, x_in, enerCEx_in, enerCEy_in, enerCEz_in, Vframe_relative_to_sim_in, metadata_in, params_in
+
 
 #TODO: parse_input_file and read_input tries to do the same thing. However,
 # both functions have different potential flaws. Need to make parse function
