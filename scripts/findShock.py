@@ -23,17 +23,18 @@ import math
 import numpy as np
 
 try:
-    startval = float(sys.argv[1])
-    endval = float(sys.argv[2])
+    analysisinputflnm = sys.argv[1]
+    startval = float(sys.argv[2])
+    endval = float(sys.argv[3])
 
 except:
     print("This generates a plot of the Ex(x,y=0,z=0) field with lines specified at the provided shock bounds (in units of di) and returns the xx index associated with the nearest element in the array to each bound.")
     print("Use these bounds with addMetadata to assign meta data")
-    print("usage: " + sys.argv[0] + " startindex endindex")
+    print("usage: " + sys.argv[0] + " analysisinputflnm startindex endindex")
     sys.exit()
 
 #load path
-path,vmax,dv,numframe,dx,xlim,ylim,zlim = anl.analysis_input()
+path,resultsdir,vmax,dv,numframe,dx,xlim,ylim,zlim = anl.analysis_input(flnm = analysisinputflnm)
 path_fields = path
 path_particles = path+"Output/Raw/Sp01/raw_sp01_{:08d}.h5"
 
@@ -43,4 +44,4 @@ dfields = dh5.field_loader(path=path_fields,num=numframe)
 #plots Ex field with lines at specified x pos prints indexes of shock bounds
 yyindex = 0
 zzindex = 0
-plt1d.plot_field(dfields, 'ex', axis='_xx', yyindex = yyindex, zzindex = zzindex, axvx1 = startval, axvx2 = endval,flnm='Ex(x)_shockbounds.png')
+plt1d.plot_field(dfields, 'ex', axis='_xx', yyindex = yyindex, zzindex = zzindex, axvx1 = startval, axvx2 = endval,flnm=resultsdir+'Ex(x)_shockbounds.png')

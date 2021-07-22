@@ -21,12 +21,19 @@ import lib.plot.velspace as pltvv
 import os
 import math
 import numpy as np
+try:
+    analysisinputflnm = sys.argv[1]
+except:
+    print("This generates FPC netcdf4 file")
+    print("usage: " + sys.argv[0] + " analysisinputflnm")
+    sys.exit()
+
 
 #-------------------------------------------------------------------------------
 # load data
 #-------------------------------------------------------------------------------
 #load path
-path,vmax,dv,numframe,dx,xlim,ylim,zlim = anl.analysis_input()
+path,resultsdir,vmax,dv,numframe,dx,xlim,ylim,zlim = anl.analysis_input(flnm = analysisinputflnm)
 path_fields = path
 path_particles = path+"Output/Raw/Sp01/raw_sp01_{:08d}.h5"
 
@@ -99,5 +106,5 @@ inputdict = dnc.parse_input_file(path)
 params = dnc.build_params(inputdict,numframe)
 
 flnm = 'FPCnometadata.nc'
-dnc.savedata(CEx_out, CEy_out, vx_out, vy_out, x_out, enerCEx_out, enerCEy_out, dfields['Vframe_relative_to_sim'], metadata_out = [], params = params, filename = flnm)
+dnc.savedata(CEx_out, CEy_out, vx_out, vy_out, x_out, enerCEx_out, enerCEy_out, dfields['Vframe_relative_to_sim'], metadata_out = [], params = params, filename = resultsdir+flnm)
 print("Done! Please use findShock.py and addMetadata to assign metadata...")

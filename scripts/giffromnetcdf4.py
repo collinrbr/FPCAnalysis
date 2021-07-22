@@ -26,19 +26,20 @@ import math
 import numpy as np
 
 try:
-    filename = sys.argv[1]
+    analysisinputflnm = sys.argv[1]
+    filename = sys.argv[2]
 
 except:
     print("This script generates correlation sweep gifs as along xx")
-    print("usage: " + sys.argv[0] + " netcdf4flnm")
+    print("usage: " + sys.argv[0] + " analysisinputflnm netcdf4flnm")
     sys.exit()
 
 #load relevant time slice fields
-path,vmax,dv,numframe,dx,xlim,ylim,zlim = anl.analysis_input()
+path,resultsdir,vmax,dv,numframe,dx,xlim,ylim,zlim = anl.analysis_input(flnm = analysisinputflnm)
 
 #load original netcdf4 file
 CEx_in, CEy_in, vx_in, vy_in, x_in, enerCEx_in, enerCEy_in, Vframe_relative_to_sim, _, params_in = dnc.load_netcdf4(filename)
 
 #TODO: make this show ExB
-pltvv.make_velsig_gif(vx_in, vy_in, vmax, CEx_in, 'ex', x_in, 'CExFrame'+str(numframe), 'CExFrame'+str(numframe)+'.gif')
-pltvv.make_velsig_gif(vx_in, vy_in, vmax, CEy_in, 'ey', x_in, 'CEyFrame'+str(numframe), 'CEyFrame'+str(numframe)+'.gif')
+pltvv.make_velsig_gif(vx_in, vy_in, vmax, CEx_in, 'ex', x_in, resultsdir+'CExFrame'+str(numframe), resultsdir+'CExFrame'+str(numframe)+'.gif')
+pltvv.make_velsig_gif(vx_in, vy_in, vmax, CEy_in, 'ey', x_in, resultsdir+'CEyFrame'+str(numframe), resultsdir+'CEyFrame'+str(numframe)+'.gif')

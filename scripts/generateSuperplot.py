@@ -23,10 +23,11 @@ import math
 import numpy as np
 try:
     analysisinputflnm = sys.argv[1]
+    filename = sys.argv[2]
+
 except:
-    print("This prints max speed in provided limits in analysis input")
-    print("usage: " + sys.argv[0] + " analysisinputflnm")
-    sys.exit()
+    print("This script makes superplot from netcdf4 file.")
+    print("usage: " + sys.argv[0] + " analysisinputflnm netcdf4flnm")
 
 #-------------------------------------------------------------------------------
 # load data
@@ -36,14 +37,17 @@ path,resultsdir,vmax,dv,numframe,dx,xlim,ylim,zlim = anl.analysis_input(flnm = a
 path_fields = path
 path_particles = path+"Output/Raw/Sp01/raw_sp01_{:08d}.h5"
 
-#Load particle data
-dparticles = dh5.readParticles(path_particles, numframe)
+#load original netcdf4 file
+Hist, CEx, CEy, CEz, vx, vy, vz, x, enerCEx, enerCEy, enerCEz, Vframe_relative_to_sim, _, params_in = dnc.load3Vnetcdf4(filename)
 
 #-------------------------------------------------------------------------------
-# check max speed
+# make superplot pngs
 #-------------------------------------------------------------------------------
-maxsx, maxsy, maxsz = ao.get_abs_max_velocity(dparticles)
+directory = resultsdir+"superplotGraphs"
+flnm = resultsdir+"superplottest.gif"
+pltvv.make_superplot_gif(vx, vy, vz, vmax, Hist, CEx, CEy, CEz, x, directory, flnm)
 
-print("Maxsx : " + str(maxsx))
-print("Maxsy : " + str(maxsy))
-print("Maxsz : " + str(maxsz))
+#-------------------------------------------------------------------------------
+# make pngs into gif
+#-------------------------------------------------------------------------------
+rsltmng.make_gif_from_folder(directory,flnm)

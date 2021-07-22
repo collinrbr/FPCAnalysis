@@ -23,16 +23,17 @@ import math
 import numpy as np
 
 try:
-    fieldkey = str(sys.argv[1])
-    planename = str(sys.argv[2])
+    analysisinputflnm = sys.argv[1]
+    fieldkey = str(sys.argv[2])
+    planename = str(sys.argv[3])
 
 except:
     print("This script pmesh field sweep gifs along axis normal to given plane")
-    print("usage: " + sys.argv[0] + " fieldkey planename (xplotlimmin xplotlimmax)")
+    print("usage: " + sys.argv[0] + " analysisinputflnm fieldkey planename (xplotlimmin xplotlimmax)")
     sys.exit()
 
 #load relevant time slice fields
-path,vmax,dv,numframe,dx,_,_,_ = ao.analysis_input()
+path,resultsdir,vmax,dv,numframe,dx,_,_,_ = ao.analysis_input(flnm = analysisinputflnm)
 path_fields = path
 
 #load fields
@@ -42,11 +43,11 @@ dfields = dh5.field_loader(path=path_fields,num=numframe)
 try:
     xplotlimmin = float(sys.argv[3])
     xplotlimmax = float(sys.argv[4])
-    directory = fieldkey+planename+'zoomedin_frame'+str(numframe)
+    directory = resultsdir+fieldkey+planename+'zoomedin_frame'+str(numframe)
     plt2d.make_fieldpmesh_sweep(dfields,fieldkey,planename,directory,xlimmin=xplotlimmin,xlimmax=xplotlimmax)
 
 except:
-    directory = fieldkey+planename+'frame'+str(numframe)
+    directory = resultsdir+fieldkey+planename+'frame'+str(numframe)
     plt2d.make_fieldpmesh_sweep(dfields,fieldkey,planename,directory)
 
 rsltmng.make_gif_from_folder(directory,directory+'.gif')
