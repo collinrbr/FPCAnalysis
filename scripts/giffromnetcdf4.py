@@ -48,9 +48,9 @@ CEx, CEy, CEz, vx, vy, vz, x, enerCEx, enerCEy, enerCEz, Vframe_relative_to_sim,
 CEx_xy = [ao.array_3d_to_2d(CEx[i],'xy') for i in range(0,len(CEx))]
 vx_xy, vy_xy = ao.mesh_3d_to_2d(vx,vy,vz,'xy')
 pltvv.make_velsig_gif_with_EcrossB(vx_xy, vy_xy, vmax, CEx_xy, 'ex', x, dx, dfields, resultsdir+'CExExB', resultsdir+'CExExB.gif', xlim = xlim, ylim = ylim, zlim = zlim)
-rsltmng.make_gif_from_folder('CExExB', 'CExExB.gif')
+rsltmng.make_gif_from_folder(resultsdir+'CExExB', resultsdir+'CExExB.gif')
 
 CEy_xy = [ao.array_3d_to_2d(CEy[i],'xy') for i in range(0,len(CEy))]
 vx_xy, vy_xy = ao.mesh_3d_to_2d(vx,vy,vz,'xy')
 pltvv.make_velsig_gif_with_EcrossB(vx_xy, vy_xy, vmax, CEy_xy, 'ey', x, dx, dfields, resultsdir+'CEyExB', resultsdir+'CEyExB.gif', xlim = xlim, ylim = ylim, zlim = zlim)
-rsltmng.make_gif_from_folder('CEyExB', 'CEyExB.gif')
+rsltmng.make_gif_from_folder(resultsdir+'CEyExB', resultsdir+'CEyExB.gif')

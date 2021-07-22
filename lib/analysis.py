@@ -66,8 +66,19 @@ def analysis_input(flnm = 'analysisinput.txt'):
 
     #copy this textfile into results directory
     import os
-    os.system('mkdir '+str(resultsdir))
-    os.system('cp '+str(flnm)+' '+str(resultsdir))
+
+    try:
+        isdiff = not(filecmp.cmp(flnm, flnm+resultsdir))
+    except:
+        isdiff = False #file not found, so can copy it
+
+    if(isdiff):
+        print("WANRING: the resultsdir is already used by another analysis input!!!")
+        print("Please make a new resultsdir or risk overwriting/ mixing up results")
+        return
+    else:
+        os.system('mkdir '+str(resultsdir))
+        os.system('cp '+str(flnm)+' '+str(resultsdir))
 
     return path,resultsdir,vmax,dv,numframe,dx,xlim,ylim,zlim
 

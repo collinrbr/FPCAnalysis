@@ -1,4 +1,5 @@
 path='M03/'
+resultsdir='testresultsdir/'
 vmax=15
 dv=0.5
 numframe=1000
