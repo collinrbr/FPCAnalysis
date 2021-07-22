@@ -112,14 +112,10 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dpar, dfields, vshock
       'Vframe_relative_to_sim':dpar['Vframe_relative_to_sim']
     }
 
-    #find distribution
-    Hist,_ = np.histogramdd((dpar_p3,dpar_p2,dpar_p1),
-                         bins=[vzbins,vybins,vxbins])
-
-    cprimew,cprimebinned,vx,vy,vz = compute_cprime(dparsubset,dfields,fieldkey,vmax,dv)
+    cprimebinned,hist,vx,vy,vz = compute_cprime_hist(dparsubset,dfields,fieldkey,vmax,dv)
     cor = compute_cor_from_cprime(cprimebinned,vx,vy,vz,dv,directionkey)
 
-    return vx, vy, vz, totalPtcl, totalFieldpts, Hist, Cor
+    return vx, vy, vz, totalPtcl, totalFieldpts, hist, cor
 
 def compute_all_hist_and_cor():
     pass
@@ -232,17 +228,6 @@ def get_3d_weights(xx,yy,zz,idxxx1,idxxx2,idxyy1,idxyy2,idxzz1,idxzz2,dfields,fi
     w7 = abs((dfields[fieldkey+'_xx'][idxxx1]-xx)*(dfields[fieldkey+'_yy'][idxyy2]-yy)*(dfields[fieldkey+'_zz'][idxzz2]-zz))
     w8 = abs((dfields[fieldkey+'_xx'][idxxx2]-xx)*(dfields[fieldkey+'_yy'][idxyy1]-yy)*(dfields[fieldkey+'_zz'][idxzz2]-zz))
 
-    # #get volume
-    # #Here we must find opposite corners of the box to ensure we get a 3d volume
-    # #We find opposite corners by  sides of the box are all in either the xy,xz, or yz plane
-    # #Note: this might only work when the cell walls are in the xy,xz,yz planes
-    # maxxx = max(dfields[fieldkey+'_xx'][idxxx1],dfields[fieldkey+'_xx'][idxxx2])
-    # maxyy = max(dfields[fieldkey+'_yy'][idxyy1],dfields[fieldkey+'_yy'][idxyy2])
-    # maxzz = max(dfields[fieldkey+'_zz'][idxzz1],dfields[fieldkey+'_zz'][idxzz2])
-    # minxx = min(dfields[fieldkey+'_xx'][idxxx1],dfields[fieldkey+'_xx'][idxxx2])
-    # minyy = min(dfields[fieldkey+'_yy'][idxyy1],dfields[fieldkey+'_yy'][idxyy2])
-    # minzz = min(dfields[fieldkey+'_zz'][idxzz1],dfields[fieldkey+'_zz'][idxzz2])
-    # vol = abs((maxxx-minxx)*(maxyy-minyy)*(maxzz-minzz))
     vol = w1+w2+w3+w4+w5+w6+w7+w8
 
     if(vol == 0.):
@@ -320,7 +305,7 @@ def weighted_field_average(xx, yy, zz, dfields, fieldkey):
 
     return fieldaverage
 
-def compute_cprime(dparticles,dfields,fieldkey,vmax,dv):
+def compute_cprime_hist(dparticles,dfields,fieldkey,vmax,dv):
     """
     Computes cprime for all particles passed to it
     """
@@ -340,8 +325,6 @@ def compute_cprime(dparticles,dfields,fieldkey,vmax,dv):
     #compute cprime for each particle
     cprimew = [] #TODO: not sure what to call this (this is technically not cprime until we bin)
     for i in range(0, len(dparticles['x1'])):
-        if(i % 10000 == 0):
-            print(str(i) + ' of ' + str(len(dparticles['x1'])))
         fieldval = weighted_field_average(dparticles['x1'][i], dparticles['x2'][i], dparticles['x3'][i], dfields, fieldkey)
         q = 1. #WARNING: might not always be true TODO: automate grabbing q and fix this
         cprimew.append(q*dparticles[vvkey][i]*fieldval)
@@ -355,6 +338,7 @@ def compute_cprime(dparticles,dfields,fieldkey,vmax,dv):
     vzbins = np.arange(-vmax, vmax+dv, dv)
     vz = (vzbins[1:] + vzbins[:-1])/2.
 
+    hist,_ = np.histogramdd((dparticles['x3'],dparticles['x2'],dparticles['x1']),bins=[vzbins,vybins,vxbins])
     cprimebinned,_ = np.histogramdd((dparticles['p3'],dparticles['p2'],dparticles['p1']),bins=[vzbins,vybins,vxbins],weights=cprimew)
 
     #make the bins 3d arrays
@@ -380,7 +364,7 @@ def compute_cprime(dparticles,dfields,fieldkey,vmax,dv):
     vy = _vy
     vz = _vz
 
-    return cprimew,cprimebinned,vx,vy,vz
+    return cprimebinned,hist,vx,vy,vz
 
 def compute_cor_from_cprime(cprimebinned,vx,vy,vz,dv,directionkey):
     #TODO: figure way to automatically handle direction of taking derivative
