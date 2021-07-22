@@ -35,8 +35,8 @@ def plot_velsig(vx,vy,vmax,Ce,fieldkey,flnm = '',ttl=''):
 
     #ordering when plotting is flipped
     #see https://matplotlib.org/3.1.1/api/_as_gen/matplotlib.pyplot.pcolormesh.html
-    plotv1 = vy
-    plotv2 = vx
+    plotv1 = vx
+    plotv2 = vy
 
     plt.figure(figsize=(6.5,6))
     plt.figure(figsize=(6.5,6))

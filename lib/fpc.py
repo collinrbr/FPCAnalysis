@@ -4,6 +4,8 @@
 
 import numpy as np
 
+#TODO: this function is very non optimized, mainly due to repeated searching of dparticles array. Should optimize this by passing particle subsets (ie boxes of particles)
+#to do FPC of
 def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dpar, dfields, vshock, fieldkey, directionkey):
     """
     Computes distribution function and correlation wrt to given field
@@ -79,44 +81,8 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dpar, dfields, vshock
     gptsparticle = (x1 < dpar['x1'] ) & (dpar['x1'] < x2) & (y1 < dpar['x2']) & (dpar['x2'] < y2) & (z1 < dpar['x3']) & (dpar['x3'] < z2)
     totalPtcl = np.sum(gptsparticle)
 
-    # #TODO?: consider forcing user to take correlation over only 1 cell
-    # if(len(goodfieldpts)==0):
-    #     print("Using weighted_field_average...") #Debug
-    #     avgfield = weighted_field_average((x1+x2)/2.,(y1+y2)/2.,0,dfields,fieldkey) #TODO: make 3d i.e. *don't* just 'project' all z information out and take fields at z = 0
-    # else:
     avgfield = np.average(goodfieldpts) #TODO: call getfieldaverageinbox here instead
     totalFieldpts = np.sum(goodfieldpts)
-
-    #make bins
-    vxbins = np.arange(-vmax, vmax+dv, dv)
-    vx = (vxbins[1:] + vxbins[:-1])/2.
-    vybins = np.arange(-vmax, vmax+dv, dv)
-    vy = (vybins[1:] + vybins[:-1])/2.
-    vzbins = np.arange(-vmax, vmax+dv, dv)
-    vz = (vzbins[1:] + vzbins[:-1])/2.
-
-    #make the bins 3d arrays
-    _vx = np.zeros((len(vz),len(vy),len(vx)))
-    _vy = np.zeros((len(vz),len(vy),len(vx)))
-    _vz = np.zeros((len(vz),len(vy),len(vx)))
-    for i in range(0,len(vx)):
-        for j in range(0,len(vy)):
-            for k in range(0,len(vz)):
-                _vx[k][j][i] = vx[i]
-
-    for i in range(0,len(vx)):
-        for j in range(0,len(vy)):
-            for k in range(0,len(vz)):
-                _vy[k][j][i] = vy[j]
-
-    for i in range(0,len(vx)):
-        for j in range(0,len(vy)):
-            for k in range(0,len(vz)):
-                _vz[k][j][i] = vz[k]
-
-    vx = _vx
-    vy = _vy
-    vz = _vz
 
     if(dfields['Vframe_relative_to_sim'] != vshock):
         "WARNING: dfields is not in the same frame as the provided vshock"
@@ -134,22 +100,25 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dpar, dfields, vshock
         dpar_p2 = np.asarray(dpar['p2'][gptsparticle][:])
         dpar_p3 = np.asarray(dpar['p3'][gptsparticle][:])
 
+    #build dparticles subset using shifted particle data
+    #TODO: this isnt clean code (using dpar_p1/2/3 'multiple times' in histogram and in compute_cprime)
+    dparsubset = {
+      'p1':dpar_p1,
+      'p2':dpar_p2,
+      'p3':dpar_p3,
+      'x1':dpar['x1'][gptsparticle][:],
+      'x2':dpar['x2'][gptsparticle][:],
+      'x3':dpar['x3'][gptsparticle][:],
+      'Vframe_relative_to_sim':dpar['Vframe_relative_to_sim']
+    }
+
     #find distribution
     Hist,_ = np.histogramdd((dpar_p3,dpar_p2,dpar_p1),
                          bins=[vzbins,vybins,vxbins])
 
-    if(directionkey == 'x'):
-        axis = 2
-        vv = vx
-    elif(directionkey == 'y'):
-        axis = 1
-        vv = vy
-    elif(directionkey == 'z'):
-        axis = 0
-        vv = vz
+    cprimew,cprimebinned,vx,vy,vz = compute_cprime(dparsubset,dfields,fieldkey,vmax,dv)
+    cor = compute_cor_from_cprime(cprimebinned,vx,vy,vz,dv,directionkey)
 
-    #calculate correlation
-    Cor = -0.5*vv**2.*np.gradient(Hist, dv, edge_order=2, axis=axis)*avgfield
     return vx, vy, vz, totalPtcl, totalFieldpts, Hist, Cor
 
 def compute_all_hist_and_cor():
@@ -386,15 +355,7 @@ def compute_cprime(dparticles,dfields,fieldkey,vmax,dv):
     vzbins = np.arange(-vmax, vmax+dv, dv)
     vz = (vzbins[1:] + vzbins[:-1])/2.
 
-    # cprimebinned = binned_statistic_dd((dparticles['p3'],dparticles['p2'],dparticles['p1']),cprime,'sum',bins=[vzbins,vybins,vxbins])
-    # cprimebinned = cprimebinned.statistic
     cprimebinned,_ = np.histogramdd((dparticles['p3'],dparticles['p2'],dparticles['p1']),bins=[vzbins,vybins,vxbins],weights=cprimew)
-
-    # for i in range(0,len(cprimebinned)):
-    #     for j in range(0,len(cprimebinned[i])):
-    #         for k in range(0,len(cprimebinned[j])):
-    #             if(np.isnan(cprimebinned[i][j][k])):
-    #                 cprimebinned[i][j][k] = 0.
 
     #make the bins 3d arrays
     _vx = np.zeros((len(vz),len(vy),len(vx)))
@@ -419,18 +380,7 @@ def compute_cprime(dparticles,dfields,fieldkey,vmax,dv):
     vy = _vy
     vz = _vz
 
-    #scale with velocity #TODO: clean
-    if(fieldkey == 'ex' or fieldkey == 'bx'):
-        cprimebinned = cprimebinned
-        return cprimew,cprimebinned,vx,vy,vz
-    elif(fieldkey == 'ey' or fieldkey == 'by'):
-        cprimebinned = cprimebinned
-        return cprimew,cprimebinned,vx,vy,vz
-    elif(fieldkey == 'ez' or fieldkey == 'bz'):
-        cprimebinned = cprimebinned
-        return cprimew,cprimebinned,vx,vy,vz
-    else:
-        print("Warning: invalid field key used...")
+    return cprimew,cprimebinned,vx,vy,vz
 
 def compute_cor_from_cprime(cprimebinned,vx,vy,vz,dv,directionkey):
     #TODO: figure way to automatically handle direction of taking derivative
