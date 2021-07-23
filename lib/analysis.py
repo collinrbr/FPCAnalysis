@@ -339,7 +339,7 @@ def check_input(analysisinputflnm,dfields):
         if(ylim[0] < (dfields['ex_yy'][0])-cellsizeyy/2.):
             print("Error: ylim[0] is outside of simulation box.")
             sys.exit()
-        if(xlim[1] > (dfields['ex_yy'][-1])+cellsizeyy/2.):
+        if(ylim[1] > (dfields['ex_yy'][-1])+cellsizeyy/2.):
             print("Error: ylim[1] is outside of simulation box.")
     if(zlim is not None):
         if(zlim[0] < (dfields['ex_zz'][0])-cellsizezz/2.):
