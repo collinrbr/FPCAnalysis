@@ -44,15 +44,25 @@ dfields = dh5.field_loader(path=path_fields,num=numframe)
 #Load all fields along all time slices
 all_dfields = dh5.all_dfield_loader(path=path_fields, verbose=False)
 
+#check input to make sure box makes sense
+anl.check_input(analysisinputflnm,dfields)
+
 #Load slice of particle data
 if xlim is not None and ylim is not None and zlim is not None:
     dparticles = dh5.read_box_of_particles(path_particles, numframe, xlim[0], xlim[1], ylim[0], ylim[1], zlim[0], zlim[1])
-#Load only a slice in x but all of y and z
-elif xlim is not None and ylim is None and zlim is None:
-    dparticles = dh5.read_box_of_particles(path_particles, numframe, xlim[0], xlim[1], dfields['ex_yy'][0], dfields['ex_yy'][-1], dfields['ex_zz'][0], dfields['ex_zz'][-1])
+#Load all data in unspecified limits and only data in bounds in specified limits
+elif xlim is not None or ylim is not None or zlim is not None:
+    if xlim is None:
+        xlim = [dfields['ex_xx'][0],dfields['ex_xx'][-1]]
+    if ylim is None:
+        ylim = [dfields['ex_yy'][0],dfields['ex_yy'][-1]]
+    if zlim is None:
+        zlim = [dfields['ex_zz'][0],dfields['ex_zz'][-1]]
+    dparticles = dh5.read_box_of_particles(path_particles, numframe, xlim[0], xlim[1], ylim[0], ylim[1], zlim[0], zlim[1])
 #Load all the particles
 else:
     dparticles = dh5.read_particles(path_particles, numframe)
+
 #-------------------------------------------------------------------------------
 # estimate shock vel and lorentz transform
 #-------------------------------------------------------------------------------
@@ -84,12 +94,12 @@ CEx_xy = []
 CEy_xy = []
 CEz_xy = []
 for i in range(0,len(CEx)):
-    CEx_xy = ao.array_3d_to_2d(CEx[i],'xy')
-    CEy_xy = ao.array_3d_to_2d(CEy[i],'xy')
-    CEz_xy = ao.array_3d_to_2d(CEz[i],'xy')
-    CEx_xy.append(CEx_xy)
-    CEy_xy.append(CEy_xy)
-    CEz_xy.append(CEz_xy)
+    CEx_xy2d = ao.array_3d_to_2d(CEx[i],'xy')
+    CEy_xy2d = ao.array_3d_to_2d(CEy[i],'xy')
+    CEz_xy2d = ao.array_3d_to_2d(CEz[i],'xy')
+    CEx_xy.append(CEx_xy2d)
+    CEy_xy.append(CEy_xy2d)
+    CEz_xy.append(CEz_xy2d)
 
 #compute energization from correlations
 enerCEx = anl.compute_energization_over_x(CEx_xy,dv)
