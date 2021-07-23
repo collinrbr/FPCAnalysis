@@ -311,7 +311,7 @@ def check_input(analysisinputflnm,dfields):
 
     """
     import sys
-    path,vmax,dv,numframe,dx,xlim,ylim,zlim = analysis_input(flnm = analysisinputflnm)
+    path,resultsdir,vmax,dv,numframe,dx,xlim,ylim,zlim = analysis_input(flnm = analysisinputflnm)
 
     cellsizexx = dfields['ex_xx'][1]-dfields['ex_xx'][0]
     cellsizeyy = dfields['ex_yy'][1]-dfields['ex_yy'][0]
