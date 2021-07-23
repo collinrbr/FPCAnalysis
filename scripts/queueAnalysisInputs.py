@@ -30,14 +30,17 @@ except:
     print("usage: " + sys.argv[0] + " analysisinputdir")
     sys.exit()
 
-    filenames = os.listdir(analysisinputdir)
-    filenames = sorted(analysisinputdir)
-    try:
-        filenames.remove('.DS_store')
-    except:
-        pass
+filenames = os.listdir(analysisinputdir)
+filenames = sorted(filenames)
+try:
+    filenames.remove('.DS_store')
+except:
+    pass
 
-    for flnm in filenames:
-        cmd = 'python3 scripts/generateFPC.py '+analysisinputdir+'/'+flnm
-        print(cmd)
-        os.system(cmd)
+print("Files that are queued up:")
+print(filenames)
+
+for flnm in filenames:
+    cmd = 'python3 scripts/generateFPC.py '+analysisinputdir+'/'+flnm
+    print(cmd)
+    os.system(cmd)
