@@ -60,8 +60,6 @@ def analysis_input(flnm = 'analysisinput.txt'):
             zlim = [float(line[1].split(",")[0]), float(line[1].split(",")[1])]
         elif(line[0]=='resultsdir'):
             resultsdir = str(line[1].split("'")[1])
-
-    #close file
     f.close()
 
     #copy this textfile into results directory
@@ -306,17 +304,81 @@ def get_abs_max_velocity(dparticles):
 
     return maxspeedx, maxspeedy, maxspeedz
 
-#prints warnings if analysis is set up in an unexpected way
-#WIP
-def check_input_and_sim_stability():
-    path,vmax,dv,numframe,dx,xlim,ylim,zlim = analysis_input()
+
+def check_input(analysisinputflnm,dfields):
+    """
+    prints warnings if analysis is set up in an unexpected way
+
+    """
+    import sys
+    path,vmax,dv,numframe,dx,xlim,ylim,zlim = analysis_input(flnm = analysisinputflnm)
+
+    cellsizexx = dfields['ex_xx'][1]-dfields['ex_xx'][0]
+    cellsizeyy = dfields['ex_yy'][1]-dfields['ex_yy'][0]
+    cellsizezz = dfields['ex_zz'][1]-dfields['ex_zz'][0]
+
+    #check bounds
+    if(xlim is not None):
+        if(xlim[0] > xlim[1]):
+            print("Error: xlim is set up backwards. xlim[0] should be stricly less than xlim[1]")
+            sys.exit()
+        if(xlim[0] > xlim[1]-dx):
+            print("Error: dx is too small. xlim[0] should not be greater than xlim[0] > xlim[1]-dx")
+            sys.exit()
+        tolerance = 0.0001
+        if((xlim[1]-xlim[0])/dx % 1. > tolerance):
+            print("Error: can't divide xlimits into uniformly sized boxes. (xlim[1]-xlim[0])/dx is not a whole number")
+            sys.exit()
+        if(xlim[0] < (dfields['ex_xx'][0])-cellsizexx/2.):
+            print("Error: xlim[0] is outside of simulation box.")
+            sys.exit()
+        if(xlim[1] > (dfields['ex_xx'][-1])+cellsizexx/2.):
+            print("Error: xlim[1] is outside of simulation box.")
+            sys.exit()
+    if(ylim is not None):
+        if(ylim[0] < (dfields['ex_yy'][0])-cellsizeyy/2.):
+            print("Error: ylim[0] is outside of simulation box.")
+            sys.exit()
+        if(xlim[1] > (dfields['ex_yy'][-1])+cellsizeyy/2.):
+            print("Error: ylim[1] is outside of simulation box.")
+    if(zlim is not None):
+        if(zlim[0] < (dfields['ex_zz'][0])-cellsizezz/2.):
+            print("Error: zlim[0] is outside of simulation box.")
+            sys.exit()
+        if(zlim[1] > (dfields['ex_zz'][-1])+cellsizezz/2.):
+            print("Error: zlim[1] is outside of simulation box.")
+
+
+
+def check_sim_stability(analysisinputflnm,dfields,dparticles,dt):
+    """
+    Checks max velocity to make sure sim is numerically stable
+    """
+    path,vmax,dv,numframe,dx,xlim,ylim,zlim = analysis_input(flnm = analysisinputflnm)
+
+    maxsx, maxsy, maxsz = get_abs_max_velocity(dparticles) #Max speed (i.e. max of absolute value of velocity)
 
     #check if max velocity is numerical stable (make optional to save time)
+    #i.e. no particle should move more than 1 cell size in a step
+    cellsizexx = dfields['ex_xx'][1]-dfields['ex_xx'][0]
+    cellsizeyy = dfields['ex_yy'][1]-dfields['ex_yy'][0]
+    cellsizezz = dfields['ex_zz'][1]-dfields['ex_zz'][0]
+    if(dt*maxsx > cellsizexx):
+        print("Warning: Courant-Friedrich-Lewy condition has been violated in this simulation. (dt*maxsx > cellsizexx)")
+    if(dt*maxsy > cellsizeyy):
+        print("Warning: Courant-Friedrich-Lewy condition has been violated in this simulation. (dt*maxsy > cellsizeyy)")
+    if(dt*maxsz > cellsizezz):
+        print("Warning: Courant-Friedrich-Lewy condition has been violated in this simulation. (dt*maxsz > cellsizezz)")
 
     #check if vmax is reasonable
+    if(vmax >= 3.*maxsx or vmax >= 3.*maxsy or vmax >= 3.*maxsz):
+        print("Warning: vmax is 3 times larger than the max velocity of any particle. It is computationally wasteful to run FPC analysis in the upper domain of velocity where there are no particles...")
 
-    #check that xlim ylim and zlim fall on grid mesh
-    pass
+
+
+
+
+
 
 #TODO: check if/force startval/endval to be at discrete location that matches the field positions we have
 def deconvolve_for_fft(dfields,fieldkey,startval,endval):

@@ -42,7 +42,7 @@ dparticles = dh5.readParticles(path_particles, numframe)
 #-------------------------------------------------------------------------------
 # check max speed
 #-------------------------------------------------------------------------------
-maxsx, maxsy, maxsz = ao.get_abs_max_velocity(dparticles)
+maxsx, maxsy, maxsz = anl.get_abs_max_velocity(dparticles)
 
 print("Maxsx : " + str(maxsx))
 print("Maxsy : " + str(maxsy))

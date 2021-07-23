@@ -1,9 +1,9 @@
-path='M03/'
+path='M06_th45/'
 resultsdir='testresultsdir/'
 vmax=15
 dv=0.5
-numframe=1000
+numframe=2000
 dx=0.5
 xlim=15.0,30.
-ylim=0.0,1.
-zlim=0.0,1.
+ylim=0.0,12.
+zlim=0.0,12.
