@@ -339,7 +339,7 @@ def check_input(analysisinputflnm,dfields):
         if(ylim[0] < (dfields['ex_yy'][0])-cellsizeyy/2.):
             print("Error: ylim[0] is outside of simulation box.")
             sys.exit()
-        if(xlim[1] > (dfields['ex_yy'][-1])+cellsizeyy/2.):
+        if(ylim[1] > (dfields['ex_yy'][-1])+cellsizeyy/2.):
             print("Error: ylim[1] is outside of simulation box.")
     if(zlim is not None):
         if(zlim[0] < (dfields['ex_zz'][0])-cellsizezz/2.):
@@ -437,3 +437,19 @@ def take_fft2(data,daxisx0,daxis1):
     fftdata = np.fft.fft2(data)
 
     return k0, k1, fftdata
+
+def remove_average_fields_over_yz(dfields):
+    """
+
+    """
+    from copy import copy
+
+    dfieldfluc = copy(dfields) #deep copy
+    dfieldfluc['ex'] = dfields['ex']-dfields['ex'].mean(axis=(0,1))
+    dfieldfluc['ey'] = dfields['ey']-dfields['ey'].mean(axis=(0,1))
+    dfieldfluc['ez'] = dfields['ez']-dfields['ez'].mean(axis=(0,1))
+    dfieldfluc['bx'] = dfields['bx']-dfields['bx'].mean(axis=(0,1))
+    dfieldfluc['by'] = dfields['by']-dfields['by'].mean(axis=(0,1))
+    dfieldfluc['bz'] = dfields['bz']-dfields['bz'].mean(axis=(0,1))
+
+    return dfieldfluc

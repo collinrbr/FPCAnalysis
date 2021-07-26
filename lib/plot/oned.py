@@ -388,3 +388,40 @@ def plot_compression_ratio(dfields, upstreambound, downstreambound, xxindex=0, y
     else:
         plt.savefig(flnm+'.png',format='png')
     plt.close()
+
+def compare_fields(dfields1, dfields2, fieldkey, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0, axvx1 = float('nan'), axvx2 = float('nan'), flnm = ''):
+    """
+
+    """
+
+
+    if(axis == '_zz'):
+        fieldval1 = np.asarray([dfields1[fieldkey][i][yyindex][xxindex] for i in range(0,len(dfields1[fieldkey+axis]))])
+        fieldval2 = np.asarray([dfields2[fieldkey][i][yyindex][xxindex] for i in range(0,len(dfields2[fieldkey+axis]))])
+        xlbl = 'z'
+    elif(axis == '_yy'):
+        fieldval1 = np.asarray([dfields1[fieldkey][zzindex][i][xxindex] for i in range(0,len(dfields1[fieldkey+axis]))])
+        fieldval2 = np.asarray([dfields2[fieldkey][zzindex][i][xxindex] for i in range(0,len(dfields2[fieldkey+axis]))])
+        xlbl = 'y'
+    elif(axis == '_xx'):
+        fieldval1 = np.asarray([dfields1[fieldkey][zzindex][yyindex][i] for i in range(0,len(dfields1[fieldkey+axis]))])
+        fieldval2 = np.asarray([dfields2[fieldkey][zzindex][yyindex][i] for i in range(0,len(dfields2[fieldkey+axis]))])
+        xlbl = 'x'
+
+    fieldcoord1 = np.asarray(dfields1[fieldkey+axis])
+    fieldcoord2 = np.asarray(dfields2[fieldkey+axis])
+
+    plt.figure(figsize=(20,10))
+    plt.xlabel(xlbl)
+    plt.ylabel(fieldkey)
+    plt.plot(fieldcoord1,fieldval1)
+    plt.plot(fieldcoord2,fieldval2)
+    if(not(axvx1 != axvx1)): #if not nan
+        plt.axvline(x=axvx1)
+    if(not(axvx2 != axvx2)): #if not nan
+        plt.axvline(x=axvx2)
+    if(flnm == ''):
+        plt.show()
+    else:
+        plt.savefig(flnm,format='png')
+    plt.close()
