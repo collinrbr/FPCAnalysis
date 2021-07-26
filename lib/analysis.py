@@ -437,3 +437,19 @@ def take_fft2(data,daxisx0,daxis1):
     fftdata = np.fft.fft2(data)
 
     return k0, k1, fftdata
+
+def remove_average_fields_over_yz(dfields):
+    """
+
+    """
+    from copy import copy
+
+    dfieldfluc = copy(dfields) #deep copy
+    dfieldfluc['ex'] = dfields['ex']-dfields['ex'].mean(axis=(0,1))
+    dfieldfluc['ey'] = dfields['ey']-dfields['ey'].mean(axis=(0,1))
+    dfieldfluc['ez'] = dfields['ez']-dfields['ez'].mean(axis=(0,1))
+    dfieldfluc['bx'] = dfields['bx']-dfields['bx'].mean(axis=(0,1))
+    dfieldfluc['by'] = dfields['by']-dfields['by'].mean(axis=(0,1))
+    dfieldfluc['bz'] = dfields['bz']-dfields['bz'].mean(axis=(0,1))
+
+    return dfieldfluc
