@@ -118,6 +118,6 @@ print("Saving results in netcdf4 file...")
 inputdict = dnc.parse_input_file(path)
 params = dnc.build_params(inputdict,numframe)
 
-flnm = 'FPCnometadata.nc'
+flnm = 'FPCusingdeltafieldsnometadata.nc'
 dnc.save3Vdata(Hist, CEx, CEy, CEz, vx, vy, vz, x, enerCEx, enerCEy, enerCEz, dfields['Vframe_relative_to_sim'], metadata_out = [], params = params, filename = resultsdir+flnm)
 print("Done! Please use findShock.py and addMetadata to assign metadata...")
