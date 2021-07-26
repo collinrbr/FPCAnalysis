@@ -79,7 +79,7 @@ all_dfields['dfields'] = _fields
 #-------------------------------------------------------------------------------
 # compute field fluctuations
 #-------------------------------------------------------------------------------
-dfieldfluc = anl.remove_average_fields_over_yz(dfields)
+dfieldsfluc = anl.remove_average_fields_over_yz(dfields)
 
 #-------------------------------------------------------------------------------
 # do FPC analysis
