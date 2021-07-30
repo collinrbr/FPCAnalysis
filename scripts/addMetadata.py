@@ -38,6 +38,9 @@ path_fields = path
 path_particles = path+"Output/Raw/Sp01/raw_sp01_{:08d}.h5"
 dfields = dh5.field_loader(path=path_fields,num=numframe)
 
+if xlim is None:
+    xlim = [dfields['ex_xx'][0],dfields['ex_xx'][-1]]
+
 #build metadata
 metadata = md.build_metadata(xlim, dx, startval, endval)
 
