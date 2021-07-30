@@ -34,7 +34,7 @@ import numpy as np
 try:
     analysisinputflnm = sys.argv[1]
 except:
-    print("This generates a plot of the Ex(x,y=0,z=0) field with lines.")
+    print("This generates a plot of the Ex(x,y=0,z=0) field.")
     print("usage: " + sys.argv[0] + " analysisinputflnm")
     sys.exit()
 
