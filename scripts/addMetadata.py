@@ -48,7 +48,7 @@ metadata = md.build_metadata(xlim, dx, startval, endval)
 Hist, CEx, CEy, CEz, vx, vy, vz, x, enerCEx, enerCEy, enerCEz, Vframe_relative_to_sim, _, params_in = dnc.load3Vnetcdf4(filename)
 
 #make new file with updated metadata
-dnc.save3vdata(Hist, CEx, CEy, CEz, vx, vy, vz, x, enerCEx, enerCEy, enerCEz, Vframe_relative_to_sim, metadata_out = metadata, params = params_in, filename = filename+'.withmetadata')
+dnc.save3Vdata(Hist, CEx, CEy, CEz, vx, vy, vz, x, enerCEx, enerCEy, enerCEz, Vframe_relative_to_sim, metadata_out = metadata, params = params_in, filename = filename+'.withmetadata')
 
 #replace old file
 os.system('rm '+filename)
