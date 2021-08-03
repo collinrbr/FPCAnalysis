@@ -48,6 +48,7 @@ def plot_field(dfields, fieldkey, axis='_xx', xxindex = 0, yyindex = 0, zzindex 
     plt.xlabel(xlbl)
     plt.ylabel(fieldkey)
     plt.plot(fieldcoord,fieldval)
+    plt.grid()
     if(not(axvx1 != axvx1)): #if not nan
         plt.axvline(x=axvx1)
     if(not(axvx2 != axvx2)): #if not nan
@@ -425,3 +426,17 @@ def compare_fields(dfields1, dfields2, fieldkey, axis='_xx', xxindex = 0, yyinde
     else:
         plt.savefig(flnm,format='png')
     plt.close()
+
+def make_field_scan_gif(dfields, fieldkey, directory, axis='_xx'):
+
+    try:
+        os.mkdir(directory)
+    except:
+        pass
+
+    sweepvar = dfields[fieldkey+'_xx'][:]
+
+    for i in range(0,len(sweepvar)):
+        print('Making plot '+str(i)+' of '+str(len(sweepvar)))
+        flnm = directory+'/'+str(i).zfill(6)
+        plot_field(dfields, fieldkey, axis='_xx', xxindex = i, yyindex = 0, zzindex = 0, axvx1 = dfields[fieldkey+'_xx'][i], axvx2 = float('nan'), flnm = flnm)

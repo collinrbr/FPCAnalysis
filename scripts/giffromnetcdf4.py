@@ -3,9 +3,6 @@
 import sys
 sys.path.append(".")
 
-import sys
-sys.path.append(".")
-
 import lib.analysis as anl
 import lib.array_ops as ao
 import lib.data_h5 as dh5

@@ -6,12 +6,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 
-def plot_fft_norm(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, xxindex=float('nan'), yyindex=float('nan'), zzindex=float('nan'), plotlog = True):
+def plot_fft_norm(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, xxindex=float('nan'), yyindex=float('nan'), zzindex=float('nan'), plotlog = True, xaxislim=None, yaxislim=None):
     """
     WIP
 
     """
-    from lib.analysisfunctions import take_fft2
+    from lib.analysis import take_fft2
 
     if(planename=='xy'):
         ttl = fieldkey+'(x,y)'
@@ -81,25 +81,28 @@ def plot_fft_norm(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, xxi
     #sort data so we can plot it
     xplot, yplot, fieldpmesh = _sort_for_contour(xplot, yplot, fieldpmesh)
 
+    #get x index where data is zero
+    #get y index where data is zero
+    #get subset based on this
+    xzeroidx = np.where(xplot[0] == 0.)[0][0]
+    yzeroidx = np.where(yplot[:,0] == 0.)[0][0]
     if(plotlog):
-        #get x index where data is zero
-        #get y index where data is zero
-        #get subset based on this
-
-        xzeroidx = np.where(xplot[0] == 0.)[0][0]
-        yzeroidx = np.where(yplot[:,0] == 0.)[0][0]
         fieldpmesh = fieldpmesh[xzeroidx+1:,yzeroidx+1:]
         xplot = xplot[xzeroidx+1:,yzeroidx+1:]
         yplot = yplot[xzeroidx+1:,yzeroidx+1:]
+    else:
+        fieldpmesh = fieldpmesh[xzeroidx:,yzeroidx:]
+        xplot = xplot[xzeroidx:,yzeroidx:]
+        yplot = yplot[xzeroidx:,yzeroidx:]
 
-    # xzeroidx = np.where(xplot[0] == 0.)[0][0]
-    # yzeroidx = np.where(yplot[:,0] == 0.)[0][0]
-    # fieldpmesh[xzeroidx,yzeroidx] = 0.
 
     plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
     plt.figure(figsize=(6.5,6))
-    plt.figure(figsize=(6.5,6))
     plt.pcolormesh(xplot, yplot, fieldpmesh, cmap="Spectral", shading="gouraud")
+    if(xaxislim is not None):
+        plt.xlim(0,xaxislim)
+    if(yaxislim is not None):
+        plt.ylim(0,yaxislim)
     if(takeaxisaverage):
         plt.title(ttl,loc="right")
     elif(planename == 'xy'):
@@ -128,6 +131,61 @@ def plot_fft_norm(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, xxi
         plt.close()
 
     return k0, k1, fieldpmesh, xplot, yplot #debug. TODO: remove
+
+def make_2dfourier_sweep(dfields,fieldkey,planename,directory,plotlog=True,xaxislim=None,yaxislim=None):
+    """
+
+    """
+
+    try:
+        os.mkdir(directory)
+    except:
+        pass
+
+    #sweep along 'third' axis
+    if(planename=='yz'):
+        sweepvar = dfields[fieldkey+'_xx'][:]
+    elif(planename=='xz'):
+        sweepvar = dfields[fieldkey+'_yy'][:]
+    elif(planename=='xy'):
+        sweepvar = dfields[fieldkey+'_zz'][:]
+
+    for i in range(0,len(sweepvar)):
+        print('Making plot '+str(i)+' of '+str(len(sweepvar)))
+        flnm = directory+'/'+str(i).zfill(6)
+        if(planename=='yz'):
+            plot_fft_norm(dfields,fieldkey,planename,flnm = flnm,plotlog=plotlog,takeaxisaverage=False, xxindex=i, yyindex=float('nan'), zzindex=float('nan'),xaxislim=xaxislim,yaxislim=yaxislim)
+        elif(planename=='xz'):
+            plot_fft_norm(dfields,fieldkey,planename,flnm = flnm,plotlog=plotlog,takeaxisaverage=False, xxindex=float('nan'), yyindex=i, zzindex=float('nan'),xaxislim=xaxislim,yaxislim=yaxislim)
+        elif(planename=='xy'):
+            plot_fft_norm(dfields,fieldkey,planename,flnm = flnm,plotlog=plotlog, takeaxisaverage=False, xxindex=float('nan'), yyindex=float('nan'), zzindex=i, xaxislim=xaxislim,yaxislim=yaxislim)
+        else:
+            print("Please enter a valid planename...")
+            break
+
+def plot1d_fft(dfields,fieldkey):
+    axis = '_xx'
+    zzindex = 0
+    yyindex = 0
+    data = np.asarray([dfields[fieldkey][zzindex][yyindex][i] for i in range(0,len(dfields[fieldkey+axis]))])
+    dx = dfields[fieldkey+axis][1]-dfields['ex_xx'][0]
+
+
+    k0 = 2.*np.pi*np.fft.fftfreq(len(data),dx)
+    k0 = k0[0:int(len(k0)/2)]
+
+    fftdata = np.fft.fft(data)
+    fftdata = np.real(fftdata*np.conj(fftdata))
+    fftdata = fftdata[0:int(len(fftdata)/2)]
+
+    plt.figure()
+    plt.xlabel('k'+axis[1:2])
+    plt.ylabel(fieldkey+' Power')
+    plt.plot(k0,fftdata)
+    plt.show()
+
+
+    return k0,fftdata
 
 def _sort_for_contour(xcoord,ycoord,dheight):
     """
