@@ -78,8 +78,10 @@ def make_field_pmesh(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, 
             yplot[i][j] = yplot1d[i]
 
     plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
-    plt.figure(figsize=(6.5,6))
-    plt.figure(figsize=(6.5,6))
+    if((planename == 'xy' or planename == 'xz') and (xlimmin == None and xlimmax == None)):
+        plt.figure(figsize=(2*6.5,6))
+    else:
+        plt.figure(figsize=(6.5,6))
     plt.pcolormesh(xplot, yplot, fieldpmesh, cmap="inferno", shading="gouraud")
     if(takeaxisaverage):
         plt.title(ttl,loc="right")

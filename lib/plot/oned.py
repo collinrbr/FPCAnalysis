@@ -181,6 +181,7 @@ def plot_flow(dflow, flowkey, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0,
     plt.figure(figsize=(20,10))
     plt.xlabel(xlbl)
     plt.ylabel(flowkey)
+    plt.grid()
     if(not(axvx1 != axvx1)): #if not nan
         plt.axvline(x=axvx1)
     if(not(axvx2 != axvx2)): #if not nan

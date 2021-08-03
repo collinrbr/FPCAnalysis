@@ -158,7 +158,7 @@ def make_2dfourier_sweep(dfields,fieldkey,planename,directory,plotlog=True,xaxis
         elif(planename=='xz'):
             plot_fft_norm(dfields,fieldkey,planename,flnm = flnm,plotlog=plotlog,takeaxisaverage=False, xxindex=float('nan'), yyindex=i, zzindex=float('nan'),xaxislim=xaxislim,yaxislim=yaxislim)
         elif(planename=='xy'):
-            plot_fft_norm(dfields,fieldkey,planename,flnm = flnm,plotlog=plotlog, takeaxisaverage=False, xxindex=float('nan'), yyindex=float('nan'), zzindex=i, xaxislim=xaxislim,yaxislim=yaxislim)
+            plot_fft_norm(dfields,fieldkey,planename,flnm = flnm,plotlog=plotlog,takeaxisaverage=False, xxindex=float('nan'), yyindex=float('nan'), zzindex=i, xaxislim=xaxislim,yaxislim=yaxislim)
         else:
             print("Please enter a valid planename...")
             break
