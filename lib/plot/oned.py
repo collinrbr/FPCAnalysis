@@ -229,10 +229,13 @@ def plot_all_flow(dflow, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0, flnm
     fig, axs = plt.subplots(3,figsize=(20,10))
     axs[0].plot(fieldcoord,ux,label="vx")
     axs[0].set_ylabel("$ux$")
+    axs[0].grid()
     axs[1].plot(fieldcoord,uy,label='vy')
     axs[1].set_ylabel("$uy$")
+    axs[1].grid()
     axs[2].plot(fieldcoord,uz,label='vz')
     axs[2].set_ylabel("$uz$")
+    axs[2].grid()
     if(axis == '_xx'):
         axs[2].set_xlabel("$x$")
     elif(axis == '_yy'):

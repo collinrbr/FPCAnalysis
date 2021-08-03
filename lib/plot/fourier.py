@@ -130,7 +130,7 @@ def plot_fft_norm(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, xxi
         plt.show()
         plt.close()
 
-    return k0, k1, fieldpmesh, xplot, yplot #debug. TODO: remove
+    return #k0, k1, fieldpmesh, xplot, yplot #debug. TODO: remove
 
 def make_2dfourier_sweep(dfields,fieldkey,planename,directory,plotlog=True,xaxislim=None,yaxislim=None):
     """
