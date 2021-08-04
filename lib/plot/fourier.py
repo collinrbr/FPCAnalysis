@@ -13,28 +13,43 @@ def plot_fft_norm(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, xxi
     """
     from lib.analysis import take_fft2
 
+
+    fieldttl = ''
+    if(fieldkey == 'ex'):
+        fieldttl = '$F\{E_x'
+    elif(fieldkey == 'ey'):
+        fieldttl = '$F\{E_y'
+    elif(fieldkey == 'ez'):
+        fieldttl = '$F\{E_z'
+    elif(fieldkey == 'bx'):
+        fieldttl = '$F\{B_x'
+    elif(fieldkey == 'by'):
+        fieldttl = '$F\{B_y'
+    elif(fieldkey == 'bz'):
+        fieldttl = '$F \{ B_z'
+
     if(planename=='xy'):
-        ttl = fieldkey+'(x,y)'
-        xlbl = 'kx (di)'
-        ylbl = 'ky (di)'
+        ttl = fieldttl+'(x,y)\}$ at '
+        xlbl = '$k_x$ (di)$^{-1}$'
+        ylbl = '$k_y$ (di)$^{-1}$'
         axisidx = 0 #used to take average along z if no index is specified
         axis = '_zz'
         daxis0 = dfields[fieldkey+'_yy'][1]-dfields[fieldkey+'_yy'][0]
         daxis1 = dfields[fieldkey+'_xx'][1]-dfields[fieldkey+'_xx'][0]
 
     elif(planename=='xz'):
-        ttl = fieldkey+'(x,z)'
-        xlbl = 'kx (di)'
-        ylbl = 'kz (di)'
+        ttl = fieldttl+'(x,z)\}$ at '
+        xlbl = '$k_x$ (di)$^{-1}$'
+        ylbl = '$k_z$ (di)$^{-1}$'
         axisidx = 1 #used to take average along y if no index is specified
         axis = '_yy'
         daxis0 = dfields[fieldkey+'_zz'][1]-dfields[fieldkey+'_zz'][0]
         daxis1 = dfields[fieldkey+'_xx'][1]-dfields[fieldkey+'_xx'][0]
 
     elif(planename=='yz'):
-        ttl = fieldkey+'(y,z)'
-        xlbl = 'ky (di)'
-        ylbl = 'kz (di)'
+        ttl = fieldttl+'(y,z)\}$ at '
+        xlbl = '$k_y$ (di)$^{-1}$'
+        ylbl = '$k_z$ (di)$^{-1}$'
         axisidx = 2 #used to take average along x if no index is specified
         axis = '_xx'
         daxis0 = dfields[fieldkey+'_zz'][1]-dfields[fieldkey+'_zz'][0]
@@ -106,11 +121,11 @@ def plot_fft_norm(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, xxi
     if(takeaxisaverage):
         plt.title(ttl,loc="right")
     elif(planename == 'xy'):
-        plt.title(ttl+' z (di): '+str(dfields[fieldkey+axis][zzindex]),loc="right")
+        plt.title(ttl+' z = '+str(dfields[fieldkey+axis][zzindex])+' (di)',loc="right")
     elif(planename == 'xz'):
-        plt.title(ttl+' y (di): '+str(dfields[fieldkey+axis][yyindex]),loc="right")
+        plt.title(ttl+' y = '+str(dfields[fieldkey+axis][yyindex])+' (di)',loc="right")
     elif(planename == 'yz'):
-        plt.title(ttl+' x (di): '+str(dfields[fieldkey+axis][xxindex]),loc="right")
+        plt.title(ttl+' x = '+str(dfields[fieldkey+axis][xxindex])+' (di)',loc="right")
     plt.xlabel(xlbl)
     plt.ylabel(ylbl)
     if(plotlog):

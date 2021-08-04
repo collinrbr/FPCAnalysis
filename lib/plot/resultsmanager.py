@@ -23,3 +23,33 @@ def make_gif_from_folder(directory,flnm):
     for filename in filenames:
         images.append(imageio.imread(directory+'/'+filename))
     imageio.mimsave(flnm, images)
+
+def keyname_to_plotname(keyname,axis):
+    """
+    Takes keyname and return string of appropriate format for plotting
+
+    TODO: add flow keynames
+    """
+    plotname = ''
+
+    if(keyname == 'ex'):
+        plotname = '$E_x('
+    elif(keyname == 'ey'):
+        plotname = '$E_y('
+    elif(keyname == 'ez'):
+        plotname = '$E_z('
+    elif(keyname == 'bx'):
+        plotname = '$B_x('
+    elif(keyname == 'by'):
+        plotname = '$B_y('
+    elif(keyname == 'bz'):
+        plotname = '$B_z('
+
+    if(axis== '_xx'):
+        plotname = plotname + 'x)$'
+    elif(axis == '_yy'):
+        plotname = plotname + 'y)$'
+    elif(axis == '_zz'):
+        plotname = plotname + 'z)$'
+
+    return plotname

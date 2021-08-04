@@ -31,22 +31,23 @@ def plot_field(dfields, fieldkey, axis='_xx', xxindex = 0, yyindex = 0, zzindex 
         x position of vertical line on plot
     """
 
+    from lib.plot.resultsmanager import keyname_to_plotname
 
     if(axis == '_zz'):
         fieldval = np.asarray([dfields[fieldkey][i][yyindex][xxindex] for i in range(0,len(dfields[fieldkey+axis]))])
-        xlbl = 'z'
+        xlbl = '$z$ (di)'
     elif(axis == '_yy'):
         fieldval = np.asarray([dfields[fieldkey][zzindex][i][xxindex] for i in range(0,len(dfields[fieldkey+axis]))])
-        xlbl = 'y'
+        xlbl = '$y$ (di)'
     elif(axis == '_xx'):
         fieldval = np.asarray([dfields[fieldkey][zzindex][yyindex][i] for i in range(0,len(dfields[fieldkey+axis]))])
-        xlbl = 'x'
+        xlbl = '$x$ (di)'
 
     fieldcoord = np.asarray(dfields[fieldkey+axis])
 
     plt.figure(figsize=(20,10))
     plt.xlabel(xlbl)
-    plt.ylabel(fieldkey)
+    plt.ylabel(keyname_to_plotname(fieldkey,axis))
     plt.plot(fieldcoord,fieldval)
     plt.grid()
     if(not(axvx1 != axvx1)): #if not nan
@@ -76,6 +77,9 @@ def plot_all_fields(dfields, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0, 
     zzindex : int, optional
         index of data along zz axis (ignored if axis = '_zz')
     """
+
+    from lib.plot.resultsmanager import keyname_to_plotname
+
     if(axis == '_zz'):
         ex = np.asarray([dfields['ex'][i][yyindex][xxindex] for i in range(0,len(dfields['ex'+axis]))])
         ey = np.asarray([dfields['ey'][i][yyindex][xxindex] for i in range(0,len(dfields['ey'+axis]))])
@@ -102,41 +106,41 @@ def plot_all_fields(dfields, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0, 
 
     fig, axs = plt.subplots(6,figsize=(20,10))
     axs[0].plot(fieldcoord,ex,label="ex")
-    axs[0].set_ylabel("$ex$")
+    axs[0].set_ylabel(keyname_to_plotname('ex',axis))
     axs[0].grid()
     if(lowxlim != None and highxlim != None):
         axs[0].set_xlim(lowxlim,highxlim)
     axs[1].plot(fieldcoord,ey,label='ey')
-    axs[1].set_ylabel("$ey$")
+    axs[1].set_ylabel(keyname_to_plotname('ey',axis))
     axs[1].grid()
     if(lowxlim is not None and highxlim is not None):
         axs[1].set_xlim(lowxlim,highxlim)
     axs[2].plot(fieldcoord,ez,label='ez')
-    axs[2].set_ylabel("$ez$")
+    axs[2].set_ylabel(keyname_to_plotname('ez',axis))
     axs[2].grid()
     if(lowxlim is not None and highxlim is not None):
         axs[2].set_xlim(lowxlim,highxlim)
     axs[3].plot(fieldcoord,bx,label='bx')
-    axs[3].set_ylabel("$bx$")
+    axs[3].set_ylabel(keyname_to_plotname('bx',axis))
     axs[3].grid()
     if(lowxlim is not None and highxlim is not None):
         axs[3].set_xlim(lowxlim,highxlim)
     axs[4].plot(fieldcoord,by,label='by')
-    axs[4].set_ylabel("$by$")
+    axs[4].set_ylabel(keyname_to_plotname('by',axis))
     axs[4].grid()
     if(lowxlim is not None and highxlim is not None):
         axs[4].set_xlim(lowxlim,highxlim)
     axs[5].plot(fieldcoord,bz,label='bz')
-    axs[5].set_ylabel("$bz$")
+    axs[5].set_ylabel(keyname_to_plotname('bz',axis))
     axs[5].grid()
     if(lowxlim is not None and highxlim is not None):
         axs[5].set_xlim(lowxlim,highxlim)
     if(axis == '_xx'):
-        axs[5].set_xlabel("$x$")
+        axs[5].set_xlabel("$x$ (di)")
     elif(axis == '_yy'):
-        axs[5].set_xlabel("$y$")
+        axs[5].set_xlabel("$y$ (di)")
     elif(axis == '_yy'):
-        axs[5].set_xlabel("$z$")
+        axs[5].set_xlabel("$z$ (di)")
     plt.subplots_adjust(hspace=0.5)
     if(flnm == ''):
         plt.show()
@@ -168,13 +172,13 @@ def plot_flow(dflow, flowkey, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0,
     """
     if(axis == '_zz'):
         flowval = np.asarray([dflow[flowkey][i][yyindex][xxindex] for i in range(0,len(dflow[flowkey+axis]))])
-        xlbl = 'z'
+        xlbl = '$z$ (di)'
     elif(axis == '_yy'):
         flowval = np.asarray([dflow[flowkey][zzindex][i][xxindex] for i in range(0,len(dflow[flowkey+axis]))])
-        xlbl = 'y'
+        xlbl = '$y$ (di)'
     elif(axis == '_xx'):
         flowval = np.asarray([dflow[flowkey][zzindex][yyindex][i] for i in range(0,len(dflow[flowkey+axis]))])
-        xlbl = 'x'
+        xlbl = '$x$ (di)'
 
     flowcoord = np.asarray(dflow[flowkey+axis])
 
@@ -237,11 +241,11 @@ def plot_all_flow(dflow, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0, flnm
     axs[2].set_ylabel("$uz$")
     axs[2].grid()
     if(axis == '_xx'):
-        axs[2].set_xlabel("$x$")
+        axs[2].set_xlabel("$x$ (di)")
     elif(axis == '_yy'):
-        axs[2].set_xlabel("$y$")
+        axs[2].set_xlabel("$y$ (di)")
     elif(axis == '_yy'):
-        axs[2].set_xlabel("$z$")
+        axs[2].set_xlabel("$z$ (di)")
     plt.subplots_adjust(hspace=0.5)
     if(flnm != ''):
         plt.savefig(flnm,format='png')
@@ -439,7 +443,6 @@ def make_field_scan_gif(dfields, fieldkey, directory, axis='_xx'):
         pass
 
     sweepvar = dfields[fieldkey+'_xx'][:]
-
     for i in range(0,len(sweepvar)):
         print('Making plot '+str(i)+' of '+str(len(sweepvar)))
         flnm = directory+'/'+str(i).zfill(6)

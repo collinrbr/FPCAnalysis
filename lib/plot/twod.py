@@ -30,28 +30,42 @@ def make_field_pmesh(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, 
         index of data along zz axis (ignored if axis = '_zz')
     """
 
+    fieldttl = ''
+    if(fieldkey == 'ex'):
+        fieldttl = '$E_x'
+    elif(fieldkey == 'ey'):
+        fieldttl = '$E_y'
+    elif(fieldkey == 'ez'):
+        fieldttl = '$E_z'
+    elif(fieldkey == 'bx'):
+        fieldttl = '$B_x'
+    elif(fieldkey == 'by'):
+        fieldttl = '$B_y'
+    elif(fieldkey == 'bz'):
+        fieldttl = '$B_z'
+
     if(planename=='xy'):
-        ttl = fieldkey+'(x,y)'
-        xlbl = 'x (di)'
-        ylbl = 'y (di)'
+        ttl = fieldttl+'(x,y)$ at '
+        xlbl = '$x$ (di)'
+        ylbl = '$y$ (di)'
         xplot1d = dfields[fieldkey+'_xx'][:]
         yplot1d = dfields[fieldkey+'_yy'][:]
         axisidx = 0 #used to take average along z if no index is specified
         axis = '_zz'
 
     elif(planename=='xz'):
-        ttl = fieldkey+'(x,z)'
-        xlbl = 'x (di)'
-        ylbl = 'z (di)'
+        ttl = fieldttl+'(x,z)$ at '
+        xlbl = '$x$ (di)'
+        ylbl = '$z$ (di)'
         xplot1d = dfields[fieldkey+'_xx'][:]
         yplot1d = dfields[fieldkey+'_zz'][:]
         axisidx = 1 #used to take average along y if no index is specified
         axis = '_yy'
 
     elif(planename=='yz'):
-        ttl = fieldkey+'(y,z)'
-        xlbl = 'y (di)'
-        ylbl = 'z (di)'
+        ttl = fieldttl+'(y,z)$ at '
+        xlbl = '$y$ (di)'
+        ylbl = '$z$ (di)'
         xplot1d = dfields[fieldkey+'_yy'][:]
         yplot1d = dfields[fieldkey+'_zz'][:]
         axisidx = 2 #used to take average along x if no index is specified
@@ -86,11 +100,11 @@ def make_field_pmesh(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, 
     if(takeaxisaverage):
         plt.title(ttl,loc="right")
     elif(planename == 'xy'):
-        plt.title(ttl+' z (di): '+str(dfields[fieldkey+axis][zzindex]),loc="right")
+        plt.title(ttl+' z = '+str(dfields[fieldkey+axis][zzindex])+' (di)',loc="right")
     elif(planename == 'xz'):
-        plt.title(ttl+' y (di): '+str(dfields[fieldkey+axis][yyindex]),loc="right")
+        plt.title(ttl+' y = '+str(dfields[fieldkey+axis][yyindex])+' (di)',loc="right")
     elif(planename == 'yz'):
-        plt.title(ttl+' x (di): '+str(dfields[fieldkey+axis][xxindex]),loc="right")
+        plt.title(ttl+' x = '+str(dfields[fieldkey+axis][xxindex])+' (di)',loc="right")
     plt.xlabel(xlbl)
     plt.ylabel(ylbl)
     plt.grid(color="k", linestyle="-", linewidth=1.0, alpha=0.6)
