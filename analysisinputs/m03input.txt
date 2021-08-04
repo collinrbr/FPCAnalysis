@@ -1,7 +1,7 @@
 path='/srv/data/simulation/dHybridR/2021.05.Perp_Shocks/Batch00/M03/'
 resultsdir='M03results/'
 vmax=15
-dv=0.5
+dv=0.25
 numframe=1000
 dx=0.5
 #xlim=
