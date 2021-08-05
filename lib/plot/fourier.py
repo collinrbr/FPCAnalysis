@@ -101,6 +101,7 @@ def plot_fft_norm(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, xxi
     #get subset based on this
     xzeroidx = np.where(xplot[0] == 0.)[0][0]
     yzeroidx = np.where(yplot[:,0] == 0.)[0][0]
+    fieldpmesh[xzeroidx,yzeroidx] = 0.
     if(plotlog):
         fieldpmesh = fieldpmesh[xzeroidx+1:,yzeroidx+1:]
         xplot = xplot[xzeroidx+1:,yzeroidx+1:]
