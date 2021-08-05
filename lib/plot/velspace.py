@@ -39,7 +39,6 @@ def plot_velsig(vx,vy,vmax,Ce,fieldkey,flnm = '',ttl=''):
     plotv2 = vx
 
     plt.figure(figsize=(6.5,6))
-    plt.figure(figsize=(6.5,6))
     plt.pcolormesh(plotv1, plotv2, Ce, vmax=maxCe, vmin=-maxCe, cmap="seismic", shading="gouraud")
     plt.xlim(-vmax, vmax)
     plt.ylim(-vmax, vmax)
