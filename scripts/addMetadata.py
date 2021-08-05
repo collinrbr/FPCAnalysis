@@ -2,6 +2,7 @@
 
 import sys
 sys.path.append(".")
+sys.path.append('..')
 
 import lib.analysis as anl
 import lib.array_ops as ao
