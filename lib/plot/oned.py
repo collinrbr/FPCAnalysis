@@ -249,8 +249,10 @@ def plot_all_flow(dflow, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0, flnm
     plt.subplots_adjust(hspace=0.5)
     if(flnm != ''):
         plt.savefig(flnm,format='png')
+        plt.close()
     else:
         plt.show()
+        plt.close()
 
 def plot_field_time(dfieldsdict, fieldkey, xxindex = 0, yyindex = 0, zzindex = 0):
     """
@@ -332,10 +334,12 @@ def time_stack_line_plot(dfieldsdict, fieldkey, pts = [], axis = '_xx', xxindex 
 
     plt.show()
 
-def plot_stack_field_along_x(dfields,fieldkey,stackaxis,yyindex=0,zzindex=0,xlow=None,xhigh=None):
+def plot_stack_field_along_x(dfields,fieldkey,stackaxis,yyindex=0,zzindex=0,xlow=None,xhigh=None,flnm=''):
     """
 
     """
+    from lib.plot.resultsmanager import keyname_to_plotname
+
     if(stackaxis != '_yy' and stackaxis != '_zz'):
         print("Please stack along _yy or _zz")
 
@@ -348,12 +352,17 @@ def plot_stack_field_along_x(dfields,fieldkey,stackaxis,yyindex=0,zzindex=0,xlow
         elif(stackaxis == '_zz'):
             zzindex += 1
         plt.xlabel('x')
-        plt.ylabel(fieldkey)
+        plt.ylabel(keyname_to_plotname(fieldkey,'_xx'))
         if(xlow != None and xhigh != None):
             plt.xlim(xlow,xhigh)
         plt.plot(fieldcoord,fieldval)
     plt.grid()
-    plt.show()
+    if(flnm != ''):
+        plt.savefig(flnm,format='png')
+        plt.close()
+    else:
+        plt.show()
+        plt.close()
     plt.close()
 
 def plot_compression_ratio(dfields, upstreambound, downstreambound, xxindex=0, yyindex=0, zzindex=0, flnm=''):
