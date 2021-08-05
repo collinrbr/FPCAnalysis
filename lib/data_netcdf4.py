@@ -3,6 +3,7 @@
 #functions related making and loading netcdf4 file to pass to MLA algo and loading netcdf4 files
 
 import numpy as np
+import math
 
 def savedata(CEx_out, CEy_out, vx_out, vy_out, x_out, enerCEx_out, enerCEy_out, Vframe_relative_to_sim_out, metadata_out = [], params = {}, filename = 'dHybridRSDAtest.nc' ):
     """
