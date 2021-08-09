@@ -332,7 +332,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     axs[0,0].set_title(r"$f(v_x, v_y)$")
     axs[0,0].set_xlabel(r"$v_x/v_{ti}$")
     axs[0,0].set_ylabel(r"$v_y/v_{ti}$")
-    plt.colorbar(im00, ax=ax[0, 0])
+    plt.colorbar(im00, cax=ax[0, 0])
     #H_xz
     axs[0,1].pcolormesh(vz_xz, vx_xz, H_xz, cmap="plasma", shading="gouraud")
     axs[0,1].set_title(r"$f(v_x, v_z)$")
