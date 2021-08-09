@@ -371,7 +371,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     axs[1,2].set_ylabel(r"$v_y/v_{ti}$")
     axs[1,2].set_xlabel(r"$v_z/v_{ti}$")
     axs[1,2].set_aspect('equal', 'box')
-    plt.colorbar(im12, axs[1,2])
+    plt.colorbar(im12, ax=axs[1,2])
     #CEy_xy
     maxCe = max(np.max(CEy_xy),abs(np.max(CEy_xy)))
     im20 = axs[2,0].pcolormesh(vy_xy,vx_xy,CEy_xy,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
@@ -379,7 +379,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     axs[2,0].set_xlabel(r"$v_x/v_{ti}$")
     axs[2,0].set_ylabel(r"$v_y/v_{ti}$")
     axs[2,0].set_aspect('equal', 'box')
-    plt.colorbar(im20, axs[2,0])
+    plt.colorbar(im20, ax=axs[2,0])
     #CEy_xz
     maxCe = max(np.max(CEy_xz),abs(np.max(CEy_xz)))
     im21 = axs[2,1].pcolormesh(vz_xz,vx_xz,CEy_xz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
@@ -387,7 +387,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     axs[2,1].set_xlabel(r"$v_x/v_{ti}$")
     axs[2,1].set_ylabel(r"$v_z/v_{ti}$")
     axs[2,1].set_aspect('equal', 'box')
-    plt.colorbar(im21, axs[2,1])
+    plt.colorbar(im21, ax=axs[2,1])
     #CEy_yz
     maxCe = max(np.max(CEy_yz),abs(np.max(CEy_yz)))
     im22 = axs[2,2].pcolormesh(vz_yz,vy_yz,CEy_yz.T,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
@@ -395,7 +395,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     axs[2,2].set_ylabel(r"$v_y/v_{ti}$")
     axs[2,2].set_xlabel(r"$v_z/v_{ti}$")
     axs[2,2].set_aspect('equal', 'box')
-    plt.colorbar(im22, axs[2,2])
+    plt.colorbar(im22, ax=axs[2,2])
     #CEz_xy
     maxCe = max(np.max(CEz_xy),abs(np.max(CEz_xy)))
     im30 = axs[3,0].pcolormesh(vy_xy,vx_xy,CEz_xy,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
@@ -403,7 +403,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     axs[3,0].set_xlabel(r"$v_x/v_{ti}$")
     axs[3,0].set_ylabel(r"$v_y/v_{ti}$")
     axs[3,0].set_aspect('equal', 'box')
-    plt.colorbar(im30, axs[3,0])
+    plt.colorbar(im30, ax=axs[3,0])
     #CEz_xz
     maxCe = max(np.max(CEz_xz),abs(np.max(CEz_xz)))
     im31 = axs[3,1].pcolormesh(vz_xz,vx_xz,CEz_xz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
@@ -411,7 +411,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     axs[3,1].set_xlabel(r"$v_x/v_{ti}$")
     axs[3,1].set_ylabel(r"$v_z/v_{ti}$")
     axs[3,1].set_aspect('equal', 'box')
-    plt.colorbar(im31, axs[3,1])
+    plt.colorbar(im31, ax=axs[3,1])
     #CEz_yz
     maxCe = max(np.max(CEz_yz),abs(np.max(CEz_yz)))
     im32 = axs[3,2].pcolormesh(vz_yz,vy_yz,CEz_yz.T,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
@@ -419,7 +419,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     axs[3,2].set_ylabel(r"$v_y/v_{ti}$")
     axs[3,2].set_xlabel(r"$v_z/v_{ti}$")
     axs[3,2].set_aspect('equal', 'box')
-    plt.colorbar(im32, axs[3,2])
+    plt.colorbar(im32, ax=axs[3,2])
 
     #plt.subplots_adjust(wspace=-.3,hspace=.6)
     if(flnm != ''):
