@@ -421,7 +421,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     axs[3,2].set_aspect('equal', 'box')
     plt.colorbar(im32, ax=axs[3,2])
 
-    #plt.subplots_adjust(wspace=-.3,hspace=.6)
+    plt.subplots_adjust(wspace=-.3,hspace=1.25)
     if(flnm != ''):
         plt.savefig(flnm+'.png',format='png')
         plt.close('all') #saves RAM
