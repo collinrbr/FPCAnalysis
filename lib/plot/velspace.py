@@ -332,23 +332,27 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     axs[0,0].set_title(r"$f(v_x, v_y)$")
     axs[0,0].set_xlabel(r"$v_x/v_{ti}$")
     axs[0,0].set_ylabel(r"$v_y/v_{ti}$")
+    axs[0,0].set_aspect('equal', 'box')
     plt.colorbar(im00, ax=axs[0, 0])
     #H_xz
     axs[0,1].pcolormesh(vz_xz, vx_xz, H_xz, cmap="plasma", shading="gouraud")
     axs[0,1].set_title(r"$f(v_x, v_z)$")
     axs[0,1].set_xlabel(r"$v_x/v_{ti}$")
     axs[0,1].set_ylabel(r"$v_z/v_{ti}$")
+    axs[0,1].set_aspect('equal', 'box')
     #H_yz
     axs[0,2].pcolormesh(vz_yz, vy_yz, H_yz.T, cmap="plasma", shading="gouraud")
     axs[0,2].set_title(r"$f(v_y, v_z)$")
     axs[0,2].set_ylabel(r"$v_y/v_{ti}$")
     axs[0,2].set_xlabel(r"$v_z/v_{ti}$")
+    axs[0,2].set_aspect('equal', 'box')
     #CEx_xy
     maxCe = max(np.max(CEx_xy),abs(np.max(CEx_xy)))
     axs[1,0].pcolormesh(vy_xy,vx_xy,CEx_xy,vmax=maxCe,vmin=-maxCe,cmap="seismic", shading="gouraud")
     axs[1,0].set_title('$C_{Ex}(v_x,v_y)$')
     axs[1,0].set_xlabel(r"$v_x/v_{ti}$")
     axs[1,0].set_ylabel(r"$v_y/v_{ti}$")
+    axs[1,0].set_aspect('equal', 'box')
     #CEx_xz
     maxCe = max(np.max(CEx_xz),abs(np.max(CEx_xz)))
     axs[1,1].pcolormesh(vz_xz,vx_xz,CEx_xz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
@@ -356,6 +360,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     axs[1,1].colorbar()
     axs[1,1].set_xlabel(r"$v_x/v_{ti}$")
     axs[1,1].set_ylabel(r"$v_z/v_{ti}$")
+    axs[1,1].set_aspect('equal', 'box')
     #CEx_yz
     maxCe = max(np.max(CEx_yz),abs(np.max(CEx_yz)))
     axs[1,2].pcolormesh(vz_yz,vy_yz,CEx_yz.T,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
@@ -363,6 +368,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     axs[1,2].colorbar()
     axs[1,2].set_ylabel(r"$v_y/v_{ti}$")
     axs[1,2].set_xlabel(r"$v_z/v_{ti}$")
+    axs[1,2].set_aspect('equal', 'box')
     #CEy_xy
     maxCe = max(np.max(CEy_xy),abs(np.max(CEy_xy)))
     axs[2,0].pcolormesh(vy_xy,vx_xy,CEy_xy,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
@@ -370,6 +376,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     axs[2,0].colorbar()
     axs[2,0].set_xlabel(r"$v_x/v_{ti}$")
     axs[2,0].set_ylabel(r"$v_y/v_{ti}$")
+    axs[2,0].set_aspect('equal', 'box')
     #CEy_xz
     maxCe = max(np.max(CEy_xz),abs(np.max(CEy_xz)))
     axs[2,1].pcolormesh(vz_xz,vx_xz,CEy_xz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
@@ -377,6 +384,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     axs[2,1].colorbar()
     axs[2,1].set_xlabel(r"$v_x/v_{ti}$")
     axs[2,1].set_ylabel(r"$v_z/v_{ti}$")
+    axs[2,1].set_aspect('equal', 'box')
     #CEy_yz
     maxCe = max(np.max(CEy_yz),abs(np.max(CEy_yz)))
     axs[2,2].pcolormesh(vz_yz,vy_yz,CEy_yz.T,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
@@ -384,6 +392,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     axs[2,2].colorbar()
     axs[2,2].set_ylabel(r"$v_y/v_{ti}$")
     axs[2,2].set_xlabel(r"$v_z/v_{ti}$")
+    axs[2,2].set_aspect('equal', 'box')
     #CEz_xy
     maxCe = max(np.max(CEz_xy),abs(np.max(CEz_xy)))
     axs[3,0].pcolormesh(vy_xy,vx_xy,CEz_xy,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
@@ -391,6 +400,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     axs[3,0].colorbar()
     axs[3,0].set_xlabel(r"$v_x/v_{ti}$")
     axs[3,0].set_ylabel(r"$v_y/v_{ti}$")
+    axs[3,0].set_aspect('equal', 'box')
     #CEz_xz
     maxCe = max(np.max(CEz_xz),abs(np.max(CEz_xz)))
     axs[3,1].pcolormesh(vz_xz,vx_xz,CEz_xz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
@@ -398,6 +408,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     axs[3,1].colorbar()
     axs[3,1].set_xlabel(r"$v_x/v_{ti}$")
     axs[3,1].set_ylabel(r"$v_z/v_{ti}$")
+    axs[3,1].set_aspect('equal', 'box')
     #CEz_yz
     maxCe = max(np.max(CEz_yz),abs(np.max(CEz_yz)))
     axs[3,2].pcolormesh(vz_yz,vy_yz,CEz_yz.T,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
@@ -405,8 +416,9 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     axs[3,2].colorbar()
     axs[3,2].set_ylabel(r"$v_y/v_{ti}$")
     axs[3,2].set_xlabel(r"$v_z/v_{ti}$")
+    axs[3,2].set_aspect('equal', 'box')
 
-    plt.subplots_adjust(wspace=.5,hspace=.5)
+    plt.subplots_adjust(wspace=.75,hspace=.75)
     if(flnm != ''):
         plt.savefig(flnm+'.png',format='png')
         plt.close('all') #saves RAM
