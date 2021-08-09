@@ -326,29 +326,27 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     vy_yz, vz_yz = mesh_3d_to_2d(vx,vy,vz,'yz')
 
     fig.suptitle(ttl)
+
     #H_xy
-    axs[0,0].pcolormesh(vy_xy, vx_xy, H_xy, cmap="plasma", shading="gouraud")
+    im00= axs[0,0].pcolormesh(vy_xy, vx_xy, H_xy, cmap="plasma", shading="gouraud")
     axs[0,0].set_title(r"$f(v_x, v_y)$")
-    axs[0,0].colorbar()
     axs[0,0].set_xlabel(r"$v_x/v_{ti}$")
     axs[0,0].set_ylabel(r"$v_y/v_{ti}$")
+    plt.colorbar(im00, ax=ax[0, 0])
     #H_xz
     axs[0,1].pcolormesh(vz_xz, vx_xz, H_xz, cmap="plasma", shading="gouraud")
     axs[0,1].set_title(r"$f(v_x, v_z)$")
-    axs[0,1].colorbar()
     axs[0,1].set_xlabel(r"$v_x/v_{ti}$")
     axs[0,1].set_ylabel(r"$v_z/v_{ti}$")
     #H_yz
     axs[0,2].pcolormesh(vz_yz, vy_yz, H_yz.T, cmap="plasma", shading="gouraud")
     axs[0,2].set_title(r"$f(v_y, v_z)$")
-    axs[0,2].colorbar()
     axs[0,2].set_ylabel(r"$v_y/v_{ti}$")
     axs[0,2].set_xlabel(r"$v_z/v_{ti}$")
     #CEx_xy
     maxCe = max(np.max(CEx_xy),abs(np.max(CEx_xy)))
     axs[1,0].pcolormesh(vy_xy,vx_xy,CEx_xy,vmax=maxCe,vmin=-maxCe,cmap="seismic", shading="gouraud")
     axs[1,0].set_title('$C_{Ex}(v_x,v_y)$')
-    axs[1,0].colorbar()
     axs[1,0].set_xlabel(r"$v_x/v_{ti}$")
     axs[1,0].set_ylabel(r"$v_y/v_{ti}$")
     #CEx_xz
