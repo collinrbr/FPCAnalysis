@@ -410,7 +410,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     axs[3,2].set_xlabel(r"$v_z/v_{ti}$")
     axs[3,2].set_aspect('equal', 'box')
 
-    plt.subplots_adjust(wspace=.3,hspace=.3)
+    plt.subplots_adjust(wspace=-.3,hspace=.6)
     if(flnm != ''):
         plt.savefig(flnm+'.png',format='png')
         plt.close('all') #saves RAM
