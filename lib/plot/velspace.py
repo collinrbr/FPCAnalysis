@@ -306,6 +306,49 @@ def plot_dist(vx, vy, vmax, H,flnm = '',ttl=''):
         plt.show()
     plt.close()
 
+def dist_log_plot_3dir(vx, vy, vz, vmax, H, flnm = '',ttl=''):
+    """
+    """
+
+    plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
+    from lib.array_ops import mesh_3d_to_2d
+    import matplotlib
+    from matplotlib.colors import LogNorm
+    from lib.array_ops import array_3d_to_2d
+
+    #get lowest nonzero number
+    minval = np.min(H[np.nonzero(H)])
+
+    #set all zeros to small value
+    H[np.where(H == 0)] = 10**-100
+
+    vx_xy, vy_xy = mesh_3d_to_2d(vx,vy,vz, 'xy')
+    H_xy = array_3d_to_2d(H,'xy')
+
+
+    plt.figure(figsize=(6.5,6))
+    cmap = matplotlib.cm.get_cmap('plasma')
+    cmap.set_under('black')
+    plt.pcolormesh(vx_xy, vy_xy, H_xy, norm=LogNorm(vmin=minval, vmax=H.max()), cmap=cmap, shading="gouraud")
+    plt.xlim(-vmax, vmax)
+    plt.ylim(-vmax, vmax)
+    plt.xticks(np.linspace(-vmax, vmax, 9))
+    plt.yticks(np.linspace(-vmax, vmax, 9))
+    if(ttl == ''):
+        plt.title(r"$f(v_x, v_y)$",loc="right")
+    else:
+        plt.title(ttl)
+    plt.xlabel(r"$v_x/v_{ti}$")
+    plt.ylabel(r"$v_y/v_{ti}$")
+    plt.grid(color="k", linestyle="-", linewidth=1.0, alpha=0.6)
+    plt.colorbar(cmap = cmap)
+    plt.gcf().subplots_adjust(bottom=0.15)
+    if(flnm != ''):
+        plt.savefig(flnm,format='png')
+    else:
+        plt.show()
+    plt.close()
+
 def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
                                 H_xy, H_xz, H_yz,
                                 CEx_xy,CEx_xz, CEx_yz,
@@ -432,7 +475,6 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
 def make_superplot_gif(vx, vy, vz, vmax, Hist, CEx, CEy, CEz, x, directory, flnm):
     #make plots of data and put into directory
 
-    from lib.array_ops import array_3d_to_2d
     from lib.array_ops import array_3d_to_2d
 
     try:
