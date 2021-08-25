@@ -306,7 +306,7 @@ def plot_dist(vx, vy, vmax, H,flnm = '',ttl=''):
         plt.show()
     plt.close()
 
-def dist_log_plot_3dir(vx, vy, vz, vmax, H, flnm = '',ttl=''):
+def dist_log_plot_3dir(vx, vy, vz, vmax, H_in, flnm = '',ttl=''):
     """
     """
 
@@ -316,33 +316,57 @@ def dist_log_plot_3dir(vx, vy, vz, vmax, H, flnm = '',ttl=''):
     from matplotlib.colors import LogNorm
     from lib.array_ops import array_3d_to_2d
 
+    from copy import copy
+    H = copy(H_in) #deep copy
+
     #get lowest nonzero number
     minval = np.min(H[np.nonzero(H)])
 
-    #set all zeros to small value
-    H[np.where(H == 0)] = 10**-100
+    # #set all zeros to small value
+    # H[np.where(H == 0)] = 10**-100
 
-    vx_xy, vy_xy = mesh_3d_to_2d(vx,vy,vz, 'xy')
+    vx_xy, vy_xy = mesh_3d_to_2d(vx,vy,vz,'xy')
     H_xy = array_3d_to_2d(H,'xy')
+    vx_xz, vz_xz = mesh_3d_to_2d(vx,vy,vz,'xz')
+    H_xz = array_3d_to_2d(H,'xz')
+    vy_yz, vz_yz = mesh_3d_to_2d(vx,vy,vz,'yz')
+    H_yz = array_3d_to_2d(H,'yz')
 
-
-    plt.figure(figsize=(6.5,6))
+    fig, axs = plt.subplots(1,3,figsize=(3*5,1*5))
     cmap = matplotlib.cm.get_cmap('plasma')
-    cmap.set_under('black')
-    plt.pcolormesh(vx_xy, vy_xy, H_xy, norm=LogNorm(vmin=minval, vmax=H.max()), cmap=cmap, shading="gouraud")
-    plt.xlim(-vmax, vmax)
-    plt.ylim(-vmax, vmax)
-    plt.xticks(np.linspace(-vmax, vmax, 9))
-    plt.yticks(np.linspace(-vmax, vmax, 9))
-    if(ttl == ''):
-        plt.title(r"$f(v_x, v_y)$",loc="right")
-    else:
-        plt.title(ttl)
-    plt.xlabel(r"$v_x/v_{ti}$")
-    plt.ylabel(r"$v_y/v_{ti}$")
-    plt.grid(color="k", linestyle="-", linewidth=1.0, alpha=0.6)
-    plt.colorbar(cmap = cmap)
-    plt.gcf().subplots_adjust(bottom=0.15)
+    bkgcolor = 'black'
+    cmap.set_under(bkgcolor) #this doesn't really work like it's supposed to, so we just change the background color to black
+    #ax = plt.gca()
+    axs[0].set_facecolor(bkgcolor)
+    axs[0].pcolormesh(vx_xy, vy_xy, H_xy, cmap=cmap, shading="gouraud",norm=LogNorm(vmin=minval, vmax=H.max()))
+    axs[0].set_xlim(-vmax, vmax)
+    axs[0].set_ylim(-vmax, vmax)
+    axs[0].set_xticks(np.linspace(-vmax, vmax, 9))
+    axs[0].set_yticks(np.linspace(-vmax, vmax, 9))
+    # if(ttl == ''):
+    #     plt.title(r"$f(v_x, v_y)$",loc="right")
+    # else:
+    #     plt.title(ttl)
+    axs[0].set_xlabel(r"$v_x/v_{ti}$")
+    axs[0].set_ylabel(r"$v_y/v_{ti}$")
+    axs[0].grid(color="grey", linestyle="--", linewidth=1.0, alpha=0.6)
+    #axs[0].colorbar(cmap = cmap, extend='min')
+    #axs[0].gcf().subplots_adjust(bottom=0.15)
+
+    axs[1].set_facecolor(bkgcolor)
+    axs[1].pcolormesh(vx_xz,vz_xz,H_xz, cmap=cmap, shading='gourand',norm=LogNorm(vmin=minval, vmax=H.max()))
+    axs[1].set_xlim(-vmax, vmax)
+    axs[1].set_ylim(-vmax, vmax)
+    axs[1].set_xticks(np.linspace(-vmax, vmax, 9))
+    axs[1].set_yticks(np.linspace(-vmax, vmax, 9))
+
+    axs[2].set_facecolor(bkgcolor)
+    axs[2].pcolormesh(vy_yz,vz_yz,H_yz, cmap=cmap, shading='gourand',norm=LogNorm(vmin=minval, vmax=H.max()))
+    axs[2].set_xlim(-vmax, vmax)
+    axs[2].set_ylim(-vmax, vmax)
+    axs[2].set_xticks(np.linspace(-vmax, vmax, 9))
+    axs[2].set_yticks(np.linspace(-vmax, vmax, 9))
+
     if(flnm != ''):
         plt.savefig(flnm,format='png')
     else:
