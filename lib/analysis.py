@@ -453,3 +453,15 @@ def remove_average_fields_over_yz(dfields):
     dfieldfluc['bz'] = dfields['bz']-dfields['bz'].mean(axis=(0,1))
 
     return dfieldfluc
+
+def remove_average_flow_over_yz(dflow):
+    """
+
+    """
+    from copy import copy
+    dflowfluc = copy(dflow)
+    dflowfluc['ux'] = dflow['ux']-dflow['ux'].mean(axis=(0,1))
+    dflowfluc['uy'] = dflow['uy']-dflow['uy'].mean(axis=(0,1))
+    dflowfluc['uz'] = dflow['uz']-dflow['uz'].mean(axis=(0,1))
+
+    return dflowfluc

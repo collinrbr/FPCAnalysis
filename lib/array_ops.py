@@ -188,3 +188,48 @@ def get_average_in_box(x1, x2, y1, y2, z1, z2, datadict, dictkey):
 
     avg = np.average(goodpts)
     return avg
+
+def get_field_subset(dfields,startx,endx,starty,endy,startz,endz):
+    """
+
+    """
+
+    from copy import copy
+
+    sxidx = find_nearest(dfields['bz_xx'],startx)
+    exidx = find_nearest(dfields['bz_xx'],endx)
+    syidx = find_nearest(dfields['bz_yy'],starty)
+    eyidx = find_nearest(dfields['bz_yy'],endy)
+    szidx = find_nearest(dfields['bz_zz'],startz)
+    ezidx = find_nearest(dfields['bz_zz'],endz)
+
+    dfieldssubset = copy(dfields)
+
+    dfieldssubset['ex_xx'] = dfieldssubset['ex_xx'][startx:endx]
+    dfieldssubset['ex_yy'] = dfieldssubset['ex_yy'][starty:endy]
+    dfieldssubset['ex_zz'] = dfieldssubset['ex_zz'][startz:endz]
+    dfieldssubset['ey_xx'] = dfieldssubset['ey_xx'][startx:endx]
+    dfieldssubset['ey_yy'] = dfieldssubset['ey_yy'][starty:endy]
+    dfieldssubset['ey_zz'] = dfieldssubset['ey_zz'][startz:endz]
+    dfieldssubset['ez_xx'] = dfieldssubset['ez_xx'][startx:endx]
+    dfieldssubset['ez_yy'] = dfieldssubset['ez_yy'][starty:endy]
+    dfieldssubset['ez_zz'] = dfieldssubset['ez_zz'][startz:endz]
+
+    dfieldssubset['bx_xx'] = dfieldssubset['bx_xx'][startx:endx]
+    dfieldssubset['bx_yy'] = dfieldssubset['bx_yy'][starty:endy]
+    dfieldssubset['bx_zz'] = dfieldssubset['bx_zz'][startz:endz]
+    dfieldssubset['by_xx'] = dfieldssubset['by_xx'][startx:endx]
+    dfieldssubset['by_yy'] = dfieldssubset['by_yy'][starty:endy]
+    dfieldssubset['by_zz'] = dfieldssubset['by_zz'][startz:endz]
+    dfieldssubset['bz_xx'] = dfieldssubset['bz_xx'][startx:endx]
+    dfieldssubset['bz_yy'] = dfieldssubset['bz_yy'][starty:endy]
+    dfieldssubset['bz_zz'] = dfieldssubset['bz_zz'][startz:endz]
+
+    dfieldsubset['ex'] = dfieldsubset['ex'][startx:endx,starty:endy,startz:endz]
+    dfieldsubset['ey'] = dfieldsubset['ey'][startx:endx,starty:endy,startz:endz]
+    dfieldsubset['ez'] = dfieldsubset['ez'][startx:endx,starty:endy,startz:endz]
+    dfieldsubset['bx'] = dfieldsubset['bx'][startx:endx,starty:endy,startz:endz]
+    dfieldsubset['by'] = dfieldsubset['by'][startx:endx,starty:endy,startz:endz]
+    dfieldsubset['bz'] = dfieldsubset['bz'][startx:endx,starty:endy,startz:endz]
+
+    return dfieldsubset
