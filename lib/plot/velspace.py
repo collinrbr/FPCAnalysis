@@ -308,6 +308,7 @@ def plot_dist(vx, vy, vmax, H,flnm = '',ttl=''):
 
 def dist_log_plot_3dir(vx, vy, vz, vmax, H_in, flnm = '',ttl=''):
     """
+    WARNING: gourand shading seems to only work on the first figure (i.e. the colormesh for only axs[0] is smoothed)
     """
 
     plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
@@ -335,14 +336,15 @@ def dist_log_plot_3dir(vx, vy, vz, vmax, H_in, flnm = '',ttl=''):
     fig, axs = plt.subplots(1,3,figsize=(3*5,1*5))
     cmap = matplotlib.cm.get_cmap('plasma')
     bkgcolor = 'black'
+    numtks = 5
     cmap.set_under(bkgcolor) #this doesn't really work like it's supposed to, so we just change the background color to black
     #ax = plt.gca()
     axs[0].set_facecolor(bkgcolor)
     axs[0].pcolormesh(vx_xy, vy_xy, H_xy, cmap=cmap, shading="gouraud",norm=LogNorm(vmin=minval, vmax=H.max()))
     axs[0].set_xlim(-vmax, vmax)
     axs[0].set_ylim(-vmax, vmax)
-    axs[0].set_xticks(np.linspace(-vmax, vmax, 9))
-    axs[0].set_yticks(np.linspace(-vmax, vmax, 9))
+    axs[0].set_xticks(np.linspace(-vmax, vmax, numtks))
+    axs[0].set_yticks(np.linspace(-vmax, vmax, numtks))
     # if(ttl == ''):
     #     plt.title(r"$f(v_x, v_y)$",loc="right")
     # else:
@@ -350,22 +352,33 @@ def dist_log_plot_3dir(vx, vy, vz, vmax, H_in, flnm = '',ttl=''):
     axs[0].set_xlabel(r"$v_x/v_{ti}$")
     axs[0].set_ylabel(r"$v_y/v_{ti}$")
     axs[0].grid(color="grey", linestyle="--", linewidth=1.0, alpha=0.6)
+    axs[0].set_aspect('equal', 'box')
     #axs[0].colorbar(cmap = cmap, extend='min')
     #axs[0].gcf().subplots_adjust(bottom=0.15)
 
     axs[1].set_facecolor(bkgcolor)
-    axs[1].pcolormesh(vx_xz,vz_xz,H_xz, cmap=cmap, shading='gourand',norm=LogNorm(vmin=minval, vmax=H.max()))
+    axs[1].pcolormesh(vx_xz,vz_xz,H_xz, cmap=cmap, shading="gourand",norm=LogNorm(vmin=minval, vmax=H.max()))
     axs[1].set_xlim(-vmax, vmax)
     axs[1].set_ylim(-vmax, vmax)
-    axs[1].set_xticks(np.linspace(-vmax, vmax, 9))
-    axs[1].set_yticks(np.linspace(-vmax, vmax, 9))
+    axs[1].set_xticks(np.linspace(-vmax, vmax, numtks))
+    axs[1].set_yticks(np.linspace(-vmax, vmax, numtks))
+    axs[1].set_xlabel(r"$v_x/v_{ti}$")
+    axs[1].set_ylabel(r"$v_z/v_{ti}$")
+    axs[1].grid(color="grey", linestyle="--", linewidth=1.0, alpha=0.6)
+    axs[1].set_aspect('equal', 'box')
 
     axs[2].set_facecolor(bkgcolor)
-    axs[2].pcolormesh(vy_yz,vz_yz,H_yz, cmap=cmap, shading='gourand',norm=LogNorm(vmin=minval, vmax=H.max()))
+    axs[2].pcolormesh(vy_yz,vz_yz,H_yz, cmap=cmap, shading="gourand",norm=LogNorm(vmin=minval, vmax=H.max()))
     axs[2].set_xlim(-vmax, vmax)
     axs[2].set_ylim(-vmax, vmax)
-    axs[2].set_xticks(np.linspace(-vmax, vmax, 9))
-    axs[2].set_yticks(np.linspace(-vmax, vmax, 9))
+    axs[2].set_xticks(np.linspace(-vmax, vmax, numtks))
+    axs[2].set_yticks(np.linspace(-vmax, vmax, numtks))
+    axs[2].set_xlabel(r"$v_y/v_{ti}$")
+    axs[2].set_ylabel(r"$v_z/v_{ti}$")
+    axs[2].grid(color="grey", linestyle="--", linewidth=1.0, alpha=0.6)
+    axs[2].set_aspect('equal', 'box')
+
+    plt.subplots_adjust(hspace=.5,wspace=.5)
 
     if(flnm != ''):
         plt.savefig(flnm,format='png')

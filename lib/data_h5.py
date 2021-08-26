@@ -461,3 +461,10 @@ def flow_loader(flow_vars=None, num=None, path='./', sp=1, verbose=False):
     d['id'] = _id
     d['Vframe_relative_to_sim'] = 0.
     return d
+
+def read_restart(path):
+    """
+    Loads restart file
+    """
+
+    pass

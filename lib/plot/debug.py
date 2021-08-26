@@ -44,7 +44,7 @@ def plot_1d_dist(dparticles, parkey, vmax, x1, x2, y1, y2, flnm = ''):
     else:
         plt.show()
 
-    plt.figure()
+    plt.close()
 
 #TODO: figure out enerCEx and normalize it in compute energization
 def check_JiEi_vs_CEi(dfields,dflow,dparticles,x,enerCEx,enerCEy,dx,xlim=None,ylim=None,zlim=None):
