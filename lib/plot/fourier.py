@@ -26,7 +26,7 @@ def plot_fft_norm(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, xxi
     elif(fieldkey == 'by'):
         fieldttl = '$F\{B_y'
     elif(fieldkey == 'bz'):
-        fieldttl = '$F \{ B_z'
+        fieldttl = '$F\{B_z'
 
     if(planename=='xy'):
         ttl = fieldttl+'(x,y)\}$ at '

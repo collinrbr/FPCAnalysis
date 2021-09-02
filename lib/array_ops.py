@@ -196,12 +196,12 @@ def get_field_subset(dfields,startx,endx,starty,endy,startz,endz):
 
     from copy import copy
 
-    sxidx = find_nearest(dfields['bz_xx'],startx)
-    exidx = find_nearest(dfields['bz_xx'],endx)
-    syidx = find_nearest(dfields['bz_yy'],starty)
-    eyidx = find_nearest(dfields['bz_yy'],endy)
-    szidx = find_nearest(dfields['bz_zz'],startz)
-    ezidx = find_nearest(dfields['bz_zz'],endz)
+    startx = find_nearest(dfields['bz_xx'],startx)
+    endx = find_nearest(dfields['bz_xx'],endx)
+    starty = find_nearest(dfields['bz_yy'],starty)
+    endy = find_nearest(dfields['bz_yy'],endy)
+    startz = find_nearest(dfields['bz_zz'],startz)
+    endz = find_nearest(dfields['bz_zz'],endz)
 
     dfieldssubset = copy(dfields)
 
@@ -225,11 +225,41 @@ def get_field_subset(dfields,startx,endx,starty,endy,startz,endz):
     dfieldssubset['bz_yy'] = dfieldssubset['bz_yy'][starty:endy]
     dfieldssubset['bz_zz'] = dfieldssubset['bz_zz'][startz:endz]
 
-    dfieldsubset['ex'] = dfieldsubset['ex'][startx:endx,starty:endy,startz:endz]
-    dfieldsubset['ey'] = dfieldsubset['ey'][startx:endx,starty:endy,startz:endz]
-    dfieldsubset['ez'] = dfieldsubset['ez'][startx:endx,starty:endy,startz:endz]
-    dfieldsubset['bx'] = dfieldsubset['bx'][startx:endx,starty:endy,startz:endz]
-    dfieldsubset['by'] = dfieldsubset['by'][startx:endx,starty:endy,startz:endz]
-    dfieldsubset['bz'] = dfieldsubset['bz'][startx:endx,starty:endy,startz:endz]
+    dfieldssubset['ex'] = dfieldssubset['ex'][startz:endz,starty:endy,startx:endx]
+    dfieldssubset['ey'] = dfieldssubset['ey'][startz:endz,starty:endy,startx:endx]
+    dfieldssubset['ez'] = dfieldssubset['ez'][startz:endz,starty:endy,startx:endx]
+    dfieldssubset['bx'] = dfieldssubset['bx'][startz:endz,starty:endy,startx:endx]
+    dfieldssubset['by'] = dfieldssubset['by'][startz:endz,starty:endy,startx:endx]
+    dfieldssubset['bz'] = dfieldssubset['bz'][startz:endz,starty:endy,startx:endx]
 
-    return dfieldsubset
+    return dfieldssubset
+
+def get_flow_subset(dflow,startx,endx,starty,endy,startz,endz):
+    """
+
+    """
+    from copy import copy
+
+    startx = find_nearest(dflow['ux_xx'],startx)
+    endx = find_nearest(dflow['ux_xx'],endx)
+    starty = find_nearest(dflow['ux_yy'],starty)
+    endy = find_nearest(dflow['ux_yy'],endy)
+    startz = find_nearest(dflow['ux_zz'],startz)
+    endz = find_nearest(dflow['ux_zz'],endz)
+
+    dflowsubset = copy(dflow)
+    dflowsubset['ux_xx'] = dflowsubset['ux_xx'][startx:endx]
+    dflowsubset['ux_yy'] = dflowsubset['ux_yy'][starty:endy]
+    dflowsubset['ux_zz'] = dflowsubset['ux_zz'][startz:endz]
+    dflowsubset['uy_xx'] = dflowsubset['uy_xx'][startx:endx]
+    dflowsubset['uy_yy'] = dflowsubset['uy_yy'][starty:endy]
+    dflowsubset['uy_zz'] = dflowsubset['uy_zz'][startz:endz]
+    dflowsubset['uz_xx'] = dflowsubset['uz_xx'][startx:endx]
+    dflowsubset['uz_yy'] = dflowsubset['uz_yy'][starty:endy]
+    dflowsubset['uz_zz'] = dflowsubset['uz_zz'][startz:endz]
+
+    dflowsubset['ux'] = dflowsubset['ux'][startz:endz,starty:endy,startx:endx]
+    dflowsubset['uy'] = dflowsubset['uy'][startz:endz,starty:endy,startx:endx]
+    dflowsubset['uz'] = dflowsubset['uz'][startz:endz,starty:endy,startx:endx]
+
+    return dflowsubset
