@@ -465,3 +465,19 @@ def remove_average_flow_over_yz(dflow):
     dflowfluc['uz'] = dflow['uz']-dflow['uz'].mean(axis=(0,1))
 
     return dflowfluc
+
+def wlt(t,data,w=6):
+    """
+
+    """
+    from scipy import signal
+
+    dt = t[1]-t[0]
+    fs = 1./dt
+
+    freq = np.linspace(.01,fs/2.,len(data))
+    widths = w*fs / (2*freq*np.pi)
+
+    cwtm = signal.cwt(data, signal.morlet2, widths, w=w)
+
+    return freq, cwtm

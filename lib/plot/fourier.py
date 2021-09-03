@@ -106,19 +106,19 @@ def plot_fft_norm(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, xxi
         fieldpmesh = fieldpmesh[xzeroidx+1:,yzeroidx+1:]
         xplot = xplot[xzeroidx+1:,yzeroidx+1:]
         yplot = yplot[xzeroidx+1:,yzeroidx+1:]
-    else:
-        fieldpmesh = fieldpmesh[xzeroidx:,yzeroidx:]
-        xplot = xplot[xzeroidx:,yzeroidx:]
-        yplot = yplot[xzeroidx:,yzeroidx:]
+    # else:
+    #     fieldpmesh = fieldpmesh[xzeroidx:,yzeroidx:]
+    #     xplot = xplot[xzeroidx:,yzeroidx:]
+    #     yplot = yplot[xzeroidx:,yzeroidx:]
 
 
     plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
     plt.figure(figsize=(6.5,6))
     plt.pcolormesh(xplot, yplot, fieldpmesh, cmap="Spectral", shading="gouraud")
     if(xaxislim is not None):
-        plt.xlim(0,xaxislim)
+        plt.xlim(-xaxislim,xaxislim)
     if(yaxislim is not None):
-        plt.ylim(0,yaxislim)
+        plt.ylim(-yaxislim,yaxislim)
     if(takeaxisaverage):
         plt.title(ttl,loc="right")
     elif(planename == 'xy'):
