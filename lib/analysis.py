@@ -3,6 +3,7 @@
 #plasma analysis functions
 
 import numpy as np
+import math
 
 def analysis_input(flnm = 'analysisinput.txt'):
     """
@@ -454,6 +455,23 @@ def remove_average_fields_over_yz(dfields):
 
     return dfieldfluc
 
+def get_average_fields_over_yz(dfields):
+    """
+
+    """
+
+    from copy import copy
+    dfieldavg = copy(dfields)
+
+    dfieldavg['ex'][:] = dfields['ex'].mean(axis=(0,1))
+    dfieldavg['ey'][:] = dfields['ey'].mean(axis=(0,1))
+    dfieldavg['ez'][:] = dfields['ez'].mean(axis=(0,1))
+    dfieldavg['bx'][:] = dfields['bx'].mean(axis=(0,1))
+    dfieldavg['by'][:] = dfields['by'].mean(axis=(0,1))
+    dfieldavg['bz'][:] = dfields['bz'].mean(axis=(0,1))
+
+    return dfieldavg
+
 def remove_average_flow_over_yz(dflow):
     """
 
@@ -480,4 +498,4 @@ def wlt(t,data,w=6):
 
     cwtm = signal.cwt(data, signal.morlet2, widths, w=w)
 
-    return freq, cwtm
+    return 2.0*math.pi*freq, cwtm
