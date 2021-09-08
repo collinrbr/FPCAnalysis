@@ -446,29 +446,34 @@ def remove_average_fields_over_yz(dfields):
     from copy import copy
 
     dfieldfluc = copy(dfields) #deep copy
-    dfieldfluc['ex'] = dfields['ex']-dfields['ex'].mean(axis=(0,1))
-    dfieldfluc['ey'] = dfields['ey']-dfields['ey'].mean(axis=(0,1))
-    dfieldfluc['ez'] = dfields['ez']-dfields['ez'].mean(axis=(0,1))
-    dfieldfluc['bx'] = dfields['bx']-dfields['bx'].mean(axis=(0,1))
-    dfieldfluc['by'] = dfields['by']-dfields['by'].mean(axis=(0,1))
-    dfieldfluc['bz'] = dfields['bz']-dfields['bz'].mean(axis=(0,1))
+    dfieldfluc['ex'] = dfieldfluc['ex']-dfieldfluc['ex'].mean(axis=(0,1))
+    dfieldfluc['ey'] = dfieldfluc['ey']-dfieldfluc['ey'].mean(axis=(0,1))
+    dfieldfluc['ez'] = dfieldfluc['ez']-dfieldfluc['ez'].mean(axis=(0,1))
+    dfieldfluc['bx'] = dfieldfluc['bx']-dfieldfluc['bx'].mean(axis=(0,1))
+    dfieldfluc['by'] = dfieldfluc['by']-dfieldfluc['by'].mean(axis=(0,1))
+    dfieldfluc['bz'] = dfieldfluc['bz']-dfieldfluc['bz'].mean(axis=(0,1))
 
     return dfieldfluc
 
 def get_average_fields_over_yz(dfields):
     """
 
+    TODO: this function doesn't seem to use a deep copy for dfields, i.e. it changes
+    dfields. Need to fix this
+
     """
+
+    print("Warning: due to a current bug get_average_fields_over_yz(dfields) doesn't correctly use deep copies and will probably change the inputed dfields object. TODO fix")
 
     from copy import copy
     dfieldavg = copy(dfields)
 
-    dfieldavg['ex'][:] = dfields['ex'].mean(axis=(0,1))
-    dfieldavg['ey'][:] = dfields['ey'].mean(axis=(0,1))
-    dfieldavg['ez'][:] = dfields['ez'].mean(axis=(0,1))
-    dfieldavg['bx'][:] = dfields['bx'].mean(axis=(0,1))
-    dfieldavg['by'][:] = dfields['by'].mean(axis=(0,1))
-    dfieldavg['bz'][:] = dfields['bz'].mean(axis=(0,1))
+    dfieldavg['ex'][:] = dfieldavg['ex'].mean(axis=(0,1))
+    dfieldavg['ey'][:] = dfieldavg['ey'].mean(axis=(0,1))
+    dfieldavg['ez'][:] = dfieldavg['ez'].mean(axis=(0,1))
+    dfieldavg['bx'][:] = dfieldavg['bx'].mean(axis=(0,1))
+    dfieldavg['by'][:] = dfieldavg['by'].mean(axis=(0,1))
+    dfieldavg['bz'][:] = dfieldavg['bz'].mean(axis=(0,1))
 
     return dfieldavg
 
@@ -478,9 +483,9 @@ def remove_average_flow_over_yz(dflow):
     """
     from copy import copy
     dflowfluc = copy(dflow)
-    dflowfluc['ux'] = dflow['ux']-dflow['ux'].mean(axis=(0,1))
-    dflowfluc['uy'] = dflow['uy']-dflow['uy'].mean(axis=(0,1))
-    dflowfluc['uz'] = dflow['uz']-dflow['uz'].mean(axis=(0,1))
+    dflowfluc['ux'] = dflowfluc['ux']-dflowfluc['ux'].mean(axis=(0,1))
+    dflowfluc['uy'] = dflowfluc['uy']-dflowfluc['uy'].mean(axis=(0,1))
+    dflowfluc['uz'] = dflowfluc['uz']-dflowfluc['uz'].mean(axis=(0,1))
 
     return dflowfluc
 
