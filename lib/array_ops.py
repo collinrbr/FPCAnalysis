@@ -133,14 +133,14 @@ def array_3d_to_2d(arr3d,planename):
         for i in range(0,len(arr3d)):
             for j in range(0,len(arr3d[i])):
                 for k in range(0,len(arr3d[i][j])):
-                    arr2d[k][i] += arr3d[i][j][k] #TODO: check this
+                    arr2d[k][i] += arr3d[i][j][k]
         return arr2d
 
     elif(planename == 'yz'):
         for i in range(0,len(arr3d)):
             for j in range(0,len(arr3d[i])):
                 for k in range(0,len(arr3d[i][j])):
-                    arr2d[j][i] += arr3d[i][j][k] #TODO: check this
+                    arr2d[j][i] += arr3d[i][j][k]
         return arr2d
     else:
         print("Please enter xy, xz, or yz for planename...")
