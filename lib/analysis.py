@@ -308,9 +308,16 @@ def get_abs_max_velocity(dparticles):
 
 def check_input(analysisinputflnm,dfields):
     """
-    prints warnings if analysis is set up in an unexpected way
+    Prints warnings if analysis is set up in an unexpected way
 
+    Parameters
+    ----------
+    analysisinputflnm : str
+        flnm of analysis input
+    dfields : dict
+        field data dictionary from field_loader
     """
+
     import sys
     path,resultsdir,vmax,dv,numframe,dx,xlim,ylim,zlim = analysis_input(flnm = analysisinputflnm)
 
@@ -353,7 +360,18 @@ def check_input(analysisinputflnm,dfields):
 
 def check_sim_stability(analysisinputflnm,dfields,dparticles,dt):
     """
-    Checks max velocity to make sure sim is numerically stable
+    Checks max velocity to make sure sim is numerically stable. Prints warnings if it is not
+
+    Parameters
+    ----------
+    analysisinputflnm : str
+        flnm of analysis input
+    dfields : dict
+        field data dictionary from field_loader
+    dparticles : dict
+        particle data dictionary
+    dt : float
+        size of each time step in code units
     """
     path,vmax,dv,numframe,dx,xlim,ylim,zlim = analysis_input(flnm = analysisinputflnm)
 
@@ -375,16 +393,26 @@ def check_sim_stability(analysisinputflnm,dfields,dparticles,dt):
     if(vmax >= 3.*maxsx or vmax >= 3.*maxsy or vmax >= 3.*maxsz):
         print("Warning: vmax is 3 times larger than the max velocity of any particle. It is computationally wasteful to run FPC analysis in the upper domain of velocity where there are no particles...")
 
-
-
-
-
-
-
 #TODO: check if/force startval/endval to be at discrete location that matches the field positions we have
 def deconvolve_for_fft(dfields,fieldkey,startval,endval):
     """
-    Fits ramp to line and subtracts line
+    Fits ramp to line and subtracts line to deconvolve
+
+    Parameters
+    ---------
+    dfields : dict
+        field data dictionary from field_loader
+    fieldkey : str
+        name of field you want to plot (ex, ey, ez, bx, by, bz)
+    startval : float
+        start xx position of ramp
+    endval : float
+        end xx position of ramp
+
+    Returns
+    -------
+    fieldvalsdeconvolved : 1d array
+        value of deconvolved field
     """
     from lib.array_ops import find_nearest
 
@@ -441,7 +469,17 @@ def take_fft2(data,daxisx0,daxis1):
 
 def remove_average_fields_over_yz(dfields):
     """
+    Removes yz average from field data i.e. delta_field(x,y,z) = field(x,y,z)-<field(x,y,z)>_(y,z)
 
+    Parameters
+    ----------
+    dfields : dict
+        field data dictionary from flow_loader
+
+    Returns
+    -------
+    dfieldsfluc : dict
+        delta field data dictionary
     """
     from copy import copy
 
@@ -457,10 +495,20 @@ def remove_average_fields_over_yz(dfields):
 
 def get_average_fields_over_yz(dfields):
     """
+    Returns yz average of field i.e. dfield_avg(x,y,z) = <field(x,y,z)>_(y,z)
 
     TODO: this function doesn't seem to use a deep copy for dfields, i.e. it changes
     dfields. Need to fix this
 
+    Parameters
+    ----------
+    dfields : dict
+        field data dictionary from flow_loader
+
+    Returns
+    -------
+    dfieldsavg : dict
+        avg field data dictionary
     """
 
     print("Warning: due to a current bug get_average_fields_over_yz(dfields) doesn't correctly use deep copies and will probably change the inputed dfields object. TODO fix")
@@ -479,7 +527,17 @@ def get_average_fields_over_yz(dfields):
 
 def remove_average_flow_over_yz(dflow):
     """
+    Removes yz average from flow data i.e. delta_flow(x,y,z) = flow(x,y,z)-<flow(x,y,z)>_(y,z)
 
+    Parameters
+    ----------
+    dflow : dict
+        flow data dictionary from flow_loader
+
+    Returns
+    -------
+    dflowfluc : dict
+        delta flow data dictionary
     """
     from copy import copy
     dflowfluc = copy(dflow)
@@ -491,7 +549,16 @@ def remove_average_flow_over_yz(dflow):
 
 def wlt(t,data,w=6):
     """
+    Peforms wavelet transform using morlet wavelet on data that is a function of t i.e. data(t)
 
+    Paramters
+    ---------
+    t : 1d array
+        independent data array
+    data : 1d array
+        dependent data array
+    w : float, opt
+        omega term in morlet wavelet function (relates to the number of humps)
     """
     from scipy import signal
 

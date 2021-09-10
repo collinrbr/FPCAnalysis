@@ -191,7 +191,31 @@ def get_average_in_box(x1, x2, y1, y2, z1, z2, datadict, dictkey):
 
 def get_field_subset(dfields,startx,endx,starty,endy,startz,endz):
     """
+    Grabs subset box of field data
 
+    TODO: move this to another library file
+
+    Parameters
+    ----------
+    dfields : dict
+        field data dictionary from field_loader
+    startx : float
+        lower x bound
+    endx : float
+        upper x bound
+    starty : float
+        lower y bound
+    endy : float
+        lower y bound
+    startz : float
+        lower z bound
+    endz : float
+        lower z bound
+
+    Returns
+    -------
+    dfieldssubset : dict
+        subset of field data
     """
 
     from copy import copy
@@ -236,7 +260,31 @@ def get_field_subset(dfields,startx,endx,starty,endy,startz,endz):
 
 def get_flow_subset(dflow,startx,endx,starty,endy,startz,endz):
     """
+    Grabs subset box of flow data
 
+    TODO: move this to another library file
+
+    Parameters
+    ----------
+    dfields : dict
+        field data dictionary from flow_loader
+    startx : float
+        lower x bound
+    endx : float
+        upper x bound
+    starty : float
+        lower y bound
+    endy : float
+        lower y bound
+    startz : float
+        lower z bound
+    endz : float
+        lower z bound
+
+    Returns
+    -------
+    dfieldssubset : dict
+        subset of flow data
     """
     from copy import copy
 

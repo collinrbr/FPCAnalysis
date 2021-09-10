@@ -342,6 +342,47 @@ def load3Vnetcdf4(filename):
     """
     Loads 3v netcdf4 data created by save3Vdata function
 
+    Parameters
+    ----------
+    filename : str
+        filename of netcdf4. Should be formatted like *.nc
+
+    Returns
+    -------
+    Hist_in : 4d array
+        Distribution data created by analysis functions
+        f(x;vx,vy,vz)
+    CEx_in  : 4d array
+        CEx data created by analysis functions
+        CE_x(x;vx,vy,vz)
+    CEy_in : 4d array
+        CEy data created by analysis functions
+        CE_x(x;vx,vy,vz)
+    CEz_in : 4d array
+        CEy data created by analysis functions
+        CE_x(x;vx,vy,vz)
+    vx_in : 3d array
+        velocity space grid created by analysis functions
+    vy_in : 3d array
+        velocity space grid created by analysis functions
+    vz_in : 3d array
+        velocity space grid created by analysis functions
+    x_in : 1d array
+        x slice position data created by analysis functions
+    enerCEx_in : 1d array
+        integral over velocity space of CEx
+    enerCEy_in : 1d array
+        integral over velocity space of CEy
+    enerCEz_in : 1d array
+        integral over velocity space of CEy
+    Vframe_relative_to_sim_in : float
+        velocity of frame analysis was done in relative to the static simulation box frame
+    metadata_in : 1d array, optional
+        meta data array with length equal to x_out and axis 3 of correlation data
+        normally needs to be made by hand
+    params_in : dict, optional
+        dictionary containing global attributes relating to data.
+        contains mostly physical input parameters from original simulation
     """
     from netCDF4 import Dataset
     from datetime import datetime
@@ -556,7 +597,6 @@ def build_params(inputdict, numframe):
     """
     Computes relevant inputs parameters from simulation
 
-
     Parameters
     ----------
     inputdict : dict
@@ -564,7 +604,6 @@ def build_params(inputdict, numframe):
 
     numframe : int
         frame number (i.e. what time slice) with are analyzing
-
 
     Returns
     -------

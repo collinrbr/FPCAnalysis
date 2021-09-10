@@ -82,12 +82,14 @@ def read_box_of_particles(path, num, x1, x2, y1, y2, z1, z2):
 def readTristanParticles(path, num):
     """
     Loads TRISTAN particle data
+
     Parameters
     ----------
     path : string
         path to data folder
     num : int
         frame of data this function will load
+
     Returns
     -------
     pts_elc : dict
@@ -134,6 +136,7 @@ def makeHistFromTristanData(vmax, dv, x1, x2, y1, y2, z1, z2, dpar, species=None
         xx vx yy vy zz vz data dictionary from read_particles or read_box_of_particles
     species : string
         'e' or 'i' depending on whether computing distribution function from electrons or ions
+
     Returns
     -------
     vx : 3d array
@@ -205,6 +208,7 @@ def field_loader(field_vars='all', components='all', num=None,
                  path='./', slc=None, verbose=False):
     """
     Loads dHybridR field data
+
     Parameters
     ----------
     field_vars : string
@@ -221,6 +225,7 @@ def field_loader(field_vars='all', components='all', num=None,
         where idx is an integer index
     verbose : boolean
         if true, prints debug information
+
     Returns
     -------
     d : dict
@@ -464,9 +469,21 @@ def flow_loader(flow_vars=None, num=None, path='./', sp=1, verbose=False):
 
 def read_restart(path):
     """
-    Loads restart file. Code provided by Dr. Colby Haggerty.
+    Loads all restart files. Use's modified code from Dr. Colby Haggerty.
 
-    Not sure how to implement this cleanly
+    TODO?: maybe add feature that limits domain (use xrange to nums feature)
+
+    (Not sure how to implement this cleanly)
+
+    Parameters
+    ---------
+    path : string
+        path to simulation data folder. I.e. one above the restart file folder
+
+    Returns
+    -------
+        pts : dict
+            dictionary containing particle data
     """
 
     class PartMapper3D(object):
@@ -666,8 +683,10 @@ def read_restart(path):
 
     procs = np.arange(0,numfiles) #loads entire simulation box. Probably more intuitive to load entire box then take subset if desired as restart files contain subboxes that contain multiple cells but are smaller than the simulation box
 
+    pts = PM.parts_from_num(procs[-1])
+    procs = procs[:-1]
     for _c,_p in enumerate(procs):
         _pts = PM.parts_from_num(_p)
         pts = np.concatenate([pts,_pts],axis=0)
 
-    pass
+    return pts
