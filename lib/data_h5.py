@@ -469,178 +469,205 @@ def read_restart(path):
     Not sure how to implement this cleanly
     """
 
-    ### WARNING: this only works for 2d restart files
-    # class PartMapper(object):
-    #     def __init__(self, path):
-    #         self.path=path
-    #
-    #         self.p = self.read_input(path)
-    #
-    #         self.px,self.py,self.pz = self.p['node_number']
-    #         self.nx,self.ny,self.nz = self.p['ncells']
-    #         self.rx,self.ry,self.rz = self.p['boxsize']
-    #
-    #         self.dx = self.rx/1./self.nx
-    #         self.dy = self.ry/1./self.ny
-    #         self.dz = self.rz/1./self.nz
-    #
-    #     def read_input(self,path='./'):
-    #         """Parse dHybrid input file for simulation information
-    #
-    #         Args:
-    #             path (str): path of input file
-    #         """
-    #         import os
-    #
-    #         path = os.path.join(path, "input/input")
-    #         inputs = {}
-    #         repeated_sections = {}
-    #         # Load in all of the input stuff
-    #         with open(path) as f:
-    #             in_bracs = False
-    #             for line in f:
-    #                 # Clean up string
-    #                 line = line.strip()
-    #
-    #                 # Remove comment '!'
-    #                 trim_bang = line.find('!')
-    #                 if trim_bang > -1:
-    #                     line = line[:trim_bang].strip()
-    #
-    #                 # Is the line not empty?
-    #                 if line:
-    #                     if not in_bracs:
-    #                         in_bracs = True
-    #                         current_key = line
-    #
-    #                         # The input has repeated section and keys for differnt species
-    #                         # This section tries to deal with that
-    #                         sp_counter = 1
-    #                         while current_key in inputs:
-    #                             inputs[current_key+"_01"] = inputs[current_key]
-    #                             sp_counter += 1
-    #                             current_key = "{}_{:02d}".format(line, sp_counter)
-    #                             repeated_sections[current_key] = sp_counter
-    #
-    #                         inputs[current_key] = []
-    #
-    #                     else:
-    #                         if line == '{':
-    #                             continue
-    #                         elif line == '}':
-    #                             in_bracs = False
-    #                         else:
-    #                             inputs[current_key].append(line)
-    #
-    #         # Parse the input and cast it into usefull types
-    #         param = {}
-    #         repeated_keys = {}
-    #         for key,inp in inputs.items():
-    #             for sp in inp:
-    #                 k = sp.split('=')
-    #                 k,v = [v.strip(' , ') for v in k]
-    #
-    #                 _fk = k.find('(')
-    #                 if _fk > 0:
-    #                     k = k[:_fk]
-    #
-    #                 if k in param:
-    #                     param["{}_{}".format(k, key)] = param[k]
-    #                     k = "{}_{}".format(k, key)
-    #
-    #                 param[k] = [self._auto_cast(c.strip()) for c in v.split(',')]
-    #
-    #                 if len(param[k]) == 1:
-    #                     param[k] = param[k][0]
-    #
-    #         return param
-    #
-    #     def _box_center(self, ip, jp):
-    #         dx = self.dx
-    #         dy = self.dy
-    #
-    #         npx = self.nx//self.px
-    #         Mx = (self.nx/1./self.px - npx)*self.px
-    #
-    #         npy = self.ny//self.py
-    #         My = (self.ny/1./self.py - npy)*self.py
-    #
-    #         if ip < Mx:
-    #             xr = dx*(npx + 1)*ip + dx/2.
-    #         else:
-    #             xr = dx*(Mx + npx*ip) + dx/2.
-    #
-    #         if jp < My:
-    #             yr = dy*(npy + 1)*jp + dy/2.
-    #         else:
-    #             yr = dy*(My + npy*jp) + dy/2.
-    #
-    #         return xr,yr
-    #
-    #     def xrange_to_nums(self, x0, x1):
+    class PartMapper3D(object):
+        def __init__(self, path):
+            self.path=path
+
+            self.p = self.read_input(path)
+
+            self.px,self.py,self.pz = self.p['node_number']
+            self.nx,self.ny,self.nz = self.p['ncells']
+            self.rx,self.ry,self.rz = self.p['boxsize']
+
+            self.dx = self.rx/1./self.nx
+            self.dy = self.ry/1./self.ny
+            self.dz = self.rz/1./self.nz
+
+        def read_input(self,path='./'):
+            """Parse dHybrid input file for simulation information
+
+            Args:
+                path (str): path of input file
+            """
+            import os
+
+            path = os.path.join(path, "input/input")
+            inputs = {}
+            repeated_sections = {}
+            # Load in all of the input stuff
+            with open(path) as f:
+                in_bracs = False
+                for line in f:
+                    # Clean up string
+                    line = line.strip()
+
+                    # Remove comment '!'
+                    trim_bang = line.find('!')
+                    if trim_bang > -1:
+                        line = line[:trim_bang].strip()
+
+                    # Is the line not empty?
+                    if line:
+                        if not in_bracs:
+                            in_bracs = True
+                            current_key = line
+
+                            # The input has repeated section and keys for differnt species
+                            # This section tries to deal with that
+                            sp_counter = 1
+                            while current_key in inputs:
+                                inputs[current_key+"_01"] = inputs[current_key]
+                                sp_counter += 1
+                                current_key = "{}_{:02d}".format(line, sp_counter)
+                                repeated_sections[current_key] = sp_counter
+
+                            inputs[current_key] = []
+
+                        else:
+                            if line == '{':
+                                continue
+                            elif line == '}':
+                                in_bracs = False
+                            else:
+                                inputs[current_key].append(line)
+
+            # Parse the input and cast it into usefull types
+            param = {}
+            repeated_keys = {}
+            for key,inp in inputs.items():
+                for sp in inp:
+                    k = sp.split('=')
+                    k,v = [v.strip(' , ') for v in k]
+
+                    _fk = k.find('(')
+                    if _fk > 0:
+                        k = k[:_fk]
+
+                    if k in param:
+                        param["{}_{}".format(k, key)] = param[k]
+                        k = "{}_{}".format(k, key)
+
+                    param[k] = [self._auto_cast(c.strip()) for c in v.split(',')]
+
+                    if len(param[k]) == 1:
+                        param[k] = param[k][0]
+
+            return param
+
+        def _box_center(self, ip, jp, kp):
+            dx = self.dx
+            dy = self.dy
+            dz = self.dz
+
+            npx = self.nx//self.px
+            Mx = (self.nx/1./self.px - npx)*self.px
+
+            npy = self.ny//self.py
+            My = (self.ny/1./self.py - npy)*self.py
+
+            npz = self.nz//self.pz
+            Mz = (self.nz/1./self.pz - npz)*self.pz
+
+            if ip < Mx:
+                xr = dx*(npx + 1)*ip + dx/2.
+            else:
+                xr = dx*(Mx + npx*ip) + dx/2.
+
+            if jp < My:
+                yr = dy*(npy + 1)*jp + dy/2.
+            else:
+                yr = dy*(My + npy*jp) + dy/2.
+
+            if kp < Mz:
+                zr = dz*(npz + 1)*kp + dz/2.
+            else:
+                zr = dz*(Mz + npz*kp) + dz/2.
+
+            return xr,yr,zr
+
+        def xrange_to_nums(self, x0, x1):
     #         i0 = np.int(np.floor(x0/self.rx*self.px))
     #         i1 = np.int(np.min([np.ceil(x1/self.rx*self.px), self.px - 1]))
-    #
+
     #         nums = np.arange(i0, i1)
     #         for _ny in np.arange(1, self.py):
     #             nums += np.arange(i0 + _ny*self.px, i1 + _ny*self.px)
-    #
+
     #         return nums
-    #
-    #     def _num_to_index(self, num):
-    #         ip = num%self.px
-    #         jp = num//self.px
-    #         return ip,jp
-    #
-    #     def _index_to_num(self, ip, jp):
-    #         num = self.px*jp + ip
-    #         return num
-    #
-    #     def parts_from_index(self, ip, jp, sp='SP01'):
-    #         fname = self.path+'/Restart/Rest_proc{:05d}.h5'
-    #         num = self._index_to_num(ip, jp)
-    #         bcx,bcy = self._box_center(ip, jp)
-    #         dx,dy = self.dx,self.dy
-    #
-    #         with h5py.File(fname.format(num),'r') as f:
-    #
-    #             pts = f[sp][:]
-    #             ind = f[sp+'INDEX'][:]
-    #             pts[:, 0] = pts[:,0] + bcx + dx*(ind[:,0] - 4)
-    #             pts[:, 1] = pts[:,1] + bcy + dy*(ind[:,1] - 4)
-    #
-    #         return pts
-    #
-    #     def parts_from_num(self, num, sp='SP01'):
-    #         ip, jp = self._num_to_index(num)
-    #         return self.parts_from_index(ip, jp, sp=sp)
-    #
-    #     def _auto_cast(self,k):
-    #         """Takes an input string and tries to cast it to a real type
-    #
-    #         Args:
-    #             k (str): A string that might be a int, float or bool
-    #         """
-    #
-    #         k = k.replace('"','').replace("'",'')
-    #
-    #         for try_type in [int, float]:
-    #             try:
-    #                 return try_type(k)
-    #             except:
-    #                 continue
-    #
-    #         if k == '.true.':
-    #             return True
-    #         if k == '.false.':
-    #             return False
-    #
-    #         return str(k)
-    #
-    # PM = PartMapper(pathrestart)
-    # procs = PM.xrange_to_nums(0., 200000.)
-    #
-    # for _c,_p in enumerate(procs):
-    #     pts = PM.parts_from_num(_p)
+
+            #hacky way to do it (would be a bit more efficient to fix the math in the above commented out block)
+            maxnum = self.px*self.py*self.pz
+            nums = []
+            for n in range(0,maxnum):
+                ip,jp,kp = self._num_to_index(n)
+                bcx,bcy,bcz = self._box_center(ip, jp, kp)
+                xxboxwidth = PM.rx/PM.px #each restart file contains a subbox that normally contains many cells
+
+                if(bcx-xxboxwidth/2. >= x0 and bcx+xxboxwidth/2. <= x1):
+                    nums.append(n)
+
+            return nums
+
+
+        def _num_to_index(self, num):
+            ip = num%self.px
+            jp = (num//self.px)%self.py
+            kp = num//(self.px*self.py)
+            return ip,jp,kp
+
+        def _index_to_num(self, ip, jp, kp):
+            num = self.px*self.py*kp + self.px*jp + ip
+            return num
+
+        def parts_from_index(self, ip, jp, kp, sp='SP01'):
+            fname = self.path+'/Restart/Rest_proc{:05d}.h5'
+            num = self._index_to_num(ip, jp, kp)
+            bcx,bcy,bcz = self._box_center(ip, jp, kp)
+            dx,dy,dz = self.dx,self.dy,self.dz
+
+            with h5py.File(fname.format(num),'r') as f:
+
+                pts = f[sp][:]
+                ind = f[sp+'INDEX'][:]
+                pts[:, 0] = pts[:,0] + bcx + dx*(ind[:,0] - 4)
+                pts[:, 1] = pts[:,1] + bcy + dy*(ind[:,1] - 4)
+                pts[:, 2] = pts[:,2] + bcz + dz*(ind[:,2] - 4)
+
+            return pts
+
+        def parts_from_num(self, num, sp='SP01'):
+            ip, jp, kp = self._num_to_index(num)
+            return self.parts_from_index(ip, jp, kp, sp=sp)
+
+        def _auto_cast(self,k):
+            """Takes an input string and tries to cast it to a real type
+
+            Args:
+                k (str): A string that might be a int, float or bool
+            """
+
+            k = k.replace('"','').replace("'",'')
+
+            for try_type in [int, float]:
+                try:
+                    return try_type(k)
+                except:
+                    continue
+
+            if k == '.true.':
+                return True
+            if k == '.false.':
+                return False
+
+            return str(k)
+
+    PM = PartMapper3D(path)
+    numfiles = PM.px*PM.py*PM.pz
+
+    procs = np.arange(0,numfiles) #loads entire simulation box. Probably more intuitive to load entire box then take subset if desired as restart files contain subboxes that contain multiple cells but are smaller than the simulation box
+
+    for _c,_p in enumerate(procs):
+        _pts = PM.parts_from_num(_p)
+        pts = np.concatenate([pts,_pts],axis=0)
 
     pass
