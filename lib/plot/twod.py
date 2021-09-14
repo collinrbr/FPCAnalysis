@@ -28,6 +28,10 @@ def make_field_pmesh(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, 
         index of data along yy axis (ignored if axis = '_yy')
     zzindex : int, optional
         index of data along zz axis (ignored if axis = '_zz')
+    xlimmin : float
+        minimum plotted x value (ignored if xx is not in plane)
+    xlimmax : float
+        maximum plotted x value (ignored if xx is not in plane)
     """
 
     fieldttl = ''
@@ -123,7 +127,23 @@ def make_field_pmesh(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, 
 
 def make_fieldpmesh_sweep(dfields,fieldkey,planename,directory,xlimmin=None,xlimmax=None):
     """
+    Makes sweep gif of field pmesh
 
+    Parameters
+    ----------
+    dfields : dict
+        field data dictionary from field_loader
+    fieldkey : str
+        name of field you want to plot (ex, ey, ez, bx, by, bz)
+    planename : str
+        name of plane you want to plot (xy, xz, yz)
+    directory : str
+        name of directory you want to create and put plots into
+        (omit final '/')
+    xlimmin : float
+        minimum plotted x value (ignored if xx is not in plane)
+    xlimmax : float
+        maximum plotted x value (ignored if xx is not in plane)
     """
 
     try:
@@ -154,7 +174,20 @@ def make_fieldpmesh_sweep(dfields,fieldkey,planename,directory,xlimmin=None,xlim
 
 def compare_pmesh_fields_yz(dfields, flnm = '', ttl ='', takeaxisaverage=False, xxindex=float('nan')):
     """
+    Plots pmesh of all fields on same figure for easier comparison along the yz projection
 
+    Parameters
+    ----------
+    dfields : dict
+        field data dictionary from field_loader
+    flnm : str
+        filename of output file
+    ttl : str, optional
+        title of plot
+    takeaxisaverage : bool, optional
+        if true, take average along axis not included in planename
+    xxindex : int
+        xx index of slice that is to be plotted
     """
 
     plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
@@ -253,7 +286,15 @@ def compare_pmesh_fields_yz(dfields, flnm = '', ttl ='', takeaxisaverage=False, 
 
 def compare_pmesh_fields_yz_sweep(dfields,directory):
     """
+    Makes sweep of pmesh of all fields along the yz projection
 
+    Parameters
+    ----------
+    dfields : dict
+        field data dictionary from field_loader
+    directory : str
+        name of directory you want to create and put plots into
+        (omit final '/')
     """
     try:
         os.mkdir(directory)

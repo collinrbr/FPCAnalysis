@@ -35,6 +35,13 @@ def lorentz_transform_vx(dfields,vx):
 def transform_flow(dflow,vx):
     """
     Transforms frame of flow data
+
+    Parameters
+    ----------
+    dflow : dict
+        flow data dictionary from flow_loader
+    vx : float
+        boost velocity along x
     """
     from copy import copy
 
@@ -47,6 +54,13 @@ def transform_flow(dflow,vx):
 def shift_particles(dparticles,vx):
     """
     Transforms velocity frame of particles
+
+    Parameters
+    ----------
+    dparticles : dict
+        particle data dictionary
+    vx : float
+        boost velocity along x
     """
     from copy import copy
 
@@ -69,6 +83,14 @@ def estimate_shock_pos(dfields, yyindex = 0, zzindex = 0):
     Takes 'rightmost' (i.e. most upstream) significant (i.e. not just small fluctuations)
     zerocrossing as the location of the shock
 
+    Parameters
+    ----------
+    dfields : dict
+        field data dictionary from field_loader
+    yyindex : int, opt
+        index of data along yy axis
+    zzindex : int, opt
+        index of data along yy axis
     """
 
     xposshock = 0.

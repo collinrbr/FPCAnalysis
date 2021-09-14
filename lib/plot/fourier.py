@@ -8,8 +8,31 @@ import os
 
 def plot_fft_norm(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, xxindex=float('nan'), yyindex=float('nan'), zzindex=float('nan'), plotlog = True, xaxislim=None, yaxislim=None):
     """
-    WIP
+    Plot norm of FFT along given plane
 
+    Parameters
+    ----------
+    dfields : dict
+        field data dictionary from field_loader
+    fieldkey : str
+        name of field you want to plot (ex, ey, ez, bx, by, bz)
+    planename : str
+        name of plane you want to get 2d grid of
+    flnm : str, optional
+        specifies filename if plot is to be saved as png.
+        if set to default, plt.show() will be called instead
+    takeaxisaverage : bool, optional
+        if true, averages data over entire 3rd axis (one not in plane specified by planename)
+    xxindex : int
+        index of data along xx axis
+    yyindex : int
+        index of data along yy axis
+    zzindex : int
+        index of data along zz axis
+    xaxislim : float
+        upper and lower bound of plot [-xaxislim to xaxislim]
+    yaxislim : float
+        upper and lower bound of plot [-yaxislim to yaxislim]
     """
     from lib.analysis import take_fft2
 
@@ -148,9 +171,25 @@ def plot_fft_norm(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, xxi
 
     return #k0, k1, fieldpmesh, xplot, yplot #debug. TODO: remove
 
-def make_2dfourier_sweep(dfields,fieldkey,planename,directory,plotlog=True,xaxislim=None,yaxislim=None):
+def make_2dfourier_sweep(dfields,fieldkey,planename,directory,plotlog=False,xaxislim=None,yaxislim=None):
     """
-
+    Makes sweep gif of plots produced by plot_fft_norm
+    Parameters
+    ----------
+    dfields : dict
+        field data dictionary from field_loader
+    fieldkey : str
+        name of field you want to plot (ex, ey, ez, bx, by, bz)
+    planename : str
+        name of plane you want to get 2d grid of
+    directory : str
+        name of the output directory of each swing png
+    plotlog : bool, opt
+        if true, makes plot log scale
+    xaxislim : float
+        upper and lower bound of plot [-xaxislim to xaxislim]
+    yaxislim : float
+        upper and lower bound of plot [-yaxislim to yaxislim]
     """
 
     try:
@@ -180,6 +219,16 @@ def make_2dfourier_sweep(dfields,fieldkey,planename,directory,plotlog=True,xaxis
             break
 
 def plot1d_fft(dfields,fieldkey):
+    """
+    Plots fft of 1d line slice along x axis at gridpoint closest to origin (y~=0, z~=0)
+
+    Parameters
+    ----------
+    dfields : dict
+        field data dictionary from field_loader
+    fieldkey : str
+        name of field you want to plot (ex, ey, ez, bx, by, bz)
+    """
     axis = '_xx'
     zzindex = 0
     yyindex = 0
@@ -218,6 +267,12 @@ def _sort_for_contour(xcoord,ycoord,dheight):
 
     Parameters
     ----------
+    xcoord : 2d array
+        xx coordinates of data (independent parameter)
+    ycoord : 2d array
+        yy coordinates of data (independent parameter)
+    dheight : 2d array
+        zz value of data (dependent parameter)
     """
 
     temprowx = xcoord[0]

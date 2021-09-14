@@ -308,7 +308,27 @@ def plot_dist(vx, vy, vmax, H,flnm = '',ttl=''):
 
 def dist_log_plot_3dir(vx, vy, vz, vmax, H_in, flnm = '',ttl=''):
     """
+    Makes 3 panel plot of the distribution function in log space
+
     WARNING: gourand shading seems to only work on the first figure (i.e. the colormesh for only axs[0] is smoothed)
+    This seems to possibly be a larger bug in matplotlib
+
+    Paramters
+    ---------
+    vx : 2d array
+        vx velocity grid
+    vy : 2d array
+        vy velocity grid
+    vmax : float
+        specifies signature domain in velocity space
+        (assumes square and centered about zero)
+    H_in : 2d array
+        distribution data
+    flnm : str, optional
+        specifies filename if plot is to be saved as png.
+        if set to default, plt.show() will be called instead
+    ttl : str, optional
+        title of plot
     """
 
     plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
@@ -393,7 +413,27 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
                                 CEz_xy,CEz_xz, CEz_yz,
                                 flnm = '', ttl = ''):
     """
+    Makes super figure of distribution and velocity sigantures from all different projections
+    i.e. different viewing angles
 
+    Parameters
+    ----------
+    vx : 2d array
+        vx velocity grid
+    vy : 2d array
+        vy velocity grid
+    vmax : float
+        specifies signature domain in velocity space
+        (assumes square and centered about zero)
+    H_** : 2d array
+        projection onto ** axis of distribution function
+    CE*_* : 2d array
+        projection onto ** axis of CE*
+    flnm : str, optional
+        specifies filename if plot is to be saved as png.
+        if set to default, plt.show() will be called instead
+    ttl : str, optional
+        title of plot
     """
     from lib.array_ops import mesh_3d_to_2d
 
@@ -510,7 +550,36 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     plt.close()
 
 def make_superplot_gif(vx, vy, vz, vmax, Hist, CEx, CEy, CEz, x, directory, flnm):
-    #make plots of data and put into directory
+    """
+    Make superplots of data and put into directory
+
+    Parameters
+    ----------
+    vx : 3d array
+        vx velocity grid
+    vy : 3d array
+        vy velocity grid
+    vz : 3d array
+        vz velocity grid
+    vmax : float
+        specifies signature domain in velocity space
+        (assumes square and centered about zero)
+    Hist : 4d array
+        distribution function data f(x;vx,vy,vz)
+    CEx : 4d array
+        distribution function data CEx(x;vx,vy,vz)
+    CEy : 4d array
+        distribution function data CEy(x;vx,vy,vz)
+    CEz : 4d array
+        distribution function data CEz(x;vx,vy,vz)
+    x : 1d array
+        x coordinate data
+    directory : str
+        name of directory you want to create and put plots into
+        (omit final '/')
+    flnm : str
+        filename of the final gif
+    """
 
     from lib.array_ops import array_3d_to_2d
 

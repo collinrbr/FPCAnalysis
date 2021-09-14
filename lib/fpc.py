@@ -218,6 +218,31 @@ def compute_all_correlation_over_x():
     pass
 
 def get_3d_weights(xx,yy,zz,idxxx1,idxxx2,idxyy1,idxyy2,idxzz1,idxzz2,dfields,fieldkey):
+    """
+    Calculates the weight associated with trilinear interpolation
+
+    Parameters
+    ----------
+    xx : float
+        test xx position
+    yy : float
+        test yy position
+    zz : float
+        test zz position
+    idx**(1/2) : int
+        index of positional value of box corner (lower then upper value)
+    dfields : dict
+        field data dictionary from field_loader
+    fieldkey : str
+        name of the field you want to correlate with
+        ex,ey,ez,bx,by, or bz
+
+    Returns
+    -------
+    w* : float
+        weight associated with each corner of box
+    """
+
     #get weights by 'volume fraction' of cell
     w1 = abs((dfields[fieldkey+'_xx'][idxxx1]-xx)*(dfields[fieldkey+'_yy'][idxyy1]-yy)*(dfields[fieldkey+'_zz'][idxzz1]-zz))
     w2 = abs((dfields[fieldkey+'_xx'][idxxx2]-xx)*(dfields[fieldkey+'_yy'][idxyy1]-yy)*(dfields[fieldkey+'_zz'][idxzz1]-zz))
@@ -254,7 +279,26 @@ def get_3d_weights(xx,yy,zz,idxxx1,idxxx2,idxyy1,idxyy2,idxzz1,idxzz2,dfields,fi
 #TODO:FIX (weight is no longer 1?)
 def weighted_field_average(xx, yy, zz, dfields, fieldkey):
     """
+    Uses trilinear interpolation to estimate field value at given test location
 
+    Parameters
+    ----------
+    xx : float
+        test xx position
+    yy : float
+        test yy position
+    zz : float
+        test zz position
+    dfields : dict
+        field data dictionary from field_loader
+    fieldkey : str
+        name of the field you want to correlate with
+        ex,ey,ez,bx,by, or bz
+
+    Returns
+    -------
+    fieldaverage : float
+        field value at given test location found using trilinear interpolation
     """
 
     from lib.array_ops import find_two_nearest
@@ -308,6 +352,35 @@ def weighted_field_average(xx, yy, zz, dfields, fieldkey):
 def compute_cprime_hist(dparticles,dfields,fieldkey,vmax,dv):
     """
     Computes cprime for all particles passed to it
+
+    Parameters
+    ----------
+    dparticles : dict
+        particle data dictionary
+    dfields : dict
+        field data dictonary
+    fieldkey : str
+        name of the field you want to correlate with
+        ex,ey,ez,bx,by, or bz
+    vmax : float
+        specifies signature domain in velocity space
+        (assumes square and centered about zero)
+    dv : float
+        velocity space grid spacing
+        (assumes square)
+
+    Returns
+    -------
+    cprimebinned : 3d array
+        cprime binned into appropriate distribution function using appropriate weights (TODO: document this var better)
+    Hist : 3d array
+        distribution function in box
+    vx : 3d array
+        vx velocity grid
+    vy : 3d array
+        vy velocity grid
+    vz : 3d array
+        vz velocity grid
     """
 
     #-TODO: shift particles to correctframe-----------
@@ -367,6 +440,25 @@ def compute_cprime_hist(dparticles,dfields,fieldkey,vmax,dv):
     return cprimebinned,hist,vx,vy,vz
 
 def compute_cor_from_cprime(cprimebinned,vx,vy,vz,dv,directionkey):
+    """
+    Computes correlation from cprime
+
+    Parameters
+    ----------
+    cprimebinned : 3d array
+        cprime binned into appropriate distribution function using appropriate weights (TODO: document this var better)
+    vx : 3d array
+        vx velocity grid
+    vy : 3d array
+        vy velocity grid
+    vz : 3d array
+        vz velocity grid
+    dv : float
+        velocity space grid spacing
+        (assumes square)
+    directionkey : str
+        direction we are taking the derivative w.r.t. (x,y,z)
+    """
     #TODO: figure way to automatically handle direction of taking derivative
     if(directionkey == 'x'):
         axis = 2

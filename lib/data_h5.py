@@ -482,8 +482,8 @@ def read_restart(path):
 
     Returns
     -------
-        pts : dict
-            dictionary containing particle data
+    pts : dict
+        dictionary containing particle data
     """
 
     class PartMapper3D(object):
