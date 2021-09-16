@@ -53,7 +53,8 @@ def estimate_grid_setup(dfields, dparticles_ion):
     _yy = [dy*float(i)+dy/2. for i in range(0,ny)]
     _zz = [dz*float(i)+dz/2. for i in range(0,nz)]
 
-    for key in dfields.keys():
+    keys = dfields.keys()
+    for key in keys:
         dfields[key+'_xx'] = copy(_xx)
         dfields[key+'_yy'] = copy(_yy)
         dfields[key+'_zz'] = copy(_zz)
