@@ -55,9 +55,12 @@ def estimate_grid_setup(dfields, dparticles_ion):
 
     keys = ['ex','ey','ez','bx','by','bz']
     for key in keys:
-        dfields[key+'_xx'] = np.asarray(copy(_xx))
-        dfields[key+'_yy'] = np.asarray(copy(_yy))
-        dfields[key+'_zz'] = np.asarray(copy(_zz))
+        dfields[key+'_xx'] = copy(_xx)
+        dfields[key+'_xx'] = np.asarray(dfields[key+'_xx'])
+        dfields[key+'_yy'] = copy(_yy)
+        dfields[key+'_yy'] = np.asarray(dfields[key+'_yy'])
+        dfields[key+'_zz'] = copy(_zz)
+        dfields[key+'_zz'] = np.asarray(dfields[key+'_zz'])
 
     return dfields
 
