@@ -40,6 +40,13 @@ def find_two_nearest(array, value):
         idx2 = idx1+1
     else:
         idx2 = idx1-1
+
+    #error checking (needed for 1d/2d simulations)
+    if(idx1 >= len(array) and len(array) == 1):
+        idx1 = 0
+    if(idx2 >= len(array) and len(array) == 1):
+        idx2 = 0
+
     return idx1,idx2
 
 def mesh_3d_to_2d(meshx,meshy,meshz,planename):

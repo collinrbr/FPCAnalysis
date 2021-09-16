@@ -15,6 +15,7 @@ def load_fields(path_fields, num):
     """
     field_vars = 'ex ey ez bx by bz'.split()
     field = {}
+    field['Vframe_relative_to_sim_out'] = 0.
     with h5py.File(path_fields.format(num),'r') as f:
         for k in field_vars:
             field[k] = f[k][:]
@@ -87,13 +88,14 @@ def load_particles(path, num):
     dens_vars_ion = 'ui vi wi xi yi zi'.split()
     pts_elc = {}
     pts_ion = {}
-    pts_elc['Vframe_relative_to_sim_out'] = 0. #tracks frame (along vx) relative to sim
-    pts_ion['Vframe_relative_to_sim_out'] = 0. #tracks frame (along vx) relative to sim
     with h5py.File(path.format(num),'r') as f:
         for k in dens_vars_elc:
             pts_elc[k] = f[k][:]
         for l in dens_vars_ion:
             pts_ion[l] = f[l][:]
+    pts_elc['Vframe_relative_to_sim_out'] = 0. #tracks frame (along vx) relative to sim
+    pts_ion['Vframe_relative_to_sim_out'] = 0. #tracks frame (along vx) relative to sim
+
     return pts_elc, pts_ion
 
 
