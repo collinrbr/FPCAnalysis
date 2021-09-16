@@ -166,10 +166,10 @@ def save3Vdata(Hist_out, CEx_out, CEy_out, CEz_out, vx_out, vy_out, vz_out, x_ou
     CEy_out /= maxCval
     CEz_out /= maxCval
 
+    #save data in netcdf file-------------------------------------------------------
     # open a netCDF file to write
     ncout = Dataset(filename, 'w', format='NETCDF4')
 
-    #save data in netcdf file-------------------------------------------------------
     #define simulation parameters
     for key in params:
         #setattr(ncout,key,params[key])
@@ -177,7 +177,7 @@ def save3Vdata(Hist_out, CEx_out, CEy_out, CEz_out, vx_out, vy_out, vz_out, x_ou
             _ = ncout.createVariable(key,None)
             _[:] = params[key]
 
-    ncout.description = 'dHybridR MLA data test 3'
+    ncout.description = 'dHybridR MLA data'
     ncout.generationtime = str(datetime.now())
     ncout.version = get_git_head()
 

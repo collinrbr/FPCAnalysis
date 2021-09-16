@@ -7,6 +7,7 @@ import lib.analysis as anl
 import lib.array_ops as ao
 import lib.data_h5 as dh5
 import lib.data_netcdf4 as dnc
+import lib.data_tristan as dtr
 import lib.fpc as fpc
 import lib.frametransform as ft
 import lib.metadata as md
@@ -32,8 +33,8 @@ import matplotlib.colors as colors
 #TODO: get pathing from analysis input
 # path_particles = "/Users/JunoRavin/Documents/PIC-Analysis/tristan/prtl.tot.{:03d}"
 # path_fields = "/Users/JunoRavin/Documents/PIC-Analysis/tristan/flds.tot.{:03d}"
-path_particles = "/Users/collbrown/Desktop/temp/mach12_2000/prtl.tot.007"
-path_fields = "/Users/collbrown/Desktop/temp/mach12_2000/flds.tot.{:03d}"
+path_particles = "/Users/collbrown/Desktop/mach12_2000/prtl.tot.007"
+path_fields = "/Users/collbrown/Desktop/mach12_2000/flds.tot.{:03d}"
 # NOTE: First pass through TRISTAN data makes it seems like TRISTAN field data
 #       has less metadata. Need to check with Colby and Anatoly (JJ 07/10/21)
 #       For right now, just read in raw field data.
@@ -48,10 +49,10 @@ with h5py.File(path_fields.format(7),'r') as f:
 #plt.figure()
 #plt.plot(field['by'][0,0,:])
 #plt.show()
-dparticles_elc, dparticles_ion = dh5.readTristanParticles(path_particles, 7)
+dparticles_elc, dparticles_ion = dtr.readTristanParticles(path_particles, 7)
 vmaxIon = 0.4
 dvIon = 0.01
-vxIon, vyIon, vzIon, totalPtclIon, HistIon = dh5.makeHistFromTristanData(vmaxIon, dvIon, 9500, 10000, 3.0, 4.0, 3.0, 4.0, dparticles_ion, species='i')
+vxIon, vyIon, vzIon, totalPtclIon, HistIon = dtr.makeHistFromTristanData(vmaxIon, dvIon, 9500, 10000, 3.0, 4.0, 3.0, 4.0, dparticles_ion, species='i')
 
 #vmaxElc = 2.0
 #dvElc = 0.1
