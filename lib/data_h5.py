@@ -28,7 +28,7 @@ def read_particles(path, num, is2d3v = False):
     """
 
     #dens_vars = 'p1 p2 p3 q tag x1 x2'.split()
-    if(is2d):
+    if(is2d3v):
         dens_vars = 'p1 p2 p3 x1 x2'.split()
     else:
         dens_vars = 'p1 p2 p3 x1 x2 x3'.split()
@@ -39,9 +39,6 @@ def read_particles(path, num, is2d3v = False):
             pts[k] = f[k][:]
 
     pts['Vframe_relative_to_sim'] = 0.
-
-    if(is2d3v):
-        pts['x3'] = np.zeros(len(pts['x1']))
 
     return pts
 
@@ -95,9 +92,6 @@ def read_box_of_particles(path, num, x1, x2, y1, y2, z1, z2, is2d3v = False):
                 else:
                     pts[k] = f[k][gptsx & gptsy][:]
     pts['Vframe_relative_to_sim'] = 0.
-
-    if(is2d3v):
-        pts['x3'] = np.zeros(len(pts['x1']))
 
     return pts
 
