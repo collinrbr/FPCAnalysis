@@ -8,7 +8,7 @@ import h5py
 import os
 
 #TODO: rename to read_dhybridr_particles
-def read_particles(path, num):
+def read_particles(path, num, is2d3v = False):
     """
     Loads dHybridR particle data
 
@@ -18,6 +18,9 @@ def read_particles(path, num):
         path to data folder
     num : int
         frame of data this function will load
+    is2d3v : bool, opt
+        set true is simualation is 2D 3V
+
     Returns
     -------
     pts : dict
@@ -25,16 +28,25 @@ def read_particles(path, num):
     """
 
     #dens_vars = 'p1 p2 p3 q tag x1 x2'.split()
-    dens_vars = 'p1 p2 p3 x1 x2 x3'.split()
+    if(is2d):
+        dens_vars = 'p1 p2 p3 x1 x2'.split()
+    else:
+        dens_vars = 'p1 p2 p3 x1 x2 x3'.split()
+
     pts = {}
     with h5py.File(path.format(num),'r') as f:
         for k in dens_vars:
             pts[k] = f[k][:]
+
     pts['Vframe_relative_to_sim'] = 0.
+
+    if(is2d3v):
+        pts['x3'] = np.zeros(len(pts['x1']))
+
     return pts
 
 #TODO: rename to read_dhybridr_box_of_par
-def read_box_of_particles(path, num, x1, x2, y1, y2, z1, z2):
+def read_box_of_particles(path, num, x1, x2, y1, y2, z1, z2, is2d3v = False):
     """
     Loads subset of dHybridR particle data
 
@@ -59,6 +71,8 @@ def read_box_of_particles(path, num, x1, x2, y1, y2, z1, z2):
         lower z bound
     z2 : float
         upper z bound
+    is2d3v : bool, opt
+        set true is simualation is 2D 3V
 
     Returns
     -------
@@ -73,20 +87,35 @@ def read_box_of_particles(path, num, x1, x2, y1, y2, z1, z2):
     with h5py.File(path.format(num),'r') as f:
         gptsx = (x1 < f['x1'][:] ) & (f['x1'][:] < x2)
         gptsy = (y1 < f['x2'][:] ) & (f['x2'][:] < y2)
-        gptsz = (z1 < f['x3'][:] ) & (f['x3'][:] < z2)
+        if(not(is2d3v)):
+            gptsz = (z1 < f['x3'][:] ) & (f['x3'][:] < z2)
         for k in dens_vars:
-                pts[k] = f[k][gptsx & gptsy & gptsz][:]
+                if(not(is2d3v)):
+                    pts[k] = f[k][gptsx & gptsy & gptsz][:]
+                else:
+                    pts[k] = f[k][gptsx & gptsy][:]
     pts['Vframe_relative_to_sim'] = 0.
+
+    if(is2d3v):
+        pts['x3'] = np.zeros(len(pts['x1']))
+
     return pts
 
 def build_slice(x1,x2,y1,y2,z1,z2):
     """
     Builds slice to pass to field_loader or flow_loader
+
+    Returns
+    -------
+    slc : 1d array
+        index tuple that specifies loading subset of fields spatially
+        form of (slice(z0idx,z1idx, 1),slice(y0idx,y1idx, 1),slice(x0idx,x1idx, 1))
+        where idx is an integer index
     """
     pass
 
 def field_loader(field_vars='all', components='all', num=None,
-                 path='./', slc=None, verbose=False):
+                 path='./', slc=None, verbose=False, is2d3v = False):
     """
     Loads dHybridR field data
 
@@ -106,6 +135,8 @@ def field_loader(field_vars='all', components='all', num=None,
         where idx is an integer index
     verbose : boolean
         if true, prints debug information
+    is2d3v : bool, opt
+        set true is simualation is 2D 3V
 
     Returns
     -------
@@ -163,23 +194,35 @@ def field_loader(field_vars='all', components='all', num=None,
             with h5py.File(ffn,'r') as f:
                 d[kc] = np.asarray(f['DATA'],order='F')
                 d[kc] = np.ascontiguousarray(d[kc])
-                _N3,_N2,_N1 = f['DATA'].shape
-                x1,x2,x3 = f['AXIS']['X1 AXIS'][:], f['AXIS']['X2 AXIS'][:], f['AXIS']['X3 AXIS'][:]
+                if(is2d3v):
+                    _N2,_N1 = f['DATA'].shape
+                    x1,x2 = f['AXIS']['X1 AXIS'][:], f['AXIS']['X2 AXIS'][:]
+                else:
+                    _N3,_N2,_N1 = f['DATA'].shape
+                    x1,x2,x3 = f['AXIS']['X1 AXIS'][:], f['AXIS']['X2 AXIS'][:], f['AXIS']['X3 AXIS'][:]
+
                 dx1 = (x1[1]-x1[0])/_N1
-                dx2 = (x2[1]-x2[0])/_N2
-                dx3 = (x3[1]-x3[0])/_N3
                 d[kc+'_xx'] = dx1*np.arange(_N1) + dx1/2. + x1[0]
-                d[kc+'_yy'] = dx2*np.arange(_N2) + dx2/2. + x2[0]
-                d[kc+'_zz'] = dx3*np.arange(_N3) + dx3/2. + x3[0]
                 d[kc+'_xx'] = d[kc+'_xx'][slc[2]]
+
+                dx2 = (x2[1]-x2[0])/_N2
+                d[kc+'_yy'] = dx2*np.arange(_N2) + dx2/2. + x2[0]
                 d[kc+'_yy'] = d[kc+'_yy'][slc[1]]
-                d[kc+'_zz'] = d[kc+'_zz'][slc[0]]
-                d[kc] = d[kc][slc]
+
+                if(is2d3v):
+                    dx3 = (x3[1]-x3[0])/_N3
+                    d[kc+'_zz'] = dx3*np.arange(_N3) + dx3/2. + x3[0]
+                    d[kc+'_zz'] = d[kc+'_zz'][slc[0]]
+
+                if(not(is2d3v)):
+                    d[kc] = d[kc][slc] #TODO?: convert to handle 2d3v (issue is handling slc[2]/slc[1] for _xx/_yy case in 2d)
+
     d['Vframe_relative_to_sim'] = 0.
+
     return d
 
 def all_dfield_loader(field_vars='all', components='all', num=None,
-                 path='./', slc=None, verbose=False):
+                 path='./', slc=None, verbose=False, is2d3v=False):
 
     """
     Function to load all fields for all available frames.
@@ -199,6 +242,8 @@ def all_dfield_loader(field_vars='all', components='all', num=None,
         form of [np.s_[z0idx,z1idx],np.s_[y0idx,y1idx],np.s_[x0idx,x1idx]]
     verbose : boolean
         if true, prints debug information
+    is2d3v : bool, opt
+        set true is simualation is 2D 3V
 
     Returns
     -------
@@ -238,49 +283,19 @@ def all_dfield_loader(field_vars='all', components='all', num=None,
     #num_of_zeros = len()
     choices = [int(c[-11:-3]) for c in choices]
     choices.sort()
-    fpath = fpath.format(f='{f}', T='{T}', c='{c}', v='{v}', t='{t:08d}')
+    #fpath = fpath.format(f='{f}', T='{T}', c='{c}', v='{v}', t='{t:08d}')
 
-#     while num not in choices:
-#         _ =  'Select from the following possible movie numbers: '\
-#              '\n{0} '.format(choices)
-#         num = int(input(_))
-
+    #TODO: clean this up, only need num, probably a lot of redundancy here
     alld= {'frame':[],'dfields':[]}
     for _num in choices:
         num = int(_num)
-        d = {}
-        for k in field_vars:
-            T = '' if k == 'J' else 'Total/'
-            for c in components:
-                ffn = fpath.format(f = _field_choices_[k],
-                                   T = T,
-                                   c = c,
-                                   v = k,
-                                   t = num)
-                kc = k.lower()+c
-                if verbose: print(ffn)
-                with h5py.File(ffn,'r') as f:
-                    d[kc] = np.asarray(f['DATA'],order='F')
-                    d[kc] = np.ascontiguousarray(d[kc])
-                    _N3,_N2,_N1 = f['DATA'].shape
-                    x1,x2,x3 = f['AXIS']['X1 AXIS'][:], f['AXIS']['X2 AXIS'][:], f['AXIS']['X3 AXIS'][:] #TODO: double check that x1->xx x2->yy x3->zz
-                    dx1 = (x1[1]-x1[0])/_N1
-                    dx2 = (x2[1]-x2[0])/_N2
-                    dx3 = (x3[1]-x3[0])/_N3
-                    d[kc+'_xx'] = dx1*np.arange(_N1) + dx1/2. + x1[0]
-                    d[kc+'_yy'] = dx2*np.arange(_N2) + dx2/2. + x2[0]
-                    d[kc+'_zz'] = dx3*np.arange(_N3) + dx3/2. + x3[0]
-                    d[kc+'_xx'] = d[kc+'_xx'][slc[2]]
-                    d[kc+'_yy'] = d[kc+'_yy'][slc[1]]
-                    d[kc+'_zz'] = d[kc+'_zz'][slc[0]]
-                    d[kc] = d[kc][slc]
-                d['Vframe_relative_to_sim'] = 0.
+        d = field_loader(path=path,num=num)
         alld['dfields'].append(d)
         alld['frame'].append(num)
 
     return alld
 
-def flow_loader(flow_vars=None, num=None, path='./', sp=1, verbose=False):
+def flow_loader(flow_vars=None, num=None, path='./', sp=1, verbose=False, is2d3v=False):
     """
     Loads dHybridR flow data
 
@@ -296,6 +311,8 @@ def flow_loader(flow_vars=None, num=None, path='./', sp=1, verbose=False):
         species number. Used to load different species
     verbose : boolean
         if true, prints debug information
+    is2d3v : bool, opt
+        set true is simualation is 2D 3V
 
     Returns
     -------
@@ -325,7 +342,7 @@ def flow_loader(flow_vars=None, num=None, path='./', sp=1, verbose=False):
             dim = len(_)
             #print(kc,_)
             d[kc] = f['DATA'][:]
-            if dim < 3:
+            if is2d3v:
                 _N2,_N1 = _
                 x1,x2 = f['AXIS']['X1 AXIS'][:], f['AXIS']['X2 AXIS'][:]
                 dx1 = (x1[1]-x1[0])/_N1

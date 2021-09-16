@@ -81,7 +81,7 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dpar, dfields, vshock
     gptsparticle = (x1 < dpar['x1'] ) & (dpar['x1'] < x2) & (y1 < dpar['x2']) & (dpar['x2'] < y2) & (z1 < dpar['x3']) & (dpar['x3'] < z2)
     totalPtcl = np.sum(gptsparticle)
 
-    avgfield = np.average(goodfieldpts) #TODO: call getfieldaverageinbox here instead
+    #avgfield = np.average(goodfieldpts) #TODO: call getfieldaverageinbox here instead
     totalFieldpts = np.sum(goodfieldpts)
 
     if(dfields['Vframe_relative_to_sim'] != vshock):
