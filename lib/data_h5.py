@@ -163,7 +163,7 @@ def field_loader(field_vars='all', components='all', num=None,
             with h5py.File(ffn,'r') as f:
                 d[kc] = np.asarray(f['DATA'],order='F')
                 d[kc] = np.ascontiguousarray(d[kc])
-                _N3,_N2,_N1 = f['DATA'].shape #python is fliped.
+                _N3,_N2,_N1 = f['DATA'].shape
                 x1,x2,x3 = f['AXIS']['X1 AXIS'][:], f['AXIS']['X2 AXIS'][:], f['AXIS']['X3 AXIS'][:]
                 dx1 = (x1[1]-x1[0])/_N1
                 dx2 = (x2[1]-x2[0])/_N2
@@ -262,7 +262,7 @@ def all_dfield_loader(field_vars='all', components='all', num=None,
                 with h5py.File(ffn,'r') as f:
                     d[kc] = np.asarray(f['DATA'],order='F')
                     d[kc] = np.ascontiguousarray(d[kc])
-                    _N3,_N2,_N1 = f['DATA'].shape #python is fliped.
+                    _N3,_N2,_N1 = f['DATA'].shape
                     x1,x2,x3 = f['AXIS']['X1 AXIS'][:], f['AXIS']['X2 AXIS'][:], f['AXIS']['X3 AXIS'][:] #TODO: double check that x1->xx x2->yy x3->zz
                     dx1 = (x1[1]-x1[0])/_N1
                     dx2 = (x2[1]-x2[0])/_N2
@@ -321,7 +321,7 @@ def flow_loader(flow_vars=None, num=None, path='./', sp=1, verbose=False):
         if verbose: print(dpath.format(sp=sp, dv=k, tm=num))
         with h5py.File(dpath.format(sp=sp, dv=k, tm=num),'r') as f:
             kc = 'u'+k
-            _ = f['DATA'].shape #python is fliped
+            _ = f['DATA'].shape
             dim = len(_)
             #print(kc,_)
             d[kc] = f['DATA'][:]
