@@ -209,7 +209,7 @@ def field_loader(field_vars='all', components='all', num=None,
                 d[kc+'_yy'] = dx2*np.arange(_N2) + dx2/2. + x2[0]
                 d[kc+'_yy'] = d[kc+'_yy'][slc[1]]
 
-                if(is2d3v):
+                if(not(is2d3v)):
                     dx3 = (x3[1]-x3[0])/_N3
                     d[kc+'_zz'] = dx3*np.arange(_N3) + dx3/2. + x3[0]
                     d[kc+'_zz'] = d[kc+'_zz'][slc[0]]
