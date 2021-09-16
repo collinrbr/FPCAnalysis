@@ -36,12 +36,12 @@ def estimate_grid_setup(dfields, dparticles_ion):
 
     x1, x2, y1, y2, z1, z2 = 0., 0., 0., 0., 0., 0.
 
-    x1 = round(max(dparticles_ion['xi']))
-    x2 = round(min(dparticles_ion['xi']))
-    y1 = round(max(dparticles_ion['yi']))
-    y2 = round(min(dparticles_ion['yi']))
-    z1 = round(max(dparticles_ion['zi']))
-    z2 = round(min(dparticles_ion['zi']))
+    x1 = round(min(dparticles_ion['xi']))
+    x2 = round(max(dparticles_ion['xi']))
+    y1 = round(min(dparticles_ion['yi']))
+    y2 = round(max(dparticles_ion['yi']))
+    z1 = round(min(dparticles_ion['zi']))
+    z2 = round(max(dparticles_ion['zi']))
 
     nz,ny,nx = dfields['bz'].shape
 
