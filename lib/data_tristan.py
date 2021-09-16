@@ -9,13 +9,13 @@ import os
 
 #See https://github.com/PrincetonUniversity/tristan-mp-v2/blob/master/inputs/input.full for details about input and output
 
-def load_fields(path_fields):
+def load_fields(path_fields, num):
     """
 
     """
     field_vars = 'ex ey ez bx by bz'.split()
     field = {}
-    with h5py.File(path_fields.format(7),'r') as f:
+    with h5py.File(path_fields.format(num),'r') as f:
         for k in field_vars:
             field[k] = f[k][:]
 
@@ -60,7 +60,7 @@ def estimate_grid_setup(dfields, dparticles_ion):
 
     return dfields
 
-def readTristanParticles(path, num):
+def load_particles(path, num):
     """
     Loads TRISTAN particle data
 
@@ -95,6 +95,9 @@ def readTristanParticles(path, num):
 
 
 
+#--------------------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------------------
 
 
 #if we need to save ram, should probably make these functions 3
