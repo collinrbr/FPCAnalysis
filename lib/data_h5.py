@@ -283,7 +283,7 @@ def all_dfield_loader(field_vars='all', components='all', num=None,
     alld= {'frame':[],'dfields':[]}
     for _num in choices:
         num = int(_num)
-        d = field_loader(path=path,num=num)
+        d = field_loader(path=path,num=num,is2d3v=is2d3v)
         alld['dfields'].append(d)
         alld['frame'].append(num)
 
