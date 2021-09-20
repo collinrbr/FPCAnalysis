@@ -578,7 +578,7 @@ def find_potential_wavemodes(dfields,fieldkey,xpos,cutoffconst=.1):
     """
 
     #compute delta fields
-    dfieldsfluc = anl.remove_average_fields_over_yz(dfields)
+    dfieldsfluc = remove_average_fields_over_yz(dfields)
 
     #spacing in grids, needed to get wavenumber from fft
     daxis0 = dfieldsfluc[fieldkey+'_zz'][1]-dfieldsfluc[fieldkey+'_zz'][0]
@@ -587,7 +587,7 @@ def find_potential_wavemodes(dfields,fieldkey,xpos,cutoffconst=.1):
     fieldfftsweepoverx = []
     for xxindex in range(0,len(dfieldsfluc[fieldkey][0][0])):
         fieldslice = np.asarray(dfieldsfluc[fieldkey])[:,:,xxindex]
-        kz, ky, fieldslicefft = anl.take_fft2(fieldslice,daxis0,daxis1)
+        kz, ky, fieldslicefft = take_fft2(fieldslice,daxis0,daxis1)
         fieldfftsweepoverx.append(fieldslicefft)
     fieldfftsweepoverx = np.asarray(fieldfftsweepoverx)
 
@@ -621,7 +621,7 @@ def find_potential_wavemodes(dfields,fieldkey,xpos,cutoffconst=.1):
 
         xkykzdata = fieldfftsweepoverx[:,kz0idx,ky0idx]
 
-        kx, wlt = anl.wlt(dfieldsfluc[fieldkey+'_xx'],xkykzdata)
+        kx, wlt = wlt(dfieldsfluc[fieldkey+'_xx'],xkykzdata)
         kxplotlist.append(kx)
         wltplotlist.append(wlt)
 
