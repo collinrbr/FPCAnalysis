@@ -571,3 +571,54 @@ def wlt(t,data,w=6):
     cwtm = signal.cwt(data, signal.morlet2, widths, w=w)
 
     return 2.0*math.pi*freq, cwtm
+
+def find_potential_wavemodes(dfields,fieldkey,xpos,cutoffconst=.1):
+    """
+
+    """
+
+    #compute delta fields
+    dfieldsfluc = anl.remove_average_fields_over_yz(dfields)
+
+    #spacing in grids, needed to get wavenumber from fft
+    daxis0 = dfieldsfluc[fieldkey+'_zz'][1]-dfieldsfluc[fieldkey+'_zz'][0]
+    daxis1 = dfieldsfluc[fieldkey+'_yy'][1]-dfieldsfluc[fieldkey+'_yy'][0]
+
+    fieldfftsweepoverx = []
+    for xxindex in range(0,len(dfieldsfluc[fieldkey][0][0])):
+        fieldslice = np.asarray(dfieldsfluc[fieldkey])[:,:,xxindex]
+        kz, ky, fieldslicefft = anl.take_fft2(fieldslice,daxis0,daxis1)
+        fieldfftsweepoverx.append(fieldslicefft)
+    fieldfftsweepoverx = np.asarray(fieldfftsweepoverx)
+
+    #pick slice nearest to given xpos
+    xxidx = ao.find_nearest(dfieldsfluc[fieldkey+'_xx'],xpos)
+    fftslice = fieldfftsweepoverx[xxidx,:,:]
+
+    #find field(xpos,ky0,kz0) with norm greater than cutoffconst*max(norm(fftslice))
+    fftslice = np.real(fftslice*np.conj(fftslice))/(float(len(kz)*len(ky)))  #convert to norm
+    maxnorm = np.max(fftslice)
+    kylist = []
+    kzlist = []
+    for i in range(0,len(kz)):
+        for j in range(0,len(ky)):
+            if(fftslice[i][j] >= cutoffconst*maxnorm):
+                kzlist.append(kz[i])
+                kylist.append(ky[j])
+
+    #do wavelet transform for each ky, kz
+    kxlist = []
+    for i in range(0,len(kylist)):
+        ky0 = kylist[i]
+        ky0idx = ao.find_nearest(ky,ky0)
+        kz0 = kzlist[i]
+        kz0idx = ao.find_nearest(kz,kz0)
+
+        xkykzdata = fieldfftsweepoverx[:,kz0idx,ky0idx]
+
+        kx, wlt = anl.wlt(dfieldsfluc[fieldkey+'_xx'],xkykzdata)
+
+        kxidx = ao.find_nearest(wlt[:,midrampidx],np.max(wlt[:,midrampidx]))
+        kxlist.append(kx[kxidx])
+
+    return kxlist, kylist, kzlist, fftslice, fieldfftsweepoverx, dfieldsfluc, fieldfftsweepoverx

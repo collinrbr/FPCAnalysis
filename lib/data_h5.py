@@ -359,6 +359,12 @@ def flow_loader(flow_vars=None, num=None, path='./', sp=1, verbose=False, is2d3v
     d['Vframe_relative_to_sim'] = 0.
     return d
 
+def pad_along_axis(dict,axis):
+    """
+    """
+    datakeys = ['ex','ey','ez','bx','by','bz','uy','uz'] #keys that might need to be padded
+    pass
+
 def read_restart(path):
     """
     Loads all restart files. Use's modified code from Dr. Colby Haggerty.

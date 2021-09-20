@@ -98,7 +98,21 @@ def load_particles(path, num):
 
     return pts_elc, pts_ion
 
+def format_fields_like_dHybridR(dfields):
+    """
+    Adds keys (that are technically points so no memory is wasted) that makes the data indexable
+    with the same key names as dHybridR data
+    """
 
+    keys = dfields.keys()
+
+    if('xi' in keys):
+        dfields['x1'] = dfields['xi']
+    if('xe' in keys):
+        dfields['x1'] = dfields['xi']
+
+
+    return dfields
 
 
 #--------------------------------------------------------------------------------------------------------

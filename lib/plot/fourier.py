@@ -286,3 +286,24 @@ def _sort_for_contour(xcoord,ycoord,dheight):
     ycoord = np.sort(ycoord,axis=0) #sort y data
 
     return xcoord, ycoord, dheight
+
+def plot_wlt(xx, kx, wlt, ky0 = None, kz0 = None, flnm = ''):
+    """
+    (ky kz should be floats if passed (because we commonly take WLT of f(x,ky0,kz0)))
+    """
+
+    plt.figure()
+    plt.pcolormesh(xx,kx,np.abs(wlt),cmap='viridis', shading='gouraud')
+    plt.colorbar()
+    plt.xlabel('x')
+    plt.ylabel('kx')
+    plt.title('ky='+str(ky0)[0:6]+' kz='+str(kz0)[0:6])
+    plt.savefig(flnm+'.png',format='png')
+    plt.show()
+
+    if(flnm == ''):
+        plt.show()
+    else:
+        #flnm='ky='+str(ky0)[0:6]+'kz='+str(kz0)[0:6]+'wlt'
+        plt.savefig(flnm,format='png')
+    plt.close()
