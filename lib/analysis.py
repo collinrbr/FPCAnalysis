@@ -577,6 +577,8 @@ def find_potential_wavemodes(dfields,fieldkey,xpos,cutoffconst=.1):
 
     """
 
+    from lib.array_ops import find_nearest
+
     #compute delta fields
     dfieldsfluc = remove_average_fields_over_yz(dfields)
 
@@ -592,7 +594,7 @@ def find_potential_wavemodes(dfields,fieldkey,xpos,cutoffconst=.1):
     fieldfftsweepoverx = np.asarray(fieldfftsweepoverx)
 
     #pick slice nearest to given xpos
-    xxidx = ao.find_nearest(dfieldsfluc[fieldkey+'_xx'],xpos)
+    xxidx = find_nearest(dfieldsfluc[fieldkey+'_xx'],xpos)
     fftslice = fieldfftsweepoverx[xxidx,:,:]
 
     #find field(xpos,ky0,kz0) with norm greater than cutoffconst*max(norm(fftslice))
@@ -615,9 +617,9 @@ def find_potential_wavemodes(dfields,fieldkey,xpos,cutoffconst=.1):
     wltplotlist = []
     for i in range(0,len(kylist)):
         ky0 = kylist[i]
-        ky0idx = ao.find_nearest(ky,ky0)
+        ky0idx = find_nearest(ky,ky0)
         kz0 = kzlist[i]
-        kz0idx = ao.find_nearest(kz,kz0)
+        kz0idx = find_nearest(kz,kz0)
 
         xkykzdata = fieldfftsweepoverx[:,kz0idx,ky0idx]
 
