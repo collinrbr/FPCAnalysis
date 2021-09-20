@@ -623,11 +623,11 @@ def find_potential_wavemodes(dfields,fieldkey,xpos,cutoffconst=.1):
 
         xkykzdata = fieldfftsweepoverx[:,kz0idx,ky0idx]
 
-        kx, wlt = wlt(dfieldsfluc[fieldkey+'_xx'],xkykzdata)
+        kx, wltdata = wlt(dfieldsfluc[fieldkey+'_xx'],xkykzdata)
         kxplotlist.append(kx)
-        wltplotlist.append(wlt)
+        wltplotlist.append(wltdata)
 
-        kxidx = ao.find_nearest(wlt[:,midrampidx],np.max(wlt[:,midrampidx]))
+        kxidx = find_nearest(wltdata[:,xxidx],np.max(wltdata[:,xxidx]))
         kxlist.append(kx[kxidx])
 
     return kxlist, kylist, kzlist, kxplotlist, wltplotlist, prcntmaxlist
