@@ -600,14 +600,19 @@ def find_potential_wavemodes(dfields,fieldkey,xpos,cutoffconst=.1):
     maxnorm = np.max(fftslice)
     kylist = []
     kzlist = []
+    prcntmaxlist = []
     for i in range(0,len(kz)):
         for j in range(0,len(ky)):
             if(fftslice[i][j] >= cutoffconst*maxnorm):
                 kzlist.append(kz[i])
                 kylist.append(ky[j])
+                prcntmaxlist.append(fftslice[i][j]/maxnorm)
+
 
     #do wavelet transform for each ky, kz
     kxlist = []
+    kxplotlist = []
+    wltplotlist = []
     for i in range(0,len(kylist)):
         ky0 = kylist[i]
         ky0idx = ao.find_nearest(ky,ky0)
@@ -617,8 +622,10 @@ def find_potential_wavemodes(dfields,fieldkey,xpos,cutoffconst=.1):
         xkykzdata = fieldfftsweepoverx[:,kz0idx,ky0idx]
 
         kx, wlt = anl.wlt(dfieldsfluc[fieldkey+'_xx'],xkykzdata)
+        kxplotlist.append(kx)
+        wltplotlist.append(wlt)
 
         kxidx = ao.find_nearest(wlt[:,midrampidx],np.max(wlt[:,midrampidx]))
         kxlist.append(kx[kxidx])
 
-    return kxlist, kylist, kzlist, fftslice, fieldfftsweepoverx, dfieldsfluc, fieldfftsweepoverx
+    return kxlist, kylist, kzlist, kxplotlist, wltplotlist, prcntmaxlist
