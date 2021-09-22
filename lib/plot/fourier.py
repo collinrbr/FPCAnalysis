@@ -297,17 +297,17 @@ def plot_wlt(xx, kx, wlt, ky0 = None, kz0 = None, flnm = '', xlim = None, ylim =
     plt.colorbar()
     plt.xlabel('x')
     plt.ylabel('kx')
+    plt.grid()
     plt.title('ky='+str(ky0)[0:6]+' kz='+str(kz0)[0:6])
     if(xlim != None):
         plt.xlim(xlim[0],xlim[1])
     if(ylim != None):
         plt.ylim(ylim[0],ylim[1])
-    plt.savefig(flnm+'.png',format='png')
-    plt.show()
 
     if(flnm == ''):
         plt.show()
     else:
         #flnm='ky='+str(ky0)[0:6]+'kz='+str(kz0)[0:6]+'wlt'
         plt.savefig(flnm,format='png')
+        plt.close('all')#saves RAM
     plt.close()

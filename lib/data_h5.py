@@ -359,13 +359,21 @@ def flow_loader(flow_vars=None, num=None, path='./', sp=1, verbose=False, is2d3v
     d['Vframe_relative_to_sim'] = 0.
     return d
 
-def pad_along_axis(dict,axis):
+def dict_2d_to_3d(dict,axis):
     """
     """
     datakeys = ['ex','ey','ez','bx','by','bz','uy','uz'] #keys that might need to be padded
-    pass
 
-def read_restart(path):
+    for key in dict.keys():
+        if key in datakeys:
+            ny,nx = dict[key].shape
+            temp = np.zeros(1,ny,nx)
+            temp[1,:,:] = dict[key][:,:]
+            dict[key] = temp
+
+    return dict
+
+def read_restart(path,verbose=False):
     """
     Loads all restart files. Use's modified code from Dr. Colby Haggerty.
 
@@ -377,6 +385,8 @@ def read_restart(path):
     ---------
     path : string
         path to simulation data folder. I.e. one above the restart file folder
+    verbose : bool, opt
+        prints debug statements if true
 
     Returns
     -------
@@ -584,6 +594,8 @@ def read_restart(path):
     pts = PM.parts_from_num(procs[-1])
     procs = procs[:-1]
     for _c,_p in enumerate(procs):
+        if(verbose):
+            print(str(_p) + ' of ' str(proces[-1]))
         _pts = PM.parts_from_num(_p)
         pts = np.concatenate([pts,_pts],axis=0)
 
