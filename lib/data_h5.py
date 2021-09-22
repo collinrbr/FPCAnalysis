@@ -595,7 +595,7 @@ def read_restart(path,verbose=False):
     procs = procs[:-1]
     for _c,_p in enumerate(procs):
         if(verbose):
-            print(str(_p) + ' of ' str(proces[-1]))
+            print(str(_p) + ' of ' + str(proces[-1]))
         _pts = PM.parts_from_num(_p)
         pts = np.concatenate([pts,_pts],axis=0)
 
