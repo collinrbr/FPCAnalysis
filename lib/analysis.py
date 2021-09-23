@@ -481,9 +481,9 @@ def remove_average_fields_over_yz(dfields):
     dfieldsfluc : dict
         delta field data dictionary
     """
-    from copy import copy
+    from copy import deepcopy
 
-    dfieldfluc = copy(dfields) #deep copy
+    dfieldfluc = deepcopy(dfields) #deep copy
     dfieldfluc['ex'] = dfieldfluc['ex']-dfieldfluc['ex'].mean(axis=(0,1))
     dfieldfluc['ey'] = dfieldfluc['ey']-dfieldfluc['ey'].mean(axis=(0,1))
     dfieldfluc['ez'] = dfieldfluc['ez']-dfieldfluc['ez'].mean(axis=(0,1))
@@ -511,10 +511,9 @@ def get_average_fields_over_yz(dfields):
         avg field data dictionary
     """
 
-    print("Warning: due to a current bug get_average_fields_over_yz(dfields) doesn't correctly use deep copies and will probably change the inputed dfields object. TODO fix")
+    from copy import deepcopy
 
-    from copy import copy
-    dfieldavg = copy(dfields)
+    dfieldavg = deepcopy(dfields)
 
     dfieldavg['ex'][:] = dfieldavg['ex'].mean(axis=(0,1))
     dfieldavg['ey'][:] = dfieldavg['ey'].mean(axis=(0,1))
@@ -539,8 +538,8 @@ def remove_average_flow_over_yz(dflow):
     dflowfluc : dict
         delta flow data dictionary
     """
-    from copy import copy
-    dflowfluc = copy(dflow)
+    from copy import deepcopy
+    dflowfluc = deepcopy(dflow)
     dflowfluc['ux'] = dflowfluc['ux']-dflowfluc['ux'].mean(axis=(0,1))
     dflowfluc['uy'] = dflowfluc['uy']-dflowfluc['uy'].mean(axis=(0,1))
     dflowfluc['uz'] = dflowfluc['uz']-dflowfluc['uz'].mean(axis=(0,1))
@@ -631,3 +630,57 @@ def find_potential_wavemodes(dfields,fieldkey,xpos,cutoffconst=.1):
         kxlist.append(kx[kxidx])
 
     return kxlist, kylist, kzlist, kxplotlist, wltplotlist, prcntmaxlist
+
+def is_perp(vec1,vec2,tol=0.001):
+    """
+
+    """
+
+    dotprod = vec1[0]*vec2[0]+vec1[1]*vec2[1]+vec1[2]*vec2[2]
+
+    if (abs(dotprod) <= tol):
+        return True, dotprod
+    else:
+        return False, dotprod
+
+#Note, B0 is from arctan(Bz/Bx) in the upstream region
+def get_B0(dfields):
+    """
+
+    """
+
+    dfavg = get_average_fields_over_yz(dfields)
+
+    B0x = dfavg['bx'][0,0,-1]
+    B0y = dfavg['by'][0,0,-1]
+    B0z = dfavg['bz'][0,0,-1]
+
+    return [B0x, B0y, B0z]
+
+def get_delta_perp_fields(dfields,B0):
+    """
+    Computes the perpendicular component wrt the total magnetic field at each point
+    """
+
+    from copy import copy
+
+    ddeltaperpfields = copy(dfields)
+
+    #nz,ny,nx = np.shape(ddeltaperpfields['bz'])
+
+    fieldkeysE = ['ex','ey','ez']
+    fieldkeysB = ['bx','by','bz']
+
+#     normE = np.sqrt(dfields['ex']*dfields['ex']+dfields['ey']*dfields['ey']+dfields['ez']*dfields['ez'])
+#     normB = np.sqrt(dfields['bx']*dfields['bx']+dfields['by']*dfields['by']+dfields['bz']*dfields['bz'])
+#     normB0 =
+
+
+    ddeltaperpfields['ex'] = dfields['ex'] - (dfields['ex']*B0[0]+dfields['ey']*B0[1]+dfields['ez']*B0[2])/(B0[0]**2+B0[1]**2+B0[2]**2)*B0[0]
+    ddeltaperpfields['ey'] = dfields['ey'] - (dfields['ex']*B0[0]+dfields['ey']*B0[1]+dfields['ez']*B0[2])/(B0[0]**2+B0[1]**2+B0[2]**2)*B0[1]
+    ddeltaperpfields['ez'] = dfields['ez'] - (dfields['ex']*B0[0]+dfields['ey']*B0[1]+dfields['ez']*B0[2])/(B0[0]**2+B0[1]**2+B0[2]**2)*B0[2]
+    ddeltaperpfields['bx'] = dfields['bx'] - (dfields['bx']*B0[0]+dfields['by']*B0[1]+dfields['bz']*B0[2])/(B0[0]**2+B0[1]**2+B0[2]**2)*B0[0]
+    ddeltaperpfields['by'] = dfields['by'] - (dfields['bx']*B0[0]+dfields['by']*B0[1]+dfields['bz']*B0[2])/(B0[0]**2+B0[1]**2+B0[2]**2)*B0[1]
+    ddeltaperpfields['bz'] = dfields['bz'] - (dfields['bx']*B0[0]+dfields['by']*B0[1]+dfields['bz']*B0[2])/(B0[0]**2+B0[1]**2+B0[2]**2)*B0[2]
+
+    return ddeltaperpfields
