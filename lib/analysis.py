@@ -546,6 +546,28 @@ def remove_average_flow_over_yz(dflow):
 
     return dflowfluc
 
+def get_delta_perp_fields(dfields,B0):
+    """
+    Computes the perpendicular component wrt the total magnetic field at each point
+    """
+
+    from copy import deepcopy
+
+    ddeltaperpfields = deepcopy(dfields)
+    dfluc = remove_average_fields_over_yz(dfields)
+
+    fieldkeysE = ['ex','ey','ez']
+    fieldkeysB = ['bx','by','bz']
+
+    ddeltaperpfields['ex'] = dfluc['ex'] - (dfluc['ex']*B0[0]+dfluc['ey']*B0[1]+dfluc['ez']*B0[2])/(B0[0]**2+B0[1]**2+B0[2]**2)*B0[0]
+    ddeltaperpfields['ey'] = dfluc['ey'] - (dfluc['ex']*B0[0]+dfluc['ey']*B0[1]+dfluc['ez']*B0[2])/(B0[0]**2+B0[1]**2+B0[2]**2)*B0[1]
+    ddeltaperpfields['ez'] = dfluc['ez'] - (dfluc['ex']*B0[0]+dfluc['ey']*B0[1]+dfluc['ez']*B0[2])/(B0[0]**2+B0[1]**2+B0[2]**2)*B0[2]
+    ddeltaperpfields['bx'] = dfluc['bx'] - (dfluc['bx']*B0[0]+dfluc['by']*B0[1]+dfluc['bz']*B0[2])/(B0[0]**2+B0[1]**2+B0[2]**2)*B0[0]
+    ddeltaperpfields['by'] = dfluc['by'] - (dfluc['bx']*B0[0]+dfluc['by']*B0[1]+dfluc['bz']*B0[2])/(B0[0]**2+B0[1]**2+B0[2]**2)*B0[1]
+    ddeltaperpfields['bz'] = dfluc['bz'] - (dfluc['bx']*B0[0]+dfluc['by']*B0[1]+dfluc['bz']*B0[2])/(B0[0]**2+B0[1]**2+B0[2]**2)*B0[2]
+
+    return ddeltaperpfields
+
 def wlt(t,data,w=6):
     """
     Peforms wavelet transform using morlet wavelet on data that is a function of t i.e. data(t)
@@ -636,12 +658,33 @@ def is_perp(vec1,vec2,tol=0.001):
 
     """
 
+    #normalize vector
+    vec1 /= np.linalg.norm(vec1)
+    vec2 /= np.linalg.norm(vec2)
+
     dotprod = vec1[0]*vec2[0]+vec1[1]*vec2[1]+vec1[2]*vec2[2]
 
     if (abs(dotprod) <= tol):
         return True, dotprod
     else:
         return False, dotprod
+
+def is_parallel(vec1,vec2,tol=0.001):
+    """
+
+    """
+
+    #normalize vector
+    vec1 /= np.linalg.norm(vec1)
+    vec2 /= np.linalg.norm(vec2)
+
+    dotprod = vec1[0]*vec2[0]+vec1[1]*vec2[1]+vec1[2]*vec2[2]
+
+    if (abs(abs(dotprod)-1.0) <= tol):
+        return True, dotprod
+    else:
+        return False, dotprod
+
 
 #Note, B0 is from arctan(Bz/Bx) in the upstream region
 def get_B0(dfields):
@@ -656,31 +699,3 @@ def get_B0(dfields):
     B0z = dfavg['bz'][0,0,-1]
 
     return [B0x, B0y, B0z]
-
-def get_delta_perp_fields(dfields,B0):
-    """
-    Computes the perpendicular component wrt the total magnetic field at each point
-    """
-
-    from copy import copy
-
-    ddeltaperpfields = copy(dfields)
-
-    #nz,ny,nx = np.shape(ddeltaperpfields['bz'])
-
-    fieldkeysE = ['ex','ey','ez']
-    fieldkeysB = ['bx','by','bz']
-
-#     normE = np.sqrt(dfields['ex']*dfields['ex']+dfields['ey']*dfields['ey']+dfields['ez']*dfields['ez'])
-#     normB = np.sqrt(dfields['bx']*dfields['bx']+dfields['by']*dfields['by']+dfields['bz']*dfields['bz'])
-#     normB0 =
-
-
-    ddeltaperpfields['ex'] = dfields['ex'] - (dfields['ex']*B0[0]+dfields['ey']*B0[1]+dfields['ez']*B0[2])/(B0[0]**2+B0[1]**2+B0[2]**2)*B0[0]
-    ddeltaperpfields['ey'] = dfields['ey'] - (dfields['ex']*B0[0]+dfields['ey']*B0[1]+dfields['ez']*B0[2])/(B0[0]**2+B0[1]**2+B0[2]**2)*B0[1]
-    ddeltaperpfields['ez'] = dfields['ez'] - (dfields['ex']*B0[0]+dfields['ey']*B0[1]+dfields['ez']*B0[2])/(B0[0]**2+B0[1]**2+B0[2]**2)*B0[2]
-    ddeltaperpfields['bx'] = dfields['bx'] - (dfields['bx']*B0[0]+dfields['by']*B0[1]+dfields['bz']*B0[2])/(B0[0]**2+B0[1]**2+B0[2]**2)*B0[0]
-    ddeltaperpfields['by'] = dfields['by'] - (dfields['bx']*B0[0]+dfields['by']*B0[1]+dfields['bz']*B0[2])/(B0[0]**2+B0[1]**2+B0[2]**2)*B0[1]
-    ddeltaperpfields['bz'] = dfields['bz'] - (dfields['bx']*B0[0]+dfields['by']*B0[1]+dfields['bz']*B0[2])/(B0[0]**2+B0[1]**2+B0[2]**2)*B0[2]
-
-    return ddeltaperpfields

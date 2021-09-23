@@ -287,7 +287,7 @@ def _sort_for_contour(xcoord,ycoord,dheight):
 
     return xcoord, ycoord, dheight
 
-def plot_wlt(xx, kx, wlt, ky0 = None, kz0 = None, flnm = '', xlim = None, ylim = None):
+def plot_wlt(xx, kx, wlt, ky0 = None, kz0 = None, flnm = '', plotstrongestkx = False, xlim = None, ylim = None, xxline = None, yyline = None):
     """
     (ky kz should be floats if passed (because we commonly take WLT of f(x,ky0,kz0)))
     """
@@ -299,10 +299,14 @@ def plot_wlt(xx, kx, wlt, ky0 = None, kz0 = None, flnm = '', xlim = None, ylim =
     plt.ylabel('kx')
     plt.grid()
     plt.title('ky='+str(ky0)[0:6]+' kz='+str(kz0)[0:6])
+    if(xxline != None and yyline != None):
+        plt.plot(xxline,yyline)
     if(xlim != None):
         plt.xlim(xlim[0],xlim[1])
     if(ylim != None):
         plt.ylim(ylim[0],ylim[1])
+    if(plotstrongestkx):
+        
 
     if(flnm == ''):
         plt.show()

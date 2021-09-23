@@ -599,4 +599,26 @@ def read_restart(path,verbose=False):
         _pts = PM.parts_from_num(_p)
         pts = np.concatenate([pts,_pts],axis=0)
 
-    return pts
+    dpar = _pts_to_par_dic(pts)
+    del pts 
+
+    return dpar
+
+def _pts_to_par_dict(pts):
+    """
+
+    """
+
+    from copy import deepcopy
+
+    dpar = {}
+
+    #p1 p2 p3 x1 x2 x3
+    dpar['x1'] = pts[:,0]
+    dpar['x2'] = pts[:,1]
+    dpar['x3'] = pts[:,2]
+    dpar['p1'] = pts[:,3]
+    dpar['p2'] = pts[:,4]
+    dpar['p3'] = pts[:,5]
+
+    return dpar
