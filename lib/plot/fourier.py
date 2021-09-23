@@ -292,6 +292,8 @@ def plot_wlt(xx, kx, wlt, ky0 = None, kz0 = None, flnm = '', plotstrongestkx = F
     (ky kz should be floats if passed (because we commonly take WLT of f(x,ky0,kz0)))
     """
 
+    from lib.array_ops import find_nearest
+
     plt.figure()
     plt.pcolormesh(xx,kx,np.abs(wlt),cmap='viridis', shading='gouraud')
     plt.colorbar()
@@ -306,7 +308,10 @@ def plot_wlt(xx, kx, wlt, ky0 = None, kz0 = None, flnm = '', plotstrongestkx = F
     if(ylim != None):
         plt.ylim(ylim[0],ylim[1])
     if(plotstrongestkx):
-        
+        kxline = []
+        for i in range(0,len(xx)):
+            kxline.append(kx[find_nearest(wlt[:,i],np.max(wlt[:,i]))])
+        plt.plot(xx,kxline)
 
     if(flnm == ''):
         plt.show()

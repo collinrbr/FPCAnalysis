@@ -600,7 +600,7 @@ def read_restart(path,verbose=False):
         pts = np.concatenate([pts,_pts],axis=0)
 
     dpar = _pts_to_par_dic(pts)
-    del pts 
+    del pts
 
     return dpar
 
@@ -614,11 +614,11 @@ def _pts_to_par_dict(pts):
     dpar = {}
 
     #p1 p2 p3 x1 x2 x3
-    dpar['x1'] = pts[:,0]
-    dpar['x2'] = pts[:,1]
-    dpar['x3'] = pts[:,2]
-    dpar['p1'] = pts[:,3]
-    dpar['p2'] = pts[:,4]
-    dpar['p3'] = pts[:,5]
+    dpar['x1'] = deepcopy(pts[:,0])
+    dpar['x2'] = deepcopy(pts[:,1])
+    dpar['x3'] = deepcopy(pts[:,2])
+    dpar['p1'] = deepcopy(pts[:,3])
+    dpar['p2'] = deepcopy(pts[:,4])
+    dpar['p3'] = deepcopy(pts[:,5])
 
     return dpar
