@@ -318,3 +318,31 @@ def get_flow_subset(dflow,startx,endx,starty,endy,startz,endz):
     dflowsubset['uz'] = dflowsubset['uz'][startz:endz,starty:endy,startx:endx]
 
     return dflowsubset
+
+def find_local_maxima(data,threshold = .05,pltdebug = False):
+    """
+
+    """
+
+    #from scipy.signal import find_peaks
+    #from scipy.signal import argrelextrema
+    from scipy.signal import savgol_filter
+
+
+    data = savgol_filter(data, 11, 5)
+    peaks = argrelextrema(data, np.greater)[0]
+
+    #remove points below some fraction of the max peak
+    _peaks = []
+    maxdata = np.max(np.abs(data[peaks]))
+    for i in range(0,len(peaks)):
+        if(np.abs(data[peaks[i]]) > threshold*maxdata):
+            _peaks.append(peaks[i])
+    peaks = _peaks
+
+    if(pltdebug):
+        plt.plot(data)
+        plt.plot(peaks, data[peaks], "x")
+        plt.show()
+
+    return peaks

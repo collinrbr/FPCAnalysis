@@ -699,3 +699,42 @@ def get_B0(dfields):
     B0z = dfavg['bz'][0,0,-1]
 
     return [B0x, B0y, B0z]
+
+def predict_kx_alfven(ky,kz,B0,delBperp):
+    """
+    routine that computes what kx would need to be given ky kz for the fluctuation to be alfvenic
+    """
+
+    Bx = B0[0]
+    By = B0[1]
+    Bz = B0[2]
+    dBx = delBperp[0]
+    dBy = delBperp[1]
+    dBz = delBperp[2]
+    kx = (Bz*dBx*ky-Bx*dBz*ky-By*dBx*kz+Bx*dBy*kz)/(Bz*dBy-By*dBz)
+
+    return kx
+
+def alfven_wave_check(dfields,xx,yy,zz):
+    """
+    Checks if basic properties of an alfven wave are seen at some location in the simulation
+    """
+
+    xxidx = ao.find_nearest(dfields['bz_xx'],xx)
+    yyidx = ao.find_nearest(dfields['bz_yy'],yy)
+    zzidx = ao.find_nearest(dfields['bz_zz'],zz)
+
+    #get external field
+    B0 = anl.get_B0(dfields)
+
+    #get delta perp fields
+    dperpf = anl.get_delta_perp_fields(dfields,B0)
+
+    # check if any of the predicted k's work for this
+    results = []
+    for i in range(0,len(kxlist)):
+        k = [kxlist[i],kylist[i],kzlist[i]]
+        kcrossB0 = np.cross(k,B0)
+        delB = [dfluc['bx'][zzidx,yyidx,xxidx],dfluc['by'][zzidx,yyidx,xxidx],dfluc['bz'][zzidx,yyidx,xxidx]]
+        delBperp = [dperpf['bx'][zzidx,yyidx,xxidx],dperpf['by'][zzidx,yyidx,xxidx],dperpf['bz'][zzidx,yyidx,xxidx]]
+        results.append([anl.is_parallel(delBperp,kcrossB0,tol=0.1),anl.is_perp(delB,B0,tol=0.1),anl.is_perp(delB,k,tol=.1),k])
