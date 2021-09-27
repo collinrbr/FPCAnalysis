@@ -325,7 +325,7 @@ def find_local_maxima(data,threshold = .05,pltdebug = False):
     """
 
     #from scipy.signal import find_peaks
-    #from scipy.signal import argrelextrema
+    from scipy.signal import argrelextrema
     from scipy.signal import savgol_filter
 
 
@@ -341,6 +341,8 @@ def find_local_maxima(data,threshold = .05,pltdebug = False):
     peaks = _peaks
 
     if(pltdebug):
+        import matplotlib.pyplot as plt
+
         plt.plot(data)
         plt.plot(peaks, data[peaks], "x")
         plt.show()

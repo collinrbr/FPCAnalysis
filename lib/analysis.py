@@ -546,25 +546,37 @@ def remove_average_flow_over_yz(dflow):
 
     return dflowfluc
 
-def get_delta_perp_fields(dfields,B0):
+def get_delta_fields(dfields,B0):
     """
-    Computes the perpendicular component wrt the total magnetic field at each point
+    Computes the delta between the local B field and the external B field
     """
 
     from copy import deepcopy
 
-    ddeltaperpfields = deepcopy(dfields)
     dfluc = remove_average_fields_over_yz(dfields)
+    ddeltafields = deepcopy(dfluc)
 
-    fieldkeysE = ['ex','ey','ez']
-    fieldkeysB = ['bx','by','bz']
+    ddeltafields['ex'] = None
+    ddeltafields['ey'] = None
+    ddeltafields['ez'] = None
+    ddeltafields['bx'] = ddeltafields['bx'] - B0[0]
+    ddeltafields['by'] = ddeltafields['by'] - B0[1]
+    ddeltafields['bz'] = ddeltafields['bz'] - B0[2]
 
-    ddeltaperpfields['ex'] = dfluc['ex'] - (dfluc['ex']*B0[0]+dfluc['ey']*B0[1]+dfluc['ez']*B0[2])/(B0[0]**2+B0[1]**2+B0[2]**2)*B0[0]
-    ddeltaperpfields['ey'] = dfluc['ey'] - (dfluc['ex']*B0[0]+dfluc['ey']*B0[1]+dfluc['ez']*B0[2])/(B0[0]**2+B0[1]**2+B0[2]**2)*B0[1]
-    ddeltaperpfields['ez'] = dfluc['ez'] - (dfluc['ex']*B0[0]+dfluc['ey']*B0[1]+dfluc['ez']*B0[2])/(B0[0]**2+B0[1]**2+B0[2]**2)*B0[2]
-    ddeltaperpfields['bx'] = dfluc['bx'] - (dfluc['bx']*B0[0]+dfluc['by']*B0[1]+dfluc['bz']*B0[2])/(B0[0]**2+B0[1]**2+B0[2]**2)*B0[0]
-    ddeltaperpfields['by'] = dfluc['by'] - (dfluc['bx']*B0[0]+dfluc['by']*B0[1]+dfluc['bz']*B0[2])/(B0[0]**2+B0[1]**2+B0[2]**2)*B0[1]
-    ddeltaperpfields['bz'] = dfluc['bz'] - (dfluc['bx']*B0[0]+dfluc['by']*B0[1]+dfluc['bz']*B0[2])/(B0[0]**2+B0[1]**2+B0[2]**2)*B0[2]
+    return ddeltafields
+
+def get_delta_perp_fields(dfields,B0):
+    """
+    Computes the perpendicular component of the delta fields wrt the total magnetic field at each point
+    """
+
+    from copy import deepcopy
+
+    ddeltaperpfields = get_delta_fields(dfields,B0)
+
+    ddeltaperpfields['bx'] = ddeltaperpfields['bx'] - (ddeltaperpfields['bx']*B0[0]+ddeltaperpfields['by']*B0[1]+ddeltaperpfields['bz']*B0[2])/(B0[0]**2+B0[1]**2+B0[2]**2)*B0[0]
+    ddeltaperpfields['by'] = ddeltaperpfields['by'] - (ddeltaperpfields['bx']*B0[0]+ddeltaperpfields['by']*B0[1]+ddeltaperpfields['bz']*B0[2])/(B0[0]**2+B0[1]**2+B0[2]**2)*B0[1]
+    ddeltaperpfields['bz'] = ddeltaperpfields['bz'] - (ddeltaperpfields['bx']*B0[0]+ddeltaperpfields['by']*B0[1]+ddeltaperpfields['bz']*B0[2])/(B0[0]**2+B0[1]**2+B0[2]**2)*B0[2]
 
     return ddeltaperpfields
 
@@ -630,7 +642,6 @@ def find_potential_wavemodes(dfields,fieldkey,xpos,cutoffconst=.1):
                 kzlist.append(kz[i])
                 kylist.append(ky[j])
                 prcntmaxlist.append(fftslice[i][j]/maxnorm)
-
 
     #do wavelet transform for each ky, kz
     kxlist = []
@@ -715,26 +726,33 @@ def predict_kx_alfven(ky,kz,B0,delBperp):
 
     return kx
 
-def alfven_wave_check(dfields,xx,yy,zz):
+def alfven_wave_check(dfields,klist,xx,yy,zz):
     """
     Checks if basic properties of an alfven wave are seen at some location in the simulation
     """
 
-    xxidx = ao.find_nearest(dfields['bz_xx'],xx)
-    yyidx = ao.find_nearest(dfields['bz_yy'],yy)
-    zzidx = ao.find_nearest(dfields['bz_zz'],zz)
+    from lib.array_ops import find_nearest
+
+    xxidx = find_nearest(dfields['bz_xx'],xx)
+    yyidx = find_nearest(dfields['bz_yy'],yy)
+    zzidx = find_nearest(dfields['bz_zz'],zz)
 
     #get external field
-    B0 = anl.get_B0(dfields)
+    B0 = get_B0(dfields)
+
+    #get delta fields
+    ddeltaf = get_delta_fields(dfields,B0)
 
     #get delta perp fields
-    dperpf = anl.get_delta_perp_fields(dfields,B0)
+    dperpf = get_delta_perp_fields(dfields,B0)
 
     # check if any of the predicted k's work for this
     results = []
-    for i in range(0,len(kxlist)):
-        k = [kxlist[i],kylist[i],kzlist[i]]
+    for i in range(0,len(klist)):
+        k = klist[i]
         kcrossB0 = np.cross(k,B0)
-        delB = [dfluc['bx'][zzidx,yyidx,xxidx],dfluc['by'][zzidx,yyidx,xxidx],dfluc['bz'][zzidx,yyidx,xxidx]]
+        delB = [ddeltaf['bx'][zzidx,yyidx,xxidx],ddeltaf['by'][zzidx,yyidx,xxidx],ddeltaf['bz'][zzidx,yyidx,xxidx]]
         delBperp = [dperpf['bx'][zzidx,yyidx,xxidx],dperpf['by'][zzidx,yyidx,xxidx],dperpf['bz'][zzidx,yyidx,xxidx]]
-        results.append([anl.is_parallel(delBperp,kcrossB0,tol=0.1),anl.is_perp(delB,B0,tol=0.1),anl.is_perp(delB,k,tol=.1),k])
+        results.append([is_parallel(delBperp,kcrossB0,tol=0.1),is_perp(delB,B0,tol=0.1),is_perp(delB,k,tol=.1)])
+
+    return results
