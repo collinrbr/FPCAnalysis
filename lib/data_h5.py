@@ -362,16 +362,32 @@ def flow_loader(flow_vars=None, num=None, path='./', sp=1, verbose=False, is2d3v
 def dict_2d_to_3d(dict,axis):
     """
     """
-    datakeys = ['ex','ey','ez','bx','by','bz','uy','uz'] #keys that might need to be padded
+    datakeys = ['ex','ey','ez','bx','by','bz','ux','uy','uz'] #keys that might need to be padded
 
     for key in dict.keys():
         if key in datakeys:
             ny,nx = dict[key].shape
             temp = np.zeros(1,ny,nx)
-            temp[1,:,:] = dict[key][:,:]
+            if(axis == 0):
+                temp[0,:,:] = dict[key][:,:]
+            if(axis == 1):
+                temp[:,0,:] = dict[key][:,:]
+            if(axis == 2):
+                temp[:,:,0] = dict[key][:,:]
             dict[key] = temp
 
     return dict
+
+def par_2d_to_3d(par):
+    """
+    """
+    datakeys = ['x1','x2','x3']
+
+    for key in datakeys:
+        if key not in par.keys():
+            par[key] = np.zeros(len(par[par.keys()[0]))
+
+    return par
 
 def read_restart(path,verbose=False):
     """

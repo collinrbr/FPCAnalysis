@@ -740,7 +740,7 @@ def alfven_wave_check(dfields,klist,xx,yy,zz):
     #get external field
     B0 = get_B0(dfields)
 
-    #get delta fields
+    #get delta fields (different from removing yz average)
     ddeltaf = get_delta_fields(dfields,B0)
 
     #get delta perp fields
