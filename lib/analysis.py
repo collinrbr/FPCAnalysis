@@ -605,6 +605,22 @@ def wlt(t,data,w=6):
 
     return 2.0*math.pi*freq, cwtm
 
+def _ffttransform_in_yz(dfields,fieldkey):
+    """
+    Takes f(z,y,x) and computes f(x,kz,ky) using a 2d fft for some given field
+    """
+
+    fieldfftsweepoverx = []
+    for xxindex in range(0,len(dfields[fieldkey][0][0])):
+        fieldslice = np.asarray(dfields[fieldkey])[:,:,xxindex]
+        kz, ky, fieldslicefft = take_fft2(fieldslice,daxis0,daxis1)
+        fieldfftsweepoverx.append(fieldslicefft)
+    fieldfftsweepoverx = np.asarray(fieldfftsweepoverx)
+
+    return kz, ky, fieldfftsweepoverx
+
+
+
 def find_potential_wavemodes(dfields,fieldkey,xpos,cutoffconst=.1):
     """
 
@@ -619,12 +635,7 @@ def find_potential_wavemodes(dfields,fieldkey,xpos,cutoffconst=.1):
     daxis0 = dfieldsfluc[fieldkey+'_zz'][1]-dfieldsfluc[fieldkey+'_zz'][0]
     daxis1 = dfieldsfluc[fieldkey+'_yy'][1]-dfieldsfluc[fieldkey+'_yy'][0]
 
-    fieldfftsweepoverx = []
-    for xxindex in range(0,len(dfieldsfluc[fieldkey][0][0])):
-        fieldslice = np.asarray(dfieldsfluc[fieldkey])[:,:,xxindex]
-        kz, ky, fieldslicefft = take_fft2(fieldslice,daxis0,daxis1)
-        fieldfftsweepoverx.append(fieldslicefft)
-    fieldfftsweepoverx = np.asarray(fieldfftsweepoverx)
+    kz, ky, fieldfftsweepoverx = _ffttransform_in_yz(dfieldsfluc,fieldkey)
 
     #pick slice nearest to given xpos
     xxidx = find_nearest(dfieldsfluc[fieldkey+'_xx'],xpos)
@@ -646,7 +657,7 @@ def find_potential_wavemodes(dfields,fieldkey,xpos,cutoffconst=.1):
     #do wavelet transform for each ky, kz
     kxlist = []
     kxplotlist = []
-    wltplotlist = []
+    wltlist = []
     for i in range(0,len(kylist)):
         ky0 = kylist[i]
         ky0idx = find_nearest(ky,ky0)
@@ -657,12 +668,12 @@ def find_potential_wavemodes(dfields,fieldkey,xpos,cutoffconst=.1):
 
         kx, wltdata = wlt(dfieldsfluc[fieldkey+'_xx'],xkykzdata)
         kxplotlist.append(kx)
-        wltplotlist.append(wltdata)
+        wltlist.append(wltdata)
 
         kxidx = find_nearest(wltdata[:,xxidx],np.max(wltdata[:,xxidx]))
         kxlist.append(kx[kxidx])
 
-    return kxlist, kylist, kzlist, kxplotlist, wltplotlist, prcntmaxlist
+    return kxlist, kylist, kzlist, kxplotlist, wltlist, prcntmaxlist
 
 def is_perp(vec1,vec2,tol=0.001):
     """
@@ -697,17 +708,16 @@ def is_parallel(vec1,vec2,tol=0.001):
         return False, dotprod
 
 
-#Note, B0 is from arctan(Bz/Bx) in the upstream region
-def get_B0(dfields):
+def get_B0(dfields,xxidx):
     """
 
     """
 
     dfavg = get_average_fields_over_yz(dfields)
 
-    B0x = dfavg['bx'][0,0,-1]
-    B0y = dfavg['by'][0,0,-1]
-    B0z = dfavg['bz'][0,0,-1]
+    B0x = dfavg['bx'][0,0,xxidx]
+    B0y = dfavg['by'][0,0,xxidx]
+    B0z = dfavg['bz'][0,0,xxidx]
 
     return [B0x, B0y, B0z]
 
@@ -729,36 +739,57 @@ def predict_kx_alfven(ky,kz,B0,delBperp):
 def alfven_wave_check(dfields,klist,xx):
     """
     Checks if basic properties of an alfven wave are seen at some location in the simulation
+
+    Note: dfields is normally the yz averaged removed fields (e.g. B_fluc(x,y,z) = B(x,y,z)-<B(x,y,z)>_(y,z))
     """
 
     from lib.array_ops import find_nearest
 
     xxidx = find_nearest(dfields['bz_xx'],xx)
 
-    bxfft = take_fft2(np.asarray(dfields['bx'])[:,:,xxindex],dfields['bx_zz'][1]-dfields['bx_zz'][0],dfields['bx_yy'][1]-dfields['bx_yy'][0])
-    byfft = take_fft2(np.asarray(dfields['by'])[:,:,xxindex],dfields['by_zz'][1]-dfields['by_zz'][0],dfields['by_yy'][1]-dfields['by_yy'][0])
-    bzfft = take_fft2(np.asarray(dfields['bz'])[:,:,xxindex],dfields['bz_zz'][1]-dfields['bz_zz'][0],dfields['bz_yy'][1]-dfields['bz_yy'][0])
+    kz, ky, bxkzkyx = _ffttransform_in_yz(dfields,'bx')
+    kz, ky, bxkzkyx = _ffttransform_in_yz(dfields,'by')
+    kz, ky, bxkzkyx = _ffttransform_in_yz(dfields,'bz')
 
-    kxidx = findnearest(dfielsd)
-    kyidx = find_nearest(dfields['bz_yy'],yy)
-    kzidx = find_nearest(dfields['bz_zz'],zz)
+    B0 = get_B0(dfields,xxidx)
 
-    #get external field
-    # B0 = get_B0(dfields) #should be local B0
-
-    # #get delta fields (different from removing yz average)
-    # ddeltaf = get_delta_fields(dfields,B0)
-    #
     # #get delta perp fields
     # dperpf = get_delta_perp_fields(dfields,B0)
 
-    # check if any of the predicted k's work for this
+    # check if any of the given k's have the expected properties of an alfven wave
+    # i.e. is deltaBperp parallel to kcrossB0, deltaB is perpendicular to B0, and delB is perpendicular to k
+    # where deltaB is from
     results = []
     for i in range(0,len(klist)):
+        #pick a k and compute kperp
         k = klist[i]
+        kperp = _get_kperp(k,B0)
+
+        #find nearest discrete point in (x,ky,kz) space we have data for
+        kyidx = find_nearest(ky,k[1])
+        kzidx = find_nearest(kz,k[2])
+        kyperpidx = find_nearest(kyperp,kperp[1])
+        kzperpidx = find_nearest(kzperp,kperp[2])
+
+        #finalize transform into k space i.e. compute B(kx0,kz0,ky0) from B(x,kz,ky) for k and k perp
+        #note: we never have an array B(kx,ky,kz), just that scalar quantities at k0 and kperp0, which we get from
+        # the just for B(x,kz,ky) as computing the entire B(kx,ky,kz) array would be computationally expensive.
+        # would have to perform wavelet transform for each (ky0,kz0)
+
+        kx, bxkz0ky0kxxx = wlt(dfields['bx_xx'],bxkzkyx[:,kzidx,kyidx]) #note kx is that same for all 6 returns here
+        kx, bykz0ky0kxxx = wlt(dfields['by_xx'],bykzkyx[:,kzidx,kyidx])
+        kx, bzkz0ky0kxxx = wlt(dfields['bz_xx'],bzkzkyx[:,kzidx,kyidx])
+        kx, bxperpkz0ky0kxxx = wlt(dfields['bx_xx'],bxkzkyx[:,kzperpidx,kyperpidx])
+        kx, byperpkz0ky0kxxx = wlt(dfields['by_xx'],bykzkyx[:,kzperpidx,kyperpidx])
+        kx, bzperpkz0ky0kxxx = wlt(dfields['bz_xx'],bzkzkyx[:,kzperpidx,kyperpidx])
+
+        kxidx = findnearest(kx,k[0])
+        kxperpidx = findnearest(kx,kperp[0])
+
         kcrossB0 = np.cross(k,B0)
-        #delB = [ddeltaf['bx'][zzidx,yyidx,xxidx],ddeltaf['by'][zzidx,yyidx,xxidx],ddeltaf['bz'][zzidx,yyidx,xxidx]]
-        delBperp = [dperpf['bx'][zzidx,yyidx,xxidx],dperpf['by'][zzidx,yyidx,xxidx],dperpf['bz'][zzidx,yyidx,xxidx]]
+        delB = [bxkz0ky0kxxx[kxidx,xxidx],bykz0ky0kxxx[kxidx,xxidx],bzkz0ky0kxxx[kxidx,xxidx]]
+        delBperp = [bxperpkz0ky0kxxx[kxperpidx,xxidx],byperpkz0ky0kxxx[kxperpidx,xxidx],bzperpkz0ky0kxxx[kxperpidx,xxidx]]
+
         results.append([is_parallel(delBperp,kcrossB0,tol=0.1),is_perp(delB,B0,tol=0.1),is_perp(delB,k,tol=.1)])
 
     return results
