@@ -565,20 +565,21 @@ def get_delta_fields(dfields,B0):
 
     return ddeltafields
 
-def get_delta_perp_fields(dfields,B0):
-    """
-    Computes the perpendicular component of the delta fields wrt the total magnetic field at each point
-    """
-
-    from copy import deepcopy
-
-    ddeltaperpfields = get_delta_fields(dfields,B0)
-
-    ddeltaperpfields['bx'] = ddeltaperpfields['bx'] - (ddeltaperpfields['bx']*B0[0]+ddeltaperpfields['by']*B0[1]+ddeltaperpfields['bz']*B0[2])/(B0[0]**2+B0[1]**2+B0[2]**2)*B0[0]
-    ddeltaperpfields['by'] = ddeltaperpfields['by'] - (ddeltaperpfields['bx']*B0[0]+ddeltaperpfields['by']*B0[1]+ddeltaperpfields['bz']*B0[2])/(B0[0]**2+B0[1]**2+B0[2]**2)*B0[1]
-    ddeltaperpfields['bz'] = ddeltaperpfields['bz'] - (ddeltaperpfields['bx']*B0[0]+ddeltaperpfields['by']*B0[1]+ddeltaperpfields['bz']*B0[2])/(B0[0]**2+B0[1]**2+B0[2]**2)*B0[2]
-
-    return ddeltaperpfields
+## This is unused and misguided, should remove
+# def get_delta_perp_fields(dfields,B0):
+#     """
+#     Computes the perpendicular component of the delta fields wrt the total magnetic field at each point
+#     """
+#
+#     from copy import deepcopy
+#
+#     ddeltaperpfields = get_delta_fields(dfields,B0)
+#
+#     ddeltaperpfields['bx'] = ddeltaperpfields['bx'] - (ddeltaperpfields['bx']*B0[0]+ddeltaperpfields['by']*B0[1]+ddeltaperpfields['bz']*B0[2])/(B0[0]**2+B0[1]**2+B0[2]**2)*B0[0]
+#     ddeltaperpfields['by'] = ddeltaperpfields['by'] - (ddeltaperpfields['bx']*B0[0]+ddeltaperpfields['by']*B0[1]+ddeltaperpfields['bz']*B0[2])/(B0[0]**2+B0[1]**2+B0[2]**2)*B0[1]
+#     ddeltaperpfields['bz'] = ddeltaperpfields['bz'] - (ddeltaperpfields['bx']*B0[0]+ddeltaperpfields['by']*B0[1]+ddeltaperpfields['bz']*B0[2])/(B0[0]**2+B0[1]**2+B0[2]**2)*B0[2]
+#
+#     return ddeltaperpfields
 
 def wlt(t,data,w=6):
     """
@@ -613,6 +614,8 @@ def _ffttransform_in_yz(dfields,fieldkey):
     fieldfftsweepoverx = []
     for xxindex in range(0,len(dfields[fieldkey][0][0])):
         fieldslice = np.asarray(dfields[fieldkey])[:,:,xxindex]
+        daxis0 = dfields[fieldkey+'_zz'][1]-dfields[fieldkey+'_zz'][0]
+        daxis1 = dfields[fieldkey+'_yy'][1]-dfields[fieldkey+'_zz'][0]
         kz, ky, fieldslicefft = take_fft2(fieldslice,daxis0,daxis1)
         fieldfftsweepoverx.append(fieldslicefft)
     fieldfftsweepoverx = np.asarray(fieldfftsweepoverx)
@@ -684,7 +687,7 @@ def is_perp(vec1,vec2,tol=0.001):
     vec1 /= np.linalg.norm(vec1)
     vec2 /= np.linalg.norm(vec2)
 
-    dotprod = vec1[0]*vec2[0]+vec1[1]*vec2[1]+vec1[2]*vec2[2]
+    dotprod = np.vdot(vec1,vec2) #vec1[0]*vec2[0]+vec1[1]*vec2[1]+vec1[2]*vec2[2]
 
     if (abs(dotprod) <= tol):
         return True, dotprod
@@ -700,7 +703,7 @@ def is_parallel(vec1,vec2,tol=0.001):
     vec1 /= np.linalg.norm(vec1)
     vec2 /= np.linalg.norm(vec2)
 
-    dotprod = vec1[0]*vec2[0]+vec1[1]*vec2[1]+vec1[2]*vec2[2]
+    dotprod = np.vdot(vec1,vec2) #vec1[0]*vec2[0]+vec1[1]*vec2[1]+vec1[2]*vec2[2]
 
     if (abs(abs(dotprod)-1.0) <= tol):
         return True, dotprod
@@ -736,6 +739,16 @@ def predict_kx_alfven(ky,kz,B0,delBperp):
 
     return kx
 
+def _get_perp_component(x1,y1):
+    """
+    Computes x1perp wrt y1
+    """
+    x1perpx = x1[0]-(x1[0]*y1[0]+x1[1]*y1[1]+x1[2]*y1[2])/(y1[0]*y1[0]+y1[1]*y1[1]+y1[2]*y1[2])*y1[0]
+    x1perpy = x1[1]-(x1[0]*y1[0]+x1[1]*y1[1]+x1[2]*y1[2])/(y1[0]*y1[0]+y1[1]*y1[1]+y1[2]*y1[2])*y1[1]
+    x1perpz = x1[2]-(x1[0]*y1[0]+x1[1]*y1[1]+x1[2]*y1[2])/(y1[0]*y1[0]+y1[1]*y1[1]+y1[2]*y1[2])*y1[2]
+
+    return [x1perpx,x1perpy,x1perpz]
+
 def alfven_wave_check(dfields,klist,xx):
     """
     Checks if basic properties of an alfven wave are seen at some location in the simulation
@@ -748,8 +761,8 @@ def alfven_wave_check(dfields,klist,xx):
     xxidx = find_nearest(dfields['bz_xx'],xx)
 
     kz, ky, bxkzkyx = _ffttransform_in_yz(dfields,'bx')
-    kz, ky, bxkzkyx = _ffttransform_in_yz(dfields,'by')
-    kz, ky, bxkzkyx = _ffttransform_in_yz(dfields,'bz')
+    kz, ky, bykzkyx = _ffttransform_in_yz(dfields,'by')
+    kz, ky, bzkzkyx = _ffttransform_in_yz(dfields,'bz')
 
     B0 = get_B0(dfields,xxidx)
 
@@ -763,19 +776,18 @@ def alfven_wave_check(dfields,klist,xx):
     for i in range(0,len(klist)):
         #pick a k and compute kperp
         k = klist[i]
-        kperp = _get_kperp(k,B0)
+        kperp = _get_perp_component(k,B0)
 
         #find nearest discrete point in (x,ky,kz) space we have data for
         kyidx = find_nearest(ky,k[1])
         kzidx = find_nearest(kz,k[2])
-        kyperpidx = find_nearest(kyperp,kperp[1])
-        kzperpidx = find_nearest(kzperp,kperp[2])
+        kyperpidx = find_nearest(ky,kperp[1])
+        kzperpidx = find_nearest(kz,kperp[2])
 
         #finalize transform into k space i.e. compute B(kx0,kz0,ky0) from B(x,kz,ky) for k and k perp
         #note: we never have an array B(kx,ky,kz), just that scalar quantities at k0 and kperp0, which we get from
         # the just for B(x,kz,ky) as computing the entire B(kx,ky,kz) array would be computationally expensive.
         # would have to perform wavelet transform for each (ky0,kz0)
-
         kx, bxkz0ky0kxxx = wlt(dfields['bx_xx'],bxkzkyx[:,kzidx,kyidx]) #note kx is that same for all 6 returns here
         kx, bykz0ky0kxxx = wlt(dfields['by_xx'],bykzkyx[:,kzidx,kyidx])
         kx, bzkz0ky0kxxx = wlt(dfields['bz_xx'],bzkzkyx[:,kzidx,kyidx])
@@ -783,12 +795,12 @@ def alfven_wave_check(dfields,klist,xx):
         kx, byperpkz0ky0kxxx = wlt(dfields['by_xx'],bykzkyx[:,kzperpidx,kyperpidx])
         kx, bzperpkz0ky0kxxx = wlt(dfields['bz_xx'],bzkzkyx[:,kzperpidx,kyperpidx])
 
-        kxidx = findnearest(kx,k[0])
-        kxperpidx = findnearest(kx,kperp[0])
+        kxidx = find_nearest(kx,k[0])
+        kxperpidx = find_nearest(kx,kperp[0])
 
         kcrossB0 = np.cross(k,B0)
-        delB = [bxkz0ky0kxxx[kxidx,xxidx],bykz0ky0kxxx[kxidx,xxidx],bzkz0ky0kxxx[kxidx,xxidx]]
-        delBperp = [bxperpkz0ky0kxxx[kxperpidx,xxidx],byperpkz0ky0kxxx[kxperpidx,xxidx],bzperpkz0ky0kxxx[kxperpidx,xxidx]]
+        delB = np.abs([bxkz0ky0kxxx[kxidx,xxidx],bykz0ky0kxxx[kxidx,xxidx],bzkz0ky0kxxx[kxidx,xxidx]])
+        delBperp = np.abs([bxperpkz0ky0kxxx[kxperpidx,xxidx],byperpkz0ky0kxxx[kxperpidx,xxidx],bzperpkz0ky0kxxx[kxperpidx,xxidx]])
 
         results.append([is_parallel(delBperp,kcrossB0,tol=0.1),is_perp(delB,B0,tol=0.1),is_perp(delB,k,tol=.1)])
 

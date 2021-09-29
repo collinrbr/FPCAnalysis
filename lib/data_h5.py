@@ -385,7 +385,7 @@ def par_2d_to_3d(par):
 
     for key in datakeys:
         if key not in par.keys():
-            par[key] = np.zeros(len(par[par.keys()[0]))
+            par[key] = np.zeros(len(par[par.keys()[0]]))
 
     return par
 
