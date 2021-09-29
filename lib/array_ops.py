@@ -11,7 +11,7 @@ def find_nearest(array, value):
     Paramters
     ---------
     array : 1d array
-        ordered array
+        array
     value : float
         value you want to approximately find in array
 

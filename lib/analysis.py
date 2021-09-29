@@ -726,7 +726,7 @@ def predict_kx_alfven(ky,kz,B0,delBperp):
 
     return kx
 
-def alfven_wave_check(dfields,klist,xx,yy,zz):
+def alfven_wave_check(dfields,klist,xx):
     """
     Checks if basic properties of an alfven wave are seen at some location in the simulation
     """
@@ -734,24 +734,30 @@ def alfven_wave_check(dfields,klist,xx,yy,zz):
     from lib.array_ops import find_nearest
 
     xxidx = find_nearest(dfields['bz_xx'],xx)
-    yyidx = find_nearest(dfields['bz_yy'],yy)
-    zzidx = find_nearest(dfields['bz_zz'],zz)
+
+    bxfft = take_fft2(np.asarray(dfields['bx'])[:,:,xxindex],dfields['bx_zz'][1]-dfields['bx_zz'][0],dfields['bx_yy'][1]-dfields['bx_yy'][0])
+    byfft = take_fft2(np.asarray(dfields['by'])[:,:,xxindex],dfields['by_zz'][1]-dfields['by_zz'][0],dfields['by_yy'][1]-dfields['by_yy'][0])
+    bzfft = take_fft2(np.asarray(dfields['bz'])[:,:,xxindex],dfields['bz_zz'][1]-dfields['bz_zz'][0],dfields['bz_yy'][1]-dfields['bz_yy'][0])
+
+    kxidx = findnearest(dfielsd)
+    kyidx = find_nearest(dfields['bz_yy'],yy)
+    kzidx = find_nearest(dfields['bz_zz'],zz)
 
     #get external field
-    B0 = get_B0(dfields)
+    # B0 = get_B0(dfields) #should be local B0
 
-    #get delta fields (different from removing yz average)
-    ddeltaf = get_delta_fields(dfields,B0)
-
-    #get delta perp fields
-    dperpf = get_delta_perp_fields(dfields,B0)
+    # #get delta fields (different from removing yz average)
+    # ddeltaf = get_delta_fields(dfields,B0)
+    #
+    # #get delta perp fields
+    # dperpf = get_delta_perp_fields(dfields,B0)
 
     # check if any of the predicted k's work for this
     results = []
     for i in range(0,len(klist)):
         k = klist[i]
         kcrossB0 = np.cross(k,B0)
-        delB = [ddeltaf['bx'][zzidx,yyidx,xxidx],ddeltaf['by'][zzidx,yyidx,xxidx],ddeltaf['bz'][zzidx,yyidx,xxidx]]
+        #delB = [ddeltaf['bx'][zzidx,yyidx,xxidx],ddeltaf['by'][zzidx,yyidx,xxidx],ddeltaf['bz'][zzidx,yyidx,xxidx]]
         delBperp = [dperpf['bx'][zzidx,yyidx,xxidx],dperpf['by'][zzidx,yyidx,xxidx],dperpf['bz'][zzidx,yyidx,xxidx]]
         results.append([is_parallel(delBperp,kcrossB0,tol=0.1),is_perp(delB,B0,tol=0.1),is_perp(delB,k,tol=.1)])
 
