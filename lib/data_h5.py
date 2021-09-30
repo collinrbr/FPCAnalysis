@@ -367,12 +367,14 @@ def dict_2d_to_3d(dict,axis):
     for key in dict.keys():
         if key in datakeys:
             ny,nx = dict[key].shape
-            temp = np.zeros(1,ny,nx)
             if(axis == 0):
+                temp = np.zeros((1,ny,nx))
                 temp[0,:,:] = dict[key][:,:]
             if(axis == 1):
+                temp = np.zeros((ny,1,nx))
                 temp[:,0,:] = dict[key][:,:]
             if(axis == 2):
+                temp = np.zeros((ny,nx,1))
                 temp[:,:,0] = dict[key][:,:]
             dict[key] = temp
 
