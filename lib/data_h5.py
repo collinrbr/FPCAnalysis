@@ -145,7 +145,7 @@ def field_loader(field_vars='all', components='all', num=None,
     if components == 'all':
         components = 'xyz'
     if(len(path) > 0):
-        if path[-1] is not '/': path = path + '/'
+        if path[-1] != '/': path = path + '/'
     fpath = path+"Output/Fields/*"
     if field_vars == 'all':
         field_vars = [c[len(fpath)-1:] for c in glob.glob(fpath)]
@@ -253,7 +253,7 @@ def all_dfield_loader(field_vars='all', components='all', num=None,
     _ivc_ = {v: k for k, v in iter(_field_choices_.items())}
     if components == 'all':
         components = 'xyz'
-    if path[-1] is not '/': path = path + '/'
+    if path[-1] != '/': path = path + '/'
     fpath = path+"Output/Fields/*"
     if field_vars == 'all':
         field_vars = [c[len(fpath)-1:] for c in glob.glob(fpath)]
@@ -315,7 +315,7 @@ def flow_loader(flow_vars=None, num=None, path='./', sp=1, verbose=False, is2d3v
     """
 
     import glob
-    if path[-1] is not '/': path = path + '/'
+    if path[-1] != '/': path = path + '/'
     #choices = num#get_output_times(path=path, sp=sp, output_type='flow')
     dpath = path+"Output/Phase/FluidVel/Sp{sp:02d}/{dv}/Vfld_{tm:08}.h5"
     d = {}
@@ -387,7 +387,7 @@ def par_2d_to_3d(par):
 
     for key in datakeys:
         if key not in par.keys():
-            par[key] = np.zeros(len(par[par.keys()[0]]))
+            par[key] = np.zeros(len(par[list(par.keys())[0]]))
 
     return par
 
