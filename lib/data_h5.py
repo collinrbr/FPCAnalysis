@@ -370,12 +370,15 @@ def dict_2d_to_3d(dict,axis):
             if(axis == 0):
                 temp = np.zeros((1,ny,nx))
                 temp[0,:,:] = dict[key][:,:]
+                dict[key+'_zz'] = np.asarray([0])
             if(axis == 1):
                 temp = np.zeros((ny,1,nx))
                 temp[:,0,:] = dict[key][:,:]
+                dict[key+'_yy'] = np.asarray([0])
             if(axis == 2):
                 temp = np.zeros((ny,nx,1))
                 temp[:,:,0] = dict[key][:,:]
+                dict[key+'_xx'] = np.asarray([0])
             dict[key] = temp
 
     return dict
