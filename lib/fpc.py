@@ -268,6 +268,8 @@ def get_3d_weights(xx,yy,zz,idxxx1,idxxx2,idxyy1,idxyy2,idxzz1,idxzz2,dfields,fi
         w7 = 0.
         w8 = 0.
 
+        vol = w1+w2+w3+w4+w5+w6+w7+w8
+
     #if vol is still zero
     if(vol == 0.):
         print("Error in getting weights! Found a zero volume.")
@@ -323,7 +325,6 @@ def weighted_field_average(xx, yy, zz, dfields, fieldkey):
 
     #find weights
     w1,w2,w3,w4,w5,w6,w7,w8 = get_3d_weights(xx,yy,zz,idxxx1,idxxx2,idxyy1,idxyy2,idxzz1,idxzz2,dfields,fieldkey)
-
 
     #TODO: fix indexing here
     #take average of field
