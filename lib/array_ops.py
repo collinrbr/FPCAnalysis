@@ -30,6 +30,9 @@ def find_two_nearest(array, value):
     finds the index of the two elements in an array closest to some given value
     assumes given array is ordered
     """
+    if(len(array)==1):
+        return 0,0
+
     array = np.asarray(array)
     idx1 = (np.abs(array - value)).argmin()
     if(idx1 == 0): #if on left boundary

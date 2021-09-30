@@ -803,13 +803,23 @@ def alfven_wave_check(dfields,dfieldfluc,klist,xx):
         kx, bzperpkz0ky0kxxx = wlt(dfieldfluc['bz_xx'],bzkzkyx[:,kzperpidx,kyperpidx])
 
         kxidx = find_nearest(kx,np.abs(k[0])) #WLT can not find negative kx. Instead we assume symmetry by taking np.abs
-        print("k[0]: " + str(k[0]) + " found kx " + str(kx[kxidx]))
         kxperpidx = find_nearest(kx,np.abs(kperp[0]))
+
+        if(k[0] < 0): #use reality condition to correct for the fact that we cant compute negative kx using the wlt
+            bxkz0ky0kxxx = np.conj(bxkz0ky0kxxx)
+            bykz0ky0kxxx = np.conj(bykz0ky0kxxx)
+            bzkz0ky0kxxx = np.conj(bzkz0ky0kxxx)
+            bxperpkz0ky0kxxx = np.conj(bxperpkz0ky0kxxx)
+            byperpkz0ky0kxxx = np.conj(byperpkz0ky0kxxx)
+            bzperpkz0ky0kxxx = np.conj(bzperpkz0ky0kxxx)
 
         kcrossB0 = np.cross(k,B0)
         delB = [bxkz0ky0kxxx[kxidx,xxidx],bykz0ky0kxxx[kxidx,xxidx],bzkz0ky0kxxx[kxidx,xxidx]]
         delBperp = [bxperpkz0ky0kxxx[kxperpidx,xxidx],byperpkz0ky0kxxx[kxperpidx,xxidx],bzperpkz0ky0kxxx[kxperpidx,xxidx]]
 
-        results.append([is_parallel(delBperp,kcrossB0,tol=0.1),is_perp(delB,B0,tol=0.1),is_perp(delB,k,tol=.1)])
+
+
+
+        results.append([is_parallel(delBperp,kcrossB0,tol=0.1),is_perp(delB,B0,tol=0.1),is_perp(k,delB,tol=.1)])
 
     return results
