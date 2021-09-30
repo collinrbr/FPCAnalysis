@@ -363,8 +363,9 @@ def dict_2d_to_3d(dict,axis):
     """
     """
     datakeys = ['ex','ey','ez','bx','by','bz','ux','uy','uz'] #keys that might need to be padded
+    dictkeys = list(dict.keys())
 
-    for key in dict.keys():
+    for key in dictkeys:
         if key in datakeys:
             ny,nx = dict[key].shape
             if(axis == 0):
