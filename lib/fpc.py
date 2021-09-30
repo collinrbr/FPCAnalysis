@@ -78,7 +78,7 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dpar, dfields, vshock
                     goodfieldpts.append(dfields[fieldkey][k][j][i])
 
     #define mask that includes particles within range
-    gptsparticle = (x1 < dpar['x1'] ) & (dpar['x1'] < x2) & (y1 < dpar['x2']) & (dpar['x2'] < y2) & (z1 < dpar['x3']) & (dpar['x3'] < z2)
+    gptsparticle = (x1 <= dpar['x1'] ) & (dpar['x1'] <= x2) & (y1 <= dpar['x2']) & (dpar['x2'] <= y2) & (z1 <= dpar['x3']) & (dpar['x3'] <= z2)
     totalPtcl = np.sum(gptsparticle)
 
     #avgfield = np.average(goodfieldpts) #TODO: call getfieldaverageinbox here instead
@@ -255,6 +255,20 @@ def get_3d_weights(xx,yy,zz,idxxx1,idxxx2,idxyy1,idxyy2,idxzz1,idxzz2,dfields,fi
 
     vol = w1+w2+w3+w4+w5+w6+w7+w8
 
+    #if vol is still zero, try computing 2d weights. For now, we assume 2d in xx and yy. TODO: program ability to be 2d in xx/zz or yy/zz
+    if(vol == 0 and dfields[fieldkey+'_zz'][idxzz1]-zz == 0 and dfields[fieldkey+'_zz'][idxzz2]-zz == 0):
+        w1 = abs((dfields[fieldkey+'_xx'][idxxx1]-xx)*(dfields[fieldkey+'_yy'][idxyy1]-yy)
+        w2 = abs((dfields[fieldkey+'_xx'][idxxx2]-xx)*(dfields[fieldkey+'_yy'][idxyy1]-yy)
+        w3 = abs((dfields[fieldkey+'_xx'][idxxx1]-xx)*(dfields[fieldkey+'_yy'][idxyy2]-yy)
+        w5 = abs((dfields[fieldkey+'_xx'][idxxx2]-xx)*(dfields[fieldkey+'_yy'][idxyy2]-yy)
+
+        #these correspond to idxzz2 and thus are zero
+        w4 = 0.
+        w6 = 0.
+        w7 = 0.
+        w8 = 0.
+
+    #if vol is still zero
     if(vol == 0.):
         print("Error in getting weights! Found a zero volume.")
 

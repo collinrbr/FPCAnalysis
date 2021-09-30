@@ -802,8 +802,9 @@ def alfven_wave_check(dfields,dfieldfluc,klist,xx):
         kx, byperpkz0ky0kxxx = wlt(dfieldfluc['by_xx'],bykzkyx[:,kzperpidx,kyperpidx])
         kx, bzperpkz0ky0kxxx = wlt(dfieldfluc['bz_xx'],bzkzkyx[:,kzperpidx,kyperpidx])
 
-        kxidx = find_nearest(kx,k[0])
-        kxperpidx = find_nearest(kx,kperp[0])
+        kxidx = find_nearest(kx,np.abs(k[0])) #WLT can not find negative kx. Instead we assume symmetry by taking np.abs
+        print("k[0]: " + str(k[0]) + " found kx " + str(kx[kxidx]))
+        kxperpidx = find_nearest(kx,np.abs(kperp[0]))
 
         kcrossB0 = np.cross(k,B0)
         delB = [bxkz0ky0kxxx[kxidx,xxidx],bykz0ky0kxxx[kxidx,xxidx],bzkz0ky0kxxx[kxidx,xxidx]]
