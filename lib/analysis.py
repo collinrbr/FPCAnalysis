@@ -780,6 +780,7 @@ def alfven_wave_check(dfields,dfieldfluc,klist,xx):
     # i.e. is deltaBperp parallel to kcrossB0, deltaB is perpendicular to B0, and delB is perpendicular to k
     # where deltaB is from
     results = []
+    kxexpected = [] #what kx needs to be for the wave to be alfvenic for each k in klist
     for i in range(0,len(klist)):
         #pick a k and compute kperp
         k = klist[i]
@@ -817,9 +818,9 @@ def alfven_wave_check(dfields,dfieldfluc,klist,xx):
         delB = [bxkz0ky0kxxx[kxidx,xxidx],bykz0ky0kxxx[kxidx,xxidx],bzkz0ky0kxxx[kxidx,xxidx]]
         delBperp = [bxperpkz0ky0kxxx[kxperpidx,xxidx],byperpkz0ky0kxxx[kxperpidx,xxidx],bzperpkz0ky0kxxx[kxperpidx,xxidx]]
 
-
+        kxexpected.append(predict_kx_alfven(k[1],k[2],B0,delBperp))
 
 
         results.append([is_parallel(delBperp,kcrossB0,tol=0.1),is_perp(delB,B0,tol=0.1),is_perp(k,delB,tol=.1)])
 
-    return results
+    return results, kxexpected
