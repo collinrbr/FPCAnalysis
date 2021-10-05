@@ -56,6 +56,7 @@ anl.check_input(analysisinputflnm,dfields)
 
 #Load data using normal output files
 if(use_restart == 'F'):
+    print("Loading particle data...")
     #Load slice of particle data
     if xlim is not None and ylim is not None and zlim is not None:
         dparticles = dh5.read_box_of_particles(path_particles, numframe, xlim[0], xlim[1], ylim[0], ylim[1], zlim[0], zlim[1])
@@ -73,6 +74,7 @@ if(use_restart == 'F'):
         dparticles = dh5.read_particles(path_particles, numframe)
 #Load data using restart files
 if(use_restart == 'T'):
+    print("Loading particle data using restart files...")
     #Load slice of particle data
     if xlim is not None:
         dparticles = dh5.read_restart(path, xlim=xlim)
