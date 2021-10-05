@@ -404,6 +404,8 @@ def _pts_to_par_dict(pts):
 
     dpar = {}
 
+    dpar['Vframe_relative_to_sim'] = 0
+
     #p1 p2 p3 x1 x2 x3
     dpar['x1'] = deepcopy(pts[:,0])
     dpar['x2'] = deepcopy(pts[:,1])
