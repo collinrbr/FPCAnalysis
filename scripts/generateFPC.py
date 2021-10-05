@@ -29,8 +29,8 @@ except:
     sys.exit()
 
 try:
-    use_restart = upper(sys.argv[2])
-    if(use_restart != 'T' or use_restart != 'F'):
+    use_restart = str(sys.argv[2].upper())
+    if(use_restart != 'T' and use_restart != 'F'):
         print("Error, use_restart should be T or F...")
         sys.exit()
 except:
