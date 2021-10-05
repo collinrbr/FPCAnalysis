@@ -742,7 +742,7 @@ def predict_kx_alfven(ky,kz,B0,delBperp):
     dBx = delBperp[0]
     dBy = delBperp[1]
     dBz = delBperp[2]
-    kx = (Bz*dBx*ky-Bx*dBz*ky-By*dBx*kz+Bx*dBy*kz)/(Bz*dBy-By*dBz)
+    kx = (-1.+Bz*dBx*ky-Bx*dBz*ky-By*dBx*kz+Bx*dBy*kz)/(Bz*dBy-By*dBz)
 
     return kx
 

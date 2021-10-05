@@ -317,6 +317,6 @@ def plot_wlt(xx, kx, wlt, ky0 = None, kz0 = None, flnm = '', plotstrongestkx = F
         plt.show()
     else:
         #flnm='ky='+str(ky0)[0:6]+'kz='+str(kz0)[0:6]+'wlt'
-        plt.savefig(flnm,format='png')
+        plt.savefig(flnm,format='png',dpi=250)
         plt.close('all')#saves RAM
     plt.close()

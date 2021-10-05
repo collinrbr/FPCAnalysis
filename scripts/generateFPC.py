@@ -24,10 +24,17 @@ import numpy as np
 try:
     analysisinputflnm = sys.argv[1]
 except:
-    print("This generates FPC netcdf4 file")
-    print("usage: " + sys.argv[0] + " analysisinputflnm")
+    print("This generates FPC netcdf4 file. Use_restart is false by default.")
+    print("usage: " + sys.argv[0] + " analysisinputflnm (use_restart(T/F))")
     sys.exit()
 
+try:
+    use_restart = upper(sys.argv[2])
+    if(use_restart != 'T' or use_restart != 'F'):
+        print("Error, use_restart should be T or F...")
+        sys.exit()
+except:
+    use_restart = 'F'
 
 #-------------------------------------------------------------------------------
 # load data
@@ -37,8 +44,8 @@ path,resultsdir,vmax,dv,numframe,dx,xlim,ylim,zlim = anl.analysis_input(flnm = a
 path_fields = path
 path_particles = path+"Output/Raw/Sp01/raw_sp01_{:08d}.h5"
 
-print("Loading data...")
 #load relevant time slice fields
+print("Loading field data...")
 dfields = dh5.field_loader(path=path_fields,num=numframe)
 
 #Load all fields along all time slices
@@ -47,21 +54,38 @@ all_dfields = dh5.all_dfield_loader(path=path_fields, verbose=False)
 #check input to make sure box makes sense
 anl.check_input(analysisinputflnm,dfields)
 
-#Load slice of particle data
-if xlim is not None and ylim is not None and zlim is not None:
-    dparticles = dh5.read_box_of_particles(path_particles, numframe, xlim[0], xlim[1], ylim[0], ylim[1], zlim[0], zlim[1])
-#Load all data in unspecified limits and only data in bounds in specified limits
-elif xlim is not None or ylim is not None or zlim is not None:
-    if xlim is None:
+#Load data using normal output files
+if(use_restart == 'F'):
+    #Load slice of particle data
+    if xlim is not None and ylim is not None and zlim is not None:
+        dparticles = dh5.read_box_of_particles(path_particles, numframe, xlim[0], xlim[1], ylim[0], ylim[1], zlim[0], zlim[1])
+    #Load all data in unspecified limits and only data in bounds in specified limits
+    elif xlim is not None or ylim is not None or zlim is not None:
+        if xlim is None:
+            xlim = [dfields['ex_xx'][0],dfields['ex_xx'][-1]]
+        if ylim is None:
+            ylim = [dfields['ex_yy'][0],dfields['ex_yy'][-1]]
+        if zlim is None:
+            zlim = [dfields['ex_zz'][0],dfields['ex_zz'][-1]]
+        dparticles = dh5.read_box_of_particles(path_particles, numframe, xlim[0], xlim[1], ylim[0], ylim[1], zlim[0], zlim[1])
+    #Load all the particles
+    else:
+        dparticles = dh5.read_particles(path_particles, numframe)
+#Load data using restart files
+if(use_restart == 'T'):
+    #Load slice of particle data
+    if xlim is not None:
+        dparticles = dh5.read_restart(path, xlim=xlim)
+    #Load all data in unspecified limits and only data in bounds in specified limits
+    else:
         xlim = [dfields['ex_xx'][0],dfields['ex_xx'][-1]]
+        dparticles = dh5.read_restart(path)
+
+    #set up other bounds (TODO: clean this up (redundant code in above if block; code this only once))
     if ylim is None:
         ylim = [dfields['ex_yy'][0],dfields['ex_yy'][-1]]
     if zlim is None:
         zlim = [dfields['ex_zz'][0],dfields['ex_zz'][-1]]
-    dparticles = dh5.read_box_of_particles(path_particles, numframe, xlim[0], xlim[1], ylim[0], ylim[1], zlim[0], zlim[1])
-#Load all the particles
-else:
-    dparticles = dh5.read_particles(path_particles, numframe)
 
 #-------------------------------------------------------------------------------
 # estimate shock vel and lorentz transform

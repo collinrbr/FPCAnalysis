@@ -395,7 +395,7 @@ def par_2d_to_3d(par):
 
     return par
 
-def read_restart(path,verbose=False):
+def read_restart(path,verbose=False,xlim=None):
     """
     Loads all restart files. Use's modified code from Dr. Colby Haggerty.
 
@@ -550,7 +550,13 @@ def read_restart(path,verbose=False):
                 bcx,bcy,bcz = self._box_center(ip, jp, kp)
                 xxboxwidth = PM.rx/PM.px #each restart file contains a subbox that normally contains many cells
 
-                if(bcx-xxboxwidth/2. >= x0 and bcx+xxboxwidth/2. <= x1):
+                #This block will only load restart file if it is entirely in the given xrange
+                # if(bcx-xxboxwidth/2. >= x0 and bcx+xxboxwidth/2. <= x1):
+                #     nums.append(n)
+
+                #This block will load restart file if it is even partially in the xrange
+                #Probably want to use this one for smaller x ranges
+                if(bcx+xxboxwidth/2. >= x0 and bcx-xxboxwidth/2. <= x1):
                     nums.append(n)
 
             return nums
@@ -611,7 +617,20 @@ def read_restart(path,verbose=False):
     PM = PartMapper3D(path)
     numfiles = PM.px*PM.py*PM.pz
 
-    procs = np.arange(0,numfiles) #loads entire simulation box. Probably more intuitive to load entire box then take subset if desired as restart files contain subboxes that contain multiple cells but are smaller than the simulation box
+    if(xlim==None):
+        procs = np.arange(0,numfiles) #loads entire simulation box.
+                                      #Probably more intuitive to load entire
+                                      #box then take subset if desired as
+                                      #restart files contain subboxes that
+                                      #contain multiple cells but are smaller
+                                      #than the simulation box
+    else:
+        procs = PM.xrange_to_nums(xlim[0], xlim[1]) #it is wasteful of RAM to only
+                                                    #restrict particle loading to
+                                                    #the xx dimensions, however
+                                                    #the results will be the same
+                                                    #TODO: optimize by restricting in
+                                                    #yy and zz too
 
     pts = PM.parts_from_num(procs[-1])
     procs = procs[:-1]
