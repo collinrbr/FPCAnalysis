@@ -45,9 +45,9 @@ except:
     is_2D3V = 'F'
 
 if(is_2D3V == 'T'):
-    is_2D3V = True
+    is2d3v = True
 else:
-    is_2D3V = False
+    is2d3v = False
 
 #-------------------------------------------------------------------------------
 # load data
