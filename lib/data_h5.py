@@ -207,7 +207,7 @@ def field_loader(field_vars='all', components='all', num=None,
                     d[kc+'_zz'] = d[kc+'_zz'][slc[0]]
 
                 if(not(is2d3v)):
-                    d[kc] = d[kc][slc] #TODO?: convert to handle 2d3v (issue is handling slc[2]/slc[1] for _xx/_yy case in 2d)
+                    d[kc] = d[kc][slc]
 
     d['Vframe_relative_to_sim'] = 0.
 
@@ -272,12 +272,9 @@ def all_dfield_loader(field_vars='all', components='all', num=None,
                              t = '*')
     if verbose: print(test_path)
     choices = glob.glob(test_path)
-    #num_of_zeros = len()
     choices = [int(c[-11:-3]) for c in choices]
     choices.sort()
-    #fpath = fpath.format(f='{f}', T='{T}', c='{c}', v='{v}', t='{t:08d}')
 
-    #TODO: clean this up, only need num, probably a lot of redundancy here
     alld= {'frame':[],'dfields':[]}
     for _num in choices:
         num = int(_num)
@@ -313,26 +310,20 @@ def flow_loader(flow_vars=None, num=None, path='./', sp=1, verbose=False, is2d3v
     """
 
     import glob
-    if path[-1] != '/': path = path + '/'
-    #choices = num#get_output_times(path=path, sp=sp, output_type='flow')
+    if path[-1] != '/':
+        path = path + '/'
     dpath = path+"Output/Phase/FluidVel/Sp{sp:02d}/{dv}/Vfld_{tm:08}.h5"
     d = {}
-    # while num not in choices:
-    #     _ =  'Select from the following possible movie numbers: '\
-    #          '\n{0} '.format(choices)
-    #     num = int(input(_))
     if type(flow_vars) is str:
         flow_vars = flow_vars.split()
     elif flow_vars is None:
         flow_vars = 'x y z'.split()
-    #print(dpath.format(sp=sp, tm=num))
     for k in flow_vars:
         if verbose: print(dpath.format(sp=sp, dv=k, tm=num))
         with h5py.File(dpath.format(sp=sp, dv=k, tm=num),'r') as f:
             kc = 'u'+k
             _ = f['DATA'].shape
             dim = len(_)
-            #print(kc,_)
             d[kc] = f['DATA'][:]
             if is2d3v:
                 _N2,_N1 = _
@@ -359,6 +350,19 @@ def flow_loader(flow_vars=None, num=None, path='./', sp=1, verbose=False, is2d3v
 
 def dict_2d_to_3d(dict,axis):
     """
+    Pads 2D3V data to look like 3D3V data that the rest of the pipeline can process
+
+    Parameters
+    ----------
+    dict : dict
+        2D3V field or flow dictionary
+    axis : int
+        axis to pad along
+
+    Returns
+    -------
+    dict : dict
+        Pseudo 3D3V data
     """
     datakeys = ['ex','ey','ez','bx','by','bz','ux','uy','uz'] #keys that might need to be padded
     dictkeys = list(dict.keys())
@@ -400,7 +404,8 @@ def par_2d_to_3d(par):
 
     for key in datakeys:
         if key not in par.keys():
-            par[key] = np.zeros(len(par[list(par.keys())[0]]))
+            num_par = len(par[list(par.keys())[0]])
+            par[key] = np.zeros()
 
     return par
 
@@ -426,7 +431,6 @@ def _pts_to_par_dict(pts):
 
     dpar['Vframe_relative_to_sim'] = 0
 
-    #p1 p2 p3 x1 x2 x3
     dpar['x1'] = deepcopy(pts[:,0])
     dpar['x2'] = deepcopy(pts[:,1])
     dpar['x3'] = deepcopy(pts[:,2])
@@ -440,8 +444,6 @@ def _pts_to_par_dict(pts):
 def read_restart(path,verbose=False,xlim=None):
     """
     Loads all restart files. Use's modified code from Dr. Colby Haggerty.
-
-    TODO?: maybe add feature that limits domain (use xrange to nums feature)
 
     (Not sure how to implement this cleanly)
 

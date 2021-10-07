@@ -105,7 +105,7 @@ if(use_restart == 'T'):
         zlim = [dfields['ex_zz'][0],dfields['ex_zz'][-1]]
 
 #-------------------------------------------------------------------------------
-# Check if data is 2D. Pad to make sudo 3d if data is 2d
+# Check if data is 2D. Pad to make pseudo 3d if data is 2d
 #-------------------------------------------------------------------------------
 if('x3' not in dparticles.keys()): #all simulations that are '2d' should be 2d 3v with coordinates (xx,yy;vx,vy,vz)
     dparticles = dh5.par_2d_to_3d(dparticles)

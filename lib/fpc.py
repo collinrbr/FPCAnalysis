@@ -34,7 +34,7 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dpar, dfields, vshock
     z2 : float
         upper y bound
     dpar : dict
-        xx vx yy vy zz vz data dictionary from readParticles or readSliceOfParticles
+        xx vx yy vy zz vz data dictionary from read_particles or read_box_of_particles
     dfields : dict
         field data dictionary from field_loader
     vshock : float
@@ -43,9 +43,9 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dpar, dfields, vshock
         name of the field you want to correlate with
         ex,ey,ez,bx,by, or bz
     directionkey : str
-        name of direction you want to take the gradient with respect to
+        name of direction you want to take the derivative with respect to
         x,y,or z
-        *should match the direction of the fieldkey* TODO: check for this automatically
+        *should match the direction of the fieldkey*
 
     Returns
     -------
@@ -64,6 +64,16 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dpar, dfields, vshock
     Cor : 3d array
         velocity space sigature data in box
     """
+    #check input
+    if(fieldkey == 'ex' or fieldkey == 'bx'):
+        if(directionkey != 'x'):
+            print("Warning, direction of derivative does not match field direction")
+    if(fieldkey == 'ey' or fieldkey == 'by'):
+        if(directionkey != 'y'):
+            print("Warning, direction of derivative does not match field direction")
+    if(fieldkey == 'ez' or fieldkey == 'bz'):
+        if(directionkey != 'z'):
+            print("Warning, direction of derivative does not match field direction")
 
     #find average E field based on provided bounds
     gfieldptsx = (x1 <= dfields[fieldkey+'_xx']) & (dfields[fieldkey+'_xx'] <= x2)
@@ -289,12 +299,11 @@ def get_3d_weights(xx,yy,zz,idxxx1,idxxx2,idxyy1,idxyy2,idxzz1,idxzz2,dfields,fi
 
     return w1,w2,w3,w4,w5,w6,w7,w8
 
-#estimates the field at some point within a cell by taking a weighted average of the surronding grid points
-#NOTE: this assumes the sides of the box are all in either the xy,xz, or yz plane
-#TODO:FIX (weight is no longer 1?)
 def weighted_field_average(xx, yy, zz, dfields, fieldkey):
     """
     Uses trilinear interpolation to estimate field value at given test location
+
+    Assumes the sides of the box are all in either the xy, xz, or yz plane
 
     Parameters
     ----------
@@ -325,7 +334,6 @@ def weighted_field_average(xx, yy, zz, dfields, fieldkey):
     #find weights
     w1,w2,w3,w4,w5,w6,w7,w8 = get_3d_weights(xx,yy,zz,idxxx1,idxxx2,idxyy1,idxyy2,idxzz1,idxzz2,dfields,fieldkey)
 
-    #TODO: fix indexing here
     #take average of field
     tolerance = 0.001
     if(abs(w1+w2+w3+w4+w5+w6+w7+w8-1.0) >= tolerance):
@@ -338,28 +346,6 @@ def weighted_field_average(xx, yy, zz, dfields, fieldkey):
     fieldaverage +=w6*dfields[fieldkey][idxzz2][idxyy2][idxxx2]
     fieldaverage +=w7*dfields[fieldkey][idxzz2][idxyy2][idxxx1]
     fieldaverage +=w8*dfields[fieldkey][idxzz2][idxyy1][idxxx2]
-
-    # #debug
-    # if(True):
-    #     print('fields:')
-    #     print(dfields[fieldkey][idxzz1][idxyy1][idxxx1])
-    #     print(dfields[fieldkey][idxzz1][idxyy1][idxxx2])
-    #     print(dfields[fieldkey][idxzz1][idxyy2][idxxx1])
-    #     print(dfields[fieldkey][idxzz2][idxyy1][idxxx1])
-    #     print(dfields[fieldkey][idxzz1][idxyy2][idxxx2])
-    #     print(dfields[fieldkey][idxzz2][idxyy2][idxxx2])
-    #     print(dfields[fieldkey][idxzz2][idxyy2][idxxx1])
-    #     print(dfields[fieldkey][idxzz2][idxyy1][idxxx2])
-    #     print(fieldaverage)
-    #     print('weights')
-    #     print(w1)
-    #     print(w2)
-    #     print(w3)
-    #     print(w4)
-    #     print(w5)
-    #     print(w6)
-    #     print(w7)
-    #     print(w8)
 
     return fieldaverage
 
@@ -386,7 +372,8 @@ def compute_cprime_hist(dparticles,dfields,fieldkey,vmax,dv):
     Returns
     -------
     cprimebinned : 3d array
-        cprime binned into appropriate distribution function using appropriate weights (TODO: document this var better)
+        distribution function weighted by charge, particles velocity,
+        and field value in integration box
     Hist : 3d array
         distribution function in box
     vx : 3d array
@@ -396,9 +383,6 @@ def compute_cprime_hist(dparticles,dfields,fieldkey,vmax,dv):
     vz : 3d array
         vz velocity grid
     """
-
-    #-TODO: shift particles to correctframe-----------
-
     from scipy.stats import binned_statistic_dd
 
     if(fieldkey == 'ex' or fieldkey == 'bx'):
@@ -410,10 +394,11 @@ def compute_cprime_hist(dparticles,dfields,fieldkey,vmax,dv):
 
 
     #compute cprime for each particle
-    cprimew = [] #TODO: not sure what to call this (this is technically not cprime until we bin)
+    cprimew = []
     for i in range(0, len(dparticles['x1'])):
         fieldval = weighted_field_average(dparticles['x1'][i], dparticles['x2'][i], dparticles['x3'][i], dfields, fieldkey)
-        q = 1. #WARNING: might not always be true TODO: automate grabbing q and fix this
+        q = 1. #WARNING: might not always be correct value for q
+               #TODO: automate grabbing q and fix this
         cprimew.append(q*dparticles[vvkey][i]*fieldval)
     cprimew = np.asarray(cprimew)
 
@@ -460,7 +445,8 @@ def compute_cor_from_cprime(cprimebinned,vx,vy,vz,dv,directionkey):
     Parameters
     ----------
     cprimebinned : 3d array
-        cprime binned into appropriate distribution function using appropriate weights (TODO: document this var better)
+        distribution function weighted by charge, particles velocity,
+        and field value in integration box
     vx : 3d array
         vx velocity grid
     vy : 3d array
@@ -474,7 +460,6 @@ def compute_cor_from_cprime(cprimebinned,vx,vy,vz,dv,directionkey):
         direction we are taking the derivative w.r.t. (x,y,z)
     """
 
-    #TODO: figure way to automatically handle direction of taking derivative
     if(directionkey == 'x'):
         axis = 2
         vv = vx

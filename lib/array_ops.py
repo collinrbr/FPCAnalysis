@@ -1,6 +1,6 @@
 # array_ops.py>
 
-#functions that manipulate or operate arrays
+# functions that manipulate or operate arrays
 
 import numpy as np
 
@@ -24,6 +24,7 @@ def find_nearest(array, value):
     array = np.asarray(array)
     idx = (np.abs(array - value)).argmin()
     return idx
+
 
 def find_two_nearest(array, value):
     """
@@ -51,6 +52,7 @@ def find_two_nearest(array, value):
         idx2 = 0
 
     return idx1,idx2
+
 
 def mesh_3d_to_2d(meshx,meshy,meshz,planename):
     """
@@ -82,38 +84,30 @@ def mesh_3d_to_2d(meshx,meshy,meshz,planename):
     if(planename == 'xy'):
         meshx2d = np.zeros((len(meshy),len(meshx)))
         meshy2d = np.zeros((len(meshy),len(meshx)))
-        for i in range(0,len(meshy)):
-            for j in range(0,len(meshx)):
-                meshx2d[i][j] = meshx[0][i][j]
-        for i in range(0,len(meshy)):
-            for j in range(0,len(meshx)):
-                meshy2d[i][j] = meshy[0][i][j]
+
+        meshx2d[:,:] = meshx[0,:,:]
+        meshy2d[:,:] = meshy[0,:,:]
 
         return meshx2d, meshy2d
 
     elif(planename == 'xz'):
         meshx2d = np.zeros((len(meshz),len(meshx)))
         meshz2d = np.zeros((len(meshz),len(meshx)))
-        for i in range(0,len(meshz)):
-            for j in range(0,len(meshx)):
-                meshx2d[i][j] = meshx[i][0][j]
-        for i in range(0,len(meshz)):
-            for j in range(0,len(meshx)):
-                meshz2d[i][j] = meshz[i][0][j]
+
+        meshx2d[i][j] = meshx[:,0,:]
+        meshz2d[i][j] = meshz[:,0,:]
 
         return meshx2d, meshz2d
 
     elif(planename == 'yz'):
         meshy2d = np.zeros((len(meshz),len(meshy)))
         meshz2d = np.zeros((len(meshz),len(meshy)))
-        for i in range(0,len(meshz)):
-            for j in range(0,len(meshy)):
-                meshy2d[i][j] = meshy[i][j][0]
-        for i in range(0,len(meshz)):
-            for j in range(0,len(meshy)):
-                meshz2d[i][j] = meshz[i][j][0]
+
+        meshy2d[:,:] = meshy[:,:,0]
+        meshz2d[:,:] = meshz[:,:,0]
 
         return meshy2d, meshz2d
+
 
 def array_3d_to_2d(arr3d,planename):
     """
@@ -154,6 +148,7 @@ def array_3d_to_2d(arr3d,planename):
         return arr2d
     else:
         print("Please enter xy, xz, or yz for planename...")
+
 
 def get_average_in_box(x1, x2, y1, y2, z1, z2, datadict, dictkey):
     """
@@ -198,6 +193,7 @@ def get_average_in_box(x1, x2, y1, y2, z1, z2, datadict, dictkey):
 
     avg = np.average(goodpts)
     return avg
+
 
 def get_field_subset(dfields,startx,endx,starty,endy,startz,endz):
     """
@@ -268,6 +264,7 @@ def get_field_subset(dfields,startx,endx,starty,endy,startz,endz):
 
     return dfieldssubset
 
+
 def get_flow_subset(dflow,startx,endx,starty,endy,startz,endz):
     """
     Grabs subset box of flow data
@@ -322,15 +319,32 @@ def get_flow_subset(dflow,startx,endx,starty,endy,startz,endz):
 
     return dflowsubset
 
+
 def find_local_maxima(data,threshold = .05,pltdebug = False):
     """
+    Finds indicies of the local maxima of given data that are greater than some fraction of the
+    max value in the data
 
+    Assumes data is all positive
+
+    Parameters
+    ----------
+    data : array
+        array of data
+    threshold : float, opt
+        cutoff fraction
+    pltdebug : bool
+        shows debug plot if requested
+
+    Return
+    ------
+    peaks : array
+        list of indexes of peaks in data
     """
 
     #from scipy.signal import find_peaks
     from scipy.signal import argrelextrema
     from scipy.signal import savgol_filter
-
 
     data = savgol_filter(data, 11, 5)
     peaks = argrelextrema(data, np.greater)[0]
