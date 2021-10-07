@@ -1,9 +1,0 @@
-path='/srv/data/simulation/dHybridR/2021.05.Perp_Shocks/Batch04/M04/'
-resultsdir='M04results/'
-vmax=15
-dv=0.25
-numframe=1000
-dx=0.5
-#xlim=
-ylim=0.0,3.
-zlim=0.0,3.
