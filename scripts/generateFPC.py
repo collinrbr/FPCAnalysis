@@ -37,7 +37,7 @@ except:
     use_restart = 'F'
 
 try:
-    is_2d3V = str(sys.argv[3].upper())
+    is_2D3V = str(sys.argv[3].upper())
     if(use_restart != 'T' and use_restart != 'F'):
         print("Error, use_restart should be T or F...")
         sys.exit()
@@ -65,7 +65,8 @@ dfields = dh5.field_loader(path=path_fields,num=numframe,is2d3v=is2d3v)
 all_dfields = dh5.all_dfield_loader(path=path_fields, is2d3v=is2d3v)
 
 #check input to make sure box makes sense
-anl.check_input(analysisinputflnm,dfields)
+if(not(is2d3v)): #TODO: add check_input for 2d3v
+    anl.check_input(analysisinputflnm,dfields)
 
 #Load data using normal output files
 if(use_restart == 'F'):
@@ -107,8 +108,12 @@ if(use_restart == 'T'):
 # Check if data is 2D. Pad to make sudo 3d if data is 2d
 #-------------------------------------------------------------------------------
 if('x3' not in dparticles.keys()): #all simulations that are '2d' should be 2d 3v with coordinates (xx,yy;vx,vy,vz)
-    dh5.par_2d_to_3d(dparticles)
-    dh5.dict_2d_to_3d(dfields,0)
+    dparticles = dh5.par_2d_to_3d(dparticles)
+    dfields = dh5.dict_2d_to_3d(dfields,0)
+    _fields = []
+    for k in range(0,len(all_dfields['dfields'])):
+        _fields.append(dh5.dict_2d_to_3d(all_dfields['dfields'][k],0))
+    all_dfields['dfields'] = _fields
 
 #-------------------------------------------------------------------------------
 # estimate shock vel and lorentz transform
