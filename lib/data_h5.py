@@ -89,7 +89,8 @@ def read_box_of_particles(path, num, x1, x2, y1, y2, z1, z2, is2d3v = False):
                 if(not(is2d3v)):
                     pts[k] = f[k][gptsx & gptsy & gptsz][:]
                 else:
-                    pts[k] = f[k][gptsx & gptsy][:]
+                    if(k != 'x3'):
+                        pts[k] = f[k][gptsx & gptsy][:]
     pts['Vframe_relative_to_sim'] = 0.
 
     return pts
