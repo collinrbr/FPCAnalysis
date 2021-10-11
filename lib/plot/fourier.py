@@ -1,4 +1,4 @@
-# 2dfields.py>
+# fourier.py>
 
 # functions related to plotting 1d field data
 

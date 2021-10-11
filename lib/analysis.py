@@ -439,6 +439,25 @@ def deconvolve_for_fft(dfields,fieldkey,startval,endval):
 
     return fieldvalsdeconvolved
 
+def take_fft1(data,daxis,axis=-1):
+    """
+    Computes 1d fft on given data
+
+    Parameters
+    ----------
+    data : array
+        data to be transformed
+    daxisx0 : float
+        cartesian spatial spacing between points
+    """
+
+    k = 2.*np.pi*np.fft.fftfreq(len(data),daxis)
+
+    fftdata = np.fft.fft(data,axis=axis)/float(len(data))
+
+    return k, fftdata
+
+
 def take_fft2(data,daxisx0,daxis1):
     """
     Computes 2d fft on given data
@@ -446,7 +465,7 @@ def take_fft2(data,daxisx0,daxis1):
     Parameters
     ----------
     data : 2d array
-        data to be transformed
+        2d data to be transformed
     daxisx0 : float
         cartesian spatial spacing between points along 0th axis of data
     daxisx1 : float
@@ -463,7 +482,7 @@ def take_fft2(data,daxisx0,daxis1):
     k0 = 2.*np.pi*np.fft.fftfreq(len(data),daxisx0)
     k1 = 2.*np.pi*np.fft.fftfreq(len(data[1]),daxis1)
 
-    fftdata = np.fft.fft2(data)
+    fftdata = np.fft.fft2(data)/(float(len(data)*len(data[1])))
 
     return k0, k1, fftdata
 
@@ -767,6 +786,7 @@ def alfven_wave_check(dfields,dfieldfluc,klist,xx):
 
     xxidx = find_nearest(dfields['bz_xx'],xx)
 
+    #TODO: rename these variables. Data is ordered B(x/kx,kz,ky)
     kz, ky, bxkzkyx = _ffttransform_in_yz(dfieldfluc,'bx')
     kz, ky, bykzkyx = _ffttransform_in_yz(dfieldfluc,'by')
     kz, ky, bzkzkyx = _ffttransform_in_yz(dfieldfluc,'bz')

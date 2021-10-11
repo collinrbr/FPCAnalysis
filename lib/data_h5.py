@@ -7,10 +7,11 @@ import numpy as np
 import h5py
 import os
 
-#TODO: rename to read_dhybridr_particles
+
 def read_particles(path, num, is2d3v = False):
     """
     Loads dHybridR particle data
+    TODO: rename to read_dhybridr_particles
 
     Parameters
     ----------
@@ -41,13 +42,15 @@ def read_particles(path, num, is2d3v = False):
 
     return pts
 
-#TODO: rename to read_dhybridr_box_of_par
+
 def read_box_of_particles(path, num, x1, x2, y1, y2, z1, z2, is2d3v = False):
     """
     Loads subset of dHybridR particle data
 
     Reads particles within a certain spatial subset only
     Warning: this method is slow for computers with insufficient RAM
+
+    #TODO: rename to read_dhybridr_box_of_par
 
     Parameters
     ----------
@@ -95,7 +98,7 @@ def read_box_of_particles(path, num, x1, x2, y1, y2, z1, z2, is2d3v = False):
 
     return pts
 
-def build_slice(x1,x2,y1,y2,z1,z2):
+def build_slice(x1, x2, y1, y2, z1, z2):
     """
     Builds slice to pass to field_loader or flow_loader
 
@@ -284,6 +287,7 @@ def all_dfield_loader(field_vars='all', components='all', num=None,
 
     return alld
 
+
 def flow_loader(flow_vars=None, num=None, path='./', sp=1, verbose=False, is2d3v=False):
     """
     Loads dHybridR flow data
@@ -348,7 +352,8 @@ def flow_loader(flow_vars=None, num=None, path='./', sp=1, verbose=False, is2d3v
     d['Vframe_relative_to_sim'] = 0.
     return d
 
-def dict_2d_to_3d(dict,axis):
+
+def dict_2d_to_3d(dict, axis):
     """
     Pads 2D3V data to look like 3D3V data that the rest of the pipeline can process
 
@@ -408,6 +413,7 @@ def par_2d_to_3d(par):
             par[key] = np.zeros()
 
     return par
+
 
 def _pts_to_par_dict(pts):
     """
@@ -491,6 +497,7 @@ def read_restart(path,verbose=False,xlim=None):
 
     return dpar
 
+
 class PartMapper3D(object):
     """
     Class that contains functions to loads positional and velocity data from
@@ -504,9 +511,9 @@ class PartMapper3D(object):
 
         self.p = self.read_input(path)
 
-        self.px,self.py,self.pz = self.p['node_number']
-        self.nx,self.ny,self.nz = self.p['ncells']
-        self.rx,self.ry,self.rz = self.p['boxsize']
+        self.px, self.py, self.pz = self.p['node_number']
+        self.nx, self.ny, self.nz = self.p['ncells']
+        self.rx, self.ry, self.rz = self.p['boxsize']
 
         self.dx = self.rx/1./self.nx
         self.dy = self.ry/1./self.ny
@@ -620,21 +627,21 @@ class PartMapper3D(object):
         Mz = (self.nz/1./self.pz - npz)*self.pz
 
         if ip < Mx:
-            xr = dx*(npx + 1)*ip + dx/2.
+            xr = dx * (npx + 1)*ip + dx/2.
         else:
-            xr = dx*(Mx + npx*ip) + dx/2.
+            xr = dx * (Mx + npx*ip) + dx/2.
 
         if jp < My:
-            yr = dy*(npy + 1)*jp + dy/2.
+            yr = dy * (npy + 1) * jp + dy/2.
         else:
-            yr = dy*(My + npy*jp) + dy/2.
+            yr = dy * (My + npy*jp) + dy/2.
 
         if kp < Mz:
-            zr = dz*(npz + 1)*kp + dz/2.
+            zr = dz * (npz + 1)*kp + dz/2.
         else:
-            zr = dz*(Mz + npz*kp) + dz/2.
+            zr = dz * (Mz + npz*kp) + dz/2.
 
-        return xr,yr,zr
+        return xr, yr, zr
 
     def xrange_to_nums(self, x0, x1):
         """
@@ -666,10 +673,10 @@ class PartMapper3D(object):
         #  in the above commented out block to work for 3d rather than 2d)
         maxnum = self.px*self.py*self.pz
         nums = []
-        for n in range(0,maxnum):
-            ip,jp,kp = self._num_to_index(n)
+        for n in range(0, maxnum):
+            ip, jp, kp = self._num_to_index(n)
             bcx,bcy,bcz = self._box_center(ip, jp, kp)
-            xxboxwidth = PM.rx/PM.px #each restart file contains a subbox
+            xxboxwidth = PM.rx / PM.px #each restart file contains a subbox
                                      #that normally contains many cells
 
             #This block will load restart file if it is even partially in the xrange
@@ -691,7 +698,7 @@ class PartMapper3D(object):
 
         Returns
         -------
-        ip,jp,kp : int
+        ip, jp, kp : int
             subbox indicies
         """
 

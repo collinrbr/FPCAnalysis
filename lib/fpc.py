@@ -92,9 +92,7 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
                     goodfieldpts.append(dfields[fieldkey][k][j][i])
 
     # define mask that includes particles within range
-    gptsparticle = (x1 <= dpar['x1']) & (dpar['x1'] <= x2)
-                 & (y1 <= dpar['x2']) & (dpar['x2'] <= y2)
-                 & (z1 <= dpar['x3']) & (dpar['x3'] <= z2)
+    gptsparticle = (x1 <= dpar['x1']) & (dpar['x1'] <= x2) & (y1 <= dpar['x2']) & (dpar['x2'] <= y2) & (z1 <= dpar['x3']) & (dpar['x3'] <= z2)
 
     totalPtcl = np.sum(gptsparticle)
 
@@ -221,7 +219,7 @@ def compute_correlation_over_x(dfields, dparticles, vmax, dv, dx, vshock, xlim=N
         vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock, 'ex', 'x')
         vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEy = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock, 'ey', 'y')
         vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEz = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock, 'ez', 'z')
-        print(x1,x2,y1,y2,z1,z2)
+        print(x1, x2, y1, y2, z1, z2)
         print(totalPtcl)
         x_out.append(np.mean([x1,x2]))
         CEx_out.append(CEx)
@@ -432,7 +430,7 @@ def compute_cprime_hist(dparticles, dfields, fieldkey, vmax, dv):
     _vz = np.zeros((len(vz), len(vy), len(vx)))
     for i in range(0, len(vx)):
         for j in range(0, len(vy)):
-            for k in range(0,l en(vz)):
+            for k in range(0, len(vz)):
                 _vx[k][j][i] = vx[i]
 
     for i in range(0, len(vx)):
