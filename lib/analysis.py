@@ -775,7 +775,7 @@ def _get_perp_component(x1,y1):
 
     return [x1perpx,x1perpy,x1perpz]
 
-def alfven_wave_check(dfields,dfieldfluc,klist,xx):
+def alfven_wave_check(dfields,dfieldfluc,klist,xx,tol=.05):
     """
     Checks if basic properties of an alfven wave are seen at some location in the simulation
 
@@ -812,27 +812,36 @@ def alfven_wave_check(dfields,dfieldfluc,klist,xx):
         kyperpidx = find_nearest(ky,kperp[1])
         kzperpidx = find_nearest(kz,kperp[2])
 
+        if(k[0] < 0):
+            _bxkzkyx = np.conj(bxkzkyx)
+            _bykzkyx = np.conj(bykzkyx)
+            _bzkzkyx = np.conj(bzkzkyx)
+        else:
+            _bxkzkyx = bxkzkyx
+            _bykzkyx = bykzkyx
+            _bzkzkyx = bzkzkyx
+
         #finalize transform into k space i.e. compute B(kx0,kz0,ky0) from B(x,kz,ky) for k and k perp
         #note: we never have an array B(kx,ky,kz), just that scalar quantities at k0 and kperp0, which we get from
         # the just for B(x,kz,ky) as computing the entire B(kx,ky,kz) array would be computationally expensive.
         # would have to perform wavelet transform for each (ky0,kz0)
-        kx, bxkz0ky0kxxx = wlt(dfieldfluc['bx_xx'],bxkzkyx[:,kzidx,kyidx]) #note kx is that same for all 6 returns here
-        kx, bykz0ky0kxxx = wlt(dfieldfluc['by_xx'],bykzkyx[:,kzidx,kyidx])
-        kx, bzkz0ky0kxxx = wlt(dfieldfluc['bz_xx'],bzkzkyx[:,kzidx,kyidx])
-        kx, bxperpkz0ky0kxxx = wlt(dfieldfluc['bx_xx'],bxkzkyx[:,kzperpidx,kyperpidx])
-        kx, byperpkz0ky0kxxx = wlt(dfieldfluc['by_xx'],bykzkyx[:,kzperpidx,kyperpidx])
-        kx, bzperpkz0ky0kxxx = wlt(dfieldfluc['bz_xx'],bzkzkyx[:,kzperpidx,kyperpidx])
+        kx, bxkz0ky0kxxx = wlt(dfieldfluc['bx_xx'],_bxkzkyx[:,kzidx,kyidx]) #note kx is that same for all 6 returns here
+        kx, bykz0ky0kxxx = wlt(dfieldfluc['by_xx'],_bykzkyx[:,kzidx,kyidx])
+        kx, bzkz0ky0kxxx = wlt(dfieldfluc['bz_xx'],_bzkzkyx[:,kzidx,kyidx])
+        kx, bxperpkz0ky0kxxx = wlt(dfieldfluc['bx_xx'],_bxkzkyx[:,kzperpidx,kyperpidx])
+        kx, byperpkz0ky0kxxx = wlt(dfieldfluc['by_xx'],_bykzkyx[:,kzperpidx,kyperpidx])
+        kx, bzperpkz0ky0kxxx = wlt(dfieldfluc['bz_xx'],_bzkzkyx[:,kzperpidx,kyperpidx])
 
         kxidx = find_nearest(kx,np.abs(k[0])) #WLT can not find negative kx. Instead we assume symmetry by taking np.abs
         kxperpidx = find_nearest(kx,np.abs(kperp[0]))
 
-        if(k[0] < 0): #use reality condition to correct for the fact that we cant compute negative kx using the wlt
-            bxkz0ky0kxxx = np.conj(bxkz0ky0kxxx)
-            bykz0ky0kxxx = np.conj(bykz0ky0kxxx)
-            bzkz0ky0kxxx = np.conj(bzkz0ky0kxxx)
-            bxperpkz0ky0kxxx = np.conj(bxperpkz0ky0kxxx)
-            byperpkz0ky0kxxx = np.conj(byperpkz0ky0kxxx)
-            bzperpkz0ky0kxxx = np.conj(bzperpkz0ky0kxxx)
+        # if(k[0] < 0): #use reality condition to correct for the fact that we cant compute negative kx using the wlt
+        #     bxkz0ky0kxxx = np.conj(bxkz0ky0kxxx)
+        #     bykz0ky0kxxx = np.conj(bykz0ky0kxxx)
+        #     bzkz0ky0kxxx = np.conj(bzkz0ky0kxxx)
+        #     bxperpkz0ky0kxxx = np.conj(bxperpkz0ky0kxxx)
+        #     byperpkz0ky0kxxx = np.conj(byperpkz0ky0kxxx)
+        #     bzperpkz0ky0kxxx = np.conj(bzperpkz0ky0kxxx)
 
         kcrossB0 = np.cross(k,B0)
         delB = [bxkz0ky0kxxx[kxidx,xxidx],bykz0ky0kxxx[kxidx,xxidx],bzkz0ky0kxxx[kxidx,xxidx]]
@@ -840,7 +849,15 @@ def alfven_wave_check(dfields,dfieldfluc,klist,xx):
 
         kxexpected.append(predict_kx_alfven(k[1],k[2],B0,delBperp))
 
+        #results.append([is_parallel(delBperp,kcrossB0,tol=0.1),is_perp(delB,B0,tol=0.1),is_perp(k,delB,tol=.1)])
+        testAlfvenval = np.cross(delB,np.cross(k,B0))
+        testAlfvenval /= (np.linalg.norm(delB)*np.linalg.norm(np.cross(k,B0)))
+        if(np.linalg.norm(testAlfvenval) <= tol):
+            belowtol = True
+        else:
+            belowtol = False
+        #belowtol = (testAlfvenval <= tol)
 
-        results.append([is_parallel(delBperp,kcrossB0,tol=0.1),is_perp(delB,B0,tol=0.1),is_perp(k,delB,tol=.1)])
+        results.append([(belowtol,np.linalg.norm(testAlfvenval)),is_perp(k,delB,tol=tol)])
 
     return results, kxexpected
