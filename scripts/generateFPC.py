@@ -24,10 +24,30 @@ import numpy as np
 try:
     analysisinputflnm = sys.argv[1]
 except:
-    print("This generates FPC netcdf4 file")
-    print("usage: " + sys.argv[0] + " analysisinputflnm")
+    print("This generates FPC netcdf4 file. Use_restart is false by default.")
+    print("usage: " + sys.argv[0] + " analysisinputflnm use_restart(T/F) is_2D3V(T/F)")
     sys.exit()
 
+try:
+    use_restart = str(sys.argv[2].upper())
+    if(use_restart != 'T' and use_restart != 'F'):
+        print("Error, use_restart should be T or F...")
+        sys.exit()
+except:
+    use_restart = 'F'
+
+try:
+    is_2D3V = str(sys.argv[3].upper())
+    if(use_restart != 'T' and use_restart != 'F'):
+        print("Error, use_restart should be T or F...")
+        sys.exit()
+except:
+    is_2D3V = 'F'
+
+if(is_2D3V == 'T'):
+    is2d3v = True
+else:
+    is2d3v = False
 
 #-------------------------------------------------------------------------------
 # load data
@@ -37,31 +57,63 @@ path,resultsdir,vmax,dv,numframe,dx,xlim,ylim,zlim = anl.analysis_input(flnm = a
 path_fields = path
 path_particles = path+"Output/Raw/Sp01/raw_sp01_{:08d}.h5"
 
-print("Loading data...")
 #load relevant time slice fields
-dfields = dh5.field_loader(path=path_fields,num=numframe)
+print("Loading field data...")
+dfields = dh5.field_loader(path=path_fields,num=numframe,is2d3v=is2d3v)
 
 #Load all fields along all time slices
-all_dfields = dh5.all_dfield_loader(path=path_fields, verbose=False)
+all_dfields = dh5.all_dfield_loader(path=path_fields, is2d3v=is2d3v)
 
 #check input to make sure box makes sense
-anl.check_input(analysisinputflnm,dfields)
+if(not(is2d3v)): #TODO: add check_input for 2d3v
+    anl.check_input(analysisinputflnm,dfields)
 
-#Load slice of particle data
-if xlim is not None and ylim is not None and zlim is not None:
-    dparticles = dh5.read_box_of_particles(path_particles, numframe, xlim[0], xlim[1], ylim[0], ylim[1], zlim[0], zlim[1])
-#Load all data in unspecified limits and only data in bounds in specified limits
-elif xlim is not None or ylim is not None or zlim is not None:
-    if xlim is None:
+#Load data using normal output files
+if(use_restart == 'F'):
+    print("Loading particle data...")
+    #Load slice of particle data
+    if xlim is not None and ylim is not None and zlim is not None:
+        dparticles = dh5.read_box_of_particles(path_particles, numframe, xlim[0], xlim[1], ylim[0], ylim[1], zlim[0], zlim[1], is2d3v=is2d3v)
+    #Load all data in unspecified limits and only data in bounds in specified limits
+    elif xlim is not None or ylim is not None or zlim is not None:
+        if xlim is None:
+            xlim = [dfields['ex_xx'][0],dfields['ex_xx'][-1]]
+        if ylim is None:
+            ylim = [dfields['ex_yy'][0],dfields['ex_yy'][-1]]
+        if zlim is None:
+            zlim = [dfields['ex_zz'][0],dfields['ex_zz'][-1]]
+        dparticles = dh5.read_box_of_particles(path_particles, numframe, xlim[0], xlim[1], ylim[0], ylim[1], zlim[0], zlim[1], is2d3v=is2d3v)
+    #Load all the particles
+    else:
+        dparticles = dh5.read_particles(path_particles, numframe, is2d3v=is2d3v)
+
+#Load data using restart files
+if(use_restart == 'T'):
+    print("Loading particle data using restart files...")
+    #Load slice of particle data
+    if xlim is not None:
+        dparticles = dh5.read_restart(path, xlim=xlim)
+    #Load all data in unspecified limits and only data in bounds in specified limits
+    else:
         xlim = [dfields['ex_xx'][0],dfields['ex_xx'][-1]]
+        dparticles = dh5.read_restart(path)
+
+    #set up other bounds (TODO: clean this up (redundant code in above if block; code this only once))
     if ylim is None:
         ylim = [dfields['ex_yy'][0],dfields['ex_yy'][-1]]
     if zlim is None:
         zlim = [dfields['ex_zz'][0],dfields['ex_zz'][-1]]
-    dparticles = dh5.read_box_of_particles(path_particles, numframe, xlim[0], xlim[1], ylim[0], ylim[1], zlim[0], zlim[1])
-#Load all the particles
-else:
-    dparticles = dh5.read_particles(path_particles, numframe)
+
+#-------------------------------------------------------------------------------
+# Check if data is 2D. Pad to make pseudo 3d if data is 2d
+#-------------------------------------------------------------------------------
+if('x3' not in dparticles.keys()): #all simulations that are '2d' should be 2d 3v with coordinates (xx,yy;vx,vy,vz)
+    dparticles = dh5.par_2d_to_3d(dparticles)
+    dfields = dh5.dict_2d_to_3d(dfields,0)
+    _fields = []
+    for k in range(0,len(all_dfields['dfields'])):
+        _fields.append(dh5.dict_2d_to_3d(all_dfields['dfields'][k],0))
+    all_dfields['dfields'] = _fields
 
 #-------------------------------------------------------------------------------
 # estimate shock vel and lorentz transform

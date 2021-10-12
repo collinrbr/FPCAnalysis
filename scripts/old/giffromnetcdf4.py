@@ -3,9 +3,6 @@
 import sys
 sys.path.append(".")
 
-import sys
-sys.path.append(".")
-
 import lib.analysis as anl
 import lib.array_ops as ao
 import lib.data_h5 as dh5
@@ -39,7 +36,7 @@ path,resultsdir,vmax,dv,numframe,dx,xlim,ylim,zlim = anl.analysis_input(flnm = a
 dfields = dh5.field_loader(path=path,num=numframe)
 
 #load original netcdf4 file
-CEx, CEy, CEz, vx, vy, vz, x, enerCEx, enerCEy, enerCEz, Vframe_relative_to_sim, _, params_in = dnc.load3Vnetcdf4(filename)
+Hist, CEx, CEy, CEz, vx, vy, vz, x, enerCEx, enerCEy, enerCEz, Vframe_relative_to_sim, _, params_in = dnc.load3Vnetcdf4(filename)
 
 # #TODO: make this show ExB
 # pltvv.make_velsig_gif(vx_in, vy_in, vmax, CEx_in, 'ex', x_in, 'CExFrame'+str(numframe), 'CExFrame'+str(numframe)+'.gif')

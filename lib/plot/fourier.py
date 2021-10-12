@@ -1,4 +1,4 @@
-# 2dfields.py>
+# fourier.py>
 
 # functions related to plotting 1d field data
 
@@ -6,35 +6,73 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 
-def plot_fft_norm(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, xxindex=float('nan'), yyindex=float('nan'), zzindex=float('nan'), plotlog = True):
+def plot_fft_norm(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, xxindex=float('nan'), yyindex=float('nan'), zzindex=float('nan'), plotlog = True, xaxislim=None, yaxislim=None):
     """
-    WIP
+    Plot norm of FFT along given plane
 
+    Parameters
+    ----------
+    dfields : dict
+        field data dictionary from field_loader
+    fieldkey : str
+        name of field you want to plot (ex, ey, ez, bx, by, bz)
+    planename : str
+        name of plane you want to get 2d grid of
+    flnm : str, optional
+        specifies filename if plot is to be saved as png.
+        if set to default, plt.show() will be called instead
+    takeaxisaverage : bool, optional
+        if true, averages data over entire 3rd axis (one not in plane specified by planename)
+    xxindex : int
+        index of data along xx axis
+    yyindex : int
+        index of data along yy axis
+    zzindex : int
+        index of data along zz axis
+    xaxislim : float
+        upper and lower bound of plot [-xaxislim to xaxislim]
+    yaxislim : float
+        upper and lower bound of plot [-yaxislim to yaxislim]
     """
-    from lib.analysisfunctions import take_fft2
+    from lib.analysis import take_fft2
+
+
+    fieldttl = ''
+    if(fieldkey == 'ex'):
+        fieldttl = '$F\{E_x'
+    elif(fieldkey == 'ey'):
+        fieldttl = '$F\{E_y'
+    elif(fieldkey == 'ez'):
+        fieldttl = '$F\{E_z'
+    elif(fieldkey == 'bx'):
+        fieldttl = '$F\{B_x'
+    elif(fieldkey == 'by'):
+        fieldttl = '$F\{B_y'
+    elif(fieldkey == 'bz'):
+        fieldttl = '$F\{B_z'
 
     if(planename=='xy'):
-        ttl = fieldkey+'(x,y)'
-        xlbl = 'kx (di)'
-        ylbl = 'ky (di)'
+        ttl = fieldttl+'(x,y)\}$ at '
+        xlbl = '$k_x$ (di)$^{-1}$'
+        ylbl = '$k_y$ (di)$^{-1}$'
         axisidx = 0 #used to take average along z if no index is specified
         axis = '_zz'
         daxis0 = dfields[fieldkey+'_yy'][1]-dfields[fieldkey+'_yy'][0]
         daxis1 = dfields[fieldkey+'_xx'][1]-dfields[fieldkey+'_xx'][0]
 
     elif(planename=='xz'):
-        ttl = fieldkey+'(x,z)'
-        xlbl = 'kx (di)'
-        ylbl = 'kz (di)'
+        ttl = fieldttl+'(x,z)\}$ at '
+        xlbl = '$k_x$ (di)$^{-1}$'
+        ylbl = '$k_z$ (di)$^{-1}$'
         axisidx = 1 #used to take average along y if no index is specified
         axis = '_yy'
         daxis0 = dfields[fieldkey+'_zz'][1]-dfields[fieldkey+'_zz'][0]
         daxis1 = dfields[fieldkey+'_xx'][1]-dfields[fieldkey+'_xx'][0]
 
     elif(planename=='yz'):
-        ttl = fieldkey+'(y,z)'
-        xlbl = 'ky (di)'
-        ylbl = 'kz (di)'
+        ttl = fieldttl+'(y,z)\}$ at '
+        xlbl = '$k_y$ (di)$^{-1}$'
+        ylbl = '$k_z$ (di)$^{-1}$'
         axisidx = 2 #used to take average along x if no index is specified
         axis = '_xx'
         daxis0 = dfields[fieldkey+'_zz'][1]-dfields[fieldkey+'_zz'][0]
@@ -81,33 +119,37 @@ def plot_fft_norm(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, xxi
     #sort data so we can plot it
     xplot, yplot, fieldpmesh = _sort_for_contour(xplot, yplot, fieldpmesh)
 
+    #get x index where data is zero
+    #get y index where data is zero
+    #get subset based on this
+    xzeroidx = np.where(xplot[0] == 0.)[0][0]
+    yzeroidx = np.where(yplot[:,0] == 0.)[0][0]
+    fieldpmesh[xzeroidx,yzeroidx] = 0.
     if(plotlog):
-        #get x index where data is zero
-        #get y index where data is zero
-        #get subset based on this
-
-        xzeroidx = np.where(xplot[0] == 0.)[0][0]
-        yzeroidx = np.where(yplot[:,0] == 0.)[0][0]
         fieldpmesh = fieldpmesh[xzeroidx+1:,yzeroidx+1:]
         xplot = xplot[xzeroidx+1:,yzeroidx+1:]
         yplot = yplot[xzeroidx+1:,yzeroidx+1:]
+    # else:
+    #     fieldpmesh = fieldpmesh[xzeroidx:,yzeroidx:]
+    #     xplot = xplot[xzeroidx:,yzeroidx:]
+    #     yplot = yplot[xzeroidx:,yzeroidx:]
 
-    # xzeroidx = np.where(xplot[0] == 0.)[0][0]
-    # yzeroidx = np.where(yplot[:,0] == 0.)[0][0]
-    # fieldpmesh[xzeroidx,yzeroidx] = 0.
 
     plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
     plt.figure(figsize=(6.5,6))
-    plt.figure(figsize=(6.5,6))
     plt.pcolormesh(xplot, yplot, fieldpmesh, cmap="Spectral", shading="gouraud")
+    if(xaxislim is not None):
+        plt.xlim(-xaxislim,xaxislim)
+    if(yaxislim is not None):
+        plt.ylim(-yaxislim,yaxislim)
     if(takeaxisaverage):
         plt.title(ttl,loc="right")
     elif(planename == 'xy'):
-        plt.title(ttl+' z (di): '+str(dfields[fieldkey+axis][zzindex]),loc="right")
+        plt.title(ttl+' z = '+str(dfields[fieldkey+axis][zzindex])+' (di)',loc="right")
     elif(planename == 'xz'):
-        plt.title(ttl+' y (di): '+str(dfields[fieldkey+axis][yyindex]),loc="right")
+        plt.title(ttl+' y = '+str(dfields[fieldkey+axis][yyindex])+' (di)',loc="right")
     elif(planename == 'yz'):
-        plt.title(ttl+' x (di): '+str(dfields[fieldkey+axis][xxindex]),loc="right")
+        plt.title(ttl+' x = '+str(dfields[fieldkey+axis][xxindex])+' (di)',loc="right")
     plt.xlabel(xlbl)
     plt.ylabel(ylbl)
     if(plotlog):
@@ -127,7 +169,88 @@ def plot_fft_norm(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, xxi
         plt.show()
         plt.close()
 
-    return k0, k1, fieldpmesh, xplot, yplot #debug. TODO: remove
+    return #k0, k1, fieldpmesh, xplot, yplot #debug. TODO: remove
+
+def make_2dfourier_sweep(dfields,fieldkey,planename,directory,plotlog=False,xaxislim=None,yaxislim=None):
+    """
+    Makes sweep gif of plots produced by plot_fft_norm
+    Parameters
+    ----------
+    dfields : dict
+        field data dictionary from field_loader
+    fieldkey : str
+        name of field you want to plot (ex, ey, ez, bx, by, bz)
+    planename : str
+        name of plane you want to get 2d grid of
+    directory : str
+        name of the output directory of each swing png
+    plotlog : bool, opt
+        if true, makes plot log scale
+    xaxislim : float
+        upper and lower bound of plot [-xaxislim to xaxislim]
+    yaxislim : float
+        upper and lower bound of plot [-yaxislim to yaxislim]
+    """
+
+    try:
+        os.mkdir(directory)
+    except:
+        pass
+
+    #sweep along 'third' axis
+    if(planename=='yz'):
+        sweepvar = dfields[fieldkey+'_xx'][:]
+    elif(planename=='xz'):
+        sweepvar = dfields[fieldkey+'_yy'][:]
+    elif(planename=='xy'):
+        sweepvar = dfields[fieldkey+'_zz'][:]
+
+    for i in range(0,len(sweepvar)):
+        print('Making plot '+str(i)+' of '+str(len(sweepvar)))
+        flnm = directory+'/'+str(i).zfill(6)
+        if(planename=='yz'):
+            plot_fft_norm(dfields,fieldkey,planename,flnm = flnm,plotlog=plotlog,takeaxisaverage=False, xxindex=i, yyindex=float('nan'), zzindex=float('nan'),xaxislim=xaxislim,yaxislim=yaxislim)
+        elif(planename=='xz'):
+            plot_fft_norm(dfields,fieldkey,planename,flnm = flnm,plotlog=plotlog,takeaxisaverage=False, xxindex=float('nan'), yyindex=i, zzindex=float('nan'),xaxislim=xaxislim,yaxislim=yaxislim)
+        elif(planename=='xy'):
+            plot_fft_norm(dfields,fieldkey,planename,flnm = flnm,plotlog=plotlog,takeaxisaverage=False, xxindex=float('nan'), yyindex=float('nan'), zzindex=i, xaxislim=xaxislim,yaxislim=yaxislim)
+        else:
+            print("Please enter a valid planename...")
+            break
+
+def plot1d_fft(dfields,fieldkey):
+    """
+    Plots fft of 1d line slice along x axis at gridpoint closest to origin (y~=0, z~=0)
+
+    Parameters
+    ----------
+    dfields : dict
+        field data dictionary from field_loader
+    fieldkey : str
+        name of field you want to plot (ex, ey, ez, bx, by, bz)
+    """
+    axis = '_xx'
+    zzindex = 0
+    yyindex = 0
+    data = np.asarray([dfields[fieldkey][zzindex][yyindex][i] for i in range(0,len(dfields[fieldkey+axis]))])
+    dx = dfields[fieldkey+axis][1]-dfields['ex_xx'][0]
+
+
+    k0 = 2.*np.pi*np.fft.fftfreq(len(data),dx)
+    k0 = k0[0:int(len(k0)/2)]
+
+    fftdata = np.fft.fft(data)
+    fftdata = np.real(fftdata*np.conj(fftdata))
+    fftdata = fftdata[0:int(len(fftdata)/2)]
+
+    plt.figure()
+    plt.xlabel('k'+axis[1:2])
+    plt.ylabel(fieldkey+' Power')
+    plt.plot(k0,fftdata)
+    plt.show()
+
+
+    return k0,fftdata
 
 def _sort_for_contour(xcoord,ycoord,dheight):
     """
@@ -144,6 +267,12 @@ def _sort_for_contour(xcoord,ycoord,dheight):
 
     Parameters
     ----------
+    xcoord : 2d array
+        xx coordinates of data (independent parameter)
+    ycoord : 2d array
+        yy coordinates of data (independent parameter)
+    dheight : 2d array
+        zz value of data (dependent parameter)
     """
 
     temprowx = xcoord[0]
@@ -157,3 +286,37 @@ def _sort_for_contour(xcoord,ycoord,dheight):
     ycoord = np.sort(ycoord,axis=0) #sort y data
 
     return xcoord, ycoord, dheight
+
+def plot_wlt(xx, kx, wlt, ky0 = None, kz0 = None, flnm = '', plotstrongestkx = False, xlim = None, ylim = None, xxline = None, yyline = None):
+    """
+    (ky kz should be floats if passed (because we commonly take WLT of f(x,ky0,kz0)))
+    """
+
+    from lib.array_ops import find_nearest
+
+    plt.figure()
+    plt.pcolormesh(xx,kx,np.abs(wlt),cmap='viridis', shading='gouraud')
+    plt.colorbar()
+    plt.xlabel('x')
+    plt.ylabel('kx')
+    plt.grid()
+    plt.title('ky='+str(ky0)[0:6]+' kz='+str(kz0)[0:6])
+    if(xxline != None and yyline != None):
+        plt.plot(xxline,yyline)
+    if(xlim != None):
+        plt.xlim(xlim[0],xlim[1])
+    if(ylim != None):
+        plt.ylim(ylim[0],ylim[1])
+    if(plotstrongestkx):
+        kxline = []
+        for i in range(0,len(xx)):
+            kxline.append(kx[find_nearest(wlt[:,i],np.max(wlt[:,i]))])
+        plt.plot(xx,kxline)
+
+    if(flnm == ''):
+        plt.show()
+    else:
+        #flnm='ky='+str(ky0)[0:6]+'kz='+str(kz0)[0:6]+'wlt'
+        plt.savefig(flnm,format='png',dpi=250)
+        plt.close('all')#saves RAM
+    plt.close()

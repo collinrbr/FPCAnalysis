@@ -2,6 +2,7 @@
 
 import sys
 sys.path.append(".")
+sys.path.append('..')
 
 import lib.analysis as anl
 import lib.array_ops as ao
@@ -38,14 +39,17 @@ path_fields = path
 path_particles = path+"Output/Raw/Sp01/raw_sp01_{:08d}.h5"
 dfields = dh5.field_loader(path=path_fields,num=numframe)
 
+if xlim is None:
+    xlim = [dfields['ex_xx'][0],dfields['ex_xx'][-1]]
+
 #build metadata
-metadata = md.build_metadata(xlim, startval, endval)
+metadata = md.build_metadata(xlim, dx, startval, endval)
 
 #load original netcdf4 file
 Hist, CEx, CEy, CEz, vx, vy, vz, x, enerCEx, enerCEy, enerCEz, Vframe_relative_to_sim, _, params_in = dnc.load3Vnetcdf4(filename)
 
 #make new file with updated metadata
-dnc.save3vdata(Hist, CEx, CEy, CEz, vx, vy, vz, x, enerCEx, enerCEy, enerCEz, Vframe_relative_to_sim, metadata_out = metadata, params = params_in, filename = filename+'.withmetadata')
+dnc.save3Vdata(Hist, CEx, CEy, CEz, vx, vy, vz, x, enerCEx, enerCEy, enerCEz, Vframe_relative_to_sim, metadata_out = metadata, params = params_in, filename = filename+'.withmetadata')
 
 #replace old file
 os.system('rm '+filename)

@@ -3,6 +3,7 @@
 #functions related making and loading netcdf4 file to pass to MLA algo and loading netcdf4 files
 
 import numpy as np
+import math
 
 def savedata(CEx_out, CEy_out, vx_out, vy_out, x_out, enerCEx_out, enerCEy_out, Vframe_relative_to_sim_out, metadata_out = [], params = {}, filename = 'dHybridRSDAtest.nc' ):
     """
@@ -165,10 +166,10 @@ def save3Vdata(Hist_out, CEx_out, CEy_out, CEz_out, vx_out, vy_out, vz_out, x_ou
     CEy_out /= maxCval
     CEz_out /= maxCval
 
+    #save data in netcdf file-------------------------------------------------------
     # open a netCDF file to write
     ncout = Dataset(filename, 'w', format='NETCDF4')
 
-    #save data in netcdf file-------------------------------------------------------
     #define simulation parameters
     for key in params:
         #setattr(ncout,key,params[key])
@@ -176,7 +177,7 @@ def save3Vdata(Hist_out, CEx_out, CEy_out, CEz_out, vx_out, vy_out, vz_out, x_ou
             _ = ncout.createVariable(key,None)
             _[:] = params[key]
 
-    ncout.description = 'dHybridR MLA data test 3'
+    ncout.description = 'dHybridR MLA data'
     ncout.generationtime = str(datetime.now())
     ncout.version = get_git_head()
 
@@ -341,6 +342,47 @@ def load3Vnetcdf4(filename):
     """
     Loads 3v netcdf4 data created by save3Vdata function
 
+    Parameters
+    ----------
+    filename : str
+        filename of netcdf4. Should be formatted like *.nc
+
+    Returns
+    -------
+    Hist_in : 4d array
+        Distribution data created by analysis functions
+        f(x;vx,vy,vz)
+    CEx_in  : 4d array
+        CEx data created by analysis functions
+        CE_x(x;vx,vy,vz)
+    CEy_in : 4d array
+        CEy data created by analysis functions
+        CE_x(x;vx,vy,vz)
+    CEz_in : 4d array
+        CEy data created by analysis functions
+        CE_x(x;vx,vy,vz)
+    vx_in : 3d array
+        velocity space grid created by analysis functions
+    vy_in : 3d array
+        velocity space grid created by analysis functions
+    vz_in : 3d array
+        velocity space grid created by analysis functions
+    x_in : 1d array
+        x slice position data created by analysis functions
+    enerCEx_in : 1d array
+        integral over velocity space of CEx
+    enerCEy_in : 1d array
+        integral over velocity space of CEy
+    enerCEz_in : 1d array
+        integral over velocity space of CEy
+    Vframe_relative_to_sim_in : float
+        velocity of frame analysis was done in relative to the static simulation box frame
+    metadata_in : 1d array, optional
+        meta data array with length equal to x_out and axis 3 of correlation data
+        normally needs to be made by hand
+    params_in : dict, optional
+        dictionary containing global attributes relating to data.
+        contains mostly physical input parameters from original simulation
     """
     from netCDF4 import Dataset
     from datetime import datetime
@@ -555,7 +597,6 @@ def build_params(inputdict, numframe):
     """
     Computes relevant inputs parameters from simulation
 
-
     Parameters
     ----------
     inputdict : dict
@@ -563,7 +604,6 @@ def build_params(inputdict, numframe):
 
     numframe : int
         frame number (i.e. what time slice) with are analyzing
-
 
     Returns
     -------

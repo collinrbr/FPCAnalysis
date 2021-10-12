@@ -44,13 +44,37 @@ def plot_1d_dist(dparticles, parkey, vmax, x1, x2, y1, y2, flnm = ''):
     else:
         plt.show()
 
-    plt.figure()
+    plt.close()
 
 #TODO: figure out enerCEx and normalize it in compute energization
 def check_JiEi_vs_CEi(dfields,dflow,dparticles,x,enerCEx,enerCEy,dx,xlim=None,ylim=None,zlim=None):
     """
+    Comapres JiEi energization vs energization computed by integrating CEi over velocity space
 
+    Parameters
+    ----------
+    dfields : dict
+        field data dictionary from field_loader
+    dflow : dict
+        flow data dictionary from flow_loader
+    dparticles : dict
+        particle data dictionary
+    x : 1d array
+        1d coordinate data
+    enerCex : 1d array
+        energization by CEx from compute_energization function in analysis
+    enerCey : 1d array
+        energization by CEx from compute_energization function in analysis
+    dx : float
+        xx step size/ spacing
+    xlim : [float,float]
+        xx bounds of integration box used when normalizing energization by CEi
+    ylim : [float,float]
+        yy bounds of integration box used when normalizing energization by CEi
+    zlim : [float,float]
+        zz bounds of integration box used when normalizing energization by CEi
     """
+
     from lib.analysis import calc_Ji_Ei
     from lib.analysis import get_num_par_in_box
 

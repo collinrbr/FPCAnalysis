@@ -3,6 +3,7 @@
 #plasma analysis functions
 
 import numpy as np
+import math
 
 def analysis_input(flnm = 'analysisinput.txt'):
     """
@@ -307,9 +308,16 @@ def get_abs_max_velocity(dparticles):
 
 def check_input(analysisinputflnm,dfields):
     """
-    prints warnings if analysis is set up in an unexpected way
+    Prints warnings if analysis is set up in an unexpected way
 
+    Parameters
+    ----------
+    analysisinputflnm : str
+        flnm of analysis input
+    dfields : dict
+        field data dictionary from field_loader
     """
+
     import sys
     path,resultsdir,vmax,dv,numframe,dx,xlim,ylim,zlim = analysis_input(flnm = analysisinputflnm)
 
@@ -352,7 +360,18 @@ def check_input(analysisinputflnm,dfields):
 
 def check_sim_stability(analysisinputflnm,dfields,dparticles,dt):
     """
-    Checks max velocity to make sure sim is numerically stable
+    Checks max velocity to make sure sim is numerically stable. Prints warnings if it is not
+
+    Parameters
+    ----------
+    analysisinputflnm : str
+        flnm of analysis input
+    dfields : dict
+        field data dictionary from field_loader
+    dparticles : dict
+        particle data dictionary
+    dt : float
+        size of each time step in code units
     """
     path,vmax,dv,numframe,dx,xlim,ylim,zlim = analysis_input(flnm = analysisinputflnm)
 
@@ -374,16 +393,26 @@ def check_sim_stability(analysisinputflnm,dfields,dparticles,dt):
     if(vmax >= 3.*maxsx or vmax >= 3.*maxsy or vmax >= 3.*maxsz):
         print("Warning: vmax is 3 times larger than the max velocity of any particle. It is computationally wasteful to run FPC analysis in the upper domain of velocity where there are no particles...")
 
-
-
-
-
-
-
 #TODO: check if/force startval/endval to be at discrete location that matches the field positions we have
 def deconvolve_for_fft(dfields,fieldkey,startval,endval):
     """
-    Fits ramp to line and subtracts line
+    Fits ramp to line and subtracts line to deconvolve
+
+    Parameters
+    ---------
+    dfields : dict
+        field data dictionary from field_loader
+    fieldkey : str
+        name of field you want to plot (ex, ey, ez, bx, by, bz)
+    startval : float
+        start xx position of ramp
+    endval : float
+        end xx position of ramp
+
+    Returns
+    -------
+    fieldvalsdeconvolved : 1d array
+        value of deconvolved field
     """
     from lib.array_ops import find_nearest
 
@@ -410,6 +439,25 @@ def deconvolve_for_fft(dfields,fieldkey,startval,endval):
 
     return fieldvalsdeconvolved
 
+def take_fft1(data,daxis,axis=-1):
+    """
+    Computes 1d fft on given data
+
+    Parameters
+    ----------
+    data : array
+        data to be transformed
+    daxisx0 : float
+        cartesian spatial spacing between points
+    """
+
+    k = 2.*np.pi*np.fft.fftfreq(len(data),daxis)
+
+    fftdata = np.fft.fft(data,axis=axis)/float(len(data))
+
+    return k, fftdata
+
+
 def take_fft2(data,daxisx0,daxis1):
     """
     Computes 2d fft on given data
@@ -417,7 +465,7 @@ def take_fft2(data,daxisx0,daxis1):
     Parameters
     ----------
     data : 2d array
-        data to be transformed
+        2d data to be transformed
     daxisx0 : float
         cartesian spatial spacing between points along 0th axis of data
     daxisx1 : float
@@ -434,22 +482,382 @@ def take_fft2(data,daxisx0,daxis1):
     k0 = 2.*np.pi*np.fft.fftfreq(len(data),daxisx0)
     k1 = 2.*np.pi*np.fft.fftfreq(len(data[1]),daxis1)
 
-    fftdata = np.fft.fft2(data)
+    fftdata = np.fft.fft2(data)/(float(len(data)*len(data[1])))
 
     return k0, k1, fftdata
 
 def remove_average_fields_over_yz(dfields):
     """
+    Removes yz average from field data i.e. delta_field(x,y,z) = field(x,y,z)-<field(x,y,z)>_(y,z)
 
+    Parameters
+    ----------
+    dfields : dict
+        field data dictionary from flow_loader
+
+    Returns
+    -------
+    dfieldsfluc : dict
+        delta field data dictionary
     """
-    from copy import copy
+    from copy import deepcopy
 
-    dfieldfluc = copy(dfields) #deep copy
-    dfieldfluc['ex'] = dfields['ex']-dfields['ex'].mean(axis=(0,1))
-    dfieldfluc['ey'] = dfields['ey']-dfields['ey'].mean(axis=(0,1))
-    dfieldfluc['ez'] = dfields['ez']-dfields['ez'].mean(axis=(0,1))
-    dfieldfluc['bx'] = dfields['bx']-dfields['bx'].mean(axis=(0,1))
-    dfieldfluc['by'] = dfields['by']-dfields['by'].mean(axis=(0,1))
-    dfieldfluc['bz'] = dfields['bz']-dfields['bz'].mean(axis=(0,1))
+    dfieldfluc = deepcopy(dfields) #deep copy
+    dfieldfluc['ex'] = dfieldfluc['ex']-dfieldfluc['ex'].mean(axis=(0,1))
+    dfieldfluc['ey'] = dfieldfluc['ey']-dfieldfluc['ey'].mean(axis=(0,1))
+    dfieldfluc['ez'] = dfieldfluc['ez']-dfieldfluc['ez'].mean(axis=(0,1))
+    dfieldfluc['bx'] = dfieldfluc['bx']-dfieldfluc['bx'].mean(axis=(0,1))
+    dfieldfluc['by'] = dfieldfluc['by']-dfieldfluc['by'].mean(axis=(0,1))
+    dfieldfluc['bz'] = dfieldfluc['bz']-dfieldfluc['bz'].mean(axis=(0,1))
 
     return dfieldfluc
+
+def get_average_fields_over_yz(dfields):
+    """
+    Returns yz average of field i.e. dfield_avg(x,y,z) = <field(x,y,z)>_(y,z)
+
+    TODO: this function doesn't seem to use a deep copy for dfields, i.e. it changes
+    dfields. Need to fix this
+
+    Parameters
+    ----------
+    dfields : dict
+        field data dictionary from flow_loader
+
+    Returns
+    -------
+    dfieldsavg : dict
+        avg field data dictionary
+    """
+
+    from copy import deepcopy
+
+    dfieldavg = deepcopy(dfields)
+
+    dfieldavg['ex'][:] = dfieldavg['ex'].mean(axis=(0,1))
+    dfieldavg['ey'][:] = dfieldavg['ey'].mean(axis=(0,1))
+    dfieldavg['ez'][:] = dfieldavg['ez'].mean(axis=(0,1))
+    dfieldavg['bx'][:] = dfieldavg['bx'].mean(axis=(0,1))
+    dfieldavg['by'][:] = dfieldavg['by'].mean(axis=(0,1))
+    dfieldavg['bz'][:] = dfieldavg['bz'].mean(axis=(0,1))
+
+    return dfieldavg
+
+def remove_average_flow_over_yz(dflow):
+    """
+    Removes yz average from flow data i.e. delta_flow(x,y,z) = flow(x,y,z)-<flow(x,y,z)>_(y,z)
+
+    Parameters
+    ----------
+    dflow : dict
+        flow data dictionary from flow_loader
+
+    Returns
+    -------
+    dflowfluc : dict
+        delta flow data dictionary
+    """
+    from copy import deepcopy
+    dflowfluc = deepcopy(dflow)
+    dflowfluc['ux'] = dflowfluc['ux']-dflowfluc['ux'].mean(axis=(0,1))
+    dflowfluc['uy'] = dflowfluc['uy']-dflowfluc['uy'].mean(axis=(0,1))
+    dflowfluc['uz'] = dflowfluc['uz']-dflowfluc['uz'].mean(axis=(0,1))
+
+    return dflowfluc
+
+def get_delta_fields(dfields,B0):
+    """
+    Computes the delta between the local B field and the external B field
+    """
+
+    from copy import deepcopy
+
+    dfluc = remove_average_fields_over_yz(dfields)
+    ddeltafields = deepcopy(dfluc)
+
+    ddeltafields['ex'] = None
+    ddeltafields['ey'] = None
+    ddeltafields['ez'] = None
+    ddeltafields['bx'] = ddeltafields['bx'] - B0[0]
+    ddeltafields['by'] = ddeltafields['by'] - B0[1]
+    ddeltafields['bz'] = ddeltafields['bz'] - B0[2]
+
+    return ddeltafields
+
+## This is unused and misguided, should remove
+# def get_delta_perp_fields(dfields,B0):
+#     """
+#     Computes the perpendicular component of the delta fields wrt the total magnetic field at each point
+#     """
+#
+#     from copy import deepcopy
+#
+#     ddeltaperpfields = get_delta_fields(dfields,B0)
+#
+#     ddeltaperpfields['bx'] = ddeltaperpfields['bx'] - (ddeltaperpfields['bx']*B0[0]+ddeltaperpfields['by']*B0[1]+ddeltaperpfields['bz']*B0[2])/(B0[0]**2+B0[1]**2+B0[2]**2)*B0[0]
+#     ddeltaperpfields['by'] = ddeltaperpfields['by'] - (ddeltaperpfields['bx']*B0[0]+ddeltaperpfields['by']*B0[1]+ddeltaperpfields['bz']*B0[2])/(B0[0]**2+B0[1]**2+B0[2]**2)*B0[1]
+#     ddeltaperpfields['bz'] = ddeltaperpfields['bz'] - (ddeltaperpfields['bx']*B0[0]+ddeltaperpfields['by']*B0[1]+ddeltaperpfields['bz']*B0[2])/(B0[0]**2+B0[1]**2+B0[2]**2)*B0[2]
+#
+#     return ddeltaperpfields
+
+def wlt(t,data,w=6):
+    """
+    Peforms wavelet transform using morlet wavelet on data that is a function of t i.e. data(t)
+
+    Paramters
+    ---------
+    t : 1d array
+        independent data array
+    data : 1d array
+        dependent data array
+    w : float, opt
+        omega term in morlet wavelet function (relates to the number of humps)
+    """
+    from scipy import signal
+
+    dt = t[1]-t[0]
+    fs = 1./dt
+
+    freq = np.linspace(.01,fs/2.,len(data))
+    widths = w*fs / (2*freq*np.pi)
+
+    cwtm = signal.cwt(data, signal.morlet2, widths, w=w)
+
+    return 2.0*math.pi*freq, cwtm
+
+def _ffttransform_in_yz(dfields,fieldkey):
+    """
+    Takes f(z,y,x) and computes f(x,kz,ky) using a 2d fft for some given field
+    """
+
+    fieldfftsweepoverx = []
+    for xxindex in range(0,len(dfields[fieldkey][0][0])):
+        fieldslice = np.asarray(dfields[fieldkey])[:,:,xxindex]
+        daxis0 = dfields[fieldkey+'_zz'][1]-dfields[fieldkey+'_zz'][0]
+        daxis1 = dfields[fieldkey+'_yy'][1]-dfields[fieldkey+'_zz'][0]
+        kz, ky, fieldslicefft = take_fft2(fieldslice,daxis0,daxis1)
+        fieldfftsweepoverx.append(fieldslicefft)
+    fieldfftsweepoverx = np.asarray(fieldfftsweepoverx)
+
+    return kz, ky, fieldfftsweepoverx
+
+
+
+def find_potential_wavemodes(dfields,fieldkey,xpos,cutoffconst=.1):
+    """
+
+    """
+
+    from lib.array_ops import find_nearest
+
+    #compute delta fields
+    dfieldsfluc = remove_average_fields_over_yz(dfields)
+
+    #spacing in grids, needed to get wavenumber from fft
+    daxis0 = dfieldsfluc[fieldkey+'_zz'][1]-dfieldsfluc[fieldkey+'_zz'][0]
+    daxis1 = dfieldsfluc[fieldkey+'_yy'][1]-dfieldsfluc[fieldkey+'_yy'][0]
+
+    kz, ky, fieldfftsweepoverx = _ffttransform_in_yz(dfieldsfluc,fieldkey)
+
+    #pick slice nearest to given xpos
+    xxidx = find_nearest(dfieldsfluc[fieldkey+'_xx'],xpos)
+    fftslice = fieldfftsweepoverx[xxidx,:,:]
+
+    #find field(xpos,ky0,kz0) with norm greater than cutoffconst*max(norm(fftslice))
+    fftslice = np.real(fftslice*np.conj(fftslice))/(float(len(kz)*len(ky)))  #convert to norm
+    maxnorm = np.max(fftslice)
+    kylist = []
+    kzlist = []
+    prcntmaxlist = []
+    for i in range(0,len(kz)):
+        for j in range(0,len(ky)):
+            if(fftslice[i][j] >= cutoffconst*maxnorm):
+                kzlist.append(kz[i])
+                kylist.append(ky[j])
+                prcntmaxlist.append(fftslice[i][j]/maxnorm)
+
+    #do wavelet transform for each ky, kz
+    kxlist = []
+    kxplotlist = []
+    wltlist = []
+    for i in range(0,len(kylist)):
+        ky0 = kylist[i]
+        ky0idx = find_nearest(ky,ky0)
+        kz0 = kzlist[i]
+        kz0idx = find_nearest(kz,kz0)
+
+        xkykzdata = fieldfftsweepoverx[:,kz0idx,ky0idx]
+
+        kx, wltdata = wlt(dfieldsfluc[fieldkey+'_xx'],xkykzdata)
+        kxplotlist.append(kx)
+        wltlist.append(wltdata)
+
+        kxidx = find_nearest(wltdata[:,xxidx],np.max(wltdata[:,xxidx]))
+        kxlist.append(kx[kxidx])
+
+    #add negative values for kx
+    nkx = len(kxlist)
+    for i in range(0,nkx):
+        kxlist.append(-1*kxlist[i])
+        kylist.append(kylist[i])
+        kzlist.append(kzlist[i])
+
+    return kxlist, kylist, kzlist, kxplotlist, wltlist, prcntmaxlist
+
+def is_perp(vec1,vec2,tol=0.001):
+    """
+
+    """
+
+    #normalize vector
+    vec1 /= np.linalg.norm(vec1)
+    vec2 /= np.linalg.norm(vec2)
+
+    dotprod = np.vdot(vec1,vec2) #vec1[0]*vec2[0]+vec1[1]*vec2[1]+vec1[2]*vec2[2]
+
+    if (abs(dotprod) <= tol):
+        return True, dotprod
+    else:
+        return False, dotprod
+
+def is_parallel(vec1,vec2,tol=0.001):
+    """
+
+    """
+
+    #normalize vector
+    vec1 /= np.linalg.norm(vec1)
+    vec2 /= np.linalg.norm(vec2)
+
+    dotprod = np.vdot(vec1,vec2) #vec1[0]*vec2[0]+vec1[1]*vec2[1]+vec1[2]*vec2[2]
+
+    if (abs(abs(dotprod)-1.0) <= tol):
+        return True, dotprod
+    else:
+        return False, dotprod
+
+
+def get_B0(dfields,xxidx):
+    """
+
+    """
+
+    dfavg = get_average_fields_over_yz(dfields)
+
+    B0x = dfavg['bx'][0,0,xxidx]
+    B0y = dfavg['by'][0,0,xxidx]
+    B0z = dfavg['bz'][0,0,xxidx]
+
+    return [B0x, B0y, B0z]
+
+def predict_kx_alfven(ky,kz,B0,delBperp):
+    """
+    routine that computes what kx would need to be given ky kz for the fluctuation to be alfvenic
+    """
+
+    Bx = B0[0]
+    By = B0[1]
+    Bz = B0[2]
+    dBx = delBperp[0]
+    dBy = delBperp[1]
+    dBz = delBperp[2]
+    kx = (-1.+Bz*dBx*ky-Bx*dBz*ky-By*dBx*kz+Bx*dBy*kz)/(Bz*dBy-By*dBz)
+
+    return kx
+
+def _get_perp_component(x1,y1):
+    """
+    Computes x1perp wrt y1
+    """
+    x1perpx = x1[0]-(x1[0]*y1[0]+x1[1]*y1[1]+x1[2]*y1[2])/(y1[0]*y1[0]+y1[1]*y1[1]+y1[2]*y1[2])*y1[0]
+    x1perpy = x1[1]-(x1[0]*y1[0]+x1[1]*y1[1]+x1[2]*y1[2])/(y1[0]*y1[0]+y1[1]*y1[1]+y1[2]*y1[2])*y1[1]
+    x1perpz = x1[2]-(x1[0]*y1[0]+x1[1]*y1[1]+x1[2]*y1[2])/(y1[0]*y1[0]+y1[1]*y1[1]+y1[2]*y1[2])*y1[2]
+
+    return [x1perpx,x1perpy,x1perpz]
+
+def alfven_wave_check(dfields,dfieldfluc,klist,xx,tol=.05):
+    """
+    Checks if basic properties of an alfven wave are seen at some location in the simulation
+
+    Note: dfields is normally the yz averaged removed fields (e.g. B_fluc(x,y,z) = B(x,y,z)-<B(x,y,z)>_(y,z))
+    """
+
+    from lib.array_ops import find_nearest
+
+    xxidx = find_nearest(dfields['bz_xx'],xx)
+
+    #TODO: rename these variables. Data is ordered B(x/kx,kz,ky)
+    kz, ky, bxkzkyx = _ffttransform_in_yz(dfieldfluc,'bx')
+    kz, ky, bykzkyx = _ffttransform_in_yz(dfieldfluc,'by')
+    kz, ky, bzkzkyx = _ffttransform_in_yz(dfieldfluc,'bz')
+
+    B0 = get_B0(dfields,xxidx)
+
+    # #get delta perp fields
+    # dperpf = get_delta_perp_fields(dfields,B0)
+
+    # check if any of the given k's have the expected properties of an alfven wave
+    # i.e. is deltaBperp parallel to kcrossB0, deltaB is perpendicular to B0, and delB is perpendicular to k
+    # where deltaB is from
+    results = []
+    kxexpected = [] #what kx needs to be for the wave to be alfvenic for each k in klist
+    for i in range(0,len(klist)):
+        #pick a k and compute kperp
+        k = klist[i]
+        kperp = _get_perp_component(k,B0)
+
+        #find nearest discrete point in (x,ky,kz) space we have data for
+        kyidx = find_nearest(ky,k[1])
+        kzidx = find_nearest(kz,k[2])
+        kyperpidx = find_nearest(ky,kperp[1])
+        kzperpidx = find_nearest(kz,kperp[2])
+
+        if(k[0] < 0):
+            _bxkzkyx = np.conj(bxkzkyx)
+            _bykzkyx = np.conj(bykzkyx)
+            _bzkzkyx = np.conj(bzkzkyx)
+        else:
+            _bxkzkyx = bxkzkyx
+            _bykzkyx = bykzkyx
+            _bzkzkyx = bzkzkyx
+
+        #finalize transform into k space i.e. compute B(kx0,kz0,ky0) from B(x,kz,ky) for k and k perp
+        #note: we never have an array B(kx,ky,kz), just that scalar quantities at k0 and kperp0, which we get from
+        # the just for B(x,kz,ky) as computing the entire B(kx,ky,kz) array would be computationally expensive.
+        # would have to perform wavelet transform for each (ky0,kz0)
+        kx, bxkz0ky0kxxx = wlt(dfieldfluc['bx_xx'],_bxkzkyx[:,kzidx,kyidx]) #note kx is that same for all 6 returns here
+        kx, bykz0ky0kxxx = wlt(dfieldfluc['by_xx'],_bykzkyx[:,kzidx,kyidx])
+        kx, bzkz0ky0kxxx = wlt(dfieldfluc['bz_xx'],_bzkzkyx[:,kzidx,kyidx])
+        kx, bxperpkz0ky0kxxx = wlt(dfieldfluc['bx_xx'],_bxkzkyx[:,kzperpidx,kyperpidx])
+        kx, byperpkz0ky0kxxx = wlt(dfieldfluc['by_xx'],_bykzkyx[:,kzperpidx,kyperpidx])
+        kx, bzperpkz0ky0kxxx = wlt(dfieldfluc['bz_xx'],_bzkzkyx[:,kzperpidx,kyperpidx])
+
+        kxidx = find_nearest(kx,np.abs(k[0])) #WLT can not find negative kx. Instead we assume symmetry by taking np.abs
+        kxperpidx = find_nearest(kx,np.abs(kperp[0]))
+
+        # if(k[0] < 0): #use reality condition to correct for the fact that we cant compute negative kx using the wlt
+        #     bxkz0ky0kxxx = np.conj(bxkz0ky0kxxx)
+        #     bykz0ky0kxxx = np.conj(bykz0ky0kxxx)
+        #     bzkz0ky0kxxx = np.conj(bzkz0ky0kxxx)
+        #     bxperpkz0ky0kxxx = np.conj(bxperpkz0ky0kxxx)
+        #     byperpkz0ky0kxxx = np.conj(byperpkz0ky0kxxx)
+        #     bzperpkz0ky0kxxx = np.conj(bzperpkz0ky0kxxx)
+
+        kcrossB0 = np.cross(k,B0)
+        delB = [bxkz0ky0kxxx[kxidx,xxidx],bykz0ky0kxxx[kxidx,xxidx],bzkz0ky0kxxx[kxidx,xxidx]]
+        delBperp = [bxperpkz0ky0kxxx[kxperpidx,xxidx],byperpkz0ky0kxxx[kxperpidx,xxidx],bzperpkz0ky0kxxx[kxperpidx,xxidx]]
+
+        kxexpected.append(predict_kx_alfven(k[1],k[2],B0,delBperp))
+
+        #results.append([is_parallel(delBperp,kcrossB0,tol=0.1),is_perp(delB,B0,tol=0.1),is_perp(k,delB,tol=.1)])
+        testAlfvenval = np.cross(delB,np.cross(k,B0))
+        testAlfvenval /= (np.linalg.norm(delB)*np.linalg.norm(np.cross(k,B0)))
+        if(np.linalg.norm(testAlfvenval) <= tol):
+            belowtol = True
+        else:
+            belowtol = False
+        #belowtol = (testAlfvenval <= tol)
+
+        results.append([(belowtol,np.linalg.norm(testAlfvenval)),is_perp(k,delB,tol=tol)])
+
+    return results, kxexpected

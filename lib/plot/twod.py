@@ -28,30 +28,48 @@ def make_field_pmesh(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, 
         index of data along yy axis (ignored if axis = '_yy')
     zzindex : int, optional
         index of data along zz axis (ignored if axis = '_zz')
+    xlimmin : float
+        minimum plotted x value (ignored if xx is not in plane)
+    xlimmax : float
+        maximum plotted x value (ignored if xx is not in plane)
     """
 
+    fieldttl = ''
+    if(fieldkey == 'ex'):
+        fieldttl = '$E_x'
+    elif(fieldkey == 'ey'):
+        fieldttl = '$E_y'
+    elif(fieldkey == 'ez'):
+        fieldttl = '$E_z'
+    elif(fieldkey == 'bx'):
+        fieldttl = '$B_x'
+    elif(fieldkey == 'by'):
+        fieldttl = '$B_y'
+    elif(fieldkey == 'bz'):
+        fieldttl = '$B_z'
+
     if(planename=='xy'):
-        ttl = fieldkey+'(x,y)'
-        xlbl = 'x (di)'
-        ylbl = 'y (di)'
+        ttl = fieldttl+'(x,y)$ at '
+        xlbl = '$x$ (di)'
+        ylbl = '$y$ (di)'
         xplot1d = dfields[fieldkey+'_xx'][:]
         yplot1d = dfields[fieldkey+'_yy'][:]
         axisidx = 0 #used to take average along z if no index is specified
         axis = '_zz'
 
     elif(planename=='xz'):
-        ttl = fieldkey+'(x,z)'
-        xlbl = 'x (di)'
-        ylbl = 'z (di)'
+        ttl = fieldttl+'(x,z)$ at '
+        xlbl = '$x$ (di)'
+        ylbl = '$z$ (di)'
         xplot1d = dfields[fieldkey+'_xx'][:]
         yplot1d = dfields[fieldkey+'_zz'][:]
         axisidx = 1 #used to take average along y if no index is specified
         axis = '_yy'
 
     elif(planename=='yz'):
-        ttl = fieldkey+'(y,z)'
-        xlbl = 'y (di)'
-        ylbl = 'z (di)'
+        ttl = fieldttl+'(y,z)$ at '
+        xlbl = '$y$ (di)'
+        ylbl = '$z$ (di)'
         xplot1d = dfields[fieldkey+'_yy'][:]
         yplot1d = dfields[fieldkey+'_zz'][:]
         axisidx = 2 #used to take average along x if no index is specified
@@ -78,17 +96,19 @@ def make_field_pmesh(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, 
             yplot[i][j] = yplot1d[i]
 
     plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
-    plt.figure(figsize=(6.5,6))
-    plt.figure(figsize=(6.5,6))
+    if((planename == 'xy' or planename == 'xz') and (xlimmin == None and xlimmax == None)):
+        plt.figure(figsize=(2*6.5,6))
+    else:
+        plt.figure(figsize=(6.5,6))
     plt.pcolormesh(xplot, yplot, fieldpmesh, cmap="inferno", shading="gouraud")
     if(takeaxisaverage):
         plt.title(ttl,loc="right")
     elif(planename == 'xy'):
-        plt.title(ttl+' z (di): '+str(dfields[fieldkey+axis][zzindex]),loc="right")
+        plt.title(ttl+' z = '+str(dfields[fieldkey+axis][zzindex])+' (di)',loc="right")
     elif(planename == 'xz'):
-        plt.title(ttl+' y (di): '+str(dfields[fieldkey+axis][yyindex]),loc="right")
+        plt.title(ttl+' y = '+str(dfields[fieldkey+axis][yyindex])+' (di)',loc="right")
     elif(planename == 'yz'):
-        plt.title(ttl+' x (di): '+str(dfields[fieldkey+axis][xxindex]),loc="right")
+        plt.title(ttl+' x = '+str(dfields[fieldkey+axis][xxindex])+' (di)',loc="right")
     plt.xlabel(xlbl)
     plt.ylabel(ylbl)
     plt.grid(color="k", linestyle="-", linewidth=1.0, alpha=0.6)
@@ -107,7 +127,23 @@ def make_field_pmesh(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, 
 
 def make_fieldpmesh_sweep(dfields,fieldkey,planename,directory,xlimmin=None,xlimmax=None):
     """
+    Makes sweep gif of field pmesh
 
+    Parameters
+    ----------
+    dfields : dict
+        field data dictionary from field_loader
+    fieldkey : str
+        name of field you want to plot (ex, ey, ez, bx, by, bz)
+    planename : str
+        name of plane you want to plot (xy, xz, yz)
+    directory : str
+        name of directory you want to create and put plots into
+        (omit final '/')
+    xlimmin : float
+        minimum plotted x value (ignored if xx is not in plane)
+    xlimmax : float
+        maximum plotted x value (ignored if xx is not in plane)
     """
 
     try:
@@ -138,7 +174,20 @@ def make_fieldpmesh_sweep(dfields,fieldkey,planename,directory,xlimmin=None,xlim
 
 def compare_pmesh_fields_yz(dfields, flnm = '', ttl ='', takeaxisaverage=False, xxindex=float('nan')):
     """
+    Plots pmesh of all fields on same figure for easier comparison along the yz projection
 
+    Parameters
+    ----------
+    dfields : dict
+        field data dictionary from field_loader
+    flnm : str
+        filename of output file
+    ttl : str, optional
+        title of plot
+    takeaxisaverage : bool, optional
+        if true, take average along axis not included in planename
+    xxindex : int
+        xx index of slice that is to be plotted
     """
 
     plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
@@ -237,7 +286,15 @@ def compare_pmesh_fields_yz(dfields, flnm = '', ttl ='', takeaxisaverage=False, 
 
 def compare_pmesh_fields_yz_sweep(dfields,directory):
     """
+    Makes sweep of pmesh of all fields along the yz projection
 
+    Parameters
+    ----------
+    dfields : dict
+        field data dictionary from field_loader
+    directory : str
+        name of directory you want to create and put plots into
+        (omit final '/')
     """
     try:
         os.mkdir(directory)
