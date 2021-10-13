@@ -804,7 +804,7 @@ def alfven_wave_check(dfields,dfieldfluc,klist,xx,tol=.05):
     for i in range(0,len(klist)):
         #pick a k and compute kperp
         k = klist[i]
-        kperp = _get_perp_component(k,B0)
+        kperp = _get_perp_component(k,B0) #
 
         #find nearest discrete point in (x,ky,kz) space we have data for
         kyidx = find_nearest(ky,k[1])
@@ -861,3 +861,52 @@ def alfven_wave_check(dfields,dfieldfluc,klist,xx,tol=.05):
         results.append([(belowtol,np.linalg.norm(testAlfvenval)),is_perp(k,delB,tol=tol)])
 
     return results, kxexpected
+
+
+def change_velocity_basis(dfields,dpar,xlim,ylim,zlim,debug=False):
+    from copy import deepcopy
+    from lib.array_ops import find_nearest
+
+    gptsparticle = (xlim[0] <= dpar['x1']) & (dpar['x1'] <= xlim[1]) & (ylim[0] <= dpar['x2']) & (dpar['x2'] <= ylim[1]) & (zlim[0] <= dpar['x3']) & (dpar['x3'] <= zlim[1])
+
+    xavg = (xlim[1]+xlim[0])/2.
+    xxidx = find_nearest(dfields['bz_xx'],xavg)
+    B0 = get_B0(dfields,xxidx) #***Assumes xlim is sufficiently thin*** as get_B0 uses <B(x0,y,z)>_(yz)=B0
+
+    #get normalized basis vectors
+    vparbasis = deepcopy(B0)
+    vparbasis /= np.linalg.norm(vparbasis)
+    vperp1basis = _get_perp_component([0,1,0],vparbasis) #TODO: check that this returns something close to 0,1,0 as B0 is approximately in the xz plane (with some fluctuations)
+    vperp1basis /= np.linalg.norm(vperp1basis)
+    vperp2basis = np.cross(vperp1basis,vparbasis)
+    vperp2basis /= np.linalg.norm(vperp2basis)
+
+    #check orthogonality of these vectors
+    if(debug):
+        tol = 0.01
+        if(np.abs(np.dot(vparbasis,vperp1basis)) > tol or np.abs(np.dot(vparbasis,vperp2basis)) > tol or np.abs(np.dot(vperp1basis,vperp2basis) > tol)):
+            print("Warning: orthogonality was not kept...")
+
+    #make change of basis matrix
+    _ = np.asarray([vparbasis,vperp1basis,vperp2basis]).T
+    changebasismatrix = np.linalg.inv(_)
+
+    #change basis
+    dparnewbasis = {}
+    dparnewbasis['ppar'],dparnewbasis['pperp1'],dparnewbasis['pperp2'] = np.matmul(changebasismatrix,[dpar['p1'][gptsparticle][:],dpar['p2'][gptsparticle][:],dpar['p3'][gptsparticle][:]])
+    dparnewbasis['x1'] = deepcopy(dpar['x1'][:])
+    dparnewbasis['x2'] = deepcopy(dpar['x2'][:])
+    dparnewbasis['x3'] = deepcopy(dpar['x3'][:])
+
+    #check v^2 for both basis to make sure everything matches
+    if(debug):
+        for i in range(0,20):
+            normnewbasis = np.linalg.norm([dparnewbasis['ppar'][i],dparnewbasis['pperp1'][i],dparnewbasis['pperp2'][i]])
+            normoldbasis = np.linalg.norm([dpar['p1'][gptsparticle][i],dpar['p2'][gptsparticle][i],dpar['p3'][gptsparticle][i]])
+            if(np.abs(normnewbasis-normoldbasis) > 0.01):
+                print('Warning. Change of basis did not converse total energy...')
+
+    return dparnewbasis
+
+def compute_temp_aniso():
+    pass

@@ -8,7 +8,7 @@ import h5py
 import os
 
 
-def read_particles(path, num, is2d3v = False):
+def read_particles(path, numframe, is2d3v = False):
     """
     Loads dHybridR particle data
     TODO: rename to read_dhybridr_particles
@@ -17,7 +17,7 @@ def read_particles(path, num, is2d3v = False):
     ----------
     path : string
         path to data folder
-    num : int
+    numframe : int
         frame of data this function will load
     is2d3v : bool, opt
         set true is simualation is 2D 3V
@@ -34,7 +34,7 @@ def read_particles(path, num, is2d3v = False):
         dens_vars = 'p1 p2 p3 x1 x2 x3'.split()
 
     pts = {}
-    with h5py.File(path.format(num),'r') as f:
+    with h5py.File(path.format(numframe),'r') as f:
         for k in dens_vars:
             pts[k] = f[k][:]
 
@@ -43,7 +43,7 @@ def read_particles(path, num, is2d3v = False):
     return pts
 
 
-def read_box_of_particles(path, num, x1, x2, y1, y2, z1, z2, is2d3v = False):
+def read_box_of_particles(path, numframe, x1, x2, y1, y2, z1, z2, is2d3v = False):
     """
     Loads subset of dHybridR particle data
 
@@ -56,7 +56,7 @@ def read_box_of_particles(path, num, x1, x2, y1, y2, z1, z2, is2d3v = False):
     ----------
     path : string
         path to data folder
-    num : int
+    numframe : int
         frame of data this function will load
     x1 : float
         lower x bound
@@ -83,7 +83,7 @@ def read_box_of_particles(path, num, x1, x2, y1, y2, z1, z2, is2d3v = False):
     dens_vars = 'p1 p2 p3 x1 x2 x3'.split()
 
     pts = {}
-    with h5py.File(path.format(num),'r') as f:
+    with h5py.File(path.format(numframe),'r') as f:
         gptsx = (x1 < f['x1'][:] ) & (f['x1'][:] < x2)
         gptsy = (y1 < f['x2'][:] ) & (f['x2'][:] < y2)
         if(not(is2d3v)):
