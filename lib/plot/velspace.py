@@ -306,7 +306,7 @@ def plot_dist(vx, vy, vmax, H,flnm = '',ttl=''):
         plt.show()
     plt.close()
 
-def dist_log_plot_3dir(vx, vy, vz, vmax, H_in, flnm = '',ttl=''):
+def dist_log_plot_3dir(vx, vy, vz, vmax, H_in, flnm = '',ttl='',xlbl=r"$v_x/v_{ti}$",ylbl=r"$v_y/v_{ti}$",zlbl=r"$v_z/v_{ti}$"):
     """
     Makes 3 panel plot of the distribution function in log space
 
@@ -360,7 +360,7 @@ def dist_log_plot_3dir(vx, vy, vz, vmax, H_in, flnm = '',ttl=''):
     cmap.set_under(bkgcolor) #this doesn't really work like it's supposed to, so we just change the background color to black
     #ax = plt.gca()
     axs[0].set_facecolor(bkgcolor)
-    axs[0].pcolormesh(vx_xy, vy_xy, H_xy, cmap=cmap, shading="gouraud",norm=LogNorm(vmin=minval, vmax=H.max()))
+    pcm0 = axs[0].pcolormesh(vx_xy, vy_xy, H_xy, cmap=cmap, shading="gouraud",norm=LogNorm(vmin=minval, vmax=H.max()))
     axs[0].set_xlim(-vmax, vmax)
     axs[0].set_ylim(-vmax, vmax)
     axs[0].set_xticks(np.linspace(-vmax, vmax, numtks))
@@ -369,34 +369,40 @@ def dist_log_plot_3dir(vx, vy, vz, vmax, H_in, flnm = '',ttl=''):
     #     plt.title(r"$f(v_x, v_y)$",loc="right")
     # else:
     #     plt.title(ttl)
-    axs[0].set_xlabel(r"$v_x/v_{ti}$")
-    axs[0].set_ylabel(r"$v_y/v_{ti}$")
+    axs[0].set_xlabel(xlbl)
+    axs[0].set_ylabel(ylbl)
     axs[0].grid(color="grey", linestyle="--", linewidth=1.0, alpha=0.6)
     axs[0].set_aspect('equal', 'box')
     #axs[0].colorbar(cmap = cmap, extend='min')
     #axs[0].gcf().subplots_adjust(bottom=0.15)
 
     axs[1].set_facecolor(bkgcolor)
-    axs[1].pcolormesh(vx_xz,vz_xz,H_xz, cmap=cmap, shading="gourand",norm=LogNorm(vmin=minval, vmax=H.max()))
+    pcm1 = axs[1].pcolormesh(vx_xz,vz_xz,H_xz, cmap=cmap, shading="gourand",norm=LogNorm(vmin=minval, vmax=H.max()))
     axs[1].set_xlim(-vmax, vmax)
     axs[1].set_ylim(-vmax, vmax)
     axs[1].set_xticks(np.linspace(-vmax, vmax, numtks))
     axs[1].set_yticks(np.linspace(-vmax, vmax, numtks))
-    axs[1].set_xlabel(r"$v_x/v_{ti}$")
-    axs[1].set_ylabel(r"$v_z/v_{ti}$")
+    axs[1].set_xlabel(xlbl)
+    axs[1].set_ylabel(zlbl)
     axs[1].grid(color="grey", linestyle="--", linewidth=1.0, alpha=0.6)
     axs[1].set_aspect('equal', 'box')
+    #axs[1].colorbar(cmap = cmap, extend='min')
 
     axs[2].set_facecolor(bkgcolor)
-    axs[2].pcolormesh(vy_yz,vz_yz,H_yz, cmap=cmap, shading="gourand",norm=LogNorm(vmin=minval, vmax=H.max()))
+    pcm2 = axs[2].pcolormesh(vy_yz,vz_yz,H_yz, cmap=cmap, shading="gourand",norm=LogNorm(vmin=minval, vmax=H.max()))
     axs[2].set_xlim(-vmax, vmax)
     axs[2].set_ylim(-vmax, vmax)
     axs[2].set_xticks(np.linspace(-vmax, vmax, numtks))
     axs[2].set_yticks(np.linspace(-vmax, vmax, numtks))
-    axs[2].set_xlabel(r"$v_y/v_{ti}$")
-    axs[2].set_ylabel(r"$v_z/v_{ti}$")
+    axs[2].set_xlabel(ylbl)
+    axs[2].set_ylabel(zlbl)
     axs[2].grid(color="grey", linestyle="--", linewidth=1.0, alpha=0.6)
     axs[2].set_aspect('equal', 'box')
+    #axs[2].colorbar(cmap = cmap, extend='min')
+
+    fig.colorbar(pcm0, ax=axs[0])
+    fig.colorbar(pcm1, ax=axs[1])
+    fig.colorbar(pcm2, ax=axs[2])
 
     plt.subplots_adjust(hspace=.5,wspace=.5)
 

@@ -300,7 +300,8 @@ def plot_wlt(xx, kx, wlt, ky0 = None, kz0 = None, flnm = '', plotstrongestkx = F
     plt.xlabel('x')
     plt.ylabel('kx')
     plt.grid()
-    plt.title('ky='+str(ky0)[0:6]+' kz='+str(kz0)[0:6])
+    if(ky0 != None and kz0 != None):
+        plt.title('ky='+str(ky0)[0:6]+' kz='+str(kz0)[0:6])
     if(xxline != None and yyline != None):
         plt.plot(xxline,yyline)
     if(xlim != None):
