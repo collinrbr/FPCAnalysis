@@ -360,7 +360,7 @@ def dist_log_plot_3dir(vx, vy, vz, vmax, H_in, flnm = '',ttl='',xlbl=r"$v_x/v_{t
     cmap.set_under(bkgcolor) #this doesn't really work like it's supposed to, so we just change the background color to black
     #ax = plt.gca()
     axs[0].set_facecolor(bkgcolor)
-    pcm0 = axs[0].pcolormesh(vx_xy, vy_xy, H_xy, cmap=cmap, shading="gouraud",norm=LogNorm(vmin=minval, vmax=H.max()))
+    pcm0 = axs[0].pcolormesh(vy_xy, vx_xy, H_xy, cmap=cmap, shading="gouraud",norm=LogNorm(vmin=minval, vmax=H.max()))
     axs[0].set_xlim(-vmax, vmax)
     axs[0].set_ylim(-vmax, vmax)
     axs[0].set_xticks(np.linspace(-vmax, vmax, numtks))
@@ -377,7 +377,7 @@ def dist_log_plot_3dir(vx, vy, vz, vmax, H_in, flnm = '',ttl='',xlbl=r"$v_x/v_{t
     #axs[0].gcf().subplots_adjust(bottom=0.15)
 
     axs[1].set_facecolor(bkgcolor)
-    pcm1 = axs[1].pcolormesh(vx_xz,vz_xz,H_xz, cmap=cmap, shading="gourand",norm=LogNorm(vmin=minval, vmax=H.max()))
+    pcm1 = axs[1].pcolormesh(vz_xz,vx_xz,H_xz, cmap=cmap, shading="gourand",norm=LogNorm(vmin=minval, vmax=H.max()))
     axs[1].set_xlim(-vmax, vmax)
     axs[1].set_ylim(-vmax, vmax)
     axs[1].set_xticks(np.linspace(-vmax, vmax, numtks))
@@ -389,7 +389,7 @@ def dist_log_plot_3dir(vx, vy, vz, vmax, H_in, flnm = '',ttl='',xlbl=r"$v_x/v_{t
     #axs[1].colorbar(cmap = cmap, extend='min')
 
     axs[2].set_facecolor(bkgcolor)
-    pcm2 = axs[2].pcolormesh(vy_yz,vz_yz,H_yz, cmap=cmap, shading="gourand",norm=LogNorm(vmin=minval, vmax=H.max()))
+    pcm2 = axs[2].pcolormesh(vz_yz,vy_yz,H_yz, cmap=cmap, shading="gourand",norm=LogNorm(vmin=minval, vmax=H.max()))
     axs[2].set_xlim(-vmax, vmax)
     axs[2].set_ylim(-vmax, vmax)
     axs[2].set_xticks(np.linspace(-vmax, vmax, numtks))

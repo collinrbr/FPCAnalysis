@@ -1,6 +1,6 @@
 # debug.py>
 
-# random and less useful plots related to previous debugging efforts
+# random plots typically related to previous debugging efforts
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -132,3 +132,220 @@ def check_JiEi_vs_CEi(dfields,dflow,dparticles,x,enerCEx,enerCEy,dx,xlim=None,yl
     plt.ylabel('Energy(x)')
     plt.legend()
     plt.show()
+
+def plot_fluc_and_coords(B0,k,delB,epar,eperp1,eperp2,flnm = ''):
+
+    font = {'family': 'serif', 'color': 'darkred', 'weight': 'normal', 'size': 16}
+
+    xbasis = [1,0,0]
+    ybasis = [0,1,0]
+    zbasis = [0,0,1]
+    veclabels = ['$\hat{x}$','$\hat{y}$','$\hat{z}$',r'$B_0$',r'$\hat{k}$',r'$\delta \hat{B}$',r'$\hat{e}_{||}$',r'$\hat{e}_{\perp 1}$',r'$\hat{e}_{\perp 2}$']
+
+    B0norm = B0/np.linalg.norm(B0)
+    knorm = k/np.linalg.norm(k)
+    delBnorm = delB/np.linalg.norm(delB)
+
+    #Build plot input varaibles
+    U = [xbasis[0],ybasis[0],zbasis[0],B0norm[0],knorm[0],delBnorm[0],epar[0],eperp1[0],eperp2[0]]
+    V = [xbasis[1],ybasis[1],zbasis[1],B0norm[1],knorm[1],delBnorm[1],epar[1],eperp1[1],eperp2[1]]
+    W = [xbasis[2],ybasis[2],zbasis[2],B0norm[2],knorm[2],delBnorm[2],epar[2],eperp1[2],eperp2[2]]
+
+    #all vectors start at origin
+    X = []
+    Y = []
+    Z = []
+    for i in range(0,len(U)):
+        X.append(0)
+        Y.append(0)
+        Z.append(0)
+
+    #TODO: consider coloring vectors
+    fig, axs = plt.subplots(1, 3,figsize=(20,60))
+
+    axs[0].set_xlim(-1.1,1.1)
+    axs[0].set_ylim(-1.1,1.1)
+    axs[0].set_aspect('equal', adjustable='box')
+    axs[0].quiver(X, Y, U, V,scale=2.2) #scale is relative to plot limits
+    for index, lbl in enumerate(veclabels):
+        if(U[index] != 0 or V[index] != 0):
+            axs[0].text(U[index], V[index], lbl, fontdict=font)
+    axs[0].set_xlabel('x')
+    axs[0].set_ylabel('y')
+    axs[0].grid()
+
+    axs[1].set_xlim(-1.1,1.1)
+    axs[1].set_ylim(-1.1,1.1)
+    axs[1].set_aspect('equal', adjustable='box')
+    axs[1].quiver(X, Z, U, W,scale=2.2) #scale is relative to plot limits
+    for index, lbl in enumerate(veclabels):
+        if(U[index] != 0 or W[index] != 0):
+            axs[1].text(U[index], W[index], lbl, fontdict=font)
+    axs[1].set_xlabel('x')
+    axs[1].set_ylabel('z')
+    axs[1].grid()
+
+    axs[2].set_xlim(-1.1,1.1)
+    axs[2].set_ylim(-1.1,1.1)
+    axs[2].set_aspect('equal', adjustable='box')
+    axs[2].quiver(Y, Z, V, W,scale=2.2) #scale is relative to plot limits
+    for index, lbl in enumerate(veclabels):
+        if(V[index] != 0 or W[index] != 0):
+            axs[2].text(V[index], W[index], lbl, fontdict=font)
+    axs[2].set_xlabel('y')
+    axs[2].set_ylabel('z')
+    axs[2].grid()
+
+    plt.subplots_adjust(hspace=.5,wspace=.5)
+
+    if(flnm != ''):
+        plt.savefig(flnm,format='png')
+    else:
+        plt.show()
+
+def plot_coords(epar,eperp1,eperp2,flnm = ''):
+
+    font = {'family': 'serif', 'color': 'darkred', 'weight': 'normal', 'size': 16}
+
+    xbasis = [1,0,0]
+    ybasis = [0,1,0]
+    zbasis = [0,0,1]
+    veclabels = ['$\hat{x}$','$\hat{y}$','$\hat{z}$',r'$\hat{e}_{||}$',r'$\hat{e}_{\perp 1}$',r'$\hat{e}_{\perp 2}$']
+
+    #Build plot input varaibles
+    U = [xbasis[0],ybasis[0],zbasis[0],epar[0],eperp1[0],eperp2[0]]
+    V = [xbasis[1],ybasis[1],zbasis[1],epar[1],eperp1[1],eperp2[1]]
+    W = [xbasis[2],ybasis[2],zbasis[2],epar[2],eperp1[2],eperp2[2]]
+
+    #all vectors start at origin
+    X = []
+    Y = []
+    Z = []
+    for i in range(0,len(U)):
+        X.append(0)
+        Y.append(0)
+        Z.append(0)
+
+    #TODO: consider coloring vectors
+    fig, axs = plt.subplots(1, 3,figsize=(20,60))
+
+    axs[0].set_xlim(-1.1,1.1)
+    axs[0].set_ylim(-1.1,1.1)
+    axs[0].set_aspect('equal', adjustable='box')
+    axs[0].quiver(X, Y, U, V,scale=2.2) #scale is relative to plot limits
+    for index, lbl in enumerate(veclabels):
+        if(U[index] != 0 or V[index] != 0):
+            axs[0].text(U[index], V[index], lbl, fontdict=font)
+    axs[0].set_xlabel('x')
+    axs[0].set_ylabel('y')
+    axs[0].grid()
+
+    axs[1].set_xlim(-1.1,1.1)
+    axs[1].set_ylim(-1.1,1.1)
+    axs[1].set_aspect('equal', adjustable='box')
+    axs[1].quiver(X, Z, U, W,scale=2.2) #scale is relative to plot limits
+    for index, lbl in enumerate(veclabels):
+        if(U[index] != 0 or W[index] != 0):
+            axs[1].text(U[index], W[index], lbl, fontdict=font)
+    axs[1].set_xlabel('x')
+    axs[1].set_ylabel('z')
+    axs[1].grid()
+
+    axs[2].set_xlim(-1.1,1.1)
+    axs[2].set_ylim(-1.1,1.1)
+    axs[2].set_aspect('equal', adjustable='box')
+    axs[2].quiver(Y, Z, V, W,scale=2.2) #scale is relative to plot limits
+    for index, lbl in enumerate(veclabels):
+        if(V[index] != 0 or W[index] != 0):
+            axs[2].text(V[index], W[index], lbl, fontdict=font)
+    axs[2].set_xlabel('y')
+    axs[2].set_ylabel('z')
+    axs[2].grid()
+
+    plt.subplots_adjust(hspace=.5,wspace=.5)
+
+    if(flnm != ''):
+        plt.savefig(flnm,format='png')
+    else:
+        plt.show()
+
+def plot_flucs_on_field_aligned_coords(dfields,k,delB,xlim,ylim,zlim,flnm = ''):
+
+    from lib.analysis import compute_field_aligned_coord
+
+    font = {'family': 'serif', 'color': 'darkred', 'weight': 'normal', 'size': 16}
+
+    vperp2basis, vperp1basis, vparbasis = compute_field_aligned_coord(dfields,xlim,ylim,zlim)
+    #make change of basis matrix
+    _ = np.asarray([vparbasis,vperp1basis,vperp2basis]).T
+    changebasismatrix = np.linalg.inv(_)
+
+    kfldalg = np.matmul(changebasismatrix,k)
+    delBfldalg = np.matmul(changebasismatrix,delB)
+
+    epar = [1,0,0]
+    eperp1 = [0,1,0]
+    eperp2 = [0,0,1]
+    veclabels = [r'$\hat{e}_{||}$',r'$\hat{e}_{\perp 1}$',r'$\hat{e}_{\perp 2}$',r'$k$',r'$\delta B$']
+
+
+    #Build plot input varaibles
+    U = [epar[0],eperp1[0],eperp2[0],kfldalg[0],np.real(delBfldalg[0])]
+    V = [epar[1],eperp1[1],eperp2[1],kfldalg[1],np.real(delBfldalg[1])]
+    W = [epar[2],eperp1[2],eperp2[2],kfldalg[2],np.real(delBfldalg[2])]
+
+    pltlim = np.max([1,np.linalg.norm(kfldalg),np.linalg.norm(delBfldalg)])
+    pltlim += .1*pltlim
+    scale = 2*pltlim
+
+    #all vectors start at origin
+    X = []
+    Y = []
+    Z = []
+    for i in range(0,len(U)):
+        X.append(0)
+        Y.append(0)
+        Z.append(0)
+
+    #TODO: consider coloring vectors
+    fig, axs = plt.subplots(1, 3,figsize=(20,60))
+
+    axs[0].set_xlim(-pltlim,pltlim)
+    axs[0].set_ylim(-pltlim,pltlim)
+    axs[0].set_aspect('equal', adjustable='box')
+    axs[0].quiver(X, Y, U, V,scale=scale) #scale is relative to plot limits
+    for index, lbl in enumerate(veclabels):
+        if(U[index] != 0 or V[index] != 0):
+            axs[0].text(U[index], V[index], lbl, fontdict=font)
+    #axs[0].set_xlabel('x')
+    #axs[0].set_ylabel('y')
+    axs[0].grid()
+
+    axs[1].set_xlim(-pltlim,pltlim)
+    axs[1].set_ylim(-pltlim,pltlim)
+    axs[1].set_aspect('equal', adjustable='box')
+    axs[1].quiver(X, Z, U, W,scale=scale) #scale is relative to plot limits
+    for index, lbl in enumerate(veclabels):
+        if(U[index] != 0 or W[index] != 0):
+            axs[1].text(U[index], W[index], lbl, fontdict=font)
+    #axs[1].set_xlabel('x')
+    #axs[1].set_ylabel('z')
+    axs[1].grid()
+
+    axs[2].set_xlim(-pltlim,pltlim)
+    axs[2].set_ylim(-pltlim,pltlim)
+    axs[2].set_aspect('equal', adjustable='box')
+    axs[2].quiver(Y, Z, V, W,scale=scale) #scale is relative to plot limits
+    for index, lbl in enumerate(veclabels):
+        if(V[index] != 0 or W[index] != 0):
+            axs[2].text(V[index], W[index], lbl, fontdict=font)
+    #axs[2].set_xlabel('y')
+    #axs[2].set_ylabel('z')
+    axs[2].grid()
+
+    plt.subplots_adjust(hspace=.5,wspace=.5)
+
+    if(flnm != ''):
+        plt.savefig(flnm,format='png')
+    else:
+        plt.show()

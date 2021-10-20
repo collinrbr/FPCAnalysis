@@ -737,9 +737,9 @@ def is_parallel(vec1,vec2,tol=0.001):
         return False, dotprod
 
 
-def get_B0(dfields,xxidx):
+def get_B_yzavg(dfields,xxidx):
     """
-
+    Returns <B(x0,y,z)>_(y,z)
     """
 
     dfavg = get_average_fields_over_yz(dfields)
@@ -747,6 +747,23 @@ def get_B0(dfields,xxidx):
     B0x = dfavg['bx'][0,0,xxidx]
     B0y = dfavg['by'][0,0,xxidx]
     B0z = dfavg['bz'][0,0,xxidx]
+
+    return [B0x, B0y, B0z]
+
+def get_B_avg(dfields,xlim,ylim,zlim):
+
+    from lib.array_ops import get_average_in_box
+
+    x1 = xlim[0]
+    x2 = xlim[1]
+    y1 = ylim[0]
+    y2 = ylim[1]
+    z1 = zlim[0]
+    z2 = zlim[1]
+
+    B0x = get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'bx')
+    B0y = get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'by')
+    B0z = get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'bz')
 
     return [B0x, B0y, B0z]
 
@@ -791,7 +808,7 @@ def alfven_wave_check(dfields,dfieldfluc,klist,xx,tol=.05):
     kz, ky, bykzkyx = _ffttransform_in_yz(dfieldfluc,'by')
     kz, ky, bzkzkyx = _ffttransform_in_yz(dfieldfluc,'bz')
 
-    B0 = get_B0(dfields,xxidx)
+    B0 = get_B_yzavg(dfields,xxidx)
 
     # #get delta perp fields
     # dperpf = get_delta_perp_fields(dfields,B0)
@@ -801,6 +818,7 @@ def alfven_wave_check(dfields,dfieldfluc,klist,xx,tol=.05):
     # where deltaB is from
     results = []
     kxexpected = [] #what kx needs to be for the wave to be alfvenic for each k in klist
+    delBlist = []
     for i in range(0,len(klist)):
         #pick a k and compute kperp
         k = klist[i]
@@ -845,6 +863,7 @@ def alfven_wave_check(dfields,dfieldfluc,klist,xx,tol=.05):
 
         kcrossB0 = np.cross(k,B0)
         delB = [bxkz0ky0kxxx[kxidx,xxidx],bykz0ky0kxxx[kxidx,xxidx],bzkz0ky0kxxx[kxidx,xxidx]]
+        delBlist.append(delB)
         delBperp = [bxperpkz0ky0kxxx[kxperpidx,xxidx],byperpkz0ky0kxxx[kxperpidx,xxidx],bzperpkz0ky0kxxx[kxperpidx,xxidx]]
 
         kxexpected.append(predict_kx_alfven(k[1],k[2],B0,delBperp))
@@ -860,27 +879,42 @@ def alfven_wave_check(dfields,dfieldfluc,klist,xx,tol=.05):
 
         results.append([(belowtol,np.linalg.norm(testAlfvenval)),is_perp(k,delB,tol=tol)])
 
-    return results, kxexpected
+    #TODO: consider cleaning up computing delB (maybe move to own function)
+    return results, kxexpected, delBlist
 
-
-def change_velocity_basis(dfields,dpar,xlim,ylim,zlim,debug=False):
-    from copy import deepcopy
+def compute_field_aligned_coord(dfields,xlim,ylim,zlim):
+    """
+    Computes field aligned coordinate basis using average B0 in provided box
+    """
     from lib.array_ops import find_nearest
+    from copy import deepcopy
 
-    gptsparticle = (xlim[0] <= dpar['x1']) & (dpar['x1'] <= xlim[1]) & (ylim[0] <= dpar['x2']) & (dpar['x2'] <= ylim[1]) & (zlim[0] <= dpar['x3']) & (dpar['x3'] <= zlim[1])
-
+    #TODO: rename vpar,vperp to epar, eperp...
     xavg = (xlim[1]+xlim[0])/2.
     xxidx = find_nearest(dfields['bz_xx'],xavg)
-    B0 = get_B0(dfields,xxidx) #***Assumes xlim is sufficiently thin*** as get_B0 uses <B(x0,y,z)>_(yz)=B0
+    B0 = get_B_avg(dfields,xlim,ylim,zlim) #***Assumes xlim is sufficiently thin*** as get_B0 uses <B(x0,y,z)>_(yz)=B0
 
     #get normalized basis vectors
     vparbasis = deepcopy(B0)
     vparbasis /= np.linalg.norm(vparbasis)
-    vperp1basis = _get_perp_component([0,1,0],vparbasis) #TODO: check that this returns something close to 0,1,0 as B0 is approximately in the xz plane (with some fluctuations)
-    vperp1basis /= np.linalg.norm(vperp1basis)
-    vperp2basis = np.cross(vperp1basis,vparbasis)
+    #vperp1basis = _get_perp_component([0,1,0],vparbasis) #TODO: check that this returns something close to 0,1,0 as B0 is approximately in the xz plane (with some fluctuations)
+    vperp2basis = np.cross([1,0,0],B0) #x hat cross B0
     vperp2basis /= np.linalg.norm(vperp2basis)
+    vperp1basis = np.cross(vparbasis,vperp2basis)
+    vperp1basis /= np.linalg.norm(vperp1basis)
 
+    return vperp2basis, vperp1basis, vparbasis
+
+def change_velocity_basis(dfields,dpar,xlim,ylim,zlim,debug=False):
+    """
+    Converts to field aligned coordinate system
+    Parallel direction is along average magnetic field direction at average in limits
+    """
+    from copy import deepcopy
+
+    gptsparticle = (xlim[0] <= dpar['x1']) & (dpar['x1'] <= xlim[1]) & (ylim[0] <= dpar['x2']) & (dpar['x2'] <= ylim[1]) & (zlim[0] <= dpar['x3']) & (dpar['x3'] <= zlim[1])
+
+    vperp2basis, vperp1basis, vparbasis = compute_field_aligned_coord(dfields,xlim,ylim,zlim)
     #check orthogonality of these vectors
     if(debug):
         tol = 0.01
@@ -906,7 +940,48 @@ def change_velocity_basis(dfields,dpar,xlim,ylim,zlim,debug=False):
             if(np.abs(normnewbasis-normoldbasis) > 0.01):
                 print('Warning. Change of basis did not converse total energy...')
 
-    return dparnewbasis
+    return dparnewbasis, [vparbasis,vperp1basis,vperp2basis]
 
-def compute_temp_aniso():
-    pass
+def compute_temp_aniso(dparfieldaligned,vmax,dv,V=[0.,0.,0.]):
+    """
+    Uses 2nd moment of the distribtuion function to compute temp anisotropy
+
+    2nd moment: P = NkT = m integral f(v) (v-V) (v-V) d3V
+
+    Assumes particles with velocity greater than vmax (along any direction) are negligible
+
+
+    """
+    from copy import deepcopy
+
+
+    if(V == [0.,0.,0.]):
+        print("Warning, recieved a drift velocity of V = [0,0,0] when computing temperature anisotropy...")
+
+    dpar = deepcopy(dparfieldaligned)
+    dpar['ppar'] = dpar['ppar'] - V[2]
+    dpar['pperp1'] = dpar['pperp1'] - V[1]
+    dpar['pperp2'] = dpar['pperp2'] - V[0]
+
+    # bin into f(vpar,vperp)
+    vparbins = np.arange(-vmax, vmax+dv, dv)
+    vpar = (vparbins[1:] + vparbins[:-1])/2.
+    vperpbins = np.arange(-vmax, vmax+dv, dv)
+    vperp = (vperpbins[1:] + vperpbins[:-1])/2.
+
+    hist,_ = np.histogramdd((np.sqrt(dpar['pperp2']*dpar['pperp2']+dpar['pperp1']*dpar['pperp1']), dpar['ppar']), bins=[vperpbins, vparbins])
+
+    #integrate by hand
+    Pperp = 0.
+    for i in range(0, len(vpar)):
+        for j in range(0, len(vperp)):
+            Pperp += vperp[j]*vperp[j]*hist[j,i]
+
+    Ppar = 0.
+    for i in range(0, len(vpar)):
+        for j in range(0, len(vperp)):
+            Ppar += vpar[i]*vpar[i]*hist[j,i]
+
+    Tperp_over_Tpar = Pperp/Ppar
+
+    return Tperp_over_Tpar
