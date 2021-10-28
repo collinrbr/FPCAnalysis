@@ -549,7 +549,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
 
     plt.subplots_adjust(hspace=.5,wspace=-.3)
     if(flnm != ''):
-        plt.savefig(flnm+'.png',format='png')
+        plt.savefig(flnm+'.png',format='png',dpi=250)
         plt.close('all') #saves RAM
     else:
         plt.show()

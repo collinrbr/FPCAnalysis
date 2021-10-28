@@ -600,7 +600,7 @@ def get_delta_fields(dfields,B0):
 #
 #     return ddeltaperpfields
 
-def wlt(t,data,w=6):
+def wlt(t,data,w=6,klim=None,retstep=1):
     """
     Peforms wavelet transform using morlet wavelet on data that is a function of t i.e. data(t)
 
@@ -614,6 +614,7 @@ def wlt(t,data,w=6):
         omega term in morlet wavelet function (relates to the number of humps)
     """
     from scipy import signal
+    from lib.array_ops import find_nearest
 
     dt = t[1]-t[0]
     fs = 1./dt
@@ -623,7 +624,18 @@ def wlt(t,data,w=6):
 
     cwtm = signal.cwt(data, signal.morlet2, widths, w=w)
 
-    return 2.0*math.pi*freq, cwtm
+    k = 2.0*math.pi*freq
+    if(klim != None):
+        lowerkidx = find_nearest(k,klim[0])
+        upperkidx = find_nearest(k,klim[1])
+        k = k[loweridx:upperkidx+1]
+        cwtm = cwtm[loweridx:upperkidx+1,:]
+
+    if(retstep != 1):
+        k=k[::retstep]
+        cwtm=cwtm[::retstep]
+
+    return k, cwtm
 
 def _ffttransform_in_yz(dfields,fieldkey):
     """
@@ -804,9 +816,14 @@ def alfven_wave_check(dfields,dfieldfluc,klist,xx,tol=.05):
     xxidx = find_nearest(dfields['bz_xx'],xx)
 
     #TODO: rename these variables. Data is ordered B(x/kx,kz,ky)
+    #TODO: make function that can compute del B/E (kx,ky,kz;xx)
     kz, ky, bxkzkyx = _ffttransform_in_yz(dfieldfluc,'bx')
     kz, ky, bykzkyx = _ffttransform_in_yz(dfieldfluc,'by')
     kz, ky, bzkzkyx = _ffttransform_in_yz(dfieldfluc,'bz')
+
+    kz, ky, exkzkyx = _ffttransform_in_yz(dfieldfluc,'ex')
+    kz, ky, eykzkyx = _ffttransform_in_yz(dfieldfluc,'ey')
+    kz, ky, ezkzkyx = _ffttransform_in_yz(dfieldfluc,'ez')
 
     B0 = get_B_yzavg(dfields,xxidx)
 
@@ -819,6 +836,7 @@ def alfven_wave_check(dfields,dfieldfluc,klist,xx,tol=.05):
     results = []
     kxexpected = [] #what kx needs to be for the wave to be alfvenic for each k in klist
     delBlist = []
+    delElist = []
     for i in range(0,len(klist)):
         #pick a k and compute kperp
         k = klist[i]
@@ -834,10 +852,16 @@ def alfven_wave_check(dfields,dfieldfluc,klist,xx,tol=.05):
             _bxkzkyx = np.conj(bxkzkyx)
             _bykzkyx = np.conj(bykzkyx)
             _bzkzkyx = np.conj(bzkzkyx)
+            _exkzkyx = np.conj(exkzkyx)
+            _eykzkyx = np.conj(eykzkyx)
+            _ezkzkyx = np.conj(ezkzkyx)
         else:
             _bxkzkyx = bxkzkyx
             _bykzkyx = bykzkyx
             _bzkzkyx = bzkzkyx
+            _exkzkyx = exkzkyx
+            _eykzkyx = eykzkyx
+            _ezkzkyx = ezkzkyx
 
         #finalize transform into k space i.e. compute B(kx0,kz0,ky0) from B(x,kz,ky) for k and k perp
         #note: we never have an array B(kx,ky,kz), just that scalar quantities at k0 and kperp0, which we get from
@@ -846,6 +870,10 @@ def alfven_wave_check(dfields,dfieldfluc,klist,xx,tol=.05):
         kx, bxkz0ky0kxxx = wlt(dfieldfluc['bx_xx'],_bxkzkyx[:,kzidx,kyidx]) #note kx is that same for all 6 returns here
         kx, bykz0ky0kxxx = wlt(dfieldfluc['by_xx'],_bykzkyx[:,kzidx,kyidx])
         kx, bzkz0ky0kxxx = wlt(dfieldfluc['bz_xx'],_bzkzkyx[:,kzidx,kyidx])
+        kx, exkz0ky0kxxx = wlt(dfieldfluc['ex_xx'],_exkzkyx[:,kzidx,kyidx])
+        kx, eykz0ky0kxxx = wlt(dfieldfluc['ey_xx'],_eykzkyx[:,kzidx,kyidx])
+        kx, ezkz0ky0kxxx = wlt(dfieldfluc['ez_xx'],_ezkzkyx[:,kzidx,kyidx])
+
         kx, bxperpkz0ky0kxxx = wlt(dfieldfluc['bx_xx'],_bxkzkyx[:,kzperpidx,kyperpidx])
         kx, byperpkz0ky0kxxx = wlt(dfieldfluc['by_xx'],_bykzkyx[:,kzperpidx,kyperpidx])
         kx, bzperpkz0ky0kxxx = wlt(dfieldfluc['bz_xx'],_bzkzkyx[:,kzperpidx,kyperpidx])
@@ -863,7 +891,9 @@ def alfven_wave_check(dfields,dfieldfluc,klist,xx,tol=.05):
 
         kcrossB0 = np.cross(k,B0)
         delB = [bxkz0ky0kxxx[kxidx,xxidx],bykz0ky0kxxx[kxidx,xxidx],bzkz0ky0kxxx[kxidx,xxidx]]
+        delE = [exkz0ky0kxxx[kxidx,xxidx],eykz0ky0kxxx[kxidx,xxidx],ezkz0ky0kxxx[kxidx,xxidx]]
         delBlist.append(delB)
+        delElist.append(delE)
         delBperp = [bxperpkz0ky0kxxx[kxperpidx,xxidx],byperpkz0ky0kxxx[kxperpidx,xxidx],bzperpkz0ky0kxxx[kxperpidx,xxidx]]
 
         kxexpected.append(predict_kx_alfven(k[1],k[2],B0,delBperp))
@@ -880,7 +910,7 @@ def alfven_wave_check(dfields,dfieldfluc,klist,xx,tol=.05):
         results.append([(belowtol,np.linalg.norm(testAlfvenval)),is_perp(k,delB,tol=tol)])
 
     #TODO: consider cleaning up computing delB (maybe move to own function)
-    return results, kxexpected, delBlist
+    return results, kxexpected, delBlist, delElist
 
 def compute_field_aligned_coord(dfields,xlim,ylim,zlim):
     """
@@ -899,11 +929,17 @@ def compute_field_aligned_coord(dfields,xlim,ylim,zlim):
     vparbasis /= np.linalg.norm(vparbasis)
     #vperp1basis = _get_perp_component([0,1,0],vparbasis) #TODO: check that this returns something close to 0,1,0 as B0 is approximately in the xz plane (with some fluctuations)
     vperp2basis = np.cross([1,0,0],B0) #x hat cross B0
+    tol = 0.005
+    _B0 = B0 / np.linalg.norm(B0)
+    if(np.linalg.norm([_B0[0]-1.,_B0[1]-0.,_B0[2]-0.]) < tol): #assumes B0 != [-1,0,0]
+        print("Warning, B0 is perpendicular to x (typically the shock normal)...")
+        print("Already in field aligned coordinates. Returning standard basis...")
+        return np.asarray([1,0,0]),np.asarray([0,1,0]),np.asarray([0,0,1])
     vperp2basis /= np.linalg.norm(vperp2basis)
     vperp1basis = np.cross(vparbasis,vperp2basis)
     vperp1basis /= np.linalg.norm(vperp1basis)
 
-    return vperp2basis, vperp1basis, vparbasis
+    return vparbasis, vperp1basis, vperp2basis
 
 def change_velocity_basis(dfields,dpar,xlim,ylim,zlim,debug=False):
     """
@@ -912,9 +948,12 @@ def change_velocity_basis(dfields,dpar,xlim,ylim,zlim,debug=False):
     """
     from copy import deepcopy
 
+    if(dfields['Vframe_relative_to_sim'] != dpar['Vframe_relative_to_sim']):
+        print("Warning, field data is not in the same frame as particle data...")
+
     gptsparticle = (xlim[0] <= dpar['x1']) & (dpar['x1'] <= xlim[1]) & (ylim[0] <= dpar['x2']) & (dpar['x2'] <= ylim[1]) & (zlim[0] <= dpar['x3']) & (dpar['x3'] <= zlim[1])
 
-    vperp2basis, vperp1basis, vparbasis = compute_field_aligned_coord(dfields,xlim,ylim,zlim)
+    vparbasis, vperp1basis, vperp2basis = compute_field_aligned_coord(dfields,xlim,ylim,zlim)
     #check orthogonality of these vectors
     if(debug):
         tol = 0.01
@@ -928,9 +967,9 @@ def change_velocity_basis(dfields,dpar,xlim,ylim,zlim,debug=False):
     #change basis
     dparnewbasis = {}
     dparnewbasis['ppar'],dparnewbasis['pperp1'],dparnewbasis['pperp2'] = np.matmul(changebasismatrix,[dpar['p1'][gptsparticle][:],dpar['p2'][gptsparticle][:],dpar['p3'][gptsparticle][:]])
-    dparnewbasis['x1'] = deepcopy(dpar['x1'][:])
-    dparnewbasis['x2'] = deepcopy(dpar['x2'][:])
-    dparnewbasis['x3'] = deepcopy(dpar['x3'][:])
+    # dparnewbasis['x1'] = deepcopy(dpar['x1'][:])
+    # dparnewbasis['x2'] = deepcopy(dpar['x2'][:])
+    # dparnewbasis['x3'] = deepcopy(dpar['x3'][:])
 
     #check v^2 for both basis to make sure everything matches
     if(debug):
@@ -940,7 +979,7 @@ def change_velocity_basis(dfields,dpar,xlim,ylim,zlim,debug=False):
             if(np.abs(normnewbasis-normoldbasis) > 0.01):
                 print('Warning. Change of basis did not converse total energy...')
 
-    return dparnewbasis, [vparbasis,vperp1basis,vperp2basis]
+    return dparnewbasis
 
 def compute_temp_aniso(dparfieldaligned,vmax,dv,V=[0.,0.,0.]):
     """
@@ -959,9 +998,9 @@ def compute_temp_aniso(dparfieldaligned,vmax,dv,V=[0.,0.,0.]):
         print("Warning, recieved a drift velocity of V = [0,0,0] when computing temperature anisotropy...")
 
     dpar = deepcopy(dparfieldaligned)
-    dpar['ppar'] = dpar['ppar'] - V[2]
+    dpar['ppar'] = dpar['ppar'] - V[0] #TODO: consider checking frame of particles relative to sim
     dpar['pperp1'] = dpar['pperp1'] - V[1]
-    dpar['pperp2'] = dpar['pperp2'] - V[0]
+    dpar['pperp2'] = dpar['pperp2'] - V[2]
 
     # bin into f(vpar,vperp)
     vparbins = np.arange(-vmax, vmax+dv, dv)
