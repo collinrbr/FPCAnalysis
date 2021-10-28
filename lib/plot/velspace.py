@@ -417,7 +417,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
                                 CEx_xy,CEx_xz, CEx_yz,
                                 CEy_xy,CEy_xz, CEy_yz,
                                 CEz_xy,CEz_xz, CEz_yz,
-                                flnm = '', ttl = ''):
+                                flnm = '', ttl = '', computeJdotE = False):
     """
     Makes super figure of distribution and velocity sigantures from all different projections
     i.e. different viewing angles
@@ -440,8 +440,11 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         if set to default, plt.show() will be called instead
     ttl : str, optional
         title of plot
+    computeJdotE : bool, optional
+        compute and write JdotE for each panel as title of each sub plot
     """
     from lib.array_ops import mesh_3d_to_2d
+    from lib.analysis import compute_energization
 
     plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
 
@@ -450,6 +453,8 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     vx_xy, vy_xy = mesh_3d_to_2d(vx,vy,vz,'xy')
     vx_xz, vz_xz = mesh_3d_to_2d(vx,vy,vz,'xz')
     vy_yz, vz_yz = mesh_3d_to_2d(vx,vy,vz,'yz')
+
+    dv = vy_yz[1][1]-vy_yz[0][0] #assumes square velocity grid
 
     fig.suptitle(ttl)
 
@@ -481,6 +486,9 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     axs[1,0].set_xlabel(r"$v_x/v_{ti}$")
     axs[1,0].set_ylabel(r"$v_y/v_{ti}$")
     axs[1,0].set_aspect('equal', 'box')
+    if(computeJdotE):
+        JdotE = compute_energization(CEx_xy,dv)
+        axs[1,0].title.set_text('$J \cdot E$ = ' + str(JdotE))
     plt.colorbar(im10, ax=axs[1,0])
     #CEx_xz
     maxCe = max(np.max(CEx_xz),abs(np.max(CEx_xz)))
@@ -489,6 +497,9 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     axs[1,1].set_xlabel(r"$v_x/v_{ti}$")
     axs[1,1].set_ylabel(r"$v_z/v_{ti}$")
     axs[1,1].set_aspect('equal', 'box')
+    if(computeJdotE):
+        JdotE = compute_energization(CEx_xz,dv)
+        axs[1,1].title.set_text('$J \cdot E$ = ' + str(JdotE))
     plt.colorbar(im11, ax=axs[1,1])
     #CEx_yz
     maxCe = max(np.max(CEx_yz),abs(np.max(CEx_yz)))
@@ -497,6 +508,9 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     axs[1,2].set_ylabel(r"$v_y/v_{ti}$")
     axs[1,2].set_xlabel(r"$v_z/v_{ti}$")
     axs[1,2].set_aspect('equal', 'box')
+    if(computeJdotE):
+        JdotE = compute_energization(CEx_yz.T,dv)
+        axs[1,2].title.set_text('$J \cdot E$ = ' + str(JdotE))
     plt.colorbar(im12, ax=axs[1,2])
     #CEy_xy
     maxCe = max(np.max(CEy_xy),abs(np.max(CEy_xy)))
@@ -505,6 +519,9 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     axs[2,0].set_xlabel(r"$v_x/v_{ti}$")
     axs[2,0].set_ylabel(r"$v_y/v_{ti}$")
     axs[2,0].set_aspect('equal', 'box')
+    if(computeJdotE):
+        JdotE = compute_energization(CEy_xy,dv)
+        axs[2,0].title.set_text('$J \cdot E$ = ' + str(JdotE))
     plt.colorbar(im20, ax=axs[2,0])
     #CEy_xz
     maxCe = max(np.max(CEy_xz),abs(np.max(CEy_xz)))
@@ -513,6 +530,9 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     axs[2,1].set_xlabel(r"$v_x/v_{ti}$")
     axs[2,1].set_ylabel(r"$v_z/v_{ti}$")
     axs[2,1].set_aspect('equal', 'box')
+    if(computeJdotE):
+        JdotE = compute_energization(CEy_xz,dv)
+        axs[2,1].title.set_text('$J \cdot E$ = ' + str(JdotE))
     plt.colorbar(im21, ax=axs[2,1])
     #CEy_yz
     maxCe = max(np.max(CEy_yz),abs(np.max(CEy_yz)))
@@ -521,6 +541,9 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     axs[2,2].set_ylabel(r"$v_y/v_{ti}$")
     axs[2,2].set_xlabel(r"$v_z/v_{ti}$")
     axs[2,2].set_aspect('equal', 'box')
+    if(computeJdotE):
+        JdotE = compute_energization(CEy_yz.T,dv)
+        axs[2,2].title.set_text('$J \cdot E$ = ' + str(JdotE))
     plt.colorbar(im22, ax=axs[2,2])
     #CEz_xy
     maxCe = max(np.max(CEz_xy),abs(np.max(CEz_xy)))
@@ -529,6 +552,9 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     axs[3,0].set_xlabel(r"$v_x/v_{ti}$")
     axs[3,0].set_ylabel(r"$v_y/v_{ti}$")
     axs[3,0].set_aspect('equal', 'box')
+    if(computeJdotE):
+        JdotE = compute_energization(CEz_xy,dv)
+        axs[3,0].title.set_text('$J \cdot E$ = ' + str(JdotE))
     plt.colorbar(im30, ax=axs[3,0])
     #CEz_xz
     maxCe = max(np.max(CEz_xz),abs(np.max(CEz_xz)))
@@ -537,6 +563,9 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     axs[3,1].set_xlabel(r"$v_x/v_{ti}$")
     axs[3,1].set_ylabel(r"$v_z/v_{ti}$")
     axs[3,1].set_aspect('equal', 'box')
+    if(computeJdotE):
+        JdotE = compute_energization(CEz_xz,dv)
+        axs[3,1].title.set_text('$J \cdot E$ = ' + str(JdotE))
     plt.colorbar(im31, ax=axs[3,1])
     #CEz_yz
     maxCe = max(np.max(CEz_yz),abs(np.max(CEz_yz)))
@@ -545,6 +574,9 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     axs[3,2].set_ylabel(r"$v_y/v_{ti}$")
     axs[3,2].set_xlabel(r"$v_z/v_{ti}$")
     axs[3,2].set_aspect('equal', 'box')
+    if(computeJdotE):
+        JdotE = compute_energization(CEz_yz.T,dv)
+        axs[3,2].title.set_text('$J \cdot E$ = ' + str(JdotE))
     plt.colorbar(im32, ax=axs[3,2])
 
     plt.subplots_adjust(hspace=.5,wspace=-.3)
