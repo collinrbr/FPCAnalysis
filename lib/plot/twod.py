@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 
-def make_field_pmesh(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, xxindex=float('nan'), yyindex=float('nan'), zzindex=float('nan'), xlimmin=None,xlimmax=None):
+def make_field_pmesh(dfields,fieldkey,planename,flnm = '',takeaxisaverage=False, xxindex=float('nan'), yyindex=float('nan'), zzindex=float('nan'), xlimmin=None,xlimmax=None):
     """
     Makes pmesh of given field
 
@@ -119,7 +119,7 @@ def make_field_pmesh(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, 
     if(xlimmin != None and xlimmax != None):
         plt.xlim(xlimmin, xlimmax)
     if(flnm != ''):
-        plt.savefig(flnm+'.png',format='png')
+        plt.savefig(flnm+'.png',format='png',dpi=300)
         plt.close('all')#saves RAM
     else:
         plt.show()

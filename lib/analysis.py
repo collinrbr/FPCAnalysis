@@ -653,6 +653,66 @@ def _ffttransform_in_yz(dfields,fieldkey):
 
     return kz, ky, fieldfftsweepoverx
 
+def take_ifft2(data):
+    """
+    Computes 2d ifft on given data
+
+
+    """
+
+    ifftdata = np.fft.ifft2(data)*(float(len(data)*len(data[1])))
+
+    return ifftdata
+
+def _iffttransform_in_yz(fftdfields,fieldkey):
+    """
+    Takes f(x,kz,ky) and computes f(x,z,y) using a 2d fft for some given field
+    """
+
+    fieldifftsweepoverx = []
+    for xxindex in range(0,len(fftdfields[fieldkey])):
+        fieldslicefft = np.asarray(fftdfields[fieldkey])[xxindex,:,:]
+        fieldslice = take_ifft2(fieldslicefft)
+        fieldifftsweepoverx.append(fieldslice)
+    fieldifftsweepoverx = np.asarray(fieldifftsweepoverx)
+
+    return fieldifftsweepoverx
+
+#filter fields to specified k
+def yz_fft_filter(dfields,ky0,kz0):
+    """
+    """
+
+    from copy import deepcopy
+
+    dfieldsfiltered = deepcopy(dfields)
+
+    keys = {'ex','ey','ez','bx','by','bz'}
+
+    #take fft
+    for key in keys:
+        kz,ky,dfieldsfiltered[key] = anl._ffttransform_in_yz(dfieldsfiltered,key)
+
+    #filter
+    ky0idx = ao.find_nearest(ky, ky0)
+    kz0idx = ao.find_nearest(kz, kz0)
+
+    for key in keys:
+        for _xxidx in range(0,len(dfieldsfiltered[key])):
+            for _kzidx in range(0,len(dfieldsfiltered[key][_xxidx])):
+                for _kyidx in range(0,len(dfieldsfiltered[key][_xxidx][_kzidx])):
+                    if(not(_kyidx == ky0idx and _kzidx == kz0idx)):
+                        dfieldsfiltered[key][_xxidx,_kzidx,_kyidx] = 0
+
+    #take ifft
+    for key in keys:
+        dfieldsfiltered[key] = _iffttransform_in_yz(dfieldsfiltered,key) #note: input index order is (x,kz,ky) and output is (x,z,y)
+        dfieldsfiltered[key] = np.swapaxes(dfieldsfiltered[key], 0, 2) #change index order from (x,z,y) to (z,y,x)
+        dfieldsfiltered[key] = np.swapaxes(dfieldsfiltered[key], 0, 1)
+        dfieldsfiltered[key] = np.real(dfieldsfiltered[key])
+
+    return dfieldsfiltered
+
 
 
 def find_potential_wavemodes(dfields,fieldkey,xpos,cutoffconst=.1):
