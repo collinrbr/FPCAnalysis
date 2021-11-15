@@ -512,6 +512,29 @@ def remove_average_fields_over_yz(dfields):
 
     return dfieldfluc
 
+def remove_average_flow_over_yz(dflow):
+    """
+    Removes yz average from field data i.e. delta_field(x,y,z) = field(x,y,z)-<field(x,y,z)>_(y,z)
+
+    Parameters
+    ----------
+    dfluc : dict
+        flow data dictionary from flow_loader
+
+    Returns
+    -------
+    dflowfluc : dict
+        delta field data dictionary
+    """
+    from copy import deepcopy
+
+    dflowfluc = deepcopy(dflow) #deep copy
+    dflowfluc['ux'] = dfieldfluc['ux']-dfieldfluc['ux'].mean(axis=(0,1))
+    dflowfluc['uy'] = dfieldfluc['uy']-dfieldfluc['uy'].mean(axis=(0,1))
+    dflowfluc['uz'] = dfieldfluc['uz']-dfieldfluc['uz'].mean(axis=(0,1))
+
+    return dflowfluc
+
 def get_average_fields_over_yz(dfields):
     """
     Returns yz average of field i.e. dfield_avg(x,y,z) = <field(x,y,z)>_(y,z)
