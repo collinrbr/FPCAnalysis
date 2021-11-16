@@ -714,7 +714,7 @@ def yz_fft_filter(dfields,ky0,kz0):
 
     #take fft
     for key in keys:
-        kz,ky,dfieldsfiltered[key] = anl._ffttransform_in_yz(dfieldsfiltered,key)
+        kz,ky,dfieldsfiltered[key] = _ffttransform_in_yz(dfieldsfiltered,key)
 
     #filter
     ky0idx = ao.find_nearest(ky, ky0)
@@ -1156,7 +1156,7 @@ def yz_fft_filter(dfields,ky0,kz0):
 
     #take fft
     for key in keys:
-        kz,ky,dfieldsfiltered[key] = anl._ffttransform_in_yz(dfieldsfiltered,key)
+        kz,ky,dfieldsfiltered[key] = _ffttransform_in_yz(dfieldsfiltered,key)
 
     #filter
     ky0idx = ao.find_nearest(ky, ky0)
