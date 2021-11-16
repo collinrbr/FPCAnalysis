@@ -706,6 +706,7 @@ def yz_fft_filter(dfields,ky0,kz0):
     """
     """
 
+    from lib.array_ops import find_nearest
     from copy import deepcopy
 
     dfieldsfiltered = deepcopy(dfields)
@@ -717,8 +718,8 @@ def yz_fft_filter(dfields,ky0,kz0):
         kz,ky,dfieldsfiltered[key] = _ffttransform_in_yz(dfieldsfiltered,key)
 
     #filter
-    ky0idx = ao.find_nearest(ky, ky0)
-    kz0idx = ao.find_nearest(kz, kz0)
+    ky0idx = find_nearest(ky, ky0)
+    kz0idx = find_nearest(kz, kz0)
 
     for key in keys:
         for _xxidx in range(0,len(dfieldsfiltered[key])):
