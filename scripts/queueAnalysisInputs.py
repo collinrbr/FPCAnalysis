@@ -43,4 +43,14 @@ print(filenames)
 for flnm in filenames:
     cmd = 'python3 scripts/generateFPC.py '+analysisinputdir+'/'+flnm
     print(cmd)
-    os.system(cmd)
+    exitval = os.system(cmd)
+    print('os.system returned: ' + exitval)
+
+    #try using restart files if error occured
+    if(exitval != 0):
+        print('Error loading Raw/Sp01 data, trying restart files...')
+        print('Warning, time of the analysis input file should be the last timeslice in the simulation...')#TODO: check automatically
+        cmd = 'python3 scripts/generateFPC.py '+analysisinputdir+'/'+flnm+' T F'
+        print(cmd)
+        exitval = os.system(cmd)
+        print('os.system returned: ' + exitval)

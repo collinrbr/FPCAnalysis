@@ -49,6 +49,11 @@ if(is_2D3V == 'T'):
 else:
     is2d3v = False
 
+if(use_restart == 'T'):
+    use_restart = True
+else:
+    use_restart = False
+
 #-------------------------------------------------------------------------------
 # load data
 #-------------------------------------------------------------------------------
@@ -69,7 +74,7 @@ if(not(is2d3v)): #TODO: add check_input for 2d3v
     anl.check_input(analysisinputflnm,dfields)
 
 #Load data using normal output files
-if(use_restart == 'F'):
+if(not(use_restart)):
     print("Loading particle data...")
     #Load slice of particle data
     if xlim is not None and ylim is not None and zlim is not None:
@@ -88,7 +93,7 @@ if(use_restart == 'F'):
         dparticles = dh5.read_particles(path_particles, numframe, is2d3v=is2d3v)
 
 #Load data using restart files
-if(use_restart == 'T'):
+if(use_restart):
     print("Loading particle data using restart files...")
     #Load slice of particle data
     if xlim is not None:

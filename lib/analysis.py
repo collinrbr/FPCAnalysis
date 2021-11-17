@@ -635,6 +635,9 @@ def wlt(t,data,w=6,klim=None,retstep=1):
         dependent data array
     w : float, opt
         omega term in morlet wavelet function (relates to the number of humps)
+    retstep : int, opt
+        spacing between samples of k in returned by wavelet transform
+        used mostly to save memory as wavelet transform returns dense sampling of k
     """
     from scipy import signal
     from lib.array_ops import find_nearest
@@ -1181,3 +1184,44 @@ def yz_fft_filter(dfields,ky0,kz0):
 
 
     return dfieldsfiltered
+
+def transform_field_to_kzkykxxx(ddict,fieldkey,retstep=12):
+    """
+    Takes fft in y and z and wavelet transform in x of given field/ flow.
+
+    E.g. takes B(z,y,x) and computes B(kz,ky,kx;x)
+
+    Parameters
+    ----------
+    ddict : dict
+        field or flow data dictionary
+    fieldkey : str
+        name of field you want to transform (ex, ey, ez, bx, by, bz, ux, uy, uz)
+    retstep : int, opt
+        spacing between samples of k in returned by wavelet transform
+        used mostly to save memory as wavelet transform returns dense sampling of k
+
+    Returns
+    -------
+    """
+
+    kz, ky, fieldkzkyx = _ffttransform_in_yz(ddict,fieldkey)
+
+    nxx = len(ddict[fieldkey+'_xx'])
+    nkx = int(len(ddict[fieldkey+'_xx'])/retstep) #warning: this is hard coded to match wlt function output size
+    nky = len(ky)
+    nkz = len(kz)
+    fieldkzkykxxx = np.zeros((nkz,nky,2*nkx,nxx),dtype=np.complex_)
+
+    for kyidx in range(0,len(ky)):
+        for kzidx in range(0,len(kz)):
+            positivekx, rightfieldkz0ky0kxxx = wlt(ddict[fieldkey+'_xx'],fieldkzkyx[:,kzidx,kyidx],retstep=retstep)
+            negativekx, leftfieldkz0ky0kxxx = wlt(ddict[fieldkey+'_xx'],np.conj(fieldkzkyx[:,kzidx,kyidx]),retstep=retstep)
+            fieldkzkykxxx[kzidx,kyidx,nkx:,:] = rightfieldkz0ky0kxxx[:,:]
+            fieldkzkykxxx[kzidx,kyidx,0:nkx,:] = np.flip(leftfieldkz0ky0kxxx[:,:], axis=0)
+
+    negativekx *= -1
+    negativekx = np.sort(negativekx)
+    kx = np.concatenate([negativekx,positivekx])
+
+    return kz, ky, kx, fieldkzkykxxx
