@@ -44,7 +44,7 @@ for flnm in filenames:
     cmd = 'python3 scripts/generateFPC.py '+analysisinputdir+'/'+flnm
     print(cmd)
     exitval = os.system(cmd)
-    print('os.system returned: ' + exitval)
+    print('os.system returned: ' + str(exitval))
 
     #try using restart files if error occured
     if(exitval != 0):
@@ -53,4 +53,4 @@ for flnm in filenames:
         cmd = 'python3 scripts/generateFPC.py '+analysisinputdir+'/'+flnm+' T F'
         print(cmd)
         exitval = os.system(cmd)
-        print('os.system returned: ' + exitval)
+        print('os.system returned: ' + str(exitval))
