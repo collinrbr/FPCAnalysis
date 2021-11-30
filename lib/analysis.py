@@ -244,7 +244,7 @@ def calc_E_crossB(dfields,x1,x2,y1,y2,z1,z2):
 
 def calc_Ji_Ei(dfields, dflow, x1, x2, y1, y2, z1, z2):
     """
-    Calculates JdotE in given box
+    Calculates JdotE components in given box
 
     Parameters
     ----------
@@ -275,7 +275,7 @@ def calc_Ji_Ei(dfields, dflow, x1, x2, y1, y2, z1, z2):
     eyf = get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'ey')
     ezf = get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'ez')
 
-    JxEx = ux*exf #TODO: check units (could have definitely omitted q here)
+    JxEx = ux*exf #TODO: check units (could have omitted q here)
     JyEy = uy*eyf
     JzEz = uz*ezf
     return JxEx, JyEy, JzEz
