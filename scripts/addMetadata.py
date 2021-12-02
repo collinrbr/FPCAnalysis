@@ -45,6 +45,10 @@ if xlim is None:
 #build metadata
 metadata = md.build_metadata(xlim, dx, startval, endval)
 
+#need to turn off lock using env var
+print("Warning: setting env var HDF5_USE_FILE_LOCKING=FALSE")
+os.system('export HDF5_USE_FILE_LOCKING=FALSE')
+
 #append metadata
 from netCDF4 import Dataset
 ncout = Dataset(filename, 'r+', format='NETCDF4')
@@ -53,7 +57,7 @@ try:
     sda.description = '1 = signature, 0 = no signature'
     sda[:] = metadata[:]
 except:
-    sda = ncout.variables['npar']
+    sda = ncout.variables['sda']
     sda[:] = metadata[:]
 
 ncout.close()
