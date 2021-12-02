@@ -139,7 +139,7 @@ def compute_all_hist_and_cor():
 
 def compute_correlation_over_x(dfields, dparticles, vmax, dv, dx, vshock, xlim=None, ylim=None, zlim=None):
     """
-    Computes f(x; vy, vx), CEx(x; vy, vx), and CEx(x; vy, vx) along different slices of x
+    Computes f(x; vy, vx), CEx(x; vy, vx), and CEx(x; vy, vx) along different slices (i.e. thin analysis boxes) of x
 
     Parameters
     ----------
@@ -181,6 +181,8 @@ def compute_correlation_over_x(dfields, dparticles, vmax, dv, dx, vshock, xlim=N
         vy velocity grid
     vz : 3d array
         vz velocity grid
+    num_par_out : 1d array
+        number of particles in box
     """
 
     CEx_out = []
@@ -188,6 +190,7 @@ def compute_correlation_over_x(dfields, dparticles, vmax, dv, dx, vshock, xlim=N
     CEz_out = []
     x_out = []
     Hist_out = []
+    num_par_out = []
 
     if xlim is not None:
         x1 = xlim[0]
@@ -214,22 +217,21 @@ def compute_correlation_over_x(dfields, dparticles, vmax, dv, dx, vshock, xlim=N
         z2 = z1 + dx
 
     while(x2 <= xEnd):
-        # This print statement is no longer correct now that we are taking the start points as inputs
-        # print(str(dfields['ex_xx'][i]) +' of ' + str(dfields['ex_xx'][len(dfields['ex_xx'])-1]))
+        print('scan pos-> x1: ',x1,' x2: ',x2,' y1: ',y1,' y2: ',y2,' z1: ' z1,' z2: ',z2)
         vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock, 'ex', 'x')
         vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEy = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock, 'ey', 'y')
         vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEz = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock, 'ez', 'z')
-        print(x1, x2, y1, y2, z1, z2)
-        print(totalPtcl)
+        print('num particles in box: ', totalPtcl)
         x_out.append(np.mean([x1,x2]))
         CEx_out.append(CEx)
         CEy_out.append(CEy)
         CEz_out.append(CEz)
         Hist_out.append(Hist)
+        num_par_out.append(totalPtcl)
         x1 += dx
         x2 += dx
 
-    return CEx_out, CEy_out, CEz_out, x_out, Hist_out, vx, vy, vz
+    return CEx_out, CEy_out, CEz_out, x_out, Hist_out, vx, vy, vz, num_par_out
 
 
 def compute_all_correlation_over_x():

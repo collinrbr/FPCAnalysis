@@ -141,7 +141,7 @@ if dx is None:
     #Assumes rectangular grid that is uniform for all fields
     #If dx not specified, just use the grid cell spacing for the EM fields
     dx = dfields['ex_xx'][1]-dfields['ex_xx'][0]
-CEx, CEy, CEz, x, Hist, vx, vy, vz = fpc.compute_correlation_over_x(dfields, dparticles, vmax, dv, dx, vshock, xlim, ylim, zlim)
+CEx, CEy, CEz, x, Hist, vx, vy, vz, num_par = fpc.compute_correlation_over_x(dfields, dparticles, vmax, dv, dx, vshock, xlim, ylim, zlim)
 
 #-------------------------------------------------------------------------------
 # compute energization
@@ -171,5 +171,5 @@ inputdict = dnc.parse_input_file(path)
 params = dnc.build_params(inputdict,numframe)
 
 flnm = 'FPCnometadata.nc'
-dnc.save3Vdata(Hist, CEx, CEy, CEz, vx, vy, vz, x, enerCEx, enerCEy, enerCEz, dfields['Vframe_relative_to_sim'], metadata_out = [], params = params, filename = resultsdir+flnm)
+dnc.save3Vdata(Hist, CEx, CEy, CEz, vx, vy, vz, x, enerCEx, enerCEy, enerCEz, dfields['Vframe_relative_to_sim'], params = params, num_par = num_par, filename = resultsdir+flnm)
 print("Done! Please use findShock.py and addMetadata to assign metadata...")
