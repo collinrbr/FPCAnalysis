@@ -81,6 +81,17 @@ def load_plume_sweep(flnm):
 
         line = f.readline()
 
+    for key in plume_sweep.keys():
+        plume_sweep[key] = np.asarray(plume_sweep[key])
+
+    #normalize B
+    plume_sweep['bxr'] = plume_sweep['bxr']*plume_sweep['vtp']
+    plume_sweep['byr'] = plume_sweep['byr']*plume_sweep['vtp']
+    plume_sweep['bzr'] = plume_sweep['bzr']*plume_sweep['vtp']
+    plume_sweep['bxi'] = plume_sweep['bxi']*plume_sweep['vtp']
+    plume_sweep['byi'] = plume_sweep['byi']*plume_sweep['vtp']
+    plume_sweep['bzi'] = plume_sweep['bzi']*plume_sweep['vtp']
+
     return plume_sweep
 
 def rotate_and_norm_to_plume_basis(wavemode,epar,eperp1,eperp2):

@@ -9,7 +9,8 @@ def compute_wavemodes(xx,dfields,xlim,ylim,zlim,
                      kx,ky,kz,
                      bxkzkykxxx,bykzkykxxx,bzkzkykxxx,
                      exkzkykxxx,eykzkykxxx,ezkzkykxxx,
-                     uxkzkykxxx,uykzkykxxx,uzkzkykxxx):
+                     uxkzkykxxx,uykzkykxxx,uzkzkykxxx,
+                     vth=None):
 
     from lib.analysis import compute_field_aligned_coord
     from lib.array_ops import find_nearest
@@ -39,6 +40,9 @@ def compute_wavemodes(xx,dfields,xlim,ylim,zlim,
                 wavemode['Ex'] = exkzkykxxx[k,j,i,xxidx]
                 wavemode['Ey'] = eykzkykxxx[k,j,i,xxidx]
                 wavemode['Ez'] = ezkzkykxxx[k,j,i,xxidx]
+                wavemode['Ux'] = uxkzkykxxx[k,j,i,xxidx]
+                wavemode['Uy'] = uykzkykxxx[k,j,i,xxidx]
+                wavemode['Uz'] = uzkzkykxxx[k,j,i,xxidx]
 
                 wavemode['normB'] = np.linalg.norm([wavemode['Bx'],wavemode['By'],wavemode['Bz']])
                 wavemode['normE'] = np.linalg.norm([wavemode['Ex'],wavemode['Ey'],wavemode['Ez']])
@@ -86,6 +90,9 @@ def compute_wavemodes(xx,dfields,xlim,ylim,zlim,
                 #value used to see if wave fluctuates in the direction we expect an MHD alfven wave to
                 wavemode['testAlfvenval'] = np.cross(_B,np.cross(_k,epar))
                 wavemode['testAlfvenval'] /= (np.linalg.norm(_B)*np.linalg.norm(np.cross(_k,epar)))
+
+                if(vth != None):
+                    wavemode['vth']=vth
 
                 dwavemodes['wavemodes'].append(wavemode)
 
