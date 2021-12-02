@@ -23,10 +23,9 @@ import os
 import math
 import numpy as np
 try:
-    analysisinputflnm = sys.argv[1]
-    filename = sys.argv[2]
-    startval = float(sys.argv[3])
-    endval = float(sys.argv[4])
+    filename = sys.argv[1]
+    startval = float(sys.argv[2])
+    endval = float(sys.argv[3])
 
 except:
     print("This script assigns metadata of 1 inbetween the bounds and 0 elsewhere")
