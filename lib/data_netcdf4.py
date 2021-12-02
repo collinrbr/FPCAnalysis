@@ -6,7 +6,7 @@ import numpy as np
 import math
 
 #TODO: make num_par not optional
-def save3Vdata(Hist_out, CEx_out, CEy_out, CEz_out, vx_out, vy_out, vz_out, x_out, enerCEx_out, enerCEy_out, enerCEz_out, Vframe_relative_to_sim_out, num_par = num_par, metadata_out = [], params = {}, filename = 'full3Vdata.nc' ):
+def save3Vdata(Hist_out, CEx_out, CEy_out, CEz_out, vx_out, vy_out, vz_out, x_out, enerCEx_out, enerCEy_out, enerCEz_out, Vframe_relative_to_sim_out, num_par = [], metadata_out = [], params = {}, filename = 'full3Vdata.nc' ):
     """
     Creates netcdf4 data of normalized correlation data to send to MLA algo.
 
