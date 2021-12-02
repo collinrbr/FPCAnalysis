@@ -110,6 +110,16 @@ if(use_restart):
         zlim = [dfields['ex_zz'][0],dfields['ex_zz'][-1]]
 
 #-------------------------------------------------------------------------------
+# If vmax is not specified, use maximum particle velocity as vmax
+#-------------------------------------------------------------------------------
+if(vmax == None):
+    print("Vmax was not specified. Using maximum...")
+    print("Computing maximum...")
+    vmax = anl.get_max_speed(dparticles)
+    print("Done!")
+
+
+#-------------------------------------------------------------------------------
 # Check if data is 2D. Pad to make pseudo 3d if data is 2d
 #-------------------------------------------------------------------------------
 if('x3' not in dparticles.keys()): #all simulations that are '2d' should be 2d 3v with coordinates (xx,yy;vx,vy,vz)

@@ -18,10 +18,22 @@ def analysis_input(flnm = 'analysisinput.txt'):
     -------
     path : str
         path to data
+    resultsdir : str
+        path to directory where output is saved
     vmax : float
         bounds of FPC analysis in velocity space (assumes square)
     dv : float
         bounds of FPC
+    numframe : int
+        frame of the simulation to be analyzed
+    dx : float
+        width of integration box
+    xlim : array
+        xx bounds of analysis (i.e. where the sweep starts and stops)
+    ylim : array
+        yy bounds of each integration box
+    zlim : array
+        zz bounds of each integration box
     """
 
     # Get file object
@@ -31,6 +43,7 @@ def analysis_input(flnm = 'analysisinput.txt'):
     xlim = None
     ylim = None
     zlim = None
+    vmax = None
     resultsdir = 'results/'
 
     while(True):
@@ -305,6 +318,24 @@ def get_abs_max_velocity(dparticles):
 
     return maxspeedx, maxspeedy, maxspeedz
 
+def get_max_speed(dparticles):
+    """
+    Returns the max of the absolute value of each velocity component array
+
+    Parameters
+    ----------
+    dparticles : dict
+        particle data dictionary
+
+    Returns
+    -------
+    maxspeed : float
+        maximum speed of any particles
+    """
+
+    maxspeed = np.sqrt(np.max(dparticles['p1']**2.+dparticles['p2']**2.+dparticles['p3']**2.))
+
+    return maxspeed
 
 def check_input(analysisinputflnm,dfields):
     """
