@@ -23,14 +23,24 @@ import os
 import math
 import numpy as np
 try:
-    filename = sys.argv[1]
-    startval = float(sys.argv[2])
-    endval = float(sys.argv[3])
+    analysisinputflnm = sys.argv[1]
+    filename = sys.argv[2]
+    startval = float(sys.argv[3])
+    endval = float(sys.argv[4])
 
 except:
     print("This script assigns metadata of 1 inbetween the bounds and 0 elsewhere")
-    print("usage: " + sys.argv[0] + " netcdf4flnm startval endval")
+    print("usage: " + sys.argv[0] + " analysisinputflnm netcdf4flnm startval endval")
     sys.exit()
+
+#load relevant time slice fields
+path,resultsdir,vmax,dv,numframe,dx,xlim,ylim,zlim = anl.analysis_input(flnm = analysisinputflnm)
+path_fields = path
+path_particles = path+"Output/Raw/Sp01/raw_sp01_{:08d}.h5"
+dfields = dh5.field_loader(path=path_fields,num=numframe)
+
+if xlim is None:
+    xlim = [dfields['ex_xx'][0],dfields['ex_xx'][-1]]
 
 #build metadata
 metadata = md.build_metadata(xlim, dx, startval, endval)
