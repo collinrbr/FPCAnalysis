@@ -56,6 +56,4 @@ except:
     sda = ncout.variables['npar']
     sda[:] = metadata[:]
 
-#replace old file
-os.system('rm '+filename)
-os.system('mv '+filename+'.withmetadata '+filename)
+ncout.close()
