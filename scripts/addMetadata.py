@@ -45,11 +45,16 @@ if xlim is None:
 #build metadata
 metadata = md.build_metadata(xlim, dx, startval, endval)
 
-#load original netcdf4 file
-Hist, CEx, CEy, CEz, vx, vy, vz, x, enerCEx, enerCEy, enerCEz, Vframe_relative_to_sim, _, params_in = dnc.load3Vnetcdf4(filename)
-
-#make new file with updated metadata
-dnc.save3Vdata(Hist, CEx, CEy, CEz, vx, vy, vz, x, enerCEx, enerCEy, enerCEz, Vframe_relative_to_sim, metadata_out = metadata, params = params_in, filename = filename+'.withmetadata')
+#append metadata
+from netCDF4 import Dataset
+ncout = Dataset(filename, 'r+', format='NETCDF4')
+try:
+    sda = ncout.createVariable('sda','f4',('nx',))
+    sda.description = '1 = signature, 0 = no signature'
+    sda[:] = metadata[:]
+except:
+    sda = ncout.variables['npar']
+    sda[:] = metadata[:]
 
 #replace old file
 os.system('rm '+filename)
