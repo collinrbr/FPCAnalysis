@@ -209,9 +209,9 @@ enerCEz_out = ncout.createVariable('E_CEz','f4',('nx',))
 enerCEz_out.description = 'Energization computed by integrating over CEy in velocity space'
 enerCEz_out[:] = enerCEz[:]
 
-n_par_out = ncout.createVariable('n_par','f4',('nx',))
-n_par_out.description = 'number of particles in each integration box. Note: this number might not match zeroth moment of the distribution function (i.e. integration over velocity space of hist) as particles outside the range of vmax are not counted in hist'
-n_par_out[:] = npar[:]
+# n_par_out = ncout.createVariable('n_par','f4',('nx',))
+# n_par_out.description = 'number of particles in each integration box. Note: this number might not match zeroth moment of the distribution function (i.e. integration over velocity space of hist) as particles outside the range of vmax are not counted in hist'
+# n_par_out[:] = npar[:]
 
 Vframe_relative_to_sim_out = ncout.createVariable('Vframe_relative_to_sim', 'f4')
 Vframe_relative_to_sim_out[:] = Vframe_relative_to_sim

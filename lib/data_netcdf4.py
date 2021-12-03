@@ -263,7 +263,7 @@ def load3Vnetcdf4(filename):
     if(npar_in != None):
         return Hist_in, CEx_in, CEy_in, CEz_in, vx, vy, vz, x_in, enerCEx_in, enerCEy_in, enerCEz_in, npar_in, Vframe_relative_to_sim_in, metadata_in, params_in
     else:
-        return Hist_in, CEx_in, CEy_in, CEz_in, vx, vy, vz, x_in, enerCEx_in, enerCEy_in, enerCEz_in, npar_in, Vframe_relative_to_sim_in, metadata_in, params_in
+        return Hist_in, CEx_in, CEy_in, CEz_in, vx, vy, vz, x_in, enerCEx_in, enerCEy_in, enerCEz_in, Vframe_relative_to_sim_in, metadata_in, params_in
 
 
 #TODO: parse_input_file and read_input tries to do the same thing. However,
