@@ -198,6 +198,7 @@ def load3Vnetcdf4(filename):
 
     ncin = Dataset(filename, 'r', format='NETCDF4')
     ncin.set_auto_mask(False)
+    npar_in = None #quick fix to fact that not all netcdf4 files have this parameter
 
     params_in = {}
     for key in ncin.variables.keys():
@@ -259,7 +260,10 @@ def load3Vnetcdf4(filename):
     vy = _vy
     vz = _vz
 
-    return Hist_in, CEx_in, CEy_in, CEz_in, vx, vy, vz, x_in, enerCEx_in, enerCEy_in, enerCEz_in, npar_in, Vframe_relative_to_sim_in, metadata_in, params_in
+    if(npar_in != None):
+        return Hist_in, CEx_in, CEy_in, CEz_in, vx, vy, vz, x_in, enerCEx_in, enerCEy_in, enerCEz_in, npar_in, Vframe_relative_to_sim_in, metadata_in, params_in
+    else:
+        return Hist_in, CEx_in, CEy_in, CEz_in, vx, vy, vz, x_in, enerCEx_in, enerCEy_in, enerCEz_in, npar_in, Vframe_relative_to_sim_in, metadata_in, params_in
 
 
 #TODO: parse_input_file and read_input tries to do the same thing. However,

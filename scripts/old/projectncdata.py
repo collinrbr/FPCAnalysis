@@ -40,7 +40,7 @@ except:
 #-------------------------------------------------------------------------------
 #load original netcdf4 file
 print("Loading data...")
-Hist, CEx, CEy, CEz, vx, vy, vz, x, enerCEx, enerCEy, enerCEz, npar, Vframe_relative_to_sim, metadata, params = dnc.load3Vnetcdf4(flnmin)
+Hist, CEx, CEy, CEz, vx, vy, vz, x, enerCEx, enerCEy, enerCEz, Vframe_relative_to_sim, metadata, params = dnc.load3Vnetcdf4(flnmin)
 
 #-------------------------------------------------------------------------------
 # Project data
