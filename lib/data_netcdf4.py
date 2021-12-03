@@ -182,6 +182,8 @@ def load3Vnetcdf4(filename):
         integral over velocity space of CEy
     enerCEz_in : 1d array
         integral over velocity space of CEy
+    num_par_out : 1d array
+        number of particles in box
     Vframe_relative_to_sim_in : float
         velocity of frame analysis was done in relative to the static simulation box frame
     metadata_in : 1d array, optional
@@ -223,6 +225,8 @@ def load3Vnetcdf4(filename):
             enerCEy_in = ncin.variables['E_CEy'][:]
         elif(key == 'E_CEz'):
             enerCEz_in = ncin.variables['E_CEz'][:]
+        elif(key == 'n_par'):
+            npar_in = ncin.variables['n_par'][:]
         elif(key == 'Vframe_relative_to_sim'):
             Vframe_relative_to_sim_in = ncin.variables['Vframe_relative_to_sim'][:]
         else:
@@ -255,7 +259,7 @@ def load3Vnetcdf4(filename):
     vy = _vy
     vz = _vz
 
-    return Hist_in, CEx_in, CEy_in, CEz_in, vx, vy, vz, x_in, enerCEx_in, enerCEy_in, enerCEz_in, Vframe_relative_to_sim_in, metadata_in, params_in
+    return Hist_in, CEx_in, CEy_in, CEz_in, vx, vy, vz, x_in, enerCEx_in, enerCEy_in, enerCEz_in, npar_in, Vframe_relative_to_sim_in, metadata_in, params_in
 
 
 #TODO: parse_input_file and read_input tries to do the same thing. However,

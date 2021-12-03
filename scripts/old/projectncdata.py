@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+#quick script to project hist/CEi(vx,vy,vz) onto hist/CEi(vx,vy) hist/CEi(vx,vz) hist/CEi(vy,vz)
+
 import sys
 sys.path.append(".")
 
@@ -38,7 +40,7 @@ except:
 #-------------------------------------------------------------------------------
 #load original netcdf4 file
 print("Loading data...")
-Hist, CEx, CEy, CEz, vx, vy, vz, x, enerCEx, enerCEy, enerCEz, Vframe_relative_to_sim, metadata, params = dnc.load3Vnetcdf4(flnmin)
+Hist, CEx, CEy, CEz, vx, vy, vz, x, enerCEx, enerCEy, enerCEz, npar, Vframe_relative_to_sim, metadata, params = dnc.load3Vnetcdf4(flnmin)
 
 #-------------------------------------------------------------------------------
 # Project data
@@ -206,6 +208,10 @@ enerCEy_out[:] = enerCEy[:]
 enerCEz_out = ncout.createVariable('E_CEz','f4',('nx',))
 enerCEz_out.description = 'Energization computed by integrating over CEy in velocity space'
 enerCEz_out[:] = enerCEz[:]
+
+n_par_out = ncout.createVariable('n_par','f4',('nx',))
+n_par_out.description = 'number of particles in each integration box. Note: this number might not match zeroth moment of the distribution function (i.e. integration over velocity space of hist) as particles outside the range of vmax are not counted in hist'
+n_par_out[:] = npar[:]
 
 Vframe_relative_to_sim_out = ncout.createVariable('Vframe_relative_to_sim', 'f4')
 Vframe_relative_to_sim_out[:] = Vframe_relative_to_sim
