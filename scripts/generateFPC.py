@@ -25,7 +25,7 @@ try:
     analysisinputflnm = sys.argv[1]
 except:
     print("This generates FPC netcdf4 file. Use_restart is false by default.")
-    print("usage: " + sys.argv[0] + " analysisinputflnm use_restart(T/F) is_2D3V(T/F)")
+    print("usage: " + sys.argv[0] + " analysisinputflnm use_restart(T/F) is_2D3V(T/F) num_threads(default 1)")
     sys.exit()
 
 try:
@@ -43,6 +43,13 @@ try:
         sys.exit()
 except:
     is_2D3V = 'F'
+
+try:
+    num_threads = int(sys.argv[4])
+    if(num_threads <= 0):
+        print("Error, please request at least 1 thread...")
+except:
+    num_threads = 1
 
 if(is_2D3V == 'T'):
     is2d3v = True
@@ -151,7 +158,10 @@ if dx is None:
     #Assumes rectangular grid that is uniform for all fields
     #If dx not specified, just use the grid cell spacing for the EM fields
     dx = dfields['ex_xx'][1]-dfields['ex_xx'][0]
-CEx, CEy, CEz, x, Hist, vx, vy, vz, num_par = fpc.compute_correlation_over_x(dfields, dparticles, vmax, dv, dx, vshock, xlim, ylim, zlim)
+if(num_threads == 1):
+    CEx, CEy, CEz, x, Hist, vx, vy, vz, num_par = fpc.compute_correlation_over_x(dfields, dparticles, vmax, dv, dx, vshock, xlim, ylim, zlim)
+else:
+    CEx, CEy, CEz, x, Hist, vx, vy, vz, num_par = fpc.comp_cor_over_x_multithread(dfields, dparticles, vmax, dv, dx, vshock, xlim=xlim, ylim=ylim, zlim=zlim, max_workers=num_threads)
 
 #-------------------------------------------------------------------------------
 # compute energization

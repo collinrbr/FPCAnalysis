@@ -79,7 +79,7 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
         if(directionkey != 'z'):
             print("Warning, direction of derivative does not match field direction")
 
-    # find average E field based on provided bounds
+    # find average E field based on provided bounds #TODO: remove this
     gfieldptsx = (x1 <= dfields[fieldkey+'_xx']) & (dfields[fieldkey+'_xx'] <= x2)
     gfieldptsy = (y1 <= dfields[fieldkey+'_yy']) & (dfields[fieldkey+'_yy'] <= y2)
     gfieldptsz = (z1 <= dfields[fieldkey+'_zz']) & (dfields[fieldkey+'_zz'] <= z2)
@@ -102,19 +102,6 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
     if(dfields['Vframe_relative_to_sim'] != vshock):
         "WARNING: dfields is not in the same frame as the provided vshock"
 
-    # shift particle data to shock frame if needed
-    if(dfields['Vframe_relative_to_sim'] == vshock and dpar['Vframe_relative_to_sim'] == 0.): #TODO: use shift particles function
-        dpar_p1 = np.asarray(dpar['p1'][gptsparticle][:])
-        dpar_p1 -= vshock
-        dpar_p2 = np.asarray(dpar['p2'][gptsparticle][:])
-        dpar_p3 = np.asarray(dpar['p3'][gptsparticle][:])
-    elif(dpar['Vframe_relative_to_sim'] != vshock):
-        "WARNING: particles were not in simulation frame or provided vshock frame. This FPC is probably incorrect..."
-    else:
-        dpar_p1 = np.asarray(dpar['p1'][gptsparticle][:])
-        dpar_p2 = np.asarray(dpar['p2'][gptsparticle][:])
-        dpar_p3 = np.asarray(dpar['p3'][gptsparticle][:])
-
     # build dparticles subset using shifted particle data
     # TODO: this isnt clean code (using dpar_p1/2/3 'multiple times' in histogram and in compute_cprime)
     dparsubset = {
@@ -131,6 +118,125 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
     cor = compute_cor_from_cprime(cprimebinned, vx, vy, vz, dv, directionkey)
 
     return vx, vy, vz, totalPtcl, totalFieldpts, hist, cor
+
+#TODO: lot of redundancy is this library. FIX THIS
+#1. compute vx, vy, vz redundantly
+#2. compute Hist redundantly
+#2. a can improve CEx, CEy, CEz calc by not computing hist redundantly
+
+def _comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock):
+    vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock, 'ex', 'x')
+    vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEy = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock, 'ey', 'y')
+    vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEz = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock, 'ez', 'z')
+
+    return vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx, CEy, CEz
+
+def comp_cor_over_x_multithread(dfields, dparticles, vmax, dv, dx, vshock, xlim=None, ylim=None, zlim=None, max_workers = 8):
+
+    # shift particle data to shock frame if needed TODO:  clean this up
+    if(dfields['Vframe_relative_to_sim'] == vshock and dpar['Vframe_relative_to_sim'] == 0.): #TODO: use shift particles function
+        dpar_p1 = np.asarray(dpar['p1'][gptsparticle][:])
+        dpar_p1 -= vshock
+        dpar_p2 = np.asarray(dpar['p2'][gptsparticle][:])
+        dpar_p3 = np.asarray(dpar['p3'][gptsparticle][:])
+    elif(dpar['Vframe_relative_to_sim'] != vshock):
+        "WARNING: particles were not in simulation frame or provided vshock frame. This FPC is probably incorrect..."
+    else:
+        dpar_p1 = np.asarray(dpar['p1'][gptsparticle][:])
+        dpar_p2 = np.asarray(dpar['p2'][gptsparticle][:])
+        dpar_p3 = np.asarray(dpar['p3'][gptsparticle][:])
+
+    #set up box bounds
+    if xlim is not None:
+        x1 = xlim[0]
+        x2 = x1+dx
+        xEnd = xlim[1]
+    # If xlim is None, use lower x edge to upper x edge extents
+    else:
+        x1 = dfields['ex_xx'][0]
+        x2 = x1 + dx
+        xEnd = dfields['ex_xx'][-1]
+    if ylim is not None:
+        y1 = ylim[0]
+        y2 = ylim[1]
+    # If ylim is None, use lower y edge to lower y edge + dx extents
+    else:
+        y1 = dfields['ex_yy'][0]
+        y2 = y1 + dx
+    if zlim is not None:
+        z1 = zlim[0]
+        z2 = zlim[1]
+    # If zlim is None, use lower z edge to lower z edge + dx extents
+    else:
+        z1 = dfields['ex_zz'][0]
+        z2 = z1 + dx
+
+    #build task array
+    x1task = []
+    x2task = []
+    while(x2 <= xEnd):
+        x1task.append(x1)
+        x2task.append(x2)
+        x1 += dx
+        x2 += dx
+
+    #empty results array
+    CEx_out = [None for _tmp in x1task]
+    CEy_out = [None for _tmp in x1task]
+    CEz_out = [None for _tmp in x1task]
+    x_out = [None for _tmp in x1task]
+    Hist_out = [None for _tmp in x1task]
+    num_par_out = [None for _tmp in x1task]
+
+    #do multithreading
+    with ThreadPoolExecutor(max_workers = max_workers) as executor:
+        futures = []
+        jobids = [] #array to track where in results array result returned by thread should go
+        num_working = 0
+        tasks_completed = 0
+        taskidx = 0
+
+        while(tasks_completed < len(tasks)): #while there are jobs to do
+            if(num_working < max_workers and taskidx < len(tasks)): #if there is a free worker and job to do, give job
+                print('started scan pos-> x1: ',x1task[taskidx],' x2: ',x2task[taskidx],' y1: ',y1,' y2: ',y2,' z1: ', z1,' z2: ',z2)
+                futures.append(executor.submit(_comp_all_CEi, vmax, dv, x1task[taskidx], x2task[taskidx], y1, y2, z1, z2, dparticles, dfields, vshock))
+                jobids.append(taskidx)
+                taskidx += 1
+                num_working += 1
+            else: #otherwise
+                exists_idle = False
+                nft = len(futures)
+                _i = 0
+                while(_i < nft):
+                    if(futures[_i].done()): #if done get result
+                        #get results and place in return vars
+                        resultidx = jobids[_i]
+                        _output = futures[_i].result() #return vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx, CEy, CEz
+                        vx = _output[0]
+                        vy = _output[1]
+                        vz = _output[2]
+                        num_par_out[resultidx] = _output[3] #TODO: use consistent ordering of variables
+                        Hist[resultidx] = _output[5]
+                        CEx[resultidx] = _output[6]
+                        CEy[resultidx] = _output[7]
+                        CEz[resultidx] = _output[8]
+
+                        print('ended scan pos-> x1: ',x1task[resultidx],' x2: ',x2task[resultidx],' y1: ',y1,' y2: ',y2,' z1: ', z1,' z2: ',z2)
+                        print('num particles in box: ', totalPtcl)
+
+                        #update multithreading state vars
+                        num_working -= 1
+                        tasks_completed += 1
+                        exists_idle = True
+                        futures.pop(_i)
+                        jobids.pop(_i)
+                        nft -= 1
+                        _i += 1
+
+                if(not(exists_idle)):
+                    time.sleep(1)
+
+    return CEx_out, CEy_out, CEz_out, x_out, Hist_out, vx, vy, vz, num_par_out
 
 
 def compute_all_hist_and_cor():
@@ -184,6 +290,19 @@ def compute_correlation_over_x(dfields, dparticles, vmax, dv, dx, vshock, xlim=N
     num_par_out : 1d array
         number of particles in box
     """
+
+    # shift particle data to shock frame if needed TODO:  clean this up
+    if(dfields['Vframe_relative_to_sim'] == vshock and dpar['Vframe_relative_to_sim'] == 0.): #TODO: use shift particles function
+        dpar_p1 = np.asarray(dpar['p1'][gptsparticle][:])
+        dpar_p1 -= vshock
+        dpar_p2 = np.asarray(dpar['p2'][gptsparticle][:])
+        dpar_p3 = np.asarray(dpar['p3'][gptsparticle][:])
+    elif(dpar['Vframe_relative_to_sim'] != vshock):
+        "WARNING: particles were not in simulation frame or provided vshock frame. This FPC is probably incorrect..."
+    else:
+        dpar_p1 = np.asarray(dpar['p1'][gptsparticle][:])
+        dpar_p2 = np.asarray(dpar['p2'][gptsparticle][:])
+        dpar_p3 = np.asarray(dpar['p3'][gptsparticle][:])
 
     CEx_out = []
     CEy_out = []
