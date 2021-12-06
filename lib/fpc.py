@@ -218,10 +218,11 @@ def comp_cor_over_x_multithread(dfields, dpar, vmax, dv, dx, vshock, xlim=None, 
                         vy = _output[1]
                         vz = _output[2]
                         num_par_out[resultidx] = _output[3] #TODO: use consistent ordering of variables
-                        Hist[resultidx] = _output[5]
-                        CEx[resultidx] = _output[6]
-                        CEy[resultidx] = _output[7]
-                        CEz[resultidx] = _output[8]
+                        Hist_out[resultidx] = _output[5]
+                        CEx_out[resultidx] = _output[6]
+                        CEy_out[resultidx] = _output[7]
+                        CEz_out[resultidx] = _output[8]
+                        x_out[resultidx] = (x2task[resultidx]+x1task[resultidx])/2.
 
                         print('ended scan pos-> x1: ',x1task[resultidx],' x2: ',x2task[resultidx],' y1: ',y1,' y2: ',y2,' z1: ', z1,' z2: ',z2)
                         print('num particles in box: ', totalPtcl)
