@@ -133,6 +133,8 @@ def _comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock)
 
 def comp_cor_over_x_multithread(dfields, dparticles, vmax, dv, dx, vshock, xlim=None, ylim=None, zlim=None, max_workers = 8):
 
+    from concurrent.futures import ThreadPoolExecutor
+
     # shift particle data to shock frame if needed TODO:  clean this up
     if(dfields['Vframe_relative_to_sim'] == vshock and dpar['Vframe_relative_to_sim'] == 0.): #TODO: use shift particles function
         dpar_p1 = np.asarray(dpar['p1'][gptsparticle][:])
