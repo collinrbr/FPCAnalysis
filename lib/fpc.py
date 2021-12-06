@@ -94,6 +94,19 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
     # define mask that includes particles within range
     gptsparticle = (x1 <= dpar['x1']) & (dpar['x1'] <= x2) & (y1 <= dpar['x2']) & (dpar['x2'] <= y2) & (z1 <= dpar['x3']) & (dpar['x3'] <= z2)
 
+    # shift particle data to shock frame if needed TODO:  clean this up
+    if(dfields['Vframe_relative_to_sim'] == vshock and dpar['Vframe_relative_to_sim'] == 0.): #TODO: use shift particles function
+        dpar_p1 = np.asarray(dpar['p1'][gptsparticle][:])
+        dpar_p1 -= vshock
+        dpar_p2 = np.asarray(dpar['p2'][gptsparticle][:])
+        dpar_p3 = np.asarray(dpar['p3'][gptsparticle][:])
+    elif(dpar['Vframe_relative_to_sim'] != vshock):
+        "WARNING: particles were not in simulation frame or provided vshock frame. This FPC is probably incorrect..."
+    else:
+        dpar_p1 = np.asarray(dpar['p1'][gptsparticle][:])
+        dpar_p2 = np.asarray(dpar['p2'][gptsparticle][:])
+        dpar_p3 = np.asarray(dpar['p3'][gptsparticle][:])
+
     totalPtcl = np.sum(gptsparticle)
 
     # avgfield = np.average(goodfieldpts)
@@ -134,19 +147,6 @@ def _comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock)
 def comp_cor_over_x_multithread(dfields, dpar, vmax, dv, dx, vshock, xlim=None, ylim=None, zlim=None, max_workers = 8):
 
     from concurrent.futures import ThreadPoolExecutor
-
-    # shift particle data to shock frame if needed TODO:  clean this up
-    if(dfields['Vframe_relative_to_sim'] == vshock and dpar['Vframe_relative_to_sim'] == 0.): #TODO: use shift particles function
-        dpar_p1 = np.asarray(dpar['p1'][gptsparticle][:])
-        dpar_p1 -= vshock
-        dpar_p2 = np.asarray(dpar['p2'][gptsparticle][:])
-        dpar_p3 = np.asarray(dpar['p3'][gptsparticle][:])
-    elif(dpar['Vframe_relative_to_sim'] != vshock):
-        "WARNING: particles were not in simulation frame or provided vshock frame. This FPC is probably incorrect..."
-    else:
-        dpar_p1 = np.asarray(dpar['p1'][gptsparticle][:])
-        dpar_p2 = np.asarray(dpar['p2'][gptsparticle][:])
-        dpar_p3 = np.asarray(dpar['p3'][gptsparticle][:])
 
     #set up box bounds
     if xlim is not None:
@@ -292,19 +292,6 @@ def compute_correlation_over_x(dfields, dparticles, vmax, dv, dx, vshock, xlim=N
     num_par_out : 1d array
         number of particles in box
     """
-
-    # shift particle data to shock frame if needed TODO:  clean this up
-    if(dfields['Vframe_relative_to_sim'] == vshock and dpar['Vframe_relative_to_sim'] == 0.): #TODO: use shift particles function
-        dpar_p1 = np.asarray(dpar['p1'][gptsparticle][:])
-        dpar_p1 -= vshock
-        dpar_p2 = np.asarray(dpar['p2'][gptsparticle][:])
-        dpar_p3 = np.asarray(dpar['p3'][gptsparticle][:])
-    elif(dpar['Vframe_relative_to_sim'] != vshock):
-        "WARNING: particles were not in simulation frame or provided vshock frame. This FPC is probably incorrect..."
-    else:
-        dpar_p1 = np.asarray(dpar['p1'][gptsparticle][:])
-        dpar_p2 = np.asarray(dpar['p2'][gptsparticle][:])
-        dpar_p3 = np.asarray(dpar['p3'][gptsparticle][:])
 
     CEx_out = []
     CEy_out = []
