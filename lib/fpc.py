@@ -201,7 +201,7 @@ def comp_cor_over_x_multithread(dfields, dpar, vmax, dv, dx, vshock, xlim=None, 
         while(tasks_completed < len(x1task)): #while there are jobs to do
             if(num_working < max_workers and taskidx < len(x1task)): #if there is a free worker and job to do, give job
                 print('started scan pos-> x1: ',x1task[taskidx],' x2: ',x2task[taskidx],' y1: ',y1,' y2: ',y2,' z1: ', z1,' z2: ',z2)
-                futures.append(executor.submit(_comp_all_CEi, vmax, dv, x1task[taskidx], x2task[taskidx], y1, y2, z1, z2, dparticles, dfields, vshock))
+                futures.append(executor.submit(_comp_all_CEi, vmax, dv, x1task[taskidx], x2task[taskidx], y1, y2, z1, z2, dpar, dfields, vshock))
                 jobids.append(taskidx)
                 taskidx += 1
                 num_working += 1
