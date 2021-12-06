@@ -131,7 +131,7 @@ def _comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock)
 
     return vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx, CEy, CEz
 
-def comp_cor_over_x_multithread(dfields, dparticles, vmax, dv, dx, vshock, xlim=None, ylim=None, zlim=None, max_workers = 8):
+def comp_cor_over_x_multithread(dfields, dpar, vmax, dv, dx, vshock, xlim=None, ylim=None, zlim=None, max_workers = 8):
 
     from concurrent.futures import ThreadPoolExecutor
 
