@@ -225,7 +225,7 @@ def comp_cor_over_x_multithread(dfields, dpar, vmax, dv, dx, vshock, xlim=None, 
                         x_out[resultidx] = (x2task[resultidx]+x1task[resultidx])/2.
 
                         print('ended scan pos-> x1: ',x1task[resultidx],' x2: ',x2task[resultidx],' y1: ',y1,' y2: ',y2,' z1: ', z1,' z2: ',z2)
-                        print('num particles in box: ', totalPtcl)
+                        print('num particles in box: ', _output[3])
 
                         #update multithreading state vars
                         num_working -= 1
