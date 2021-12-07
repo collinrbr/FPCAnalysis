@@ -136,6 +136,7 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
 #1. compute vx, vy, vz redundantly
 #2. compute Hist redundantly
 #2. a can improve CEx, CEy, CEz calc by not computing hist redundantly
+#3. dont compute subset each time for CEx, CEy, CEz
 
 def _comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock):
     vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock, 'ex', 'x')
