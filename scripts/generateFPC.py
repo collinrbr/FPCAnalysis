@@ -104,11 +104,11 @@ if(use_restart):
     print("Loading particle data using restart files...")
     #Load slice of particle data
     if xlim is not None:
-        dparticles = dh5.read_restart(path, xlim=xlim)
+        dparticles = dh5.read_restart(path, xlim=xlim,nthreads=num_threads)
     #Load all data in unspecified limits and only data in bounds in specified limits
     else:
         xlim = [dfields['ex_xx'][0],dfields['ex_xx'][-1]]
-        dparticles = dh5.read_restart(path)
+        dparticles = dh5.read_restart(path,nthreads=num_threads)
 
     #set up other bounds (TODO: clean this up (redundant code in above if block; code this only once))
     if ylim is None:

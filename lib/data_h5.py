@@ -447,7 +447,7 @@ def _pts_to_par_dict(pts):
     return dpar
 
 
-def read_restart(path,verbose=False,xlim=None):
+def read_restart(path,verbose=True,xlim=None,nthreads=1):
     """
     Loads all restart files. Use's modified code from Dr. Colby Haggerty.
 
@@ -483,19 +483,77 @@ def read_restart(path,verbose=False,xlim=None):
                                                     #the results will be the same
                                                     #TODO: optimize by restricting in
                                                     #yy and zz too
+    if(nthreads == 1):
+        pts = PM.parts_from_num(procs[-1])
+        procs = procs[:-1]
+        for _c,_p in enumerate(procs):
+            if(verbose):
+                print(str(_p) + ' of ' + str(procs[-1]))
+            _pts = PM.parts_from_num(_p)
+            pts = np.concatenate([pts,_pts],axis=0)
 
-    pts = PM.parts_from_num(procs[-1])
-    procs = procs[:-1]
-    for _c,_p in enumerate(procs):
-        if(verbose):
-            print(str(_p) + ' of ' + str(procs[-1]))
-        _pts = PM.parts_from_num(_p)
-        pts = np.concatenate([pts,_pts],axis=0)
+        dpar = _pts_to_par_dict(pts)
+        del pts
 
-    dpar = _pts_to_par_dict(pts)
-    del pts
+    else:
+        #empty results array
+        pts = [[],[],[],[],[],[]]
+
+        tasks = procs
+
+        #do multithreading
+        with ProcessPoolExecutor(max_workers = nthreads) as executor:
+            futures = []
+            jobids = [] #array to track where in results array result returned by thread should go
+            num_working = 0
+            tasks_completed = 0
+            taskidx = 0
+
+            while(tasks_completed < len(x1task)): #while there are jobs to do
+                if(num_working < max_workers and taskidx < len(x1task)): #if there is a free worker and job to do, give job
+                    if(verbose):
+                        print('Loading '+str(taskidx) + ' of ' + str(procs[-1]))
+                    futures.append(executor.submit(PM._multi_process_part_mapper,tasks[taskidx],path))
+                    jobids.append(taskidx)
+                    taskidx += 1
+                    num_working += 1
+                else: #otherwise
+                    exists_idle = False
+                    nft = len(futures)
+                    _i = 0
+                    while(_i < nft):
+                        if(futures[_i].done()): #if done get result
+                            #get results and place in return vars
+                            resultidx = jobids[_i]
+                            _output = futures[_i].result() #return vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx, CEy, CEz
+                            pts = np.concatenate([pts,_output],axis=0)
+
+                            if(verbose):
+                                print('Loaded '+str(taskidx) + ' of ' + str(procs[-1]))
+
+                            #update multithreading state vars
+                            num_working -= 1
+                            tasks_completed += 1
+                            exists_idle = True
+                            futures.pop(_i)
+                            jobids.pop(_i)
+                            nft -= 1
+                            _i += 1
+
+                    if(not(exists_idle)):
+                        time.sleep(1)
 
     return dpar
+
+def _multi_process_part_mapper(filenum,path):
+    """
+
+    """
+    PM = PartMapper3D(path)
+    _pts = PM.parts_from_num(_p)
+
+    return _pts
+
 
 
 class PartMapper3D(object):
@@ -658,7 +716,7 @@ class PartMapper3D(object):
         Returns
         -------
         nums : array
-            has nums associated
+            has nums associated with pariticles within specified range
         """
 #         i0 = np.int(np.floor(x0/self.rx*self.px))
 #         i1 = np.int(np.min([np.ceil(x1/self.rx*self.px), self.px - 1]))
