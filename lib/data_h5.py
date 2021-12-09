@@ -496,6 +496,8 @@ def read_restart(path,verbose=True,xlim=None,nthreads=1):
         del pts
 
     else:
+        from concurrent.futures import ProcessPoolExecutor
+
         #empty results array
         pts = [[],[],[],[],[],[]]
 
