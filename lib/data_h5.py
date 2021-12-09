@@ -552,7 +552,7 @@ def _multi_process_part_mapper(filenum,path):
 
     """
     PM = PartMapper3D(path)
-    _pts = PM.parts_from_num(_p)
+    _pts = PM.parts_from_num(filenum)
 
     return _pts
 
