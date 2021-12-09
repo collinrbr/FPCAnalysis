@@ -512,7 +512,7 @@ def read_restart(path,verbose=True,xlim=None,nthreads=1):
                 if(num_working < nthreads and taskidx < len(tasks)): #if there is a free worker and job to do, give job
                     if(verbose):
                         print('Loading '+str(taskidx) + ' of ' + str(procs[-1]))
-                    futures.append(executor.submit(PM._multi_process_part_mapper,tasks[taskidx],path))
+                    futures.append(executor.submit(_multi_process_part_mapper,tasks[taskidx],path))
                     jobids.append(taskidx)
                     taskidx += 1
                     num_working += 1
