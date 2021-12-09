@@ -492,9 +492,6 @@ def read_restart(path,verbose=True,xlim=None,nthreads=1):
             _pts = PM.parts_from_num(_p)
             pts = np.concatenate([pts,_pts],axis=0)
 
-        dpar = _pts_to_par_dict(pts)
-        del pts
-
     else:
         from concurrent.futures import ProcessPoolExecutor
 
@@ -511,15 +508,15 @@ def read_restart(path,verbose=True,xlim=None,nthreads=1):
             tasks_completed = 0
             taskidx = 0
 
-            while(tasks_completed < len(x1task)): #while there are jobs to do
-                if(num_working < max_workers and taskidx < len(x1task)): #if there is a free worker and job to do, give job
+            while(tasks_completed < len(tasks)): #while there are jobs to do
+                if(num_working < max_workers and taskidx < len(tasks)): #if there is a free worker and job to do, give job
                     if(verbose):
                         print('Loading '+str(taskidx) + ' of ' + str(procs[-1]))
                     futures.append(executor.submit(PM._multi_process_part_mapper,tasks[taskidx],path))
                     jobids.append(taskidx)
                     taskidx += 1
                     num_working += 1
-                else: #otherwise
+                else:
                     exists_idle = False
                     nft = len(futures)
                     _i = 0
@@ -544,6 +541,9 @@ def read_restart(path,verbose=True,xlim=None,nthreads=1):
 
                     if(not(exists_idle)):
                         time.sleep(1)
+
+    dpar = _pts_to_par_dict(pts)
+    del pts
 
     return dpar
 
