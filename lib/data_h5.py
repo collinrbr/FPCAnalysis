@@ -496,9 +496,9 @@ def read_restart(path,verbose=True,xlim=None,nthreads=1):
         from concurrent.futures import ProcessPoolExecutor
 
         #empty results array
-        pts = [[],[],[],[],[],[]]
+        pts = PM.parts_from_num(procs[0])
 
-        tasks = procs
+        tasks = procs[1:]
 
         #do multithreading
         with ProcessPoolExecutor(max_workers = nthreads) as executor:
