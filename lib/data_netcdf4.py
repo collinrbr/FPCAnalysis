@@ -265,6 +265,111 @@ def load3Vnetcdf4(filename):
     else:
         return Hist_in, CEx_in, CEy_in, CEz_in, vx, vy, vz, x_in, enerCEx_in, enerCEy_in, enerCEz_in, Vframe_relative_to_sim_in, metadata_in, params_in
 
+def load2vdata(filename):
+    """
+    Loads 3v netcdf4 data created by projection script
+
+    """
+    from netCDF4 import Dataset
+    from datetime import datetime
+
+    ncin = Dataset(filename, 'r', format='NETCDF4')
+    ncin.set_auto_mask(False)
+    npar_in = None #quick fix to fact that not all netcdf4 files have this parameter
+
+    params_in = {}
+    for key in ncin.variables.keys():
+        if(key == 'x'):
+            x_in = ncin.variables['x'][:]
+        elif(key == 'vx'):
+            vx_in = ncin.variables['vx'][:]
+        elif(key == 'vy'):
+            vy_in = ncin.variables['vy'][:]
+        elif(key == 'vz'):
+            vz_in = ncin.variables['vz'][:]
+        elif(key == 'C_Ex_vxvy'):
+            C_Ex_vxvy = ncin.variables['C_Ex_vxvy'][:]
+        elif(key == 'C_Ex_vxvz'):
+            C_Ex_vxvz = ncin.variables['C_Ex_vxvz'][:]
+        elif(key == 'C_Ex_vyvz'):
+            C_Ex_vyvz = ncin.variables['C_Ex_vyvz'][:]
+        elif(key == 'C_Ey_vxvy'):
+            C_Ey_vxvy = ncin.variables['C_Ey_vxvy'][:]
+        elif(key == 'C_Ey_vxvz'):
+            C_Ey_vxvz = ncin.variables['C_Ey_vxvz'][:]
+        elif(key == 'C_Ey_vyvz'):
+            C_Ey_vyvz = ncin.variables['C_Ey_vyvz'][:]
+        elif(key == 'C_Ez_vxvy'):
+            C_Ez_vxvy = ncin.variables['C_Ez_vxvy'][:]
+        elif(key == 'C_Ez_vxvz'):
+            C_Ez_vxvz = ncin.variables['C_Ez_vxvz'][:]
+        elif(key == 'C_Ez_vyvz'):
+            C_Ez_vyvz = ncin.variables['C_Ez_vyvz'][:]
+        elif(key == 'Hist_vxvy'):
+            Hist_vxvy = ncin.variables['Hist_vxvy'][:]
+        elif(key == 'Hist_vxvz'):
+            Hist_vxvz = ncin.variables['Hist_vxvz'][:]
+        elif(key == 'Hist_vyvz'):
+            Hist_vyvz = ncin.variables['Hist_vyvz'][:]
+        elif(key == 'sda'):
+            metadata_in = ncin.variables['sda'][:] #TODO: add ability to handle multiple types of metadata
+        elif(key == 'E_CEx'):
+            enerCEx_in = ncin.variables['E_CEx'][:]
+        elif(key == 'E_CEy'):
+            enerCEy_in = ncin.variables['E_CEy'][:]
+        elif(key == 'E_CEz'):
+            enerCEz_in = ncin.variables['E_CEz'][:]
+        elif(key == 'n_par'):
+            npar_in = ncin.variables['n_par'][:]
+        elif(key == 'Vframe_relative_to_sim'):
+            Vframe_relative_to_sim_in = ncin.variables['Vframe_relative_to_sim'][:]
+        else:
+            if(not(isinstance(ncin.variables[key][:], str))):
+                params_in[key] = ncin.variables[key][:]
+
+    #add global attributes
+    params_in.update(ncin.__dict__)
+
+    #reconstruct vx, vy, vz 3d arrays
+    _vx = np.zeros((len(vz_in),len(vy_in),len(vx_in)))
+    _vy = np.zeros((len(vz_in),len(vy_in),len(vx_in)))
+    _vz = np.zeros((len(vz_in),len(vy_in),len(vx_in)))
+    for i in range(0,len(vx_in)):
+        for j in range(0,len(vy_in)):
+            for k in range(0,len(vz_in)):
+                _vx[k][j][i] = vx_in[i]
+
+    for i in range(0,len(vx_in)):
+        for j in range(0,len(vy_in)):
+            for k in range(0,len(vz_in)):
+                _vy[k][j][i] = vy_in[j]
+
+    for i in range(0,len(vx_in)):
+        for j in range(0,len(vy_in)):
+            for k in range(0,len(vz_in)):
+                _vz[k][j][i] = vz_in[k]
+
+    vx = _vx
+    vy = _vy
+    vz = _vz
+
+    if(npar_in != None):
+        return (Hist_vxvy, Hist_vxvz, Hist_vyvz,
+               C_Ex_vxvy, C_Ex_vxvz, C_Ex_vyvz,
+               C_Ey_vxvy, C_Ey_vxvz, C_Ey_vyvz,
+               C_Ez_vxvy, C_Ez_vxvz, C_Ez_vyvz,
+               vx, vy, vz, x_in,
+               enerCEx_in, enerCEy_in, enerCEz_in,
+               npar_in, Vframe_relative_to_sim_in, metadata_in, params_in)
+    else:
+        return (Hist_vxvy, Hist_vxvz, Hist_vyvz,
+               C_Ex_vxvy, C_Ex_vxvz, C_Ex_vyvz,
+               C_Ey_vxvy, C_Ey_vxvz, C_Ey_vyvz,
+               C_Ez_vxvy, C_Ez_vxvz, C_Ez_vyvz,
+               vx, vy, vz, x_in,
+               enerCEx_in, enerCEy_in, enerCEz_in,
+               Vframe_relative_to_sim_in, metadata_in, params_in)
+
 
 #TODO: parse_input_file and read_input tries to do the same thing. However,
 # both functions have different potential flaws. Need to make parse function

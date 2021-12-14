@@ -528,7 +528,7 @@ def read_restart(path,verbose=True,xlim=None,nthreads=1):
                             pts = np.concatenate([pts,_output],axis=0)
 
                             if(verbose):
-                                print('Loaded '+str(taskidx) + ' of ' + str(procs[-1]))
+                                print('Loaded '+str(resultidx) + ' of ' + str(procs[-1]))
 
                             #update multithreading state vars
                             num_working -= 1
