@@ -417,7 +417,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
                                 CEx_xy,CEx_xz, CEx_yz,
                                 CEy_xy,CEy_xz, CEy_yz,
                                 CEz_xy,CEz_xz, CEz_yz,
-                                flnm = '', ttl = '', computeJdotE = False):
+                                flnm = '', ttl = '', computeJdotE = False, params = None, metadata = None, xpos = None):
     """
     Makes super figure of distribution and velocity sigantures from all different projections
     i.e. different viewing angles
@@ -442,13 +442,18 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         title of plot
     computeJdotE : bool, optional
         compute and write JdotE for each panel as title of each sub plot
+    params : dict, optional
+        dictionary with simulation parameters in it
+    metadata : string, optional
+        string describing metadata to be shown on plot
     """
     from lib.array_ops import mesh_3d_to_2d
     from lib.analysis import compute_energization
 
     plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
 
-    fig, axs = plt.subplots(4,3,figsize=(4*5,3*5))
+    fig, axs = plt.subplots(4,3,figsize=(4*5,3*5),sharex=True)
+    fig.subplots_adjust(hspace=0.1,wspace=-0.35)
 
     vx_xy, vy_xy = mesh_3d_to_2d(vx,vy,vz,'xy')
     vx_xz, vz_xz = mesh_3d_to_2d(vx,vy,vz,'xz')
@@ -458,134 +463,218 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
 
     fig.suptitle(ttl)
 
+    # fig, axes = plt.subplots(nrows=2)
+    # ax0label = axes[0].set_ylabel('Axes 0')
+    # ax1label = axes[1].set_ylabel('Axes 1')
+    #
+    # title = axes[0].set_title('Title')
+    #
+    clboffset = np.array([vmax*.15,-vmax*.15])
+    # title.set_position(ax0label.get_position() + offset)
+    # title.set_rotation(90)
+
     #H_xy
     im00= axs[0,0].pcolormesh(vy_xy, vx_xy, H_xy, cmap="plasma", shading="gouraud")
-    axs[0,0].set_title(r"$f(v_x, v_y)$")
-    axs[0,0].set_xlabel(r"$v_x/v_{ti}$")
+    #axs[0,0].set_title(r"$f(v_x, v_y)$")
     axs[0,0].set_ylabel(r"$v_y/v_{ti}$")
     axs[0,0].set_aspect('equal', 'box')
-    plt.colorbar(im00, ax=axs[0,0])
+    axs[0,0].grid()
+    clrbar00 = plt.colorbar(im00, ax=axs[0,0])#,format='%.1e')
+    clrbar00.formatter.set_powerlimits((0, 0))
+    axs[0,0].text(-vmax*2.0,0, r"$f$", ha='center', rotation=90, wrap=False)
+    if(params != None):
+        axs[0,0].text(-vmax*2.6,0, '$M_A = $ ' + str(abs(params['MachAlfven'])), ha='center', rotation=90, wrap=False)
+
     #H_xz
     im01 = axs[0,1].pcolormesh(vz_xz, vx_xz, H_xz, cmap="plasma", shading="gouraud")
-    axs[0,1].set_title(r"$f(v_x, v_z)$")
-    axs[0,1].set_xlabel(r"$v_x/v_{ti}$")
+    #axs[0,1].set_title(r"$f(v_x, v_z)$")
     axs[0,1].set_ylabel(r"$v_z/v_{ti}$")
     axs[0,1].set_aspect('equal', 'box')
-    plt.colorbar(im01, ax=axs[0,1])
+    axs[0,1].grid()
+    clrbar01 = plt.colorbar(im01, ax=axs[0,1])#,format='%.1e')
+    clrbar01.formatter.set_powerlimits((0, 0))
     #H_yz
     im02 = axs[0,2].pcolormesh(vz_yz, vy_yz, H_yz.T, cmap="plasma", shading="gouraud")
-    axs[0,2].set_title(r"$f(v_y, v_z)$")
+    #axs[0,2].set_title(r"$f(v_y, v_z)$")
     axs[0,2].set_ylabel(r"$v_y/v_{ti}$")
-    axs[0,2].set_xlabel(r"$v_z/v_{ti}$")
     axs[0,2].set_aspect('equal', 'box')
-    plt.colorbar(im02, ax=axs[0,2])
+    axs[0,2].grid()
+    clrbar02 = plt.colorbar(im02, ax=axs[0,2])#,format='%.1e')
+    clrbar02.formatter.set_powerlimits((0, 0))
     #CEx_xy
     maxCe = max(np.max(CEx_xy),abs(np.max(CEx_xy)))
     im10 = axs[1,0].pcolormesh(vy_xy,vx_xy,CEx_xy,vmax=maxCe,vmin=-maxCe,cmap="seismic", shading="gouraud")
-    axs[1,0].set_title('$C_{Ex}(v_x,v_y)$')
-    axs[1,0].set_xlabel(r"$v_x/v_{ti}$")
+    #axs[1,0].set_title('$C_{Ex}(v_x,v_y)$')
     axs[1,0].set_ylabel(r"$v_y/v_{ti}$")
     axs[1,0].set_aspect('equal', 'box')
+    axs[1,0].grid()
+    axs[1,0].text(-vmax*2.0,0, r"$C_{Ex}$", ha='center', rotation=90, wrap=False)
+    if(params != None):
+        axs[1,0].text(-vmax*2.6,0, '$\Theta_{Bn} = $ ' + str(params['thetaBn']), ha='center', rotation=90, wrap=False)
     if(computeJdotE):
         JdotE = compute_energization(CEx_xy,dv)
         axs[1,0].title.set_text('$C_{Ex}(v_x,v_y)$; $J \cdot E_x$ = ' + "{:.2e}".format(JdotE))
-    plt.colorbar(im10, ax=axs[1,0])
+    clrbar10 = plt.colorbar(im10, ax=axs[1,0])#,format='%.1e')
+    clrbar10.formatter.set_powerlimits((0, 0))
+    # print('clrbar10.ax.yaxis.get_label().get_position()')
+    # print(clrbar10.ax.yaxis.get_label().get_position())
+    # print(clrbar10.ax.yaxis)
+    # print(clrbar10.ax.yaxis.label)
+    # clrbar10.ax.yaxis.set_label_coords(clrbar10.ax.yaxis.get_label().get_position()[0] + clboffset[0], clrbar10.ax.yaxis.get_label().get_position()[1] + clboffset[1])
     #CEx_xz
     maxCe = max(np.max(CEx_xz),abs(np.max(CEx_xz)))
     im11 = axs[1,1].pcolormesh(vz_xz,vx_xz,CEx_xz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
-    axs[1,1].set_title('$C_{Ex}(v_x,v_z)$')
-    axs[1,1].set_xlabel(r"$v_x/v_{ti}$")
+    #axs[1,1].set_title('$C_{Ex}(v_x,v_z)$')
     axs[1,1].set_ylabel(r"$v_z/v_{ti}$")
     axs[1,1].set_aspect('equal', 'box')
+    axs[1,1].grid()
     if(computeJdotE):
         JdotE = compute_energization(CEx_xz,dv)
-        axs[1,1].title.set_text('$C_{Ex}(v_x,v_z)$; $J \cdot E_x$ = ' + "{:.2e}".format(JdotE))
-    plt.colorbar(im11, ax=axs[1,1])
+        axs[1,1].title.set_text('$C_{Ex}(v_x,v_y)$; $J \cdot E_x$ = ' + "{:.2e}".format(JdotE))
+    clrbar11 = plt.colorbar(im11, ax=axs[1,1])#,format='%.1e')
+    clrbar11.formatter.set_powerlimits((0, 0))
     #CEx_yz
     maxCe = max(np.max(CEx_yz),abs(np.max(CEx_yz)))
     im12 = axs[1,2].pcolormesh(vz_yz,vy_yz,CEx_yz.T,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
-    axs[1,2].set_title('$C_{Ex}(v_y,v_z)$')
+    #axs[1,2].set_title('$C_{Ex}(v_y,v_z)$')
     axs[1,2].set_ylabel(r"$v_y/v_{ti}$")
-    axs[1,2].set_xlabel(r"$v_z/v_{ti}$")
     axs[1,2].set_aspect('equal', 'box')
+    axs[1,2].grid()
     if(computeJdotE):
         JdotE = compute_energization(CEx_yz.T,dv)
         axs[1,2].title.set_text('$C_{Ex}(v_y,v_z)$; $J \cdot E_x$ = ' + "{:.2e}".format(JdotE))
-    plt.colorbar(im12, ax=axs[1,2])
+    clrbar12 = plt.colorbar(im12, ax=axs[1,2])#,format='%.1e')
+    clrbar12.formatter.set_powerlimits((0, 0))
     #CEy_xy
     maxCe = max(np.max(CEy_xy),abs(np.max(CEy_xy)))
     im20 = axs[2,0].pcolormesh(vy_xy,vx_xy,CEy_xy,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
-    axs[2,0].set_title('$C_{Ey}(v_x,v_y)$')
-    axs[2,0].set_xlabel(r"$v_x/v_{ti}$")
+    #axs[2,0].set_title('$C_{Ey}(v_x,v_y)$')
     axs[2,0].set_ylabel(r"$v_y/v_{ti}$")
     axs[2,0].set_aspect('equal', 'box')
+    axs[2,0].text(-vmax*2.0,0, r"$C_{Ey}$", ha='center', rotation=90, wrap=False)
+    axs[2,0].grid()
+    if(xpos != None):
+        axs[2,0].text(-vmax*2.6,0,'$x/d_i = $' + str(xpos), ha='center', rotation=90, wrap=False)
     if(computeJdotE):
         JdotE = compute_energization(CEy_xy,dv)
         axs[2,0].title.set_text('$C_{Ey}(v_x,v_y)$; $J \cdot E_y$ = ' + "{:.2e}".format(JdotE))
-    plt.colorbar(im20, ax=axs[2,0])
+    clrbar20 = plt.colorbar(im20, ax=axs[2,0])#,format='%.1e')
+    clrbar20.formatter.set_powerlimits((0, 0))
+
     #CEy_xz
     maxCe = max(np.max(CEy_xz),abs(np.max(CEy_xz)))
     im21 = axs[2,1].pcolormesh(vz_xz,vx_xz,CEy_xz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
-    axs[2,1].set_title('$C_{Ey}(v_x,v_z)$')
-    axs[2,1].set_xlabel(r"$v_x/v_{ti}$")
+    #axs[2,1].set_title('$C_{Ey}(v_x,v_z)$')
     axs[2,1].set_ylabel(r"$v_z/v_{ti}$")
     axs[2,1].set_aspect('equal', 'box')
+    axs[2,1].grid()
     if(computeJdotE):
         JdotE = compute_energization(CEy_xz,dv)
         axs[2,1].title.set_text('$C_{Ey}(v_x,v_z)$; $J \cdot E_y$ = ' + "{:.2e}".format(JdotE))
-    plt.colorbar(im21, ax=axs[2,1])
+    clrbar21 = plt.colorbar(im21, ax=axs[2,1])#,format='%.1e')
+    clrbar21.formatter.set_powerlimits((0, 0))
+
     #CEy_yz
     maxCe = max(np.max(CEy_yz),abs(np.max(CEy_yz)))
     im22 = axs[2,2].pcolormesh(vz_yz,vy_yz,CEy_yz.T,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
-    axs[2,2].set_title('$C_{Ey}(v_y,v_z)$')
+    #axs[2,2].set_title('$C_{Ey}(v_y,v_z)$')
     axs[2,2].set_ylabel(r"$v_y/v_{ti}$")
-    axs[2,2].set_xlabel(r"$v_z/v_{ti}$")
     axs[2,2].set_aspect('equal', 'box')
+    axs[2,2].grid()
     if(computeJdotE):
         JdotE = compute_energization(CEy_yz.T,dv)
         axs[2,2].title.set_text('$C_{Ey}(v_y,v_z)$; $J \cdot E_y$ = ' + "{:.2e}".format(JdotE))
-    plt.colorbar(im22, ax=axs[2,2])
+    clrbar22 = plt.colorbar(im22, ax=axs[2,2])#,format='%.1e')
+    clrbar22.formatter.set_powerlimits((0, 0))
+
     #CEz_xy
     maxCe = max(np.max(CEz_xy),abs(np.max(CEz_xy)))
     im30 = axs[3,0].pcolormesh(vy_xy,vx_xy,CEz_xy,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
-    axs[3,0].set_title('$C_{Ez}(v_x,v_y)$')
+    #axs[3,0].set_title('$C_{Ez}(v_x,v_y)$')
     axs[3,0].set_xlabel(r"$v_x/v_{ti}$")
     axs[3,0].set_ylabel(r"$v_y/v_{ti}$")
     axs[3,0].set_aspect('equal', 'box')
+    axs[3,0].text(-vmax*2.0,0, r"$C_{Ez}$", ha='center', rotation=90, wrap=False)
+    axs[3,0].grid()
+    if(metadata != None):
+        axs[3,0].text(-vmax*2.6,0, metadata, ha='center', rotation=90, wrap=False)
     if(computeJdotE):
         JdotE = compute_energization(CEz_xy,dv)
         axs[3,0].title.set_text('$C_{Ez}(v_x,v_y)$; $J \cdot E_z$ = ' + "{:.2e}".format(JdotE))
-    plt.colorbar(im30, ax=axs[3,0])
+    clrbar30 = plt.colorbar(im30, ax=axs[3,0])#,format='%.1e')
+    clrbar30.formatter.set_powerlimits((0, 0))
+
     #CEz_xz
     maxCe = max(np.max(CEz_xz),abs(np.max(CEz_xz)))
     im31 = axs[3,1].pcolormesh(vz_xz,vx_xz,CEz_xz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
-    axs[3,1].set_title('$C_{Ez}(v_x,v_z)$')
+    #axs[3,1].set_title('$C_{Ez}(v_x,v_z)$')
     axs[3,1].set_xlabel(r"$v_x/v_{ti}$")
     axs[3,1].set_ylabel(r"$v_z/v_{ti}$")
     axs[3,1].set_aspect('equal', 'box')
+    axs[3,1].grid()
     if(computeJdotE):
         JdotE = compute_energization(CEz_xz,dv)
         axs[3,1].title.set_text('$C_{Ez}(v_x,v_z)$; $J \cdot E_z$ = ' + "{:.2e}".format(JdotE))
-    plt.colorbar(im31, ax=axs[3,1])
+    clrbar31 = plt.colorbar(im31, ax=axs[3,1])#,format='%.1e')
+    clrbar31.formatter.set_powerlimits((0, 0))
     #CEz_yz
     maxCe = max(np.max(CEz_yz),abs(np.max(CEz_yz)))
     im32 = axs[3,2].pcolormesh(vz_yz,vy_yz,CEz_yz.T,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
-    axs[3,2].set_title('$C_{Ez}(v_y,v_z)$')
+    #axs[3,2].set_title('$C_{Ez}(v_y,v_z)$')
     axs[3,2].set_ylabel(r"$v_y/v_{ti}$")
     axs[3,2].set_xlabel(r"$v_z/v_{ti}$")
     axs[3,2].set_aspect('equal', 'box')
+    axs[3,2].grid()
     if(computeJdotE):
         JdotE = compute_energization(CEz_yz.T,dv)
         axs[3,2].title.set_text('$C_{Ez}(v_y,v_z)$; $J \cdot E_z$ = ' + "{:.2e}".format(JdotE))
-    plt.colorbar(im32, ax=axs[3,2])
+    clrbar32 = plt.colorbar(im32, ax=axs[3,2])#,format='%.1e')
+    clrbar32.formatter.set_powerlimits((0, 0))
 
-    plt.subplots_adjust(hspace=.5,wspace=-.3)
+    #set ticks
+    intvl = 5.
+    tcks = np.arange(0,vmax+intvl,intvl)
+    tcks = np.concatenate((-1*np.flip(tcks),tcks))
+    for _i in range(0,4):
+        for _j in range(0,3):
+            axs[_i,_j].set_xticks(tcks)
+            axs[_i,_j].set_yticks(tcks)
+
+    #plt.subplots_adjust(hspace=.5,wspace=-.3)
     if(flnm != ''):
-        plt.savefig(flnm+'.png',format='png',dpi=250)
+        plt.savefig(flnm+'.png',format='png',dpi=250,bbox_inches='tight')
         plt.close('all') #saves RAM
     else:
         plt.show()
     plt.close()
+
+def make_9panel_sweep_from_2v(Hist_vxvy, Hist_vxvz, Hist_vyvz,
+                              C_Ex_vxvy, C_Ex_vxvz, C_Ex_vyvz,
+                              C_Ey_vxvy, C_Ey_vxvz, C_Ey_vyvz,
+                              C_Ez_vxvy, C_Ez_vxvz, C_Ez_vyvz,
+                              vx, vy,vz,params_in,x,metadata,
+                              directory):
+    """
+
+    """
+
+    try:
+        os.mkdir(directory)
+    except:
+        pass
+
+    vmax = np.max(vz)
+    print(vmax)
+
+    for i in range(0,len(Hist_vxvy)):
+        print('Making plot ' + str(i) + ' of ' + str(len(Hist_vxvy)))
+        mdt = str('Metadata = ' + str(metadata[i]))
+        plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
+                                    Hist_vxvy[i], Hist_vxvz[i], Hist_vyvz[i],
+                                    C_Ex_vxvy[i], C_Ex_vxvz[i], C_Ex_vyvz[i],
+                                    C_Ey_vxvy[i], C_Ey_vxvz[i], C_Ey_vyvz[i],
+                                    C_Ez_vxvy[i], C_Ez_vxvz[i], C_Ez_vyvz[i],
+                                    flnm = directory+str(i), computeJdotE = False, params = params_in, metadata = mdt, xpos = x[i])
 
 def make_superplot_gif(vx, vy, vz, vmax, Hist, CEx, CEy, CEz, x, directory, flnm):
     """
