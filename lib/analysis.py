@@ -1033,6 +1033,7 @@ def alfven_wave_check(dfields,dfieldfluc,klist,xx,tol=.05):
 def compute_field_aligned_coord(dfields,xlim,ylim,zlim):
     """
     Computes field aligned coordinate basis using average B0 in provided box
+    TODO: rename vars (vperp->eperp, etc...)
     """
     from lib.array_ops import find_nearest
     from copy import deepcopy

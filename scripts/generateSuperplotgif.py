@@ -22,32 +22,33 @@ import os
 import math
 import numpy as np
 try:
-    analysisinputflnm = sys.argv[1]
-    filename = sys.argv[2]
+    filename = sys.argv[1]
 
 except:
     print("This script makes superplot from netcdf4 file.")
-    print("usage: " + sys.argv[0] + " analysisinputflnm netcdf4flnm")
+    print("usage: " + sys.argv[0] + " netcdf4flnm")
 
 #-------------------------------------------------------------------------------
 # load data
 #-------------------------------------------------------------------------------
-#load path
-path,resultsdir,vmax,dv,numframe,dx,xlim,ylim,zlim = anl.analysis_input(flnm = analysisinputflnm)
-path_fields = path
-path_particles = path+"Output/Raw/Sp01/raw_sp01_{:08d}.h5"
+# #load path
+# path,resultsdir,vmax,dv,numframe,dx,xlim,ylim,zlim = anl.analysis_input(flnm = analysisinputflnm)
+# path_fields = path
+# path_particles = path+"Output/Raw/Sp01/raw_sp01_{:08d}.h5"
 
 #load original netcdf4 file
 Hist, CEx, CEy, CEz, vx, vy, vz, x, enerCEx, enerCEy, enerCEz, Vframe_relative_to_sim, _, params_in = dnc.load3Vnetcdf4(filename)
+
+vmax = np.max(vz)+np.abs(vz[1]-vz[0]) #assumes square grid
 
 #-------------------------------------------------------------------------------
 # make superplot pngs
 #-------------------------------------------------------------------------------
 directory = resultsdir+"superplotGraphs"
-flnm = resultsdir+"superplottest.gif"
-pltvv.make_superplot_gif(vx, vy, vz, vmax, Hist, CEx, CEy, CEz, x, directory, flnm)
+outname = resultsdir+"superplottest.gif"
+pltvv.make_superplot_gif(vx, vy, vz, vmax, Hist, CEx, CEy, CEz, x, directory)
 
 #-------------------------------------------------------------------------------
 # make pngs into gif
 #-------------------------------------------------------------------------------
-rsltmng.make_gif_from_folder(directory,flnm)
+rsltmng.make_gif_from_folder(directory,outname)

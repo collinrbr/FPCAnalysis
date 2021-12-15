@@ -676,7 +676,7 @@ def make_9panel_sweep_from_2v(Hist_vxvy, Hist_vxvz, Hist_vyvz,
                                     C_Ez_vxvy[i], C_Ez_vxvz[i], C_Ez_vyvz[i],
                                     flnm = directory+str(i), computeJdotE = False, params = params_in, metadata = mdt, xpos = x[i])
 
-def make_superplot_gif(vx, vy, vz, vmax, Hist, CEx, CEy, CEz, x, directory, flnm):
+def make_superplot_gif(vx, vy, vz, vmax, Hist, CEx, CEy, CEz, x, directory):
     """
     Make superplots of data and put into directory
 
@@ -704,8 +704,6 @@ def make_superplot_gif(vx, vy, vz, vmax, Hist, CEx, CEy, CEz, x, directory, flnm
     directory : str
         name of directory you want to create and put plots into
         (omit final '/')
-    flnm : str
-        filename of the final gif
     """
 
     from lib.array_ops import array_3d_to_2d
