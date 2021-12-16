@@ -635,7 +635,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     intvl = 10.
     tcks = np.arange(0,vmax+intvl,intvl)
     if(tcks[-1] > vmax):
-        del tcks[-1]
+        np.delete(tcks, -1)
     tcks = np.concatenate((-1*np.flip(tcks),tcks))
     for _i in range(0,4):
         for _j in range(0,3):
