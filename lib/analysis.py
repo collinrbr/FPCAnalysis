@@ -1248,13 +1248,13 @@ def transform_field_to_kzkykxxx(ddict,fieldkey,retstep=12):
     for kyidx in range(0,len(ky)):
         for kzidx in range(0,len(kz)):
             positivekx, rightfieldkz0ky0kxxx = wlt(ddict[fieldkey+'_xx'],fieldxkzky[:,kzidx,kyidx],retstep=retstep)
-            negativekx, leftfieldkz0ky0kxxx = wlt(ddict[fieldkey+'_xx'],fieldxkzky[:,kzidx,kyidx],retstep=retstep)
+            negativekx, leftfieldkz0ky0kxxx = wlt(ddict[fieldkey+'_xx'],np.conj(fieldxkzky[:,kzidx,kyidx]),retstep=retstep)
             leftfieldkz0ky0kxxx = np.conj(leftfieldkz0ky0kxxx) #use reality condition to compute negative kxs
             fieldkzkykxxx[kzidx,kyidx,nkx:,:] = rightfieldkz0ky0kxxx[:,:]
             fieldkzkykxxx[kzidx,kyidx,0:nkx,:] = np.flip(leftfieldkz0ky0kxxx[:,:], axis=0)
 
     negativekx *= -1
-    negativekx = np.sort(negativekx)
+    negativekx = np.flip(negativekx)
     kx = np.concatenate([negativekx,positivekx])
 
     return kz, ky, kx, fieldkzkykxxx
