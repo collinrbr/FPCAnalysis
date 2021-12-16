@@ -1237,7 +1237,7 @@ def transform_field_to_kzkykxxx(ddict,fieldkey,retstep=12):
     -------
     """
 
-    kz, ky, fieldkzkyx = _ffttransform_in_yz(ddict,fieldkey)
+    kz, ky, fieldxkzky = _ffttransform_in_yz(ddict,fieldkey)
 
     nxx = len(ddict[fieldkey+'_xx'])
     nkx = int(len(ddict[fieldkey+'_xx'])/retstep) #warning: this is hard coded to match wlt function output size
@@ -1247,8 +1247,9 @@ def transform_field_to_kzkykxxx(ddict,fieldkey,retstep=12):
 
     for kyidx in range(0,len(ky)):
         for kzidx in range(0,len(kz)):
-            positivekx, rightfieldkz0ky0kxxx = wlt(ddict[fieldkey+'_xx'],fieldkzkyx[:,kzidx,kyidx],retstep=retstep)
-            negativekx, leftfieldkz0ky0kxxx = wlt(ddict[fieldkey+'_xx'],np.conj(fieldkzkyx[:,kzidx,kyidx]),retstep=retstep)
+            positivekx, rightfieldkz0ky0kxxx = wlt(ddict[fieldkey+'_xx'],fieldxkzky[:,kzidx,kyidx],retstep=retstep)
+            negativekx, leftfieldkz0ky0kxxx = wlt(ddict[fieldkey+'_xx'],fieldxkzky[:,kzidx,kyidx],retstep=retstep)
+            leftfieldkz0ky0kxxx = np.conj(leftfieldkz0ky0kxxx) #use reality condition to compute negative kxs
             fieldkzkykxxx[kzidx,kyidx,nkx:,:] = rightfieldkz0ky0kxxx[:,:]
             fieldkzkykxxx[kzidx,kyidx,0:nkx,:] = np.flip(leftfieldkz0ky0kxxx[:,:], axis=0)
 

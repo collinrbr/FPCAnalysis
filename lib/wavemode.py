@@ -17,9 +17,8 @@ def compute_wavemodes(xx,dfields,xlim,ylim,zlim,
 
     dwavemodes = {'wavemodes':[],'sortkey':None}
 
-    #note: xx should be in the middle of xlim
+    #note: xx should be in the middle of xlim TODO: check for this
     epar,eperp1,eperp2 = compute_field_aligned_coord(dfields,xlim,ylim,zlim)
-
 
     xxidx = find_nearest(dfields['bz_xx'],xx)
 
@@ -90,6 +89,9 @@ def compute_wavemodes(xx,dfields,xlim,ylim,zlim,
                 #value used to see if wave fluctuates in the direction we expect an MHD alfven wave to
                 wavemode['testAlfvenval'] = np.cross(_B,np.cross(_k,epar))
                 wavemode['testAlfvenval'] /= (np.linalg.norm(_B)*np.linalg.norm(np.cross(_k,epar)))
+
+                #consistency check
+                wavemode['kdotB'] = np.dot(_k,_B)/(np.linalg.norm(_k)*np.linalg.norm(_B)) #should be small
 
                 if(vth != None):
                     wavemode['vth']=vth
@@ -186,6 +188,8 @@ def _wavemodes_key_to_label(key):
         lbl = r'$(\delta \mathbf{E} \times \delta \mathbf{B})_{e2}$'
     elif(key == 'EcrossBe3'):
         lbl = r'$(\delta \mathbf{E} \times \delta \mathbf{B})_{e3}$'
+    elif(key == 'kdotB'):
+        lbl = r'$\frac{\mathbf{k} \cdot \mathbf{B}}{||\mathbf{k}|| ||\mathbf{B}||}$'
     else:
         print('Did not find label for ' + key + ' ...')
         lbl = key

@@ -105,8 +105,8 @@ def rotate_and_norm_to_plume_basis(wavemode,epar,eperp1,eperp2):
     #i.e. we change our basis vectors so that our wavemode is in the span of two of the field align basis vectors, epar and eperp1
     #note:we assume epar, eperp1, and eperp2 are orthonormal #TODO: check for this
     proj = _project_onto_plane(epar,[plume_basis_wavemode['kx'],plume_basis_wavemode['ky'],plume_basis_wavemode['kz']])
-    angl = _angle_between_vecs(proj,eperp1)
-    angl += math.pi #TODO: check if this is correct basis
+    angl = _angle_between_vecs(proj,eperp2)
+    #angl += math.pi #TODO: check if this is correct basis
     eperp1 = _rotate(-angl,epar,eperp1)
     eperp2 = _rotate(-angl,epar,eperp2)
 
