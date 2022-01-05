@@ -101,14 +101,35 @@ def rotate_and_norm_to_plume_basis(wavemode,epar,eperp1,eperp2):
     from copy import deepcopy
     plume_basis_wavemode = deepcopy(wavemode)
 
-    #by convention we rotate until kperp2 is zero
+    #by convention we flip coordinate systems if kpar is negative
+    if(plume_basis_wavemode['kpar'] < 0):
+        epar = _rotate(math.pi,eperp1,epar)
+        eperp2 = _rotate(math.pi,eperp1,eperp2)
+
+    print(epar,eperp1,eperp2)
+
+    #by convention we rotate about epar until kperp2 is zero
     #i.e. we change our basis vectors so that our wavemode is in the span of two of the field align basis vectors, epar and eperp1
     #note:we assume epar, eperp1, and eperp2 are orthonormal #TODO: check for this
     proj = _project_onto_plane(epar,[plume_basis_wavemode['kx'],plume_basis_wavemode['ky'],plume_basis_wavemode['kz']])
-    angl = _angle_between_vecs(proj,eperp2)
+    angl = _angle_between_vecs(proj,eperp1) #note this does not tell us the direction we need to rotate, just the amount
     #angl += math.pi #TODO: check if this is correct basis
-    eperp1 = _rotate(-angl,epar,eperp1)
-    eperp2 = _rotate(-angl,epar,eperp2)
+
+    #try first direction
+    eperp1 = _rotate(angl,epar,eperp1)
+    eperp2 = _rotate(angl,epar,eperp2)
+
+    #if failed, try second direction
+    if(np.abs(np.dot(eperp2,[wavemode['kx'],wavemode['ky'],wavemode['kz']])) > 0.01):
+        eperp1 = _rotate(-2.*angl,epar,eperp1) #times 2 to make up for first rotation
+        eperp2 = _rotate(-2.*angl,epar,eperp2)
+
+    if(np.abs(np.dot(eperp2,[wavemode['kx'],wavemode['ky'],wavemode['kz']])) > 0.01):
+        print("Error, rotation did not result in kperp2 ~= 0")
+
+    print('angl',angl)#debug
+    angl = _angle_between_vecs(proj,eperp1) #debug
+    print('angl',angl) #debug
 
     #by convention we normalize so that Eperp1 = 1+0i
     normfactor = np.dot(eperp1,[plume_basis_wavemode['Ex'],plume_basis_wavemode['Ey'],plume_basis_wavemode['Ez']])
@@ -193,6 +214,7 @@ def _rotate(tht,rotationaxis,vect):
     r23 = uy*uz*(1-math.cos(tht))-ux*math.sin(tht)
     r33 = math.cos(tht)+uz**2.*(1.-math.cos(tht))
     R = [[r11,r12,r13],[r21,r22,r23],[r31,r32,r33]]
+    #R = [[r11,r21,r31],[r12,r22,r32],[r13,r23,r33]] #TODO: double check if matrix should be inverted
 
     rotatedvec = np.matmul(R,vect)
     return rotatedvec

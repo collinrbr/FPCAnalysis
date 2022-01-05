@@ -18,7 +18,7 @@ def compute_wavemodes(xx,dfields,xlim,ylim,zlim,
     dwavemodes = {'wavemodes':[],'sortkey':None}
 
     #note: xx should be in the middle of xlim TODO: check for this
-    epar,eperp1,eperp2 = compute_field_aligned_coord(dfields,xlim,ylim,zlim)
+    epar,eperp1,eperp2 = compute_field_aligned_coord(dfields,xlim,ylim,zlim) #WARNING: dfields should be total fields here
 
     xxidx = find_nearest(dfields['bz_xx'],xx)
 

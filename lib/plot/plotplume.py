@@ -52,6 +52,7 @@ def plot_sweep(plume_sweeps,xaxiskey,yaxiskey,wavemodes=[''],xlbl='',ylbl='',lbl
                 print('WARNING: wavemodes was not normalized...')
             if(np.abs(wm['kperp2']) > strict_tol):
                 print('WARNING: wavemode is not in the correct coordinate system...')
+                print('kperp2 = ' + str(wm['kperp2']) + ' which is above the tolerance for approximately zero...')
             if(xaxiskey=='kpar' and np.abs(wm['kperp']-p_swp['kperp'][0]) > loose_tol): #we use a loose tolerance as sweeps are often run at kperps rounded to nearest tenth
                 print('WARNING: wavemode has a different kperp value than sweep..')
 
@@ -100,6 +101,6 @@ def plot_sweep(plume_sweeps,xaxiskey,yaxiskey,wavemodes=[''],xlbl='',ylbl='',lbl
             if(yaxiskey == 'uz1i'):
                 plt.scatter([wm['kpar']],[wm['Uz'].imag])
     if(flnm != ''):
-        plt.savefig(flnm+'.png',format='png',dpi=600)
+        plt.savefig(flnm+'.png',format='png',dpi=600,bbox_inches="tight")
     else:
         plt.show()
