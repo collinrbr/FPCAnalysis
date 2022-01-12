@@ -48,7 +48,7 @@ def plot_sweep(plume_sweeps,xaxiskey,yaxiskey,wavemodes=[''],xlbl='',ylbl='',lbl
         for wm in wavemodes:
             strict_tol = .001
             loose_tol = .1
-            if(np.abs(np.linalg.norm(wm['Eperp1'])-1) > strict_tol):
+            if(np.abs(np.linalg.norm(wm['Eperp1'])-1.) > strict_tol):
                 print('WARNING: wavemodes was not normalized...')
             if(np.abs(wm['kperp2']) > strict_tol):
                 print('WARNING: wavemode is not in the correct coordinate system...')

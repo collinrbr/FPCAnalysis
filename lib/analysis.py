@@ -1047,11 +1047,11 @@ def compute_field_aligned_coord(dfields,xlim,ylim,zlim):
     vparbasis = deepcopy(B0)
     vparbasis /= np.linalg.norm(vparbasis)
     #vperp1basis = _get_perp_component([0,1,0],vparbasis) #TODO: check that this returns something close to 0,1,0 as B0 is approximately in the xz plane (with some fluctuations)
-    vperp2basis = np.cross([1,0,0],B0) #x hat cross B0
+    vperp2basis = np.cross([1.,0,0],B0) #x hat cross B0
     tol = 0.005
     _B0 = B0 / np.linalg.norm(B0)
-    if(np.linalg.norm([_B0[0]-1.,_B0[1]-0.,_B0[2]-0.]) < tol): #assumes B0 != [-1,0,0]
-        print("Warning, B0 is perpendicular to x (typically the shock normal)...")
+    if(np.abs(np.dot([_B0[0],_B0[1],_B0[2]],[1.,0.,0.])) < tol): #assumes B0 != [-1,0,0]
+        print("Warning, B0 is parallel to x (typically the shock normal)...")
         print("Already in field aligned coordinates. Returning standard basis...")
         return np.asarray([1,0,0]),np.asarray([0,1,0]),np.asarray([0,0,1])
     vperp2basis /= np.linalg.norm(vperp2basis)
