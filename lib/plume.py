@@ -1,6 +1,6 @@
 # plume.py>
 
-# loading and analysis functions related to plume and comparisons with plume
+# loading and analysis functions related to plume and comparisons with plume and other misc. theory
 
 import numpy as np
 import math
@@ -170,6 +170,167 @@ def rotate_and_norm_to_plume_basis(wavemode,epar,eperp1,eperp2):
     plume_basis_wavemode['EcrossBperp2'] = np.dot(eperp2,_EcrossB)
 
     return plume_basis_wavemode
+
+def get_freq_from_wavemode(wm,epar,eperp1,eperp2):
+    """
+    Predicts dispersion relation frequency using faradays law and assuming plane wave solutions
+
+    Note: this leads to three constraint equations that can all be used to independently calculate frequency
+    These equations predict similar values
+    """
+
+    wm = rotate_and_norm_to_plume_basis(wm,epar,eperp1,eperp2) #need to be in plume basis i.e. kperp2 = 0
+
+    #consistency check using div B = 0
+    kdotb=(wm['Bperp1']*wm['kperp1']+wm['Bpar']*wm['kpar'])/(np.linalg.norm([wm['kperp1'],wm['kperp2'],wm['kpar']])*np.linalg.norm([wm['Bperp1'],wm['Bperp2'],wm['Bpar']]))
+    if(np.abs(kdotb) > 0.1):
+        print("Warning, div B != 0: div B = " + str(kdotb))
+
+    #get omega using first constraint
+    omega1 = -wm['kpar']/wm['Bperp1']*wm['Eperp2']
+
+    #get omega using first constraint
+    omega2 = -(1./wm['Bperp2'])*(wm['kpar']*wm['Eperp1']-wm['kperp1']*wm['Epar'])
+
+    #get omega using second constraint
+    omega3 = wm['kperp1']/wm['Bpar']*wm['Eperp2']
+
+    return omega1, omega2, omega3, wm
+
+def kaw_curve(kperp,kpar,comp_error_prop=False,uncertainty = .5,beta_i = 1.,tau = 1.):
+    """
+    Dispersion relation for a kinetic alfven wave
+
+    From Howes et al. 2014
+    """
+
+    if(comp_error_prop):
+        from uncertainties import ufloat
+        from uncertainties.umath import sqrt
+
+        kperp = ufloat(kperp,uncertainty*kperp)
+        kpar = ufloat(kpar,uncertainty*kpar)
+        #beta_i = ufloat(beta_i,uncertainty*beta_i) #assume no uncertainty in these parameters, as they do not contribute much to the final error after propogation
+        #tau = ufloat(tau,uncertainty*tau)
+
+        omega_over_Omega_i=kpar*sqrt(1.+ kperp**2./(1.+ 2./(beta_i*(1.+1./tau))))
+
+    else:
+        omega_over_Omega_i=kpar*math.sqrt(1.+ kperp**2./(1.+ 2./(beta_i*(1.+1./tau))))
+
+    return omega_over_Omega_i
+
+def fastmagson_curve(kperp,kpar,beta_i = 1.,tau = 1.):
+    """
+
+    From Klein et al. 2012
+    """
+    bt = beta_i*(1+1./tau)
+    k_tot = math.sqrt(kperp**2.+kpar**2.)
+
+    omega_over_Omega_i=k_tot*math.sqrt( (1.+bt + math.sqrt( (1.+bt)**2. -4.*bt*(kpar/k_tot)**2.))/2.)
+
+    return omega_over_Omega_i
+
+def whistler_curve(kperp,kpar,beta_i = 1.,tau = 1.):
+    """
+
+    Limit of fastmagson_curve(kperp,kpar) when kpar << kperp
+    """
+
+    k_tot = math.sqrt(kperp**2.+kpar**2.)
+    omega_over_Omega_i=k_tot*math.sqrt(1.+beta_i*(1.+1./tau) + kpar**2.)
+
+    return omega_over_Omega_i
+
+def select_wavemodes_and_compute_curves(dwavemodes, depth, kpars, kperps, tol=0.05, beta_i = 1., tau = 1.):
+    """
+    """
+    #iterate over kpars
+    wavemodes_matching_kpar = []
+    kaw_curves_matching_kpar = []
+    fm_curves_matching_kpar = []
+    whi_curves_matching_kpar = []
+    for kpar in kpars:
+        _wvmds = {'wavemodes':[]}
+
+        #pick out wavemodes
+        for k in range(0,depth):
+            wvmd = rotate_and_norm_to_plume_basis(dwavemodes['wavemodes'][k],dwavemodes['epar'],dwavemodes['eperp1'],dwavemodes['eperp2']) #need to be in plume basis so that kperp2 = 0
+            if(np.abs(wvmd['kpar']-kpar)<tol):
+                _wvmds['wavemodes'].append(wvmd)
+
+        #compute curves
+        kperpsweep = np.linspace(.1,10.,1000)
+        _crvkaw = []
+        _crvfm = []
+        _crvwhi = []
+        for _kperpval in kperpsweep:
+            _crvkaw.append(kaw_curve(_kperpval,kpar,beta_i = beta_i, tau = tau))
+            _crvfm.append(fastmagson_curve(_kperpval,kpar,beta_i = beta_i, tau = tau))
+            _crvwhi.append(whistler_curve(_kperpval,kpar,beta_i = beta_i, tau = tau))
+
+        #save to output arrays
+        wavemodes_matching_kpar.append(_wvmds)
+        kaw_curves_matching_kpar.append(_crvkaw)
+        fm_curves_matching_kpar.append(_crvfm)
+        whi_curves_matching_kpar.append(_crvwhi)
+
+    #iterate over kperps
+    wavemodes_matching_kperp = []
+    kaw_curves_matching_kperp = []
+    fm_curves_matching_kperp = []
+    whi_curves_matching_kperp = []
+    for kperp in kperps:
+        _wvmds = {'wavemodes':[]}
+
+        #pick out wavemodes
+        for k in range(0,depth):
+            wvmd = rotate_and_norm_to_plume_basis(dwavemodes['wavemodes'][k],dwavemodes['epar'],dwavemodes['eperp1'],dwavemodes['eperp2']) #need to be in plume basis so that kperp2 = 0
+            if(np.abs(wvmd['kperp']-kperp)<tol):
+                _wvmds['wavemodes'].append(wvmd)
+
+        #compute curves
+        kparsweep = np.linspace(.1,10.,1000)
+        _crvkaw = []
+        _crvfm = []
+        _crvwhi = []
+        for _kparval in kparsweep:
+            _crvkaw.append(kaw_curve(kperp,_kparval,beta_i = beta_i, tau = tau))
+            _crvfm.append(fastmagson_curve(kperp,_kparval,beta_i = beta_i, tau = tau))
+            _crvwhi.append(whistler_curve(kperp,_kparval,beta_i = beta_i, tau = tau))
+
+        #save to output arrays
+        wavemodes_matching_kperp.append(_wvmds)
+        kaw_curves_matching_kperp.append(_crvkaw)
+        fm_curves_matching_kperp.append(_crvfm)
+        whi_curves_matching_kperp.append(_crvwhi)
+
+    #return
+    return (wavemodes_matching_kpar, kaw_curves_matching_kpar, fm_curves_matching_kpar, whi_curves_matching_kpar, kperpsweep,
+           wavemodes_matching_kperp, kaw_curves_matching_kperp, fm_curves_matching_kperp, whi_curves_matching_kperp, kparsweep)
+
+def get_freq_from_wvmd(wm,tol=0.01):
+    """
+    """
+    if(np.abs(wm['kperp2'])>tol):
+        print("WARNING: not in correct basiss... Please normalize such that kperp2 = 0 (see rotate_and_norm_to_plume_basis())...")
+
+    #consistency check using div B = 0
+    kdotb=(wm['Bperp1']*wm['kperp1']+wm['Bpar']*wm['kpar'])/(np.linalg.norm([wm['kperp1'],wm['kperp2'],wm['kpar']])*np.linalg.norm([wm['Bperp1'],wm['Bperp2'],wm['Bpar']]))
+    if(np.abs(kdotb) > 0.1):
+        print("Warning, div B != 0: div B = " + str(kdotb))
+
+    #get omega using first constraint
+    omega1 = -wm['kpar']/wm['Bperp1']*wm['Eperp2']
+
+    #get omega using first constraint
+    omega2 = -(1./wm['Bperp2'])*(wm['kpar']*wm['Eperp1']-wm['kperp1']*wm['Epar'])
+
+    #get omega using second constraint
+    omega3 = wm['kperp1']/wm['Bpar']*wm['Eperp2']
+
+    return omega1, omega2, omega3
 
 def _project_onto_plane(norm,vec):
     """

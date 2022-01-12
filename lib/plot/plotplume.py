@@ -104,3 +104,115 @@ def plot_sweep(plume_sweeps,xaxiskey,yaxiskey,wavemodes=[''],xlbl='',ylbl='',lbl
         plt.savefig(flnm+'.png',format='png',dpi=600,bbox_inches="tight")
     else:
         plt.show()
+
+def plot_kperp_disp_sweeps(kperpsweep,wavemodes_matching_kpar,kaw_curves_matching_kpar,fm_curves_matching_kpar,whi_curves_matching_kpar,uncertainty=.5,flnm='',beta_i = 1. , tau = 1.):
+    """
+    WARNING: beta_i and tau should match beta_i and tau use for select_wavemodes_and_compute_curves
+    """
+    from lib.plume import get_freq_from_wvmd
+    from lib.plume import kaw_curve
+
+
+    #compute kpar and omega for each wavemodes
+    omegas = []
+    omega_errors = []
+    pltkperps = []
+    pltkperp_errors = []
+    for k in range(0,len(wavemodes_matching_kpar)):
+        _omegarow = []
+        _omega_errorrow = []
+        _kperprow = []
+        _kperp_errorrow = []
+        for wvmd in wavemodes_matching_kpar[k]['wavemodes']:
+            _,omega2,_ = get_freq_from_wvmd(wvmd)
+            _omegarow.append(omega2)
+            _omega_errorrow.append(kaw_curve(wvmd['kperp'],wvmd['kpar'],comp_error_prop=True,uncertainty = uncertainty, beta_i = beta_i, tau = tau).s)     #WARNING: we use KAW disp relation to compute error propogation
+            _kperprow.append(wvmd['kperp'])
+            _kperp_errorrow.append(wvmd['kperp']*uncertainty)
+        omegas.append(_omegarow)
+        omega_errors.append(_omega_errorrow)
+        pltkperps.append(_kperprow)
+        pltkperp_errors.append(_kperp_errorrow)
+
+    if(len(kaw_curves_matching_kpar) != 3):
+        print('Error, this function is set up to plot 3 curves (per wavemode) only... TODO: generalize this')
+        return
+
+    linestyle = ['-',':','--']
+    lnwidth = 1.75
+
+    plt.figure(figsize=(10,10))
+    for i in range(0,len(kaw_curves_matching_kpar)):
+        plt.errorbar(pltkperps[i],np.real(omegas[i]), xerr = pltkperp_errors[i], yerr=omega_errors[i], fmt="o",color='C0')
+        plt.plot(kperpsweep,kaw_curves_matching_kpar[i],linestyle[i],color='black',linewidth=lnwidth)
+        plt.plot(kperpsweep,fm_curves_matching_kpar[i],linestyle[i],color='blue',linewidth=lnwidth)
+        plt.plot(kperpsweep,whi_curves_matching_kpar[i],linestyle[i],color='red',linewidth=lnwidth)
+
+    plt.yscale('log')
+    plt.xscale('log')
+    plt.xlabel('$k_{\perp} d_i$')
+    plt.ylabel('$\omega / \Omega_i$')
+    plt.grid(True, which="both", ls="-")
+    plt.axis('scaled')
+    plt.ylim(.1,10)
+    plt.xlim(.1,10)
+    if(flnm != ''):
+        plt.savefig(flnm+'.png',format='png',dpi=600,bbox_inches="tight")
+    else:
+        plt.show()
+
+def plot_kpar_disp_sweeps(kparsweep,wavemodes_matching_kperp,kaw_curves_matching_kperp,fm_curves_matching_kperp,whi_curves_matching_kperp,uncertainty=.5,flnm='',beta_i=1.,tau=1.):
+    """
+    WARNING: beta_i and tau should match beta_i and tau use for select_wavemodes_and_compute_curves
+    """
+    from lib.plume import get_freq_from_wvmd
+    from lib.plume import kaw_curve
+
+
+    #compute kpar and omega for each wavemodes
+    omegas = []
+    omega_errors = []
+    pltkpars = []
+    pltkpar_errors = []
+    for k in range(0,len(wavemodes_matching_kperp)):
+        _omegarow = []
+        _omega_errorrow = []
+        _kparrow = []
+        _kpar_errorrow = []
+        for wvmd in wavemodes_matching_kperp[k]['wavemodes']:
+            _,omega2,_ = get_freq_from_wvmd(wvmd)
+            _omegarow.append(omega2)
+            _omega_errorrow.append(kaw_curve(wvmd['kperp'],wvmd['kpar'],comp_error_prop=True,uncertainty = uncertainty, beta_i = beta_i, tau = tau).s,)     #WARNING: we use KAW disp relation to compute error propogation
+            _kparrow.append(wvmd['kpar'])
+            _kpar_errorrow.append(wvmd['kpar']*uncertainty)
+        omegas.append(_omegarow)
+        omega_errors.append(_omega_errorrow)
+        pltkpars.append(_kparrow)
+        pltkpar_errors.append(_kpar_errorrow)
+
+    if(len(kaw_curves_matching_kperp) != 3):
+        print('Error, this function is set up to plot 3 curves (per wavemode) only... TODO: generalize this')
+        return
+
+    linestyle = ['-',':','--']
+    lnwidth = 1.75
+
+    plt.figure(figsize=(10,10))
+    for i in range(0,len(kaw_curves_matching_kperp)):
+        plt.errorbar(pltkpars[i],np.real(omegas[i]), xerr = pltkpar_errors[i], yerr=omega_errors[i], fmt="o",color='C0')
+        plt.plot(kparsweep,kaw_curves_matching_kperp[i],linestyle[i],color='black',linewidth=lnwidth)
+        plt.plot(kparsweep,fm_curves_matching_kperp[i],linestyle[i],color='blue',linewidth=lnwidth)
+        plt.plot(kparsweep,whi_curves_matching_kperp[i],linestyle[i],color='red',linewidth=lnwidth)
+
+    plt.yscale('log')
+    plt.xscale('log')
+    plt.xlabel('$k_{\perp} d_i$')
+    plt.ylabel('$\omega / \Omega_i$')
+    plt.grid(True, which="both", ls="-")
+    plt.axis('scaled')
+    plt.ylim(.1,10)
+    plt.xlim(.1,10)
+    if(flnm != ''):
+        plt.savefig(flnm+'.png',format='png',dpi=600,bbox_inches="tight")
+    else:
+        plt.show()
