@@ -105,7 +105,7 @@ def plot_sweep(plume_sweeps,xaxiskey,yaxiskey,wavemodes=[''],xlbl='',ylbl='',lbl
     else:
         plt.show()
 
-def plot_kperp_disp_sweeps(kperpsweep,wavemodes_matching_kpar,kaw_curves_matching_kpar,fm_curves_matching_kpar,whi_curves_matching_kpar,uncertainty=.5,flnm='',beta_i = 1. , tau = 1.):
+def plot_kperp_disp_sweeps(kperpsweep,wavemodes_matching_kpar,kaw_curves_matching_kpar,fm_curves_matching_kpar,slow_curves_matching_kpar,whi_curves_matching_kpar,uncertainty=.5,flnm='',beta_i = 1. , tau = 1.):
     """
     WARNING: beta_i and tau should match beta_i and tau use for select_wavemodes_and_compute_curves
     """
@@ -138,7 +138,7 @@ def plot_kperp_disp_sweeps(kperpsweep,wavemodes_matching_kpar,kaw_curves_matchin
         print('Error, this function is set up to plot 3 curves (per wavemode) only... TODO: generalize this')
         return
 
-    linestyle = ['-',':','--']
+    linestyle = ['--',':','-']
     lnwidth = 1.75
 
     plt.figure(figsize=(10,10))
@@ -146,6 +146,7 @@ def plot_kperp_disp_sweeps(kperpsweep,wavemodes_matching_kpar,kaw_curves_matchin
         plt.errorbar(pltkperps[i],np.real(omegas[i]), xerr = pltkperp_errors[i], yerr=omega_errors[i], fmt="o",color='C0')
         plt.plot(kperpsweep,kaw_curves_matching_kpar[i],linestyle[i],color='black',linewidth=lnwidth)
         plt.plot(kperpsweep,fm_curves_matching_kpar[i],linestyle[i],color='blue',linewidth=lnwidth)
+        plt.plot(kperpsweep,slow_curves_matching_kpar[i],linestyle[i],color='green',linewidth=lnwidth)
         plt.plot(kperpsweep,whi_curves_matching_kpar[i],linestyle[i],color='red',linewidth=lnwidth)
 
     plt.yscale('log')
@@ -161,7 +162,7 @@ def plot_kperp_disp_sweeps(kperpsweep,wavemodes_matching_kpar,kaw_curves_matchin
     else:
         plt.show()
 
-def plot_kpar_disp_sweeps(kparsweep,wavemodes_matching_kperp,kaw_curves_matching_kperp,fm_curves_matching_kperp,whi_curves_matching_kperp,uncertainty=.5,flnm='',beta_i=1.,tau=1.):
+def plot_kpar_disp_sweeps(kparsweep,wavemodes_matching_kperp,kaw_curves_matching_kperp,fm_curves_matching_kperp,slow_curves_matching_kperp,whi_curves_matching_kperp,uncertainty=.5,flnm='',beta_i=1.,tau=1.):
     """
     WARNING: beta_i and tau should match beta_i and tau use for select_wavemodes_and_compute_curves
     """
@@ -202,6 +203,7 @@ def plot_kpar_disp_sweeps(kparsweep,wavemodes_matching_kperp,kaw_curves_matching
         plt.errorbar(pltkpars[i],np.real(omegas[i]), xerr = pltkpar_errors[i], yerr=omega_errors[i], fmt="o",color='C0')
         plt.plot(kparsweep,kaw_curves_matching_kperp[i],linestyle[i],color='black',linewidth=lnwidth)
         plt.plot(kparsweep,fm_curves_matching_kperp[i],linestyle[i],color='blue',linewidth=lnwidth)
+        plt.plot(kparsweep,slow_curves_matching_kperp[i],linestyle[i],color='green',linewidth=lnwidth)
         plt.plot(kparsweep,whi_curves_matching_kperp[i],linestyle[i],color='red',linewidth=lnwidth)
 
     plt.yscale('log')

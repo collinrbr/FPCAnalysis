@@ -287,7 +287,7 @@ def all_dfield_loader(field_vars='all', components='all', num=None,
 
     return alld
 
-
+#TODO: load all fluid quantities and rename this to fluid_loader (and rename flow to fluid where appropriate)
 def flow_loader(flow_vars=None, num=None, path='./', sp=1, verbose=False, is2d3v=False):
     """
     Loads dHybridR flow data
@@ -352,6 +352,70 @@ def flow_loader(flow_vars=None, num=None, path='./', sp=1, verbose=False, is2d3v
     d['Vframe_relative_to_sim'] = 0.
     return d
 
+def den_loader(num=None, path='./', sp=1, verbose=False, is2d3v=False):
+    """
+    Loads dHybridR fluid density data
+
+    Parameters
+    num : int
+        used to specify which frame (i.e. time slice) is loaded
+    path : string
+        path to data folder
+    sp : int
+        species number. Used to load different species
+    verbose : boolean
+        if true, prints debug information
+    is2d3v : bool, opt
+        set true is simualation is 2D 3V
+
+    Returns
+    -------
+    d : dict
+        dictionary containing den information and location. Ordered (z,y,x)
+    """
+
+    import glob
+    if path[-1] != '/':
+        path = path + '/'
+    dpath = path+"Output/Phase/x3x2x1/Sp{sp:02d}/dens_sp{sp:02d}_{tm:08}.h5"
+    d = {}
+
+    if verbose: print(dpath.format(sp=sp, tm=num))
+    with h5py.File(dpath.format(sp=sp, tm=num),'r') as f:
+        _ = f['DATA'].shape
+        dim = len(_)
+        d['den'] = f['DATA'][:]
+        if is2d3v:
+            _N2,_N1 = _
+            x1,x2 = f['AXIS']['X1 AXIS'][:], f['AXIS']['X2 AXIS'][:]
+            dx1 = (x1[1]-x1[0])/_N1
+            dx2 = (x2[1]-x2[0])/_N2
+            d['den_xx'] = dx1*np.arange(_N1) + dx1/2. + x1[0]
+            d['den_yy'] = dx2*np.arange(_N2) + dx2/2. + x2[0]
+        else:
+            _N3,_N2,_N1 = _
+            x1 = f['AXIS']['X1 AXIS'][:]
+            x2 = f['AXIS']['X2 AXIS'][:]
+            x3 = f['AXIS']['X3 AXIS'][:]
+            dx1 = (x1[1]-x1[0])/_N1
+            dx2 = (x2[1]-x2[0])/_N2
+            dx3 = (x3[1]-x3[0])/_N3
+            d['den_xx'] = dx1*np.arange(_N1) + dx1/2. + x1[0]
+            d['den_yy'] = dx2*np.arange(_N2) + dx2/2. + x2[0]
+            d['den_zz'] = dx3*np.arange(_N3) + dx3/2. + x3[0]
+
+        x1 = f['AXIS']['X1 AXIS'][:]
+        x2 = f['AXIS']['X2 AXIS'][:]
+        x3 = f['AXIS']['X3 AXIS'][:]
+        dx1 = (x1[1]-x1[0])/_N1
+        dx2 = (x2[1]-x2[0])/_N2
+        dx3 = (x3[1]-x3[0])/_N3
+        d['den_xx'] = dx1*np.arange(_N1) + dx1/2. + x1[0]
+        d['den_yy'] = dx2*np.arange(_N2) + dx2/2. + x2[0]
+        d['den_zz'] = dx3*np.arange(_N3) + dx3/2. + x3[0]
+
+    d['Vframe_relative_to_sim'] = 0.
+    return d
 
 def dict_2d_to_3d(dict, axis):
     """

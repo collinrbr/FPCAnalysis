@@ -232,6 +232,18 @@ def fastmagson_curve(kperp,kpar,beta_i = 1.,tau = 1.):
 
     return omega_over_Omega_i
 
+def slowmagson_curve(kperp,kpar,beta_i = 1.,tau = 1.):
+    """
+
+    From Klein et al. 2012
+    """
+    bt = beta_i*(1+1./tau)
+    k_tot = math.sqrt(kperp**2.+kpar**2.)
+
+    omega_over_Omega_i=k_tot*math.sqrt( (1.+bt - math.sqrt( (1.+bt)**2. -4.*bt*(kpar/k_tot)**2.))/2.)
+
+    return omega_over_Omega_i
+
 def whistler_curve(kperp,kpar,beta_i = 1.,tau = 1.):
     """
 
@@ -250,6 +262,7 @@ def select_wavemodes_and_compute_curves(dwavemodes, depth, kpars, kperps, tol=0.
     wavemodes_matching_kpar = []
     kaw_curves_matching_kpar = []
     fm_curves_matching_kpar = []
+    slow_curves_matching_kpar = []
     whi_curves_matching_kpar = []
     for kpar in kpars:
         _wvmds = {'wavemodes':[]}
@@ -264,22 +277,26 @@ def select_wavemodes_and_compute_curves(dwavemodes, depth, kpars, kperps, tol=0.
         kperpsweep = np.linspace(.1,10.,1000)
         _crvkaw = []
         _crvfm = []
+        _crvslw = []
         _crvwhi = []
         for _kperpval in kperpsweep:
             _crvkaw.append(kaw_curve(_kperpval,kpar,beta_i = beta_i, tau = tau))
             _crvfm.append(fastmagson_curve(_kperpval,kpar,beta_i = beta_i, tau = tau))
+            _crvslw.append(slowmagson_curve(_kperpval,kpar,beta_i = beta_i, tau = tau))
             _crvwhi.append(whistler_curve(_kperpval,kpar,beta_i = beta_i, tau = tau))
 
         #save to output arrays
         wavemodes_matching_kpar.append(_wvmds)
         kaw_curves_matching_kpar.append(_crvkaw)
         fm_curves_matching_kpar.append(_crvfm)
+        slow_curves_matching_kpar.append(_crvslw)
         whi_curves_matching_kpar.append(_crvwhi)
 
     #iterate over kperps
     wavemodes_matching_kperp = []
     kaw_curves_matching_kperp = []
     fm_curves_matching_kperp = []
+    slow_curves_matching_kperp = []
     whi_curves_matching_kperp = []
     for kperp in kperps:
         _wvmds = {'wavemodes':[]}
@@ -294,21 +311,24 @@ def select_wavemodes_and_compute_curves(dwavemodes, depth, kpars, kperps, tol=0.
         kparsweep = np.linspace(.1,10.,1000)
         _crvkaw = []
         _crvfm = []
+        _crvslw = []
         _crvwhi = []
         for _kparval in kparsweep:
             _crvkaw.append(kaw_curve(kperp,_kparval,beta_i = beta_i, tau = tau))
             _crvfm.append(fastmagson_curve(kperp,_kparval,beta_i = beta_i, tau = tau))
+            _crvslw.append(slowmagson_curve(kperp,_kparval,beta_i = beta_i, tau = tau))
             _crvwhi.append(whistler_curve(kperp,_kparval,beta_i = beta_i, tau = tau))
 
         #save to output arrays
         wavemodes_matching_kperp.append(_wvmds)
         kaw_curves_matching_kperp.append(_crvkaw)
         fm_curves_matching_kperp.append(_crvfm)
+        slow_curves_matching_kperp.append(_crvslw)
         whi_curves_matching_kperp.append(_crvwhi)
 
     #return
-    return (wavemodes_matching_kpar, kaw_curves_matching_kpar, fm_curves_matching_kpar, whi_curves_matching_kpar, kperpsweep,
-           wavemodes_matching_kperp, kaw_curves_matching_kperp, fm_curves_matching_kperp, whi_curves_matching_kperp, kparsweep)
+    return (wavemodes_matching_kpar, kaw_curves_matching_kpar, fm_curves_matching_kpar, slow_curves_matching_kpar, whi_curves_matching_kpar, kperpsweep,
+           wavemodes_matching_kperp, kaw_curves_matching_kperp, fm_curves_matching_kperp, slow_curves_matching_kperp, whi_curves_matching_kperp, kparsweep)
 
 def get_freq_from_wvmd(wm,tol=0.01):
     """

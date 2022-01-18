@@ -34,14 +34,17 @@ except:
     print("usage: " + sys.argv[0] + " filename")
     sys.exit()
 
+#TODO: update to copy all variables in netcdf4 (in particular npar_in) in final netcdf4 product
 
 #-------------------------------------------------------------------------------
 # load data
 #-------------------------------------------------------------------------------
 #load original netcdf4 file
 print("Loading data...")
-Hist, CEx, CEy, CEz, vx, vy, vz, x, enerCEx, enerCEy, enerCEz, Vframe_relative_to_sim, metadata, params = dnc.load3Vnetcdf4(flnmin)
-
+try:
+    Hist, CEx, CEy, CEz, vx, vy, vz, x, enerCEx, enerCEy, enerCEz, npar_in, Vframe_relative_to_sim, metadata, params = dnc.load3Vnetcdf4(flnmin)
+except:
+        Hist, CEx, CEy, CEz, vx, vy, vz, x, enerCEx, enerCEy, enerCEz, Vframe_relative_to_sim, metadata, params = dnc.load3Vnetcdf4(flnmin)
 #-------------------------------------------------------------------------------
 # Project data
 #-------------------------------------------------------------------------------

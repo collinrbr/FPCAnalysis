@@ -1129,7 +1129,7 @@ def compute_temp_aniso(dparfieldaligned,vmax,dv,V=[0.,0.,0.]):
 
     hist,_ = np.histogramdd((np.sqrt(dpar['pperp2']*dpar['pperp2']+dpar['pperp1']*dpar['pperp1']), dpar['ppar']), bins=[vperpbins, vparbins])
 
-    #integrate by hand
+    #integrate by riemann sum, note: the factor of delta v cancels
     Pperp = 0.
     for i in range(0, len(vpar)):
         for j in range(0, len(vperp)):

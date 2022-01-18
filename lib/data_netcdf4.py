@@ -260,9 +260,10 @@ def load3Vnetcdf4(filename):
     vy = _vy
     vz = _vz
 
-    if(npar_in != None):
-        return Hist_in, CEx_in, CEy_in, CEz_in, vx, vy, vz, x_in, enerCEx_in, enerCEy_in, enerCEz_in, npar_in, Vframe_relative_to_sim_in, metadata_in, params_in
-    else:
+    try:
+        if(len(npar_in) > 0):
+            return Hist_in, CEx_in, CEy_in, CEz_in, vx, vy, vz, x_in, enerCEx_in, enerCEy_in, enerCEz_in, npar_in, Vframe_relative_to_sim_in, metadata_in, params_in
+    except:
         return Hist_in, CEx_in, CEy_in, CEz_in, vx, vy, vz, x_in, enerCEx_in, enerCEy_in, enerCEz_in, Vframe_relative_to_sim_in, metadata_in, params_in
 
 def load2vdata(filename):
