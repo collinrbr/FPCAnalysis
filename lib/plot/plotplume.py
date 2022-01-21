@@ -1,6 +1,6 @@
 # plume.py>
 
-# functions to plotting plume results
+# functions to plotting things related to the PLUME solve and other theory related plots
 
 import numpy as np
 import matplotlib.pyplot as plt

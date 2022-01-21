@@ -171,6 +171,7 @@ def rotate_and_norm_to_plume_basis(wavemode,epar,eperp1,eperp2):
 
     return plume_basis_wavemode
 
+#TODO: remove either this or get_freq_from_wvmd
 def get_freq_from_wavemode(wm,epar,eperp1,eperp2):
     """
     Predicts dispersion relation frequency using faradays law and assuming plane wave solutions

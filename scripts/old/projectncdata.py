@@ -44,7 +44,7 @@ print("Loading data...")
 try:
     Hist, CEx, CEy, CEz, vx, vy, vz, x, enerCEx, enerCEy, enerCEz, npar_in, Vframe_relative_to_sim, metadata, params = dnc.load3Vnetcdf4(flnmin)
 except:
-        Hist, CEx, CEy, CEz, vx, vy, vz, x, enerCEx, enerCEy, enerCEz, Vframe_relative_to_sim, metadata, params = dnc.load3Vnetcdf4(flnmin)
+    Hist, CEx, CEy, CEz, vx, vy, vz, x, enerCEx, enerCEy, enerCEz, Vframe_relative_to_sim, metadata, params = dnc.load3Vnetcdf4(flnmin)
 #-------------------------------------------------------------------------------
 # Project data
 #-------------------------------------------------------------------------------
