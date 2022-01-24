@@ -105,6 +105,7 @@ def plot_sweep(plume_sweeps,xaxiskey,yaxiskey,wavemodes=[''],xlbl='',ylbl='',lbl
     else:
         plt.show()
 
+#todo: make sure given wavemodes are close to give kpars
 def plot_wavemodes_and_compare_to_sweeps_kperp(kpars,beta_i,tau,wavemodes_matching_kpar,epar,eperp1,eperp2,kperplim = [.1,10], flnm = '',delta_beta_i = 0, delta_tau = 0):
     from lib.plume import get_freq_from_wvmd
     from lib.plume import kaw_curve
@@ -186,6 +187,7 @@ def plot_wavemodes_and_compare_to_sweeps_kperp(kpars,beta_i,tau,wavemodes_matchi
     else:
         plt.show()
 
+#TODO: make sure given wavemodes are close to given kperps
 def plot_wavemodes_and_compare_to_sweeps_kpar(kperps,beta_i,tau,wavemodes_matching_kpar,epar,eperp1,eperp2,kparlim = [.1,10], flnm = '',delta_beta_i = 0, delta_tau = 0):
     from lib.plume import get_freq_from_wvmd
     from lib.plume import kaw_curve
@@ -256,7 +258,7 @@ def plot_wavemodes_and_compare_to_sweeps_kpar(kperps,beta_i,tau,wavemodes_matchi
 
     plt.yscale('log')
     plt.xscale('log')
-    plt.xlabel('$k_{\perp} d_i$')
+    plt.xlabel('$k_{||} d_i$')
     plt.ylabel('$\omega / \Omega_i$')
     plt.grid(True, which="both", ls="-")
     plt.axis('scaled')
