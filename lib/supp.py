@@ -1,6 +1,8 @@
 # supplementary fucntions lifted from other libraries
 # this was done as scipy was not up to date on server i was using to run code
 
+import numpy as np
+
 def morlet2(M, s, w=5):
     """
     Complex Morlet wavelet, designed to work with `cwt`.
