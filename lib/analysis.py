@@ -682,7 +682,7 @@ def wlt(t,data,w=6,klim=None,retstep=1):
     try:
         cwtm = signal.cwt(data, signal.morlet2, widths, w=w)
     except:
-        from lib.supp import * #manually rename scipy signal library and put in folder named supplementary in libraries folder to attempt to load needed library
+        from lib.supp import cwt #manually rename scipy signal library and put in folder named supplementary in libraries folder to attempt to load needed library
         print("Warning, it seems we will have to attempt to manually import signal from scipy...")
         print("Attempting to do so...")
         #print('Warning, Scipy is not up to date and seems to be missing morlet2, attempting to use manual copy of morlet2')
