@@ -105,36 +105,60 @@ def plot_sweep(plume_sweeps,xaxiskey,yaxiskey,wavemodes=[''],xlbl='',ylbl='',lbl
     else:
         plt.show()
 
-def plot_kperp_disp_sweeps(kperpsweep,wavemodes_matching_kpar,kaw_curves_matching_kpar,fm_curves_matching_kpar,slow_curves_matching_kpar,whi_curves_matching_kpar,flnm='',beta_i = 1.,delta_beta_i = 0.,tau = 1.,delta_tau = 0.):
-    """
-    WARNING: beta_i and tau should match beta_i and tau use for select_wavemodes_and_compute_curves
-    """
+def plot_wavemodes_and_compare_to_sweeps_kperp(kpars,beta_i,tau,wavemodes_matching_kpar,epar,eperp1,eperp2,kperplim = [.1,10], flnm = '',delta_beta_i = 0, delta_tau = 0):
     from lib.plume import get_freq_from_wvmd
     from lib.plume import kaw_curve
+    from lib.plume import fastmagson_curve
+    from lib.plume import slowmagson_curve
+    from lib.plume import whistler_curve
 
+    kperps = np.linspace(kperplim[0],kperplim[1],1000)
+    kawcrvs = []
+    fastcrvs = []
+    slowcrvs = []
+    whicrvs = []
+    #plot theoretical curves
+    for kpar in kpars:
+        kawcrv = []
+        fastcrv = []
+        slowcrv = []
+        whicrv = []
+        for kperp in kperps:
+            kawcrv.append(kaw_curve(kperp,kpar,beta_i,tau,comp_error_prop=False))
+            fastcrv.append(fastmagson_curve(kperp,kpar,beta_i,tau,comp_error_prop=False))
+            slowcrv.append(slowmagson_curve(kperp,kpar,beta_i,tau,comp_error_prop=False))
+            whicrv.append(whistler_curve(kperp,kpar,beta_i,tau,comp_error_prop=False))
+        kawcrvs.append(kawcrv)
+        fastcrvs.append(fastcrv)
+        slowcrvs.append(slowcrv)
+        whicrvs.append(whicrv)
 
-    #compute kpar and omega for each wavemodes
+    plotkperps = []
+    plotkperp_errors = []
     omegas = []
     omega_errors = []
-    pltkperps = []
-    pltkperp_errors = []
-    for k in range(0,len(wavemodes_matching_kpar)):
-        _omegarow = []
-        _omega_errorrow = []
-        _kperprow = []
-        _kperp_errorrow = []
-        for wvmd in wavemodes_matching_kpar[k]['wavemodes']:
-            _,omega2,_ = get_freq_from_wvmd(wvmd)
-            _omegarow.append(omega2)
-            _omega_errorrow.append(kaw_curve(wvmd['kperp'],wvmd['kpar'],beta_i,tau,comp_error_prop=True, delta_beta_i = delta_beta_i, delta_tau = delta_tau).s)     #WARNING: we use KAW disp relation to compute error propogation
-            _kperprow.append(wvmd['kperp'])
-            _kperp_errorrow.append(wvmd['kperp']*uncertainty)
-        omegas.append(_omegarow)
-        omega_errors.append(_omega_errorrow)
-        pltkperps.append(_kperprow)
-        pltkperp_errors.append(_kperp_errorrow)
+    #grab points and compute error for each wavemode
+    for match_list in wavemodes_matching_kpar:
+        plotkperp = []
+        plotkperp_error = []
+        omega = []
+        omega_error = []
+        for wvmd in match_list['wavemodes']:
+            _,omega_faraday,_ = get_freq_from_wvmd(wvmd)
+            plotkperp.append(wvmd['kperp'])
+            delta_kperp = _propogate_error_in_cartesian_to_vector(wvmd['delta_kx'], 0., 0., epar)
+            delta_kpar = _propogate_error_in_cartesian_to_vector(wvmd['delta_kx'], 0., 0., eperp1)
+            plotkperp_error.append(delta_kperp)
+            _omega = kaw_curve(wvmd['kperp'],wvmd['kpar'],beta_i,tau,comp_error_prop=True,delta_kperp = delta_kperp, delta_kpar = delta_kpar, delta_beta_i = delta_beta_i, delta_tau = delta_tau)
+            omega.append(omega_faraday)
+            omega_error.append(_omega.s)
 
-    if(len(kaw_curves_matching_kpar) != 3):
+        plotkperps.append(plotkperp)
+        plotkperp_errors.append(plotkperp_error)
+        omegas.append(omega)
+        omega_errors.append(omega_error)
+
+    if(len(kaw_curves_matching_kperp) != 3):
         print('Error, this function is set up to plot 3 curves (per wavemode) only... TODO: generalize this')
         return
 
@@ -142,12 +166,12 @@ def plot_kperp_disp_sweeps(kperpsweep,wavemodes_matching_kpar,kaw_curves_matchin
     lnwidth = 1.75
 
     plt.figure(figsize=(10,10))
-    for i in range(0,len(kaw_curves_matching_kpar)):
-        plt.errorbar(pltkperps[i],np.real(omegas[i]), xerr = pltkperp_errors[i], yerr=omega_errors[i], fmt="o",color='C0')
-        plt.plot(kperpsweep,kaw_curves_matching_kpar[i],linestyle[i],color='black',linewidth=lnwidth)
-        plt.plot(kperpsweep,fm_curves_matching_kpar[i],linestyle[i],color='blue',linewidth=lnwidth)
-        plt.plot(kperpsweep,slow_curves_matching_kpar[i],linestyle[i],color='green',linewidth=lnwidth)
-        plt.plot(kperpsweep,whi_curves_matching_kpar[i],linestyle[i],color='red',linewidth=lnwidth)
+    for i in range(0,len(kawcrvs)):
+        plt.errorbar(plotkperps[i],np.real(omegas[i]), xerr = plotkperp_errors[i], yerr=omega_errors[i], fmt="o",color='C0')
+        plt.plot(kperps,kawcrvs[i],linestyle[i],color='black',linewidth=lnwidth)
+        plt.plot(kperps,fastcrvs[i],linestyle[i],color='blue',linewidth=lnwidth)
+        plt.plot(kperps,slowcrvs[i],linestyle[i],color='green',linewidth=lnwidth)
+        plt.plot(kperps,whicrvs[i],linestyle[i],color='red',linewidth=lnwidth)
 
     plt.yscale('log')
     plt.xscale('log')
@@ -162,49 +186,73 @@ def plot_kperp_disp_sweeps(kperpsweep,wavemodes_matching_kpar,kaw_curves_matchin
     else:
         plt.show()
 
-def plot_kpar_disp_sweeps(kparsweep,wavemodes_matching_kperp,kaw_curves_matching_kperp,fm_curves_matching_kperp,slow_curves_matching_kperp,whi_curves_matching_kperp,uncertainty=.5,flnm='',beta_i=1.,tau=1.):
-    """
-    WARNING: beta_i and tau should match beta_i and tau use for select_wavemodes_and_compute_curves
-    """
+def plot_wavemodes_and_compare_to_sweeps_kpar(kperps,beta_i,tau,wavemodes_matching_kpar,epar,eperp1,eperp2,kparlim = [.1,10], flnm = '',delta_beta_i = 0, delta_tau = 0):
     from lib.plume import get_freq_from_wvmd
     from lib.plume import kaw_curve
+    from lib.plume import fastmagson_curve
+    from lib.plume import slowmagson_curve
+    from lib.plume import whistler_curve
 
+    kpars = np.linspace(kparlim[0],kparlim[1],1000)
+    kawcrvs = []
+    fastcrvs = []
+    slowcrvs = []
+    whicrvs = []
+    #plot theoretical curves
+    for kperp in kperps:
+        kawcrv = []
+        fastcrv = []
+        slowcrv = []
+        whicrv = []
+        for kpar in kpars:
+            kawcrv.append(kaw_curve(kperp,kpar,beta_i,tau,comp_error_prop=False))
+            fastcrv.append(fastmagson_curve(kperp,kpar,beta_i,tau,comp_error_prop=False))
+            slowcrv.append(slowmagson_curve(kperp,kpar,beta_i,tau,comp_error_prop=False))
+            whicrv.append(whistler_curve(kperp,kpar,beta_i,tau,comp_error_prop=False))
+        kawcrvs.append(kawcrv)
+        fastcrvs.append(fastcrv)
+        slowcrvs.append(slowcrv)
+        whicrvs.append(whicrv)
 
-    #compute kpar and omega for each wavemodes
+    plotkpars = []
+    plotkpar_errors = []
     omegas = []
     omega_errors = []
-    pltkpars = []
-    pltkpar_errors = []
-    for k in range(0,len(wavemodes_matching_kperp)):
-        _omegarow = []
-        _omega_errorrow = []
-        _kparrow = []
-        _kpar_errorrow = []
-        for wvmd in wavemodes_matching_kperp[k]['wavemodes']:
-            _,omega2,_ = get_freq_from_wvmd(wvmd)
-            _omegarow.append(omega2)
-            _omega_errorrow.append(kaw_curve(wvmd['kperp'],wvmd['kpar'],comp_error_prop=True,uncertainty = uncertainty, beta_i = beta_i, tau = tau).s,)     #WARNING: we use KAW disp relation to compute error propogation
-            _kparrow.append(wvmd['kpar'])
-            _kpar_errorrow.append(wvmd['kpar']*uncertainty)
-        omegas.append(_omegarow)
-        omega_errors.append(_omega_errorrow)
-        pltkpars.append(_kparrow)
-        pltkpar_errors.append(_kpar_errorrow)
+    #grab points and compute error for each wavemode
+    for match_list in wavemodes_matching_kpar:
+        plotkpar = []
+        plotkpar_error = []
+        omega = []
+        omega_error = []
+        for wvmd in match_list['wavemodes']:
+            _,omega_faraday,_ = get_freq_from_wvmd(wvmd)
+            plotkpar.append(wvmd['kpar'])
+            delta_kperp = _propogate_error_in_cartesian_to_vector(wvmd['delta_kx'], 0., 0., epar)
+            delta_kpar = _propogate_error_in_cartesian_to_vector(wvmd['delta_kx'], 0., 0., eperp1)
+            plotkpar_error.append(delta_kpar)
+            _omega = kaw_curve(wvmd['kperp'],wvmd['kpar'],beta_i,tau,comp_error_prop=True,delta_kperp = delta_kperp, delta_kpar = delta_kpar, delta_beta_i = delta_beta_i, delta_tau = delta_tau)
+            omega.append(omega_faraday)
+            omega_error.append(_omega.s)
+
+        plotkpars.append(plotkpar)
+        plotkpar_errors.append(plotkpar_error)
+        omegas.append(omega)
+        omega_errors.append(omega_error)
 
     if(len(kaw_curves_matching_kperp) != 3):
         print('Error, this function is set up to plot 3 curves (per wavemode) only... TODO: generalize this')
         return
 
-    linestyle = ['-',':','--']
+    linestyle = ['--',':','-']
     lnwidth = 1.75
 
     plt.figure(figsize=(10,10))
-    for i in range(0,len(kaw_curves_matching_kperp)):
-        plt.errorbar(pltkpars[i],np.real(omegas[i]), xerr = pltkpar_errors[i], yerr=omega_errors[i], fmt="o",color='C0')
-        plt.plot(kparsweep,kaw_curves_matching_kperp[i],linestyle[i],color='black',linewidth=lnwidth)
-        plt.plot(kparsweep,fm_curves_matching_kperp[i],linestyle[i],color='blue',linewidth=lnwidth)
-        plt.plot(kparsweep,slow_curves_matching_kperp[i],linestyle[i],color='green',linewidth=lnwidth)
-        plt.plot(kparsweep,whi_curves_matching_kperp[i],linestyle[i],color='red',linewidth=lnwidth)
+    for i in range(0,len(kawcrvs)):
+        plt.errorbar(plotkpars[i],np.real(omegas[i]), xerr = plotkpar_errors[i], yerr=omega_errors[i], fmt="o",color='C0')
+        plt.plot(kpars,kawcrvs[i],linestyle[i],color='black',linewidth=lnwidth)
+        plt.plot(kpars,fastcrvs[i],linestyle[i],color='blue',linewidth=lnwidth)
+        plt.plot(kpars,slowcrvs[i],linestyle[i],color='green',linewidth=lnwidth)
+        plt.plot(kpars,whicrvs[i],linestyle[i],color='red',linewidth=lnwidth)
 
     plt.yscale('log')
     plt.xscale('log')
@@ -218,3 +266,35 @@ def plot_kpar_disp_sweeps(kparsweep,wavemodes_matching_kperp,kaw_curves_matching
         plt.savefig(flnm+'.png',format='png',dpi=600,bbox_inches="tight")
     else:
         plt.show()
+
+def _propogate_error_in_cartesian_to_vector(delta_xx, delta_yy, delta_zz, vec):
+    """
+    Determinines error in length of given vector given uncertainty in xx, yy, zz
+    """
+
+    #given epar, eperp1, eperp2, we can write something like epar = math.sin tht * kx + math.sin tht2 * ky + math.sin tht3 * kz
+    #sovle for kx, and propogate error
+
+    #with this, we can pass a value for uncertainty
+
+    #kx_direction = np.asarray([1,0,0])
+
+    from uncertainties import ufloat
+
+    #compute normalized vect
+    length = np.linalg.norm(vec)
+    evec = vec
+
+    #break down into components
+    xx_component_of_kpar = length*evec[0]
+    yy_component_of_kpar = length*evec[1]
+    zz_component_of_kpar = length*evec[2]
+
+    xx = ufloat(xx_component_of_kpar,delta_xx)
+    yy = ufloat(yy_component_of_kpar,delta_yy)
+    zz = ufloat(zz_component_of_kpar,delta_zz)
+
+    #compute original vec length to get error
+    veclengtherror = ((xx**2+yy**2+zz**2)**.5).s
+
+    return veclengtherror
