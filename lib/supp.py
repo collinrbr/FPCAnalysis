@@ -166,10 +166,10 @@ def cwt(data, wavelet, widths, dtype=None, **kwargs):
         # kwarg pop above may be removed eventually; these
         # are shims for 32-bit arch + NumPy <= 1.14.5 to
         # address gh-11095
-        if wavelet == ricker and window_size is None:
-            ceil = np.ceil(N)
-            if ceil != N:
-                N = int(N)
+        # if wavelet == ricker and window_size is None:
+        #     ceil = np.ceil(N)
+        #     if ceil != N:
+        #         N = int(N)
         wavelet_data = np.conj(wavelet(N, width, **kwargs)[::-1])
         output[ind] = convolve(data, wavelet_data, mode='same')
     return output
