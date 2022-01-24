@@ -682,9 +682,9 @@ def wlt(t,data,w=6,klim=None,retstep=1):
     try:
         cwtm = signal.cwt(data, signal.morlet2, widths, w=w)
     except:
-        print('Warning, Scipy is not up to date and seems to be missing morlet2, attempting to use manual copy of morlet2')
-        print('Warning, w has been overwritten to be 5') #can pass keyword w in old version of scipy, must use scipys default value of 5 for morlet wavelet
-        cwtm = signal.cwt(data, morlet2_1p7p1, widths)
+        #print('Warning, Scipy is not up to date and seems to be missing morlet2, attempting to use manual copy of morlet2')
+        #print('Warning, w has been overwritten to be 5') #can pass keyword w in old version of scipy, must use scipys default value of 5 for morlet wavelet
+        cwtm = cwt(data, signal.morlet2, widths, w=w)
 
     k = 2.0*math.pi*freq
     if(klim != None):
@@ -778,6 +778,102 @@ def morlet2_1p7p1(M, s, w=5):
     x = x / s
     wavelet = np.exp(1j * w * x) * np.exp(-0.5 * x**2) * np.pi**(-0.25)
     output = np.sqrt(1/s) * wavelet
+    return output
+
+#this function was lifted from Scipy 1.7.1 and is only used because the version of scipy installed on the
+#server I was working with was not up to date, and this function also out of date
+def cwt(data, wavelet, widths, dtype=None, **kwargs):
+    """
+    Continuous wavelet transform.
+
+    Performs a continuous wavelet transform on `data`,
+    using the `wavelet` function. A CWT performs a convolution
+    with `data` using the `wavelet` function, which is characterized
+    by a width parameter and length parameter. The `wavelet` function
+    is allowed to be complex.
+
+    Parameters
+    ----------
+    data : (N,) ndarray
+        data on which to perform the transform.
+    wavelet : function
+        Wavelet function, which should take 2 arguments.
+        The first argument is the number of points that the returned vector
+        will have (len(wavelet(length,width)) == length).
+        The second is a width parameter, defining the size of the wavelet
+        (e.g. standard deviation of a gaussian). See `ricker`, which
+        satisfies these requirements.
+    widths : (M,) sequence
+        Widths to use for transform.
+    dtype : data-type, optional
+        The desired data type of output. Defaults to ``float64`` if the
+        output of `wavelet` is real and ``complex128`` if it is complex.
+
+        .. versionadded:: 1.4.0
+
+    kwargs
+        Keyword arguments passed to wavelet function.
+
+        .. versionadded:: 1.4.0
+
+    Returns
+    -------
+    cwt: (M, N) ndarray
+        Will have shape of (len(widths), len(data)).
+
+    Notes
+    -----
+
+    .. versionadded:: 1.4.0
+
+    For non-symmetric, complex-valued wavelets, the input signal is convolved
+    with the time-reversed complex-conjugate of the wavelet data [1].
+
+    ::
+
+        length = min(10 * width[ii], len(data))
+        cwt[ii,:] = signal.convolve(data, np.conj(wavelet(length, width[ii],
+                                        **kwargs))[::-1], mode='same')
+
+    References
+    ----------
+    .. [1] S. Mallat, "A Wavelet Tour of Signal Processing (3rd Edition)",
+        Academic Press, 2009.
+
+    Examples
+    --------
+    >>> from scipy import signal
+    >>> import matplotlib.pyplot as plt
+    >>> t = np.linspace(-1, 1, 200, endpoint=False)
+    >>> sig  = np.cos(2 * np.pi * 7 * t) + signal.gausspulse(t - 0.4, fc=2)
+    >>> widths = np.arange(1, 31)
+    >>> cwtmatr = signal.cwt(sig, signal.ricker, widths)
+    >>> plt.imshow(cwtmatr, extent=[-1, 1, 1, 31], cmap='PRGn', aspect='auto',
+    ...            vmax=abs(cwtmatr).max(), vmin=-abs(cwtmatr).max())
+    >>> plt.show()
+    """
+    if wavelet == ricker:
+        window_size = kwargs.pop('window_size', None)
+    # Determine output type
+    if dtype is None:
+        if np.asarray(wavelet(1, widths[0], **kwargs)).dtype.char in 'FDG':
+            dtype = np.complex128
+        else:
+            dtype = np.float64
+
+    output = np.empty((len(widths), len(data)), dtype=dtype)
+    for ind, width in enumerate(widths):
+        N = np.min([10 * width, len(data)])
+        # the conditional block below and the window_size
+        # kwarg pop above may be removed eventually; these
+        # are shims for 32-bit arch + NumPy <= 1.14.5 to
+        # address gh-11095
+        if wavelet == ricker and window_size is None:
+            ceil = np.ceil(N)
+            if ceil != N:
+                N = int(N)
+        wavelet_data = np.conj(wavelet(N, width, **kwargs)[::-1])
+        output[ind] = convolve(data, wavelet_data, mode='same')
     return output
 
 def _ffttransform_in_yz(dfields,fieldkey):
