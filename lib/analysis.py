@@ -682,11 +682,12 @@ def wlt(t,data,w=6,klim=None,retstep=1):
     try:
         cwtm = signal.cwt(data, signal.morlet2, widths, w=w)
     except:
-        from lib.supplementary import signal_1p7 #manually rename scipy signal library and put in folder named supplementary in libraries folder to attempt to load needed library
-        print("Warning, it seems")
+        from lib.supp import * #manually rename scipy signal library and put in folder named supplementary in libraries folder to attempt to load needed library
+        print("Warning, it seems we will have to attempt to manually import signal from scipy...")
+        print("Attempting to do so...")
         #print('Warning, Scipy is not up to date and seems to be missing morlet2, attempting to use manual copy of morlet2')
         #print('Warning, w has been overwritten to be 5') #can pass keyword w in old version of scipy, must use scipys default value of 5 for morlet wavelet
-        cwtm = signal_1p7.cwt(data, signal_1p7.morlet2, widths, w=w)
+        cwtm = cwt(data, signal_1p7.morlet2, widths, w=w)
 
     k = 2.0*math.pi*freq
     if(klim != None):
