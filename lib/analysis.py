@@ -682,12 +682,11 @@ def wlt(t,data,w=6,klim=None,retstep=1):
     try:
         cwtm = signal.cwt(data, signal.morlet2, widths, w=w)
     except:
+        print("Warning, it seems we will have to attempt to manually import needed functions from signal from scipy...")
+        print("Attempting to do so...")
         from lib.supp import cwt #manually rename scipy signal library and put in folder named supplementary in libraries folder to attempt to load needed library
         from lib.supp import morlet2
-        print("Warning, it seems we will have to attempt to manually import signal from scipy...")
-        print("Attempting to do so...")
-        #print('Warning, Scipy is not up to date and seems to be missing morlet2, attempting to use manual copy of morlet2')
-        #print('Warning, w has been overwritten to be 5') #can pass keyword w in old version of scipy, must use scipys default value of 5 for morlet wavelet
+
         cwtm = cwt(data, morlet2, widths, w=w)
 
     k = 2.0*math.pi*freq
@@ -784,7 +783,7 @@ def yz_fft_filter(dfields,ky0,kz0):
 
 def find_potential_wavemodes(dfields,fieldkey,xpos,cutoffconst=.1):
     """
-
+    This function didnt lead to useful results, and is no longer used...
     """
 
     from lib.array_ops import find_nearest
@@ -1062,7 +1061,7 @@ def compute_field_aligned_coord(dfields,xlim,ylim,zlim):
     if(np.abs(np.dot([_B0[0],_B0[1],_B0[2]],[1.,0.,0.])) < tol): #assumes B0 != [-1,0,0]
         print("Warning, B0 is parallel to x (typically the shock normal)...")
         print("Already in field aligned coordinates. Returning standard basis...")
-        return np.asarray([1,0,0]),np.asarray([0,1,0]),np.asarray([0,0,1])
+        return np.asarray([1.,0,0]),np.asarray([0,1.,0]),np.asarray([0,0,1.])
     vperp2basis /= np.linalg.norm(vperp2basis)
     vperp1basis = np.cross(vparbasis,vperp2basis)
     vperp1basis /= np.linalg.norm(vperp1basis)

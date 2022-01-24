@@ -198,7 +198,8 @@ def get_freq_from_wavemode(wm,epar,eperp1,eperp2):
 
     return omega1, omega2, omega3, wm
 
-def kaw_curve(kperp,kpar,comp_error_prop=False,uncertainty = .5,beta_i = 1.,tau = 1.):
+def kaw_curve(kperp,kpar,beta_i,tau,
+              comp_error_prop=False,delta_kperp = 0., delta_kpar = 0., delta_beta_i = 0., delta_tau = 0.):
     """
     Dispersion relation for a kinetic alfven wave
 
@@ -209,10 +210,10 @@ def kaw_curve(kperp,kpar,comp_error_prop=False,uncertainty = .5,beta_i = 1.,tau 
         from uncertainties import ufloat
         from uncertainties.umath import sqrt
 
-        kperp = ufloat(kperp,uncertainty*kperp)
-        kpar = ufloat(kpar,uncertainty*kpar)
-        #beta_i = ufloat(beta_i,uncertainty*beta_i) #assume no uncertainty in these parameters, as they do not contribute much to the final error after propogation
-        #tau = ufloat(tau,uncertainty*tau)
+        kperp = ufloat(kperp,delta_kperp)
+        kpar = ufloat(kpar,delta_kpar)
+        beta_i = ufloat(beta_i,delta_beta_i)
+        tau = ufloat(tau,delta_tau)
 
         omega_over_Omega_i=kpar*sqrt(1.+ kperp**2./(1.+ 2./(beta_i*(1.+1./tau))))
 
@@ -221,38 +222,82 @@ def kaw_curve(kperp,kpar,comp_error_prop=False,uncertainty = .5,beta_i = 1.,tau 
 
     return omega_over_Omega_i
 
-def fastmagson_curve(kperp,kpar,beta_i = 1.,tau = 1.):
+def fastmagson_curve(kperp,kpar,beta_i,tau,
+              comp_error_prop=False,delta_kperp = 0., delta_kpar = 0., delta_beta_i = 0., delta_tau = 0.):
     """
 
     From Klein et al. 2012
     """
-    bt = beta_i*(1+1./tau)
-    k_tot = math.sqrt(kperp**2.+kpar**2.)
+    if(comp_error_prop):
+        from uncertainties import ufloat
+        from uncertainties.umath import sqrt
 
-    omega_over_Omega_i=k_tot*math.sqrt( (1.+bt + math.sqrt( (1.+bt)**2. -4.*bt*(kpar/k_tot)**2.))/2.)
+        kperp = ufloat(kperp,delta_kperp)
+        kpar = ufloat(kpar,delta_kpar)
+        beta_i = ufloat(beta_i,delta_beta_i)
+        tau = ufloat(tau,delta_tau)
+
+        bt = beta_i*(1+1./tau)
+        k_tot = sqrt(kperp**2.+kpar**2.)
+
+        omega_over_Omega_i=k_tot*sqrt( (1.+bt + math.sqrt( (1.+bt)**2. -4.*bt*(kpar/k_tot)**2.))/2.)
+
+    else:
+        bt = beta_i*(1+1./tau)
+        k_tot = math.sqrt(kperp**2.+kpar**2.)
+
+        omega_over_Omega_i=k_tot*math.sqrt( (1.+bt + math.sqrt( (1.+bt)**2. -4.*bt*(kpar/k_tot)**2.))/2.)
 
     return omega_over_Omega_i
 
-def slowmagson_curve(kperp,kpar,beta_i = 1.,tau = 1.):
+def slowmagson_curve(kperp,kpar,beta_i,tau,
+              comp_error_prop=False,delta_kperp = 0., delta_kpar = 0., delta_beta_i = 0., delta_tau = 0.):
     """
 
     From Klein et al. 2012
     """
-    bt = beta_i*(1+1./tau)
-    k_tot = math.sqrt(kperp**2.+kpar**2.)
+    if(comp_error_prop):
+        from uncertainties import ufloat
+        from uncertainties.umath import sqrt
 
-    omega_over_Omega_i=k_tot*math.sqrt( (1.+bt - math.sqrt( (1.+bt)**2. -4.*bt*(kpar/k_tot)**2.))/2.)
+        kperp = ufloat(kperp,delta_kperp)
+        kpar = ufloat(kpar,delta_kpar)
+        beta_i = ufloat(beta_i,delta_beta_i)
+        tau = ufloat(tau,delta_tau)
+
+        bt = beta_i*(1+1./tau)
+        k_tot = sqrt(kperp**2.+kpar**2.)
+
+        omega_over_Omega_i=k_tot*sqrt( (1.+bt - math.sqrt( (1.+bt)**2. -4.*bt*(kpar/k_tot)**2.))/2.)
+
+    else:
+        bt = beta_i*(1+1./tau)
+        k_tot = math.sqrt(kperp**2.+kpar**2.)
+
+        omega_over_Omega_i=k_tot*math.sqrt( (1.+bt - math.sqrt( (1.+bt)**2. -4.*bt*(kpar/k_tot)**2.))/2.)
 
     return omega_over_Omega_i
 
-def whistler_curve(kperp,kpar,beta_i = 1.,tau = 1.):
+def whistler_curve(kperp,kpar,beta_i,tau,
+              comp_error_prop=False,delta_kperp = 0., delta_kpar = 0., delta_beta_i = 0., delta_tau = 0.):
     """
 
     Limit of fastmagson_curve(kperp,kpar) when kpar << kperp
     """
+    if(comp_error_prop):
+        from uncertainties import ufloat
+        from uncertainties.umath import sqrt
 
-    k_tot = math.sqrt(kperp**2.+kpar**2.)
-    omega_over_Omega_i=k_tot*math.sqrt(1.+beta_i*(1.+1./tau) + kpar**2.)
+        kperp = ufloat(kperp,delta_kperp)
+        kpar = ufloat(kpar,delta_kpar)
+        beta_i = ufloat(beta_i,delta_beta_i)
+        tau = ufloat(tau,delta_tau)
+
+        k_tot = sqrt(kperp**2.+kpar**2.)
+        omega_over_Omega_i=k_tot*sqrt(1.+beta_i*(1.+1./tau) + kpar**2.)
+    else:
+        k_tot = math.sqrt(kperp**2.+kpar**2.)
+        omega_over_Omega_i=k_tot*math.sqrt(1.+beta_i*(1.+1./tau) + kpar**2.)
 
     return omega_over_Omega_i
 
