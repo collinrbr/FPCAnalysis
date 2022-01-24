@@ -686,7 +686,7 @@ def wlt(t,data,w=6,klim=None,retstep=1):
         print("Warning, it seems")
         #print('Warning, Scipy is not up to date and seems to be missing morlet2, attempting to use manual copy of morlet2')
         #print('Warning, w has been overwritten to be 5') #can pass keyword w in old version of scipy, must use scipys default value of 5 for morlet wavelet
-        cwtm = cwt(data, morlet2, widths, w=w)
+        cwtm = signal_1p7.cwt(data, signal_1p7.morlet2, widths, w=w)
 
     k = 2.0*math.pi*freq
     if(klim != None):
