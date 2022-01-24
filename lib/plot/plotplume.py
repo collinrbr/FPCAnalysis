@@ -158,7 +158,7 @@ def plot_wavemodes_and_compare_to_sweeps_kperp(kpars,beta_i,tau,wavemodes_matchi
         omegas.append(omega)
         omega_errors.append(omega_error)
 
-    if(len(kaw_curves_matching_kperp) != 3):
+    if(len(kpars) != 3):
         print('Error, this function is set up to plot 3 curves (per wavemode) only... TODO: generalize this')
         return
 
@@ -239,7 +239,7 @@ def plot_wavemodes_and_compare_to_sweeps_kpar(kperps,beta_i,tau,wavemodes_matchi
         omegas.append(omega)
         omega_errors.append(omega_error)
 
-    if(len(kaw_curves_matching_kperp) != 3):
+    if(len(kperps) != 3):
         print('Error, this function is set up to plot 3 curves (per wavemode) only... TODO: generalize this')
         return
 
