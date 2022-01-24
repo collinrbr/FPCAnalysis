@@ -275,9 +275,9 @@ def convolve(in1, in2, mode='full', method='direct'):
         raise ValueError("volume and kernel should have the same "
                          "dimensionality")
 
-    if _inputs_swap_needed(mode, volume.shape, kernel.shape):
-        # Convolution is commutative; order doesn't have any effect on output
-        volume, kernel = kernel, volume
+    # if _inputs_swap_needed(mode, volume.shape, kernel.shape):
+    #     # Convolution is commutative; order doesn't have any effect on output
+    #     volume, kernel = kernel, volume
 
     if method == 'auto':
         method = choose_conv_method(volume, kernel, mode=mode)
