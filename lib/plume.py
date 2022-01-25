@@ -424,6 +424,8 @@ def _angle_between_vecs(vec1,vec2):
     except:
         from uncertainties import unumpy
 
+        print(np.dot(vec1,vec2)/(np.linalg.norm(vec1)*np.linalg.norm(vec2)))
+
         tht = unumpy.arccos(np.dot(vec1,vec2)/(np.linalg.norm(vec1)*np.linalg.norm(vec2)))
 
     return tht
