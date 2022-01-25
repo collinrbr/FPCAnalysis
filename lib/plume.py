@@ -172,7 +172,9 @@ def rotate_and_norm_to_plume_basis(wavemode,epar,eperp1,eperp2,comp_error_prop=F
         plume_basis_wavemode['kperp1'] = plume_basis_wavemode['kperp1'].n
         plume_basis_wavemode['kperp2'] = plume_basis_wavemode['kperp2'].n
 
-    throw = error#TODO: grab errors for fields
+    if(comp_error_prop):
+        print("Warning, we should consider tracking error of fields...")
+        #throw = error#TODO: grab errors for fields?
 
     plume_basis_wavemode['eperp1'] = eperp1
     plume_basis_wavemode['eperp2'] = eperp2
