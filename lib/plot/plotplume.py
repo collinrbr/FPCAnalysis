@@ -145,14 +145,11 @@ def plot_wavemodes_and_compare_to_sweeps_kperp(kpars,beta_i,tau,wavemodes_matchi
         omega = []
         omega_error = []
         for wvmd in match_list['wavemodes']:
-            _,omega_faraday,_ = get_freq_from_wvmd(wvmd)
+            _,omega_faraday,_ = get_freq_from_wvmd(wvmd,comp_error_prop=True)
             plotkperp.append(wvmd['kperp'])
-            delta_kperp = _propogate_error_in_cartesian_to_vector(wvmd['delta_kx'], 0., 0., epar)
-            delta_kpar = _propogate_error_in_cartesian_to_vector(wvmd['delta_kx'], 0., 0., eperp1)
-            plotkperp_error.append(delta_kperp)
-            _omega = kaw_curve(wvmd['kperp'],wvmd['kpar'],beta_i,tau,comp_error_prop=True,delta_kperp = delta_kperp, delta_kpar = delta_kpar, delta_beta_i = delta_beta_i, delta_tau = delta_tau)
-            omega.append(omega_faraday)
-            omega_error.append(_omega.s)
+            plotkperp_error.append(wvmd['delta_kperp'])
+            omega.append(omega_faraday.n)
+            omega_error.append(omega_faraday.s)
 
         plotkperps.append(plotkperp)
         plotkperp_errors.append(plotkperp_error)
@@ -188,7 +185,7 @@ def plot_wavemodes_and_compare_to_sweeps_kperp(kpars,beta_i,tau,wavemodes_matchi
         plt.show()
 
 #TODO: make sure given wavemodes are close to given kperps
-def plot_wavemodes_and_compare_to_sweeps_kpar(kperps,beta_i,tau,wavemodes_matching_kpar,epar,eperp1,eperp2,kparlim = [.1,10], flnm = '',delta_beta_i = 0, delta_tau = 0):
+def plot_wavemodes_and_compare_to_sweeps_kpar(kperps,beta_i,tau,wavemodes_matching_kpar,kparlim = [.1,10], flnm = '',delta_beta_i = 0, delta_tau = 0):
     from lib.plume import get_freq_from_wvmd
     from lib.plume import kaw_curve
     from lib.plume import fastmagson_curve
@@ -227,14 +224,11 @@ def plot_wavemodes_and_compare_to_sweeps_kpar(kperps,beta_i,tau,wavemodes_matchi
         omega = []
         omega_error = []
         for wvmd in match_list['wavemodes']:
-            _,omega_faraday,_ = get_freq_from_wvmd(wvmd)
+            _,omega_faraday,_ = get_freq_from_wvmd(wvmd,comp_error_prop=True)
             plotkpar.append(wvmd['kpar'])
-            delta_kperp = _propogate_error_in_cartesian_to_vector(wvmd['delta_kx'], 0., 0., epar)
-            delta_kpar = _propogate_error_in_cartesian_to_vector(wvmd['delta_kx'], 0., 0., eperp1)
-            plotkpar_error.append(delta_kpar)
-            _omega = kaw_curve(wvmd['kperp'],wvmd['kpar'],beta_i,tau,comp_error_prop=True,delta_kperp = delta_kperp, delta_kpar = delta_kpar, delta_beta_i = delta_beta_i, delta_tau = delta_tau)
-            omega.append(omega_faraday)
-            omega_error.append(_omega.s)
+            plotkpar_error.append(wvmd['delta_kpar'])
+            omega.append(omega_faraday.n)
+            omega_error.append(omega_faraday.s)
 
         plotkpars.append(plotkpar)
         plotkpar_errors.append(plotkpar_error)
@@ -268,35 +262,3 @@ def plot_wavemodes_and_compare_to_sweeps_kpar(kperps,beta_i,tau,wavemodes_matchi
         plt.savefig(flnm+'.png',format='png',dpi=600,bbox_inches="tight")
     else:
         plt.show()
-
-def _propogate_error_in_cartesian_to_vector(delta_xx, delta_yy, delta_zz, vec):
-    """
-    Determinines error in length of given vector given uncertainty in xx, yy, zz
-    """
-
-    #given epar, eperp1, eperp2, we can write something like epar = math.sin tht * kx + math.sin tht2 * ky + math.sin tht3 * kz
-    #sovle for kx, and propogate error
-
-    #with this, we can pass a value for uncertainty
-
-    #kx_direction = np.asarray([1,0,0])
-
-    from uncertainties import ufloat
-
-    #compute normalized vect
-    length = np.linalg.norm(vec)
-    evec = vec
-
-    #break down into components
-    xx_component_of_kpar = length*evec[0]
-    yy_component_of_kpar = length*evec[1]
-    zz_component_of_kpar = length*evec[2]
-
-    xx = ufloat(xx_component_of_kpar,delta_xx)
-    yy = ufloat(yy_component_of_kpar,delta_yy)
-    zz = ufloat(zz_component_of_kpar,delta_zz)
-
-    #compute original vec length to get error
-    veclengtherror = ((xx**2+yy**2+zz**2)**.5).s
-
-    return veclengtherror

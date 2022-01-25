@@ -94,7 +94,7 @@ def load_plume_sweep(flnm):
 
     return plume_sweep
 
-def rotate_and_norm_to_plume_basis(wavemode,epar,eperp1,eperp2):
+def rotate_and_norm_to_plume_basis(wavemode,epar,eperp1,eperp2,comp_error_prop=False):
     """
     Note: plume's basis of x,y,z is not the same as our simulations basis of x,y,z
     """
@@ -109,7 +109,18 @@ def rotate_and_norm_to_plume_basis(wavemode,epar,eperp1,eperp2):
     #by convention we rotate about epar until kperp2 is zero
     #i.e. we change our basis vectors so that our wavemode is in the span of two of the field align basis vectors, epar and eperp1
     #note:we assume epar, eperp1, and eperp2 are orthonormal #TODO: check for this
-    proj = _project_onto_plane(epar,[plume_basis_wavemode['kx'],plume_basis_wavemode['ky'],plume_basis_wavemode['kz']])
+
+    if(comp_error_prop):
+        from uncertainties import ufloat
+        try:
+            _kx = ufloat(plume_basis_wavemode['kx'],plume_basis_wavemode['delta_kx'])
+        except:
+            print("Error, please assign key delta_kx to wavemode before passing")
+            _kx = ufloat(plume_basis_wavemode['kx'],plume_basis_wavemode['delta_kx']) #purposefully break it anyways after explaining error
+    else:
+        _kx = plume_basis_wavemode['kx']
+
+    proj = _project_onto_plane(epar,[_kx,plume_basis_wavemode['ky'],plume_basis_wavemode['kz']])
     angl = _angle_between_vecs(proj,eperp1) #note this does not tell us the direction we need to rotate, just the amount
     #angl += math.pi #TODO: check if this is the correct basis #NOTE: unless we rotate by this additional pi, our normfactor is off by a sign factor
 
@@ -133,6 +144,8 @@ def rotate_and_norm_to_plume_basis(wavemode,epar,eperp1,eperp2):
 
     #by convention we normalize so that Eperp1 = 1+0i
     normfactor = np.dot(eperp1,[plume_basis_wavemode['Ex'],plume_basis_wavemode['Ey'],plume_basis_wavemode['Ez']])
+    if(comp_error_prop):
+        normfactor = normfactor.n #only want to track error in kperp
     plume_basis_wavemode['Ex'] /= normfactor
     plume_basis_wavemode['Ey'] /= normfactor
     plume_basis_wavemode['Ez'] /= normfactor
@@ -151,6 +164,20 @@ def rotate_and_norm_to_plume_basis(wavemode,epar,eperp1,eperp2):
     plume_basis_wavemode['kpar'] = np.dot(epar,_k)
     plume_basis_wavemode['kperp1'] = np.dot(eperp1,_k)
     plume_basis_wavemode['kperp2'] = np.dot(eperp2,_k)
+    if(comp_error_prop):#only care to track error for kperp, also want to store under seperate key
+        eperp1 = [_val.n for val in eperp1]
+        eperp2 = [_val.n for val in eperp2]
+        plume_basis_wavemode['delta_kperp1'] = plume_basis_wavemode['kperp1'].s
+        plume_basis_wavemode['delta_kperp2'] = plume_basis_wavemode['kperp2'].s
+        plume_basis_wavemode['kperp1'] = plume_basis_wavemode['kperp1'].n
+        plume_basis_wavemode['kperp2'] = plume_basis_wavemode['kperp2'].n
+
+    throw = error#TODO: grab errors for fields
+
+    plume_basis_wavemode['eperp1'] = eperp1
+    plume_basis_wavemode['eperp2'] = eperp2
+    plume_basis_wavemode['epar'] = epar
+
     plume_basis_wavemode['kperp'] = math.sqrt(plume_basis_wavemode['kperp1']**2+plume_basis_wavemode['kperp2']**2)
 
     plume_basis_wavemode['Epar'] = np.dot(epar,_E)
@@ -337,7 +364,7 @@ def select_wavemodes_and_compute_curves(dwavemodes, depth, kpars, kperps, tol=0.
     #return
     return wavemodes_matching_kpar, wavemodes_matching_kperp
 
-def get_freq_from_wvmd(wm,tol=0.01):
+def get_freq_from_wvmd(wm,tol=0.01, comp_error_prop=False, ):
     """
     """
     if(np.abs(wm['kperp2'])>tol):
@@ -348,14 +375,29 @@ def get_freq_from_wvmd(wm,tol=0.01):
     if(np.abs(kdotb) > 0.1):
         print("Warning, div B != 0: div B = " + str(kdotb))
 
-    #get omega using first constraint
-    omega1 = -wm['kpar']/wm['Bperp1']*wm['Eperp2']
+    if(comp_error_prop):
+        from uncertainties import ufloat
+        from uncertainties.umath import sqrt
 
-    #get omega using first constraint
-    omega2 = -(1./wm['Bperp2'])*(wm['kpar']*wm['Eperp1']-wm['kperp1']*wm['Epar'])
+        #should have delta_kpar and delta_kperp at this stage
+        kperp1 = ufloat(wm['kperp1'],wm['delta_kperp1'])
+        kperp2 = ufloat(wm['kperp2'],wm['delta_kperp2'])
 
-    #get omega using second constraint
-    omega3 = wm['kperp1']/wm['Bpar']*wm['Eperp2']
+        omega1 = -kpar/(wm['Bperp1']*wm['Eperp2'])
+
+        omega2 = -(1./wm['Bperp2'])*(kpar*wm['Eperp1']-kperp1*wm['Epar'])
+
+        omega3 = kperp1/wm['Bpar']*wm['Eperp2']
+
+    else:
+        #get omega using first constraint
+        omega1 = -wm['kpar']/wm['Bperp1']*wm['Eperp2']
+
+        #get omega using first constraint
+        omega2 = -(1./wm['Bperp2'])*(wm['kpar']*wm['Eperp1']-wm['kperp1']*wm['Epar'])
+
+        #get omega using second constraint
+        omega3 = wm['kperp1']/wm['Bpar']*wm['Eperp2']
 
     return omega1, omega2, omega3
 
