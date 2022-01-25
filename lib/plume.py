@@ -420,7 +420,7 @@ def _angle_between_vecs(vec1,vec2):
     _vec1 = np.asarray(vec1)
     _vec2 = np.asarray(vec2)
 
-    try:
+    try: #TODO: use keyword parameter if trying to propogate error instead of a try except block
         tht = np.arccos(np.dot(_vec1,_vec2)/(np.linalg.norm(_vec1)*np.linalg.norm(_vec2)))
     except:
         from uncertainties import unumpy
@@ -445,15 +445,29 @@ def _rotate(tht,rotationaxis,vect):
     uz = rotationaxis[2] / np.linalg.norm(rotationaxis)
 
     #Rotation matrix
-    r11 = math.cos(tht)+ux**2.*(1.-math.cos(tht))
-    r21 = uy*ux*(1.-math.cos(tht))+uz*math.sin(tht)
-    r31 = uz*ux*(1.-math.cos(tht))-uy*math.sin(tht)
-    r12 = ux*uy*(1.-math.cos(tht))-uz*math.sin(tht)
-    r22 = math.cos(tht)+uy**2.*(1.-math.cos(tht))
-    r32 = uz*uy*(1.-math.cos(tht))+ux*math.sin(tht)
-    r13 = ux*uz*(1.-math.cos(tht))+uy*math.sin(tht)
-    r23 = uy*uz*(1-math.cos(tht))-ux*math.sin(tht)
-    r33 = math.cos(tht)+uz**2.*(1.-math.cos(tht))
+    try: #TODO: use keyword parameter if trying to propogate error instead of a try except block
+        r11 = math.cos(tht)+ux**2.*(1.-math.cos(tht))
+        r21 = uy*ux*(1.-math.cos(tht))+uz*math.sin(tht)
+        r31 = uz*ux*(1.-math.cos(tht))-uy*math.sin(tht)
+        r12 = ux*uy*(1.-math.cos(tht))-uz*math.sin(tht)
+        r22 = math.cos(tht)+uy**2.*(1.-math.cos(tht))
+        r32 = uz*uy*(1.-math.cos(tht))+ux*math.sin(tht)
+        r13 = ux*uz*(1.-math.cos(tht))+uy*math.sin(tht)
+        r23 = uy*uz*(1-math.cos(tht))-ux*math.sin(tht)
+        r33 = math.cos(tht)+uz**2.*(1.-math.cos(tht))
+    except:
+        from uncertainties.umath import cos, sin
+        
+        r11 = cos(tht)+ux**2.*(1.-cos(tht))
+        r21 = uy*ux*(1.-cos(tht))+uz*sin(tht)
+        r31 = uz*ux*(1.-cos(tht))-uy*sin(tht)
+        r12 = ux*uy*(1.-cos(tht))-uz*sin(tht)
+        r22 = cos(tht)+uy**2.*(1.-cos(tht))
+        r32 = uz*uy*(1.-cos(tht))+ux*sin(tht)
+        r13 = ux*uz*(1.-cos(tht))+uy*sin(tht)
+        r23 = uy*uz*(1-cos(tht))-ux*sin(tht)
+        r33 = cos(tht)+uz**2.*(1.-cos(tht))
+
     R = [[r11,r12,r13],[r21,r22,r23],[r31,r32,r33]]
     #R = [[r11,r21,r31],[r12,r22,r32],[r13,r23,r33]] #TODO: double check if matrix should be inverted
 
