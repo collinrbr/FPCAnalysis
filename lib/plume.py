@@ -443,6 +443,7 @@ def _angle_between_vecs(vec1,vec2):
         len2 = sqrt(vec2[0]**2.+vec2[1]**2.+vec2[2]**2.)
 
         tht = unumpy.arccos(np.dot(_vec1,_vec2)/(len1*len2))
+        tht = ufloat(tht.n,tht.s)
 
         print('type in func')
         print(type(tht))
