@@ -165,8 +165,6 @@ def rotate_and_norm_to_plume_basis(wavemode,epar,eperp1,eperp2,comp_error_prop=F
 
     #by convention we normalize so that Eperp1 = 1+0i
     normfactor = np.dot(eperp1,[plume_basis_wavemode['Ex'],plume_basis_wavemode['Ey'],plume_basis_wavemode['Ez']])
-    if(comp_error_prop):
-        normfactor = normfactor.n #only want to track error in kperp
     plume_basis_wavemode['Ex'] /= normfactor
     plume_basis_wavemode['Ey'] /= normfactor
     plume_basis_wavemode['Ez'] /= normfactor
