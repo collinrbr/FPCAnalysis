@@ -417,17 +417,17 @@ def _project_onto_plane(norm,vec):
 def _angle_between_vecs(vec1,vec2):
     """
     """
-    vec1 = np.asarray(vec1)
-    vec2 = np.asarray(vec2)
-    print(np.dot(vec1,vec2)/(np.linalg.norm(vec1)*np.linalg.norm(vec2)))
+    _vec1 = np.asarray(vec1)
+    _vec2 = np.asarray(vec2)
+
     try:
-        tht = np.arccos(np.dot(vec1,vec2)/(np.linalg.norm(vec1)*np.linalg.norm(vec2)))
+        tht = np.arccos(np.dot(_vec1,_vec2)/(np.linalg.norm(_vec1)*np.linalg.norm(_vec2)))
     except:
         from uncertainties import unumpy
 
-        print(np.dot(vec1,vec2)/(np.linalg.norm(vec1)*np.linalg.norm(vec2)))
-
-        tht = unumpy.arccos(np.dot(vec1,vec2)/(np.linalg.norm(vec1)*np.linalg.norm(vec2)))
+        _vec1 = unumpy.asarray(vec1)
+        _vec2 = unumpy.asarray(vec2)
+        tht = unumpy.arccos(unumpy.dot(_vec1,_vec2)/(unumpy.linalg.norm(_vec1)*unumpy.linalg.norm(_vec2)))
 
     return tht
 
