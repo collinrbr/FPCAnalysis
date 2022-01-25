@@ -457,7 +457,7 @@ def _rotate(tht,rotationaxis,vect):
         r33 = math.cos(tht)+uz**2.*(1.-math.cos(tht))
     except:
         from uncertainties.umath import cos, sin
-        
+        print(tht)
         r11 = cos(tht)+ux**2.*(1.-cos(tht))
         r21 = uy*ux*(1.-cos(tht))+uz*sin(tht)
         r31 = uz*ux*(1.-cos(tht))-uy*sin(tht)
