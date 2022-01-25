@@ -136,6 +136,10 @@ def rotate_and_norm_to_plume_basis(wavemode,epar,eperp1,eperp2,comp_error_prop=F
         eperp1 = _rotate(-2.*angl,epar,eperp1) #times 2 to make up for first rotation
         eperp2 = _rotate(-2.*angl,epar,eperp2)
 
+    _k = [wavemode['kx'],wavemode['ky'],wavemode['kz']]
+    _E = [plume_basis_wavemode['Ex'],plume_basis_wavemode['Ey'],plume_basis_wavemode['Ez']]
+    _B = [plume_basis_wavemode['Bx'],plume_basis_wavemode['By'],plume_basis_wavemode['Bz']]
+
     #we compute these here, as if epar/eperp1/eperp2 has uncertainties, we either need to define complex operations with uncertainty,
     #or we can save the uncertainty and convert these vars back to simple scalars
     plume_basis_wavemode['kpar'] = np.dot(epar,_k)
@@ -173,10 +177,6 @@ def rotate_and_norm_to_plume_basis(wavemode,epar,eperp1,eperp2,comp_error_prop=F
     #recomputed all quantities that are impacted by rotation and normalization
     plume_basis_wavemode['normB'] = np.linalg.norm([plume_basis_wavemode['Bx'],plume_basis_wavemode['By'],plume_basis_wavemode['Bz']])
     plume_basis_wavemode['normE'] = np.linalg.norm([plume_basis_wavemode['Ex'],plume_basis_wavemode['Ey'],plume_basis_wavemode['Ez']])
-
-    _k = [wavemode['kx'],wavemode['ky'],wavemode['kz']]
-    _E = [plume_basis_wavemode['Ex'],plume_basis_wavemode['Ey'],plume_basis_wavemode['Ez']]
-    _B = [plume_basis_wavemode['Bx'],plume_basis_wavemode['By'],plume_basis_wavemode['Bz']]
 
     if(comp_error_prop):
         print("Warning, we should consider tracking error of fields...")
