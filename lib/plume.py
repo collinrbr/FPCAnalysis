@@ -167,6 +167,8 @@ def rotate_and_norm_to_plume_basis(wavemode,epar,eperp1,eperp2,comp_error_prop=F
     if(comp_error_prop):#only care to track error for kperp, also want to store under seperate key
         eperp1 = [_val.n for val in eperp1]
         eperp2 = [_val.n for val in eperp2]
+        plume_basis_wavemode['delta_eperp1'] = [_val.s for val in eperp1]
+        plume_basis_wavemode['delta_eperp2'] = [_val.s for val in eperp2]
         plume_basis_wavemode['delta_kperp1'] = plume_basis_wavemode['kperp1'].s
         plume_basis_wavemode['delta_kperp2'] = plume_basis_wavemode['kperp2'].s
         plume_basis_wavemode['kperp1'] = plume_basis_wavemode['kperp1'].n
@@ -330,7 +332,7 @@ def whistler_curve(kperp,kpar,beta_i,tau,
 
     return omega_over_Omega_i
 
-def select_wavemodes_and_compute_curves(dwavemodes, depth, kpars, kperps, tol=0.05):
+def select_wavemodes(dwavemodes, depth, kpars, kperps, tol=0.05):
     """
     """
     from lib.plume import rotate_and_norm_to_plume_basis
