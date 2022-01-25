@@ -137,6 +137,8 @@ def rotate_and_norm_to_plume_basis(wavemode,epar,eperp1,eperp2,comp_error_prop=F
         eperp2 = _rotate(-2.*angl,epar,eperp2)
 
     _k = [wavemode['kx'],wavemode['ky'],wavemode['kz']]
+    if(comp_error_prop):
+        _k[0] = ufloat(wavemode['kx'],wavemode['delta_kx'])
     _E = [plume_basis_wavemode['Ex'],plume_basis_wavemode['Ey'],plume_basis_wavemode['Ez']]
     _B = [plume_basis_wavemode['Bx'],plume_basis_wavemode['By'],plume_basis_wavemode['Bz']]
 
