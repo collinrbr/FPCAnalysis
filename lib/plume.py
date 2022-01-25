@@ -136,15 +136,6 @@ def rotate_and_norm_to_plume_basis(wavemode,epar,eperp1,eperp2,comp_error_prop=F
         eperp1 = _rotate(-2.*angl,epar,eperp1) #times 2 to make up for first rotation
         eperp2 = _rotate(-2.*angl,epar,eperp2)
 
-
-    #double check rotations
-    if(np.abs(np.dot(eperp2,[wavemode['kx'],wavemode['ky'],wavemode['kz']])) > 0.01):
-        print("Error, rotation did not result in kperp2 ~= 0")
-    if(np.abs(np.dot(epar,eperp1)) > .01 or np.abs(np.dot(eperp1,eperp2)) > .01 or np.abs(np.dot(epar,eperp2)) > .01):
-        print("Error, basis is no longer orthogonal...")
-    if(np.abs(np.linalg.norm(epar)-1.) > .01 or np.abs(np.linalg.norm(eperp1)-1.) > .01 or np.abs(np.linalg.norm(eperp2)-1.) > .01):
-        print("Error, basis is no longer normal...")
-
     #by convention we normalize so that Eperp1 = 1+0i
     normfactor = np.dot(eperp1,[plume_basis_wavemode['Ex'],plume_basis_wavemode['Ey'],plume_basis_wavemode['Ez']])
     if(comp_error_prop):
@@ -202,6 +193,14 @@ def rotate_and_norm_to_plume_basis(wavemode,epar,eperp1,eperp2,comp_error_prop=F
     plume_basis_wavemode['EcrossBpar'] = np.dot(epar,_EcrossB)
     plume_basis_wavemode['EcrossBperp1'] = np.dot(eperp1,_EcrossB)
     plume_basis_wavemode['EcrossBperp2'] = np.dot(eperp2,_EcrossB)
+
+    #double check rotations
+    if(np.abs(np.dot(eperp2,[wavemode['kx'],wavemode['ky'],wavemode['kz']])) > 0.01):
+        print("Error, rotation did not result in kperp2 ~= 0")
+    if(np.abs(np.dot(epar,eperp1)) > .01 or np.abs(np.dot(eperp1,eperp2)) > .01 or np.abs(np.dot(epar,eperp2)) > .01):
+        print("Error, basis is no longer orthogonal...")
+    if(np.abs(np.linalg.norm(epar)-1.) > .01 or np.abs(np.linalg.norm(eperp1)-1.) > .01 or np.abs(np.linalg.norm(eperp2)-1.) > .01):
+        print("Error, basis is no longer normal...")
 
     return plume_basis_wavemode
 
