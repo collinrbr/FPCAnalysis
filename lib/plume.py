@@ -428,6 +428,7 @@ def _angle_between_vecs(vec1,vec2):
     except:
         from uncertainties import unumpy
         from uncertainties.umath import sqrt
+        from uncertainties import ufloat
 
         print("typage of vecs in angle")
         print(type(vec1))
