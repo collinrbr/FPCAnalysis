@@ -458,7 +458,10 @@ def _rotate(tht,rotationaxis,vect):
     except:
         from uncertainties.umath import cos, sin
         print(tht)
+        print(type(tht))
         print(cos(tht))
+        print(ux**2.)
+        print(1.-cos(tht))
         r11 = cos(tht)+ux**2.*(1.-cos(tht))
         r21 = uy*ux*(1.-cos(tht))+uz*sin(tht)
         r31 = uz*ux*(1.-cos(tht))-uy*sin(tht)
