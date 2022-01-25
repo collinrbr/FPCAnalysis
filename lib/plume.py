@@ -148,8 +148,8 @@ def rotate_and_norm_to_plume_basis(wavemode,epar,eperp1,eperp2,comp_error_prop=F
     if(comp_error_prop):#only care to track error for kperp, also want to store under seperate key
         plume_basis_wavemode['delta_eperp1'] = [_val.s for val in eperp1]
         plume_basis_wavemode['delta_eperp2'] = [_val.s for val in eperp2]
-        eperp1 = [_val.n for val in eperp1]
-        eperp2 = [_val.n for val in eperp2]
+        eperp1 = [_val.n for _val in eperp1]
+        eperp2 = [_val.n for _val in eperp2]
         plume_basis_wavemode['delta_kperp1'] = plume_basis_wavemode['kperp1'].s
         plume_basis_wavemode['delta_kperp2'] = plume_basis_wavemode['kperp2'].s
         plume_basis_wavemode['kperp1'] = plume_basis_wavemode['kperp1'].n
