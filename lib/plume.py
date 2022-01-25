@@ -424,7 +424,7 @@ def _angle_between_vecs(vec1,vec2):
         tht = np.arccos(np.dot(_vec1,_vec2)/(np.linalg.norm(_vec1)*np.linalg.norm(_vec2)))
     except:
         from uncertainties import unumpy
-        from uncertainties import sqrt
+        from uncertainties.umath import sqrt
 
         len1 = sqrt(vec1[0]**2.+vec1[1]**2.+vec1[2]**2.) #this function uses sqrt, which requires it's own uncertainties function when working with ufloat
         len2 = sqrt(vec2[0]**2.+vec2[1]**2.+vec2[2]**2.)
