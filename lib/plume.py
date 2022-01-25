@@ -124,6 +124,9 @@ def rotate_and_norm_to_plume_basis(wavemode,epar,eperp1,eperp2,comp_error_prop=F
     angl = _angle_between_vecs(proj,eperp1) #note this does not tell us the direction we need to rotate, just the amount
     #angl += math.pi #TODO: check if this is the correct basis #NOTE: unless we rotate by this additional pi, our normfactor is off by a sign factor
 
+    print('type out of func')
+    print(type(angl))
+
     #try first direction
     eperp1 = _rotate(angl,epar,eperp1)
     eperp2 = _rotate(angl,epar,eperp2)
@@ -441,6 +444,8 @@ def _angle_between_vecs(vec1,vec2):
 
         tht = unumpy.arccos(np.dot(_vec1,_vec2)/(len1*len2))
 
+        print('type in func')
+        print(type(tht))
     return tht
 
 def _rotate(tht,rotationaxis,vect):
