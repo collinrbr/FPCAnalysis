@@ -426,6 +426,16 @@ def _angle_between_vecs(vec1,vec2):
         from uncertainties import unumpy
         from uncertainties.umath import sqrt
 
+        print("typage of vecs in angle")
+        print(type(vec1))
+        print(type(vec1[0]))
+        print(type(vec1[1]))
+        print(type(vec1[2]))
+        print(type(vec2))
+        print(type(vec2[0]))
+        print(type(vec2[1]))
+        print(type(vec2[2]))
+
         len1 = sqrt(vec1[0]**2.+vec1[1]**2.+vec1[2]**2.) #this function uses sqrt, which requires it's own uncertainties function when working with ufloat
         len2 = sqrt(vec2[0]**2.+vec2[1]**2.+vec2[2]**2.)
 
@@ -457,11 +467,13 @@ def _rotate(tht,rotationaxis,vect):
         r33 = math.cos(tht)+uz**2.*(1.-math.cos(tht))
     except:
         from uncertainties.umath import cos, sin
+        from uncertainties import ufloat
         print(tht)
         print(type(tht))
         print(cos(tht))
         print(ux**2.)
         print(1.-cos(tht))
+        tht = ufloat()
         r11 = cos(tht)+ux**2.*(1.-cos(tht))
         r21 = uy*ux*(1.-cos(tht))+uz*sin(tht)
         r31 = uz*ux*(1.-cos(tht))-uy*sin(tht)
