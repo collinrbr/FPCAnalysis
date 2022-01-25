@@ -444,7 +444,7 @@ def _angle_between_vecs(vec1,vec2):
         len2 = sqrt(vec2[0]**2.+vec2[1]**2.+vec2[2]**2.)
 
         tht = unumpy.arccos(np.dot(_vec1,_vec2)/(len1*len2))
-        tht = ufloat(tht.n,tht.s)
+        tht = tht.ravel()[0] #above function returns ndarray that does have the wanted attributes used by later functions, must convert back to ufloat
 
         print('type in func')
         print(type(tht))
