@@ -419,6 +419,7 @@ def _angle_between_vecs(vec1,vec2):
     """
     vec1 = np.asarray(vec1)
     vec2 = np.asarray(vec2)
+    print(np.dot(vec1,vec2)/(np.linalg.norm(vec1)*np.linalg.norm(vec2)))
     try:
         tht = np.arccos(np.dot(vec1,vec2)/(np.linalg.norm(vec1)*np.linalg.norm(vec2)))
     except:
