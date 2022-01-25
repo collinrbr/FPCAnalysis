@@ -391,7 +391,7 @@ def get_freq_from_wvmd(wm,tol=0.01, comp_error_prop=False, ):
 
         omega1 = -wm['kpar']/(wm['Bperp1']*wm['Eperp2'])
 
-        omega2 = -(1./wm['Bperp2'])*(kpar*wm['Eperp1']-kperp1*wm['Epar'])
+        omega2 = -(1./wm['Bperp2'])*(wm['kpar']*wm['Eperp1']-kperp1*wm['Epar'])
 
         omega3 = kperp1/wm['Bpar']*wm['Eperp2']
 
