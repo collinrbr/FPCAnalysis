@@ -147,7 +147,7 @@ def plot_wavemodes_and_compare_to_sweeps_kperp(kpars,beta_i,tau,wavemodes_matchi
         for wvmd in match_list['wavemodes']:
             _,_,omega_faradayreal,_,_,_ = get_freq_from_wvmd(wvmd,comp_error_prop=True)
             plotkperp.append(wvmd['kperp'])
-            plotkperp_error.append(wvmd['delta_kperp'])
+            plotkperp_error.append(wvmd['delta_kperp1'])
             omega.append(omega_faradayreal.n)
             omega_error.append(omega_faradayreal.s)
 
