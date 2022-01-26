@@ -106,7 +106,7 @@ def plot_sweep(plume_sweeps,xaxiskey,yaxiskey,wavemodes=[''],xlbl='',ylbl='',lbl
         plt.show()
 
 #todo: make sure given wavemodes are close to give kpars
-def plot_wavemodes_and_compare_to_sweeps_kperp(kpars,beta_i,tau,wavemodes_matching_kpar,epar,eperp1,eperp2,kperplim = [.1,10], flnm = '',delta_beta_i = 0, delta_tau = 0):
+def plot_wavemodes_and_compare_to_sweeps_kperp(kpars,beta_i,tau,wavemodes_matching_kpar,kperplim = [.1,10], flnm = '',delta_beta_i = 0, delta_tau = 0):
     from lib.plume import get_freq_from_wvmd
     from lib.plume import kaw_curve
     from lib.plume import fastmagson_curve
