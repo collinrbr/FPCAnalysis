@@ -165,6 +165,7 @@ def plot_wavemodes_and_compare_to_sweeps_kperp(kpars,beta_i,tau,wavemodes_matchi
 
     plt.figure(figsize=(10,10))
     for i in range(0,len(kawcrvs)):
+        print(plotkperps[i],np.real(omegas[i]))
         plt.errorbar(plotkperps[i],np.real(omegas[i]), xerr = plotkperp_errors[i], yerr=omega_errors[i], fmt="o",color='C0')
         plt.plot(kperps,kawcrvs[i],linestyle[i],color='black',linewidth=lnwidth)
         plt.plot(kperps,fastcrvs[i],linestyle[i],color='blue',linewidth=lnwidth)
