@@ -177,8 +177,8 @@ def plot_wavemodes_and_compare_to_sweeps_kperp(kpars,beta_i,tau,wavemodes_matchi
     plt.ylabel('$\omega / \Omega_i$')
     plt.grid(True, which="both", ls="-")
     plt.axis('scaled')
-    plt.ylim(.1,10)
-    plt.xlim(.1,10)
+    #plt.ylim(.1,10)
+    #plt.xlim(.1,10)
     if(flnm != ''):
         plt.savefig(flnm+'.png',format='png',dpi=600,bbox_inches="tight")
     else:
@@ -256,8 +256,8 @@ def plot_wavemodes_and_compare_to_sweeps_kpar(kperps,beta_i,tau,wavemodes_matchi
     plt.ylabel('$\omega / \Omega_i$')
     plt.grid(True, which="both", ls="-")
     plt.axis('scaled')
-    plt.ylim(.1,10)
-    plt.xlim(.1,10)
+    #plt.ylim(.1,10)
+    #plt.xlim(.1,10)
     if(flnm != ''):
         plt.savefig(flnm+'.png',format='png',dpi=600,bbox_inches="tight")
     else:
