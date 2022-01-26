@@ -396,14 +396,14 @@ def get_freq_from_wvmd(wm,tol=0.01, comp_error_prop=False, ):
         omega1 = -wm['kpar']/(wm['Bperp1']*wm['Eperp2'])
 
         omega2 = -(1./wm['Bperp2'])*(wm['kpar']*wm['Eperp1']-kperp1.n*wm['Epar'])
-        omega2_error = -(1./wm['Bperp2'])*(wm['kpar']*wm['Eperp1']-kperp1.s*wm['Epar'])
-        omega2real = ufloat(omega2.real,omega2_error.real)
-        omega2imag = ufloat(omega2.imag,omega2_error.imag)
+        omega2_error = -(1./wm['Bperp2'])*(kperp1.s*wm['Epar']) #uncertainties does not handle complex numbers yet, but fornuately, as these complex numbers are scalars w/o error, it's trivial to do by hand
+        omega2real = ufloat(omega2.real,np.abs(omega2_error.real))
+        omega2imag = ufloat(omega2.imag,np.abs(omega2_error.imag))
 
         omega3 = kperp1.n/wm['Bpar']*wm['Eperp2']
-        omega3_error = kperp1.s/wm['Bpar']*wm['Eperp2'] #uncertainties does not handle complex numbers yet, but fornuately, as these complex numbers are scalars, it's trivial to do by hand
-        omega3real = ufloat(omega3.real,omega3_error.real)
-        omega3imag = ufloat(omega3.imag,omega3_error.imag)
+        omega3_error = kperp1.s/wm['Bpar']*wm['Eperp2'] #uncertainties does not handle complex numbers yet, but fornuately, as these complex numbers are scalars w/o error, it's trivial to do by hand
+        omega3real = ufloat(omega3.real,np.abs(omega3_error.real))
+        omega3imag = ufloat(omega3.imag,np.abs(omega3_error.imag))
 
         return omega1.real, omega1.imag, omega2real, omega2imag, omega3real, omega3imag
 
