@@ -145,11 +145,11 @@ def plot_wavemodes_and_compare_to_sweeps_kperp(kpars,beta_i,tau,wavemodes_matchi
         omega = []
         omega_error = []
         for wvmd in match_list['wavemodes']:
-            _,omega_faraday,_ = get_freq_from_wvmd(wvmd,comp_error_prop=True)
+            _,_,omega_faradayreal,_,_,_ = get_freq_from_wvmd(wvmd,comp_error_prop=True)
             plotkperp.append(wvmd['kperp'])
             plotkperp_error.append(wvmd['delta_kperp'])
-            omega.append(omega_faraday.n)
-            omega_error.append(omega_faraday.s)
+            omega.append(omega_faradayreal.n)
+            omega_error.append(omega_faradayreal.s)
 
         plotkperps.append(plotkperp)
         plotkperp_errors.append(plotkperp_error)
@@ -224,11 +224,11 @@ def plot_wavemodes_and_compare_to_sweeps_kpar(kperps,beta_i,tau,wavemodes_matchi
         omega = []
         omega_error = []
         for wvmd in match_list['wavemodes']:
-            _,omega_faraday,_ = get_freq_from_wvmd(wvmd,comp_error_prop=True)
+            _,_,omega_faradayreal,_,_,_ = get_freq_from_wvmd(wvmd,comp_error_prop=True)
             plotkpar.append(wvmd['kpar'])
             plotkpar_error.append(wvmd['delta_kpar'])
-            omega.append(omega_faraday.n)
-            omega_error.append(omega_faraday.s)
+            omega.append(omega_faradayreal.n)
+            omega_error.append(omega_faradayreal.s)
 
         plotkpars.append(plotkpar)
         plotkpar_errors.append(plotkpar_error)
