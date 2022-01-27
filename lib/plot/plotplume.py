@@ -194,24 +194,40 @@ def plot_wavemodes_and_compare_to_sweeps_kpar(kperps,beta_i,tau,wavemodes_matchi
 
     kpars = np.linspace(kparlim[0],kparlim[1],1000)
     kawcrvs = []
+    kawcrv_errors = []
     fastcrvs = []
+    fastcrvs_errors = []
     slowcrvs = []
+    slowcrvs_errors = []
     whicrvs = []
+    whicrvs_errors = []
     #plot theoretical curves
     for kperp in kperps:
         kawcrv = []
+        kawcrv_error = []
         fastcrv = []
+        fastcrv_error = []
         slowcrv = []
+        slowcrv_error = []
         whicrv = []
+        whicrv_error = []
         for kpar in kpars:
             kawcrv.append(kaw_curve(kperp,kpar,beta_i,tau,comp_error_prop=False))
+            kawcrv_error.append(kaw_curve(kperp,kpar,beta_i,tau,delta_beta_i=delta_beta_i,delta_tau=delta_tau,comp_error_prop=True))
             fastcrv.append(fastmagson_curve(kperp,kpar,beta_i,tau,comp_error_prop=False))
+            fastcrv_error.append(fastmagson_curve(kperp,kpar,beta_i,tau,delta_beta_i=delta_beta_i,delta_tau=delta_tau,comp_error_prop=True))
             slowcrv.append(slowmagson_curve(kperp,kpar,beta_i,tau,comp_error_prop=False))
+            slowcrv_error.append(slowmagson_curve(kperp,kpar,beta_i,tau,delta_beta_i=delta_beta_i,delta_tau=delta_tau,comp_error_prop=True))
             whicrv.append(whistler_curve(kperp,kpar,beta_i,tau,comp_error_prop=False))
+            whicrv_error.append(whistler_curve(kperp,kpar,beta_i,tau,delta_beta_i=delta_beta_i,delta_tau=delta_tau,comp_error_prop=True))
         kawcrvs.append(kawcrv)
+        kawcrv_errors.append(kawcrv_error)
         fastcrvs.append(fastcrv)
+        fastcrv_errors.append(fastcrv_error)
         slowcrvs.append(slowcrv)
+        slowcrv_errors.append(slowcrv_error)
         whicrvs.append(whicrv)
+        whicrv_errors.append(whicrv_error)
 
     plotkpars = []
     plotkpar_errors = []
@@ -246,9 +262,13 @@ def plot_wavemodes_and_compare_to_sweeps_kpar(kperps,beta_i,tau,wavemodes_matchi
     for i in range(0,len(kawcrvs)):
         plt.errorbar(plotkpars[i],np.real(omegas[i]), xerr = plotkpar_errors[i], yerr=omega_errors[i], fmt="o",color='C0')
         plt.plot(kpars,kawcrvs[i],linestyle[i],color='black',linewidth=lnwidth)
+        plt.fill_between(kpars,kawcrvs[i]-kawcrv_errors[i],kawcrvs[i]+kawcrv_errors[i],alpha=.2,color='black')
         plt.plot(kpars,fastcrvs[i],linestyle[i],color='blue',linewidth=lnwidth)
+        plt.fill_between(kpars,fastcrvs[i]-fastcrvs_errors[i],fastcrvs[i]+fastcrvs_errors[i],alpha=.2,color='blue')
         plt.plot(kpars,slowcrvs[i],linestyle[i],color='green',linewidth=lnwidth)
+        plt.fill_between(kpars,slowcrvs[i]-slowcrvs_errors[i],slowcrvs[i]+slowcrvs_errors[i],alpha=.2,color='green')
         plt.plot(kpars,whicrvs[i],linestyle[i],color='red',linewidth=lnwidth)
+        plt.fill_between(kpars,whicrvs[i]-whicrvs_errors[i],whicrvs[i]+whicrvs_errors[i],alpha=.2,color='green')
 
     plt.yscale('log')
     plt.xscale('log')
