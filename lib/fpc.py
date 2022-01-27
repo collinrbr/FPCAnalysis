@@ -147,7 +147,7 @@ def _comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock)
 
 def _grab_dpar_and_comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dpar_folder, dfields, vshock):
 
-    rom lib.data_h5 import get_dpar_from_bounds
+    from lib.data_h5 import get_dpar_from_bounds
 
     dpar = get_dpar_from_bounds(dpar_folder,x1,x2)
 
