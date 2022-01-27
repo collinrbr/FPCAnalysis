@@ -138,13 +138,14 @@ if(vmax == None):
 #-------------------------------------------------------------------------------
 # Check if data is 2D. Pad to make pseudo 3d if data is 2d
 #-------------------------------------------------------------------------------
-if('x3' not in dparticles.keys()): #all simulations that are '2d' should be 2d 3v with coordinates (xx,yy;vx,vy,vz)
-    dparticles = dh5.par_2d_to_3d(dparticles)
-    dfields = dh5.dict_2d_to_3d(dfields,0)
-    _fields = []
-    for k in range(0,len(all_dfields['dfields'])):
-        _fields.append(dh5.dict_2d_to_3d(all_dfields['dfields'][k],0))
-    all_dfields['dfields'] = _fields
+if(is_2D3V)
+    if('x3' not in dparticles.keys()): #all simulations that are '2d' should be 2d 3v with coordinates (xx,yy;vx,vy,vz)
+        dparticles = dh5.par_2d_to_3d(dparticles)
+        dfields = dh5.dict_2d_to_3d(dfields,0)
+        _fields = []
+        for k in range(0,len(all_dfields['dfields'])):
+            _fields.append(dh5.dict_2d_to_3d(all_dfields['dfields'][k],0))
+        all_dfields['dfields'] = _fields
 
 #-------------------------------------------------------------------------------
 # estimate shock vel and lorentz transform
