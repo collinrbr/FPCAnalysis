@@ -27,7 +27,8 @@ try:
     use_restart = sys.argv[3]
 except:
     print("This makes hdf5 files of presliced along x data. Uses xlim and dx specified by analysis input folder.")
-    print("usage: " + sys.argv[0] + " analysisinputflnm outdirname userestart(T/F)")
+    print("usage: " + sys.argv[0] + " analysisinputflnm outdirname userestart(T/F) num_threads(optional)")
+    print("multiprocessing is only used when use restart is true")
     sys.exit()
 
 is2d3v = False #TODO: make compatiable with 2d3v data
@@ -38,6 +39,13 @@ elif(use_restart == 'F'):
     use_restart = False
 else:
     print('Please pass T or F for userestart...')
+
+try:
+    num_threads = int(sys.argv[4])
+    if(num_threads <= 0):
+        print("Error, please request at least 1 thread...")
+except:
+    num_threads = 1
 
 try:
     cmd = 'mkdir ' + outdirname
@@ -123,7 +131,7 @@ while(x2 <= xEnd):
         if(key in 'p1 p2 p3 x1 x2 x3'.split()):
             _tempdpar[key] = dparticles[key][gptsparticle][:]
 
-    outflnm = outdirname + '/' + "{:.5f}".format(x1) + '_' + "{:.5f}".format(x2)
+    outflnm = outdirname + '/' + '{:012.6f}'.format(x1) + '_' + '{:012.6f}'.format(x2)
     dh5.write_particles_to_hdf5(_tempdpar,outflnm)
     x1 += dx
     x2 += dx
