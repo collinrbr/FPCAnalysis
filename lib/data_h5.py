@@ -77,7 +77,7 @@ def get_dpar_from_bounds(dpar_folder,x1,x2,verbose=True):
 
     rightmostbound_index = 0
     testidx = 0
-    while(bounds[testidx][1]<x2)
+    while(bounds[testidx][1]<x2):
         testidx += 1
         rightmostbound_index += 1
 
