@@ -196,11 +196,11 @@ def plot_wavemodes_and_compare_to_sweeps_kpar(kperps,beta_i,tau,wavemodes_matchi
     kawcrvs = []
     kawcrv_errors = []
     fastcrvs = []
-    fastcrvs_errors = []
+    fastcrv_errors = []
     slowcrvs = []
-    slowcrvs_errors = []
+    slowcrv_errors = []
     whicrvs = []
-    whicrvs_errors = []
+    whicrv_errors = []
     #plot theoretical curves
     for kperp in kperps:
         kawcrv = []
