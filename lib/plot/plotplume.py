@@ -115,19 +115,23 @@ def plot_wavemodes_and_compare_to_sweeps_kperp(kpars,beta_i,tau,wavemodes_matchi
 
     kperps = np.linspace(kperplim[0],kperplim[1],1000)
     kawcrvs = []
+    kawcrv_errors = []
     fastcrvs = []
+    fastcrv_errors = []
     slowcrvs = []
+    slowcrv_errors = []
     whicrvs = []
+    whicrv_errors = []
     #plot theoretical curves
     for kpar in kpars:
-        kawcrvs = []
-        kawcrv_errors = []
-        fastcrvs = []
-        fastcrv_errors = []
-        slowcrvs = []
-        slowcrv_errors = []
-        whicrvs = []
-        whicrv_errors = []
+        kawcrv = []
+        kawcrv_error = []
+        fastcrv = []
+        fastcrv_error = []
+        slowcrv = []
+        slowcrv_error = []
+        whicrv = []
+        whicrv_error = []
         for kperp in kperps:
             kawcrv.append(kaw_curve(kperp,kpar,beta_i,tau,comp_error_prop=False))
             kawcrv_error.append(kaw_curve(kperp,kpar,beta_i,tau,delta_beta_i=delta_beta_i,delta_tau=delta_tau,comp_error_prop=True).s)

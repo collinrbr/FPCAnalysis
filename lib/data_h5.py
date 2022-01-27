@@ -8,7 +8,7 @@ import h5py
 import os
 
 
-def read_particles(path, numframe, is2d3v = False):
+def read_particles(path, numframe=None, is2d3v = False):
     """
     Loads dHybridR particle data
     TODO: rename to read_dhybridr_particles
@@ -16,8 +16,9 @@ def read_particles(path, numframe, is2d3v = False):
     Parameters
     ----------
     path : string
-        path to data folder
-    numframe : int
+        when numframe = none, this is the path and filename (e.g. foo/bar/data.hdf5)
+        when numframe != none, this is the path to data with place to  numframe != none (e.g. Output/Raw/Sp01/raw_sp01_{:08d}.h5)
+    numframe : int, opt
         frame of data this function will load
     is2d3v : bool, opt
         set true is simualation is 2D 3V
@@ -34,7 +35,11 @@ def read_particles(path, numframe, is2d3v = False):
         dens_vars = 'p1 p2 p3 x1 x2 x3'.split()
 
     pts = {}
-    with h5py.File(path.format(numframe),'r') as f:
+    if(numframe != None):
+        loadfilename = path.format(numframe)
+    else:
+        loadfilename = path
+    with h5py.File(loadfilename,'r') as f:
         for k in dens_vars:
             pts[k] = f[k][:]
 
@@ -97,6 +102,22 @@ def read_box_of_particles(path, numframe, x1, x2, y1, y2, z1, z2, is2d3v = False
     pts['Vframe_relative_to_sim'] = 0.
 
     return pts
+
+def write_particles_to_hdf5(dpar,flnm):
+    #TODO: make work for 2d data
+    if(dpar['Vframe_relative_to_sim'] != 0.0):
+        print("Warning: this data is not in the frame of the simulation.")
+        print("dpar['Vframe_relative_to_sim'] = ",dpar['Vframe_relative_to_sim'],"!=0")
+        print("Please return this data to the simulation frame and call it again...")
+        return
+
+    f = h5py.File(flnm,'w')
+
+    dens_vars = 'p1 p2 p3 x1 x2 x3'.split()
+    for key in dens_vars:
+        f.create_dataset(key,(len(dpar[key]),),data=dpar[key])
+
+    f.close()
 
 def build_slice(x1, x2, y1, y2, z1, z2):
     """
