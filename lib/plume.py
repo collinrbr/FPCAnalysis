@@ -277,7 +277,7 @@ def fastmagson_curve(kperp,kpar,beta_i,tau,
         bt = beta_i*(1+1./tau)
         k_tot = sqrt(kperp**2.+kpar**2.)
 
-        omega_over_Omega_i=k_tot*sqrt( (1.+bt + math.sqrt( (1.+bt)**2. -4.*bt*(kpar/k_tot)**2.))/2.)
+        omega_over_Omega_i=k_tot*sqrt( (1.+bt + sqrt( (1.+bt)**2. -4.*bt*(kpar/k_tot)**2.))/2.)
 
     else:
         bt = beta_i*(1+1./tau)
@@ -305,7 +305,7 @@ def slowmagson_curve(kperp,kpar,beta_i,tau,
         bt = beta_i*(1+1./tau)
         k_tot = sqrt(kperp**2.+kpar**2.)
 
-        omega_over_Omega_i=k_tot*sqrt( (1.+bt - math.sqrt( (1.+bt)**2. -4.*bt*(kpar/k_tot)**2.))/2.)
+        omega_over_Omega_i=k_tot*sqrt( (1.+bt - sqrt( (1.+bt)**2. -4.*bt*(kpar/k_tot)**2.))/2.)
 
     else:
         bt = beta_i*(1+1./tau)

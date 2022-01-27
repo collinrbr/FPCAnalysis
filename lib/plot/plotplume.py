@@ -213,13 +213,13 @@ def plot_wavemodes_and_compare_to_sweeps_kpar(kperps,beta_i,tau,wavemodes_matchi
         whicrv_error = []
         for kpar in kpars:
             kawcrv.append(kaw_curve(kperp,kpar,beta_i,tau,comp_error_prop=False))
-            kawcrv_error.append(kaw_curve(kperp,kpar,beta_i,tau,delta_beta_i=delta_beta_i,delta_tau=delta_tau,comp_error_prop=True))
+            kawcrv_error.append(kaw_curve(kperp,kpar,beta_i,tau,delta_beta_i=delta_beta_i,delta_tau=delta_tau,comp_error_prop=True).s)
             fastcrv.append(fastmagson_curve(kperp,kpar,beta_i,tau,comp_error_prop=False))
-            fastcrv_error.append(fastmagson_curve(kperp,kpar,beta_i,tau,delta_beta_i=delta_beta_i,delta_tau=delta_tau,comp_error_prop=True))
+            fastcrv_error.append(fastmagson_curve(kperp,kpar,beta_i,tau,delta_beta_i=delta_beta_i,delta_tau=delta_tau,comp_error_prop=True).s)
             slowcrv.append(slowmagson_curve(kperp,kpar,beta_i,tau,comp_error_prop=False))
-            slowcrv_error.append(slowmagson_curve(kperp,kpar,beta_i,tau,delta_beta_i=delta_beta_i,delta_tau=delta_tau,comp_error_prop=True))
+            slowcrv_error.append(slowmagson_curve(kperp,kpar,beta_i,tau,delta_beta_i=delta_beta_i,delta_tau=delta_tau,comp_error_prop=True).s)
             whicrv.append(whistler_curve(kperp,kpar,beta_i,tau,comp_error_prop=False))
-            whicrv_error.append(whistler_curve(kperp,kpar,beta_i,tau,delta_beta_i=delta_beta_i,delta_tau=delta_tau,comp_error_prop=True))
+            whicrv_error.append(whistler_curve(kperp,kpar,beta_i,tau,delta_beta_i=delta_beta_i,delta_tau=delta_tau,comp_error_prop=True).s)
         kawcrvs.append(kawcrv)
         kawcrv_errors.append(kawcrv_error)
         fastcrvs.append(fastcrv)
