@@ -24,12 +24,20 @@ import numpy as np
 try:
     analysisinputflnm = sys.argv[1]
     outdirname = sys.argv[2]
+    use_restart = sys.argv[3]
 except:
     print("This makes hdf5 files of presliced along x data. Uses xlim and dx specified by analysis input folder.")
-    print("usage: " + sys.argv[0] + " analysisinputflnm outdirname")
+    print("usage: " + sys.argv[0] + " analysisinputflnm outdirname userestart(T/F)")
     sys.exit()
 
 is2d3v = False #TODO: make compatiable with 2d3v data
+
+if(use_restart == 'T'):
+    use_restart = True
+elif(use_restart == 'F'):
+    use_restart = False
+else:
+    print('Please pass T or F for userestart...')
 
 try:
     cmd = 'mkdir ' + outdirname
@@ -74,6 +82,9 @@ if(not(use_restart)):
         dparticles = dh5.read_box_of_particles(path_particles, numframe, xlim[0], xlim[1], ylim[0], ylim[1], zlim[0], zlim[1], is2d3v=is2d3v)
     #Load all the particles
     else:
+        xlim = [dfields['ex_xx'][0],dfields['ex_xx'][-1]]
+        ylim = [dfields['ex_yy'][0],dfields['ex_yy'][-1]]
+        zlim = [dfields['ex_zz'][0],dfields['ex_zz'][-1]]
         dparticles = dh5.read_particles(path_particles, numframe, is2d3v=is2d3v)
 
 #Load data using restart files
@@ -106,13 +117,13 @@ z1 = zlim[0]
 z2 = zlim[1]
 while(x2 <= xEnd):
     print("x1: ", x1, "x2: ", x2)
-    gptsparticle = (x1 <= dpar['x1']) & (dpar['x1'] <= x2) & (y1 <= dpar['x2']) & (dpar['x2'] <= y2) & (z1 <= dpar['x3']) & (dpar['x3'] <= z2)
+    gptsparticle = (x1 <= dparticles['x1']) & (dparticles['x1'] <= x2) & (y1 <= dparticles['x2']) & (dparticles['x2'] <= y2) & (z1 <= dparticles['x3']) & (dparticles['x3'] <= z2)
     _tempdpar = {}
-    for key in dpar.keys():
+    for key in dparticles.keys():
         if(key in 'p1 p2 p3 x1 x2 x3'.split()):
-            _tempdpar[key] = dpar[key][gptsparticle][:]
+            _tempdpar[key] = dparticles[key][gptsparticle][:]
 
-    outflnm = outdirname + '/' + str(x1) + '_' + str(x2)
+    outflnm = outdirname + '/' + "{:.5f}".format(x1) + '_' + "{:.5f}".format(x2)
     dh5.write_particles_to_hdf5(_tempdpar,outflnm)
     x1 += dx
     x2 += dx
