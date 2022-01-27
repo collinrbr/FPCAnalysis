@@ -105,11 +105,14 @@ def read_box_of_particles(path, numframe, x1, x2, y1, y2, z1, z2, is2d3v = False
 
 def write_particles_to_hdf5(dpar,flnm):
     #TODO: make work for 2d data
-    if(dpar['Vframe_relative_to_sim'] != 0.0):
-        print("Warning: this data is not in the frame of the simulation.")
-        print("dpar['Vframe_relative_to_sim'] = ",dpar['Vframe_relative_to_sim'],"!=0")
-        print("Please return this data to the simulation frame and call it again...")
-        return
+    try:#if vframe_relative_to_sim key is present, check it
+        if(dpar['Vframe_relative_to_sim'] != 0.0):
+            print("Warning: this data is not in the frame of the simulation.")
+            print("dpar['Vframe_relative_to_sim'] = ",dpar['Vframe_relative_to_sim'],"!=0")
+            print("Please return this data to the simulation frame and call it again...")
+            return
+    except:
+        pass
 
     f = h5py.File(flnm,'w')
 
