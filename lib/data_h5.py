@@ -47,6 +47,58 @@ def read_particles(path, numframe=None, is2d3v = False):
 
     return pts
 
+def get_dpar_from_bounds(dpar_folder,x1,x2,verbose=True):
+    """
+    Loads all needed particle data files from dpar_folder which is created by preslicedata.py
+    """
+    import os
+
+    if(x2 < x1):
+        print("Warning, x1 should be less than x2")
+        return
+
+    filenames = os.listdir(dpar_folder)
+    filenames = sorted(filenames)
+    try:
+        filenames.remove('.DS_store')
+    except:
+        pass
+
+    xbounds = []
+    for f in filenames:
+        bounds = f.split('_')
+        xbounds.append([float(bounds[0]),float(bounds[1]]))
+
+    leftmostbound_index = -1 #must lag by one to capture all wanted slices
+    testidx = 0
+    while(bounds[testidx][0]<=x1):
+        testidx += 1
+        leftmostbound_index += 1
+
+    rightmostbound_index = 0
+    testidx = 0
+    while(bounds[testidx][1]<x2)
+        testidx += 1
+        rightmostbound_index += 1
+
+    filenames = filenames[leftmostbound_index:rightmostbound_index+1]
+
+    if(verbose):
+        print('Loading the following files...')
+        for f in filenames:
+            print(f)
+        print('----')
+
+    if(len(filenames) == 0):
+        print("Warning: no files with wanted particle data was found...")
+
+    pts = {'p1':[],'p2':[],'p3':[],'x1':[],'x2':[],'x3':[]}
+    for f in filenames:
+        _pts = read_particles(dpar_folder+f)
+        for key in pts.keys():
+            pts[key].append(_pts[key][:])
+
+    return pts
 
 def read_box_of_particles(path, numframe, x1, x2, y1, y2, z1, z2, is2d3v = False):
     """

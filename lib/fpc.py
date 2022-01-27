@@ -145,9 +145,18 @@ def _comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock)
 
     return vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx, CEy, CEz
 
-def comp_cor_over_x_multithread(dfields, dpar, vmax, dv, dx, vshock, xlim=None, ylim=None, zlim=None, max_workers = 8):
+def _grab_dpar_and_comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dpar_folder, dfields, vshock):
 
-    from concurrent.futures import ThreadPoolExecutor
+    rom lib.data_h5 import get_dpar_from_bounds
+
+    dpar = get_dpar_from_bounds(dpar_folder,x1,x2)
+
+    _comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dpar, dfields, vshock)
+
+
+def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim=None, ylim=None, zlim=None, max_workers = 8):
+
+    from concurrent.futures import ProcessPoolExecutor
 
     #set up box bounds
     if xlim is not None:
@@ -192,7 +201,7 @@ def comp_cor_over_x_multithread(dfields, dpar, vmax, dv, dx, vshock, xlim=None, 
     num_par_out = [None for _tmp in x1task]
 
     #do multithreading
-    with ThreadPoolExecutor(max_workers = max_workers) as executor:
+    with ProcessPoolExecutor(max_workers = max_workers) as executor:
         futures = []
         jobids = [] #array to track where in results array result returned by thread should go
         num_working = 0
@@ -202,7 +211,7 @@ def comp_cor_over_x_multithread(dfields, dpar, vmax, dv, dx, vshock, xlim=None, 
         while(tasks_completed < len(x1task)): #while there are jobs to do
             if(num_working < max_workers and taskidx < len(x1task)): #if there is a free worker and job to do, give job
                 print('started scan pos-> x1: ',x1task[taskidx],' x2: ',x2task[taskidx],' y1: ',y1,' y2: ',y2,' z1: ', z1,' z2: ',z2)
-                futures.append(executor.submit(_comp_all_CEi, vmax, dv, x1task[taskidx], x2task[taskidx], y1, y2, z1, z2, dpar, dfields, vshock))
+                futures.append(executor.submit(_grab_dpar_and_comp_all_CEi, vmax, dv, x1task[taskidx], x2task[taskidx], y1, y2, z1, z2, dpar_folder, dfields, vshock))
                 jobids.append(taskidx)
                 taskidx += 1
                 num_working += 1

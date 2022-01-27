@@ -25,7 +25,7 @@ try:
     analysisinputflnm = sys.argv[1]
 except:
     print("This generates FPC netcdf4 file. Use_restart is false by default.")
-    print("usage: " + sys.argv[0] + " analysisinputflnm use_restart(T/F) is_2D3V(T/F) num_threads(default 1)")
+    print("usage: " + sys.argv[0] + " analysisinputflnm use_restart(T/F) is_2D3V(T/F) num_threads(default 1) dpar_folder")
     sys.exit()
 
 try:
@@ -51,6 +51,11 @@ try:
 except:
     num_threads = 1
 
+try:
+    dpar_folder = sys.argv[5]+'/'
+except:
+    dpar_folder = None
+
 if(is_2D3V == 'T'):
     is2d3v = True
 else:
@@ -60,6 +65,10 @@ if(use_restart == 'T'):
     use_restart = True
 else:
     use_restart = False
+
+if(num_threads != 1 and dpar_folder == None): #TODO: clean up code that assumes multithreading without preslicing data
+    print("Error, multithreading now expects pre-slicing of the data.")
+    print("Please use preslicedata.py, and pass output folder to dpar_folder")
 
 #-------------------------------------------------------------------------------
 # load data
@@ -81,7 +90,7 @@ if(not(is2d3v)): #TODO: add check_input for 2d3v
     anl.check_input(analysisinputflnm,dfields)
 
 #Load data using normal output files
-if(not(use_restart)):
+if(not(use_restart) and dpar_folder == None):
     print("Loading particle data...")
     #Load slice of particle data
     if xlim is not None and ylim is not None and zlim is not None:
@@ -100,7 +109,7 @@ if(not(use_restart)):
         dparticles = dh5.read_particles(path_particles, numframe, is2d3v=is2d3v)
 
 #Load data using restart files
-if(use_restart):
+if(use_restart and dpar_folder == None):
     print("Loading particle data using restart files...")
     #Load slice of particle data
     if xlim is not None:
@@ -161,7 +170,7 @@ if dx is None:
 if(num_threads == 1):
     CEx, CEy, CEz, x, Hist, vx, vy, vz, num_par = fpc.compute_correlation_over_x(dfields, dparticles, vmax, dv, dx, vshock, xlim, ylim, zlim)
 else:
-    CEx, CEy, CEz, x, Hist, vx, vy, vz, num_par = fpc.comp_cor_over_x_multithread(dfields, dparticles, vmax, dv, dx, vshock, xlim=xlim, ylim=ylim, zlim=zlim, max_workers=num_threads)
+    CEx, CEy, CEz, x, Hist, vx, vy, vz, num_par = fpc.comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim=xlim, ylim=ylim, zlim=zlim, max_workers=num_threads)
 
 #-------------------------------------------------------------------------------
 # compute energization
