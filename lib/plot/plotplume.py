@@ -220,14 +220,14 @@ def plot_wavemodes_and_compare_to_sweeps_kpar(kperps,beta_i,tau,wavemodes_matchi
             slowcrv_error.append(slowmagson_curve(kperp,kpar,beta_i,tau,delta_beta_i=delta_beta_i,delta_tau=delta_tau,comp_error_prop=True).s)
             whicrv.append(whistler_curve(kperp,kpar,beta_i,tau,comp_error_prop=False))
             whicrv_error.append(whistler_curve(kperp,kpar,beta_i,tau,delta_beta_i=delta_beta_i,delta_tau=delta_tau,comp_error_prop=True).s)
-        kawcrvs.append(kawcrv)
-        kawcrv_errors.append(kawcrv_error)
-        fastcrvs.append(fastcrv)
+        kawcrvs.append(np.asarray(kawcrv))
+        kawcrv_errors.append(np.asarray(kawcrv_error))
+        fastcrvs.append(np.asarray(fastcrv))
         fastcrv_errors.append(fastcrv_error)
-        slowcrvs.append(slowcrv)
+        slowcrvs.append(np.asarray(slowcrv))
         slowcrv_errors.append(slowcrv_error)
-        whicrvs.append(whicrv)
-        whicrv_errors.append(whicrv_error)
+        whicrvs.append(np.asarray(whicrv))
+        whicrv_errors.append(np.asarray(whicrv_error))
 
     plotkpars = []
     plotkpar_errors = []
