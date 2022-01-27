@@ -29,6 +29,14 @@ except:
     print("usage: " + sys.argv[0] + " analysisinputflnm outdirname")
     sys.exit()
 
+is2d3v = False #TODO: make compatiable with 2d3v data
+
+try:
+    cmd = 'mkdir ' + outdirname
+    print(cmd)
+    os.system(cmd)
+except:
+    pass
 
 #-------------------------------------------------------------------------------
 # load data
@@ -101,7 +109,7 @@ while(x2 <= xEnd):
     gptsparticle = (x1 <= dpar['x1']) & (dpar['x1'] <= x2) & (y1 <= dpar['x2']) & (dpar['x2'] <= y2) & (z1 <= dpar['x3']) & (dpar['x3'] <= z2)
     _tempdpar = {}
     for key in dpar.keys():
-        if(key in 'p1 p2 p3 x1 x2 x3'.split())
+        if(key in 'p1 p2 p3 x1 x2 x3'.split()):
             _tempdpar[key] = dpar[key][gptsparticle][:]
 
     outflnm = outdirname + '/' + str(x1) + '_' + str(x2)
