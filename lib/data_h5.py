@@ -67,7 +67,7 @@ def get_dpar_from_bounds(dpar_folder,x1,x2,verbose=True):
     xbounds = []
     for f in filenames:
         bounds = f.split('_')
-        xbounds.append([float(bounds[0]),float(bounds[1]]))
+        xbounds.append([float(bounds[0]),float(bounds[1])])
 
     leftmostbound_index = -1 #must lag by one to capture all wanted slices
     testidx = 0
