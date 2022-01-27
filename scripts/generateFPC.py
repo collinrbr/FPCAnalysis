@@ -138,7 +138,7 @@ if(vmax == None):
 #-------------------------------------------------------------------------------
 # Check if data is 2D. Pad to make pseudo 3d if data is 2d
 #-------------------------------------------------------------------------------
-if(is_2D3V)
+if(is_2D3V):
     if('x3' not in dparticles.keys()): #all simulations that are '2d' should be 2d 3v with coordinates (xx,yy;vx,vy,vz)
         dparticles = dh5.par_2d_to_3d(dparticles)
         dfields = dh5.dict_2d_to_3d(dfields,0)
