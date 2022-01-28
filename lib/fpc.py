@@ -154,7 +154,7 @@ def _grab_dpar_and_comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dpar_folder, d
     vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx, CEy, CEz = _comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dpar, dfields, vshock)
 
 
-    print(vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx, CEy, CEz)
+    print(type(vx), type(vy), type(vz), type(totalPtcl), type(totalFieldpts), type(Hist), type(CEx), type(CEy), type(CEz))
     return vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx, CEy, CEz
 
 
