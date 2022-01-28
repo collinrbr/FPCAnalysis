@@ -887,9 +887,11 @@ class PartMapper3D(object):
             bcx,bcy,bcz = self._box_center(ip, jp, kp)
             #xxboxwidth = self.rx / self.px #each restart file contains a subbox
                                      #that normally contains many cells
-            xxboxwidthright = (self._box_center(ip+1, jp, kp)-self._box_center(ip, jp, kp))#/2. TODO: find out if this should be /2. or not. It should be divided by two if all boxes are the same time
+            bcxr,_,_ = self._box_center(ip+1, jp, kp)
+            bxrl,_,_ = self._box_center(ip-1, jp, kp)
+            xxboxwidthright = (bcxr-bcx)#/2. TODO: find out if this should be /2. or not. It should be divided by two if all boxes are the same time
                                                                                             #worse case scenario, we load more than we need so we will leave things like this for now
-            xxboxwidthleft = (self._box_center(ip, jp, kp)-self._box_center(ip-1, jp, kp))#/2.
+            xxboxwidthleft = (bcx-bcxl)#/2.
 
             #This block will load restart file if it is even partially in the xrange
             if(bcx+xxboxwidthright >= x0 and bcx-xxboxwidthleft <= x1):
