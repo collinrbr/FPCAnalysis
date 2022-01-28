@@ -33,7 +33,7 @@ except:
 
 is2d3v = False #TODO: make compatiable with 2d3v data
 
-if(use_restart == 'T'):
+if(use_restart == 'T'): #Note, we preslice restart files even tho they are already divided into blocks as this makes the pipeline more streamlined and allows us to create smaller slices in x
     use_restart = True
 elif(use_restart == 'F'):
     use_restart = False
@@ -95,22 +95,22 @@ if(not(use_restart)):
         zlim = [dfields['ex_zz'][0],dfields['ex_zz'][-1]]
         dparticles = dh5.read_particles(path_particles, numframe, is2d3v=is2d3v)
 
-#Load data using restart files
-if(use_restart):
-    print("Loading particle data using restart files...")
-    #Load slice of particle data
-    if xlim is not None:
-        dparticles = dh5.read_restart(path, xlim=xlim,nthreads=num_threads)
-    #Load all data in unspecified limits and only data in bounds in specified limits
-    else:
-        xlim = [dfields['ex_xx'][0],dfields['ex_xx'][-1]]
-        dparticles = dh5.read_restart(path,nthreads=num_threads)
-
-    #set up other bounds (TODO: clean this up (redundant code in above if block; code this only once))
-    if ylim is None:
-        ylim = [dfields['ex_yy'][0],dfields['ex_yy'][-1]]
-    if zlim is None:
-        zlim = [dfields['ex_zz'][0],dfields['ex_zz'][-1]]
+# #Load data using restart files
+# if(use_restart):
+#     print("Loading particle data using restart files...")
+#     #Load slice of particle data
+#     if xlim is not None:
+#         dparticles = dh5.read_restart(path, xlim=xlim,nthreads=num_threads)
+#     #Load all data in unspecified limits and only data in bounds in specified limits
+#     else:
+#         xlim = [dfields['ex_xx'][0],dfields['ex_xx'][-1]]
+#         dparticles = dh5.read_restart(path,nthreads=num_threads)
+#
+#     #set up other bounds (TODO: clean this up (redundant code in above if block; code this only once))
+#     if ylim is None:
+#         ylim = [dfields['ex_yy'][0],dfields['ex_yy'][-1]]
+#     if zlim is None:
+#         zlim = [dfields['ex_zz'][0],dfields['ex_zz'][-1]]
 
 #-------------------------------------------------------------------------------
 # slice data
@@ -123,12 +123,14 @@ y1 = ylim[0]
 y2 = ylim[1]
 z1 = zlim[0]
 z2 = zlim[1]
+dparkeys='p1 p2 p3 x1 x2 x3'.split()
 while(x2 <= xEnd):
     print("x1: ", x1, "x2: ", x2)
+    if(use_restart): #if we are using restart files, must load relevant files
+        dparticles = dh5.read_restart(path,verbose=True,xlim=[x1,x2],nthreads=1)
     gptsparticle = (x1 <= dparticles['x1']) & (dparticles['x1'] <= x2) & (y1 <= dparticles['x2']) & (dparticles['x2'] <= y2) & (z1 <= dparticles['x3']) & (dparticles['x3'] <= z2)
     _tempdpar = {}
-    for key in dparticles.keys():
-        if(key in 'p1 p2 p3 x1 x2 x3'.split()):
+    for key in dparkeys:
             _tempdpar[key] = dparticles[key][gptsparticle][:]
 
     outflnm = outdirname + '/' + '{:012.6f}'.format(x1) + '_' + '{:012.6f}'.format(x2)

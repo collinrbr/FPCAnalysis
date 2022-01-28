@@ -105,6 +105,7 @@ def get_dpar_from_bounds(dpar_folder,x1,x2,verbose=True):
         pts[key]=np.asarray(pts[key])
     pts['Vframe_relative_to_sim'] = 0. #TODO: track this throughout slicing so we dont have to assume this when loading
 
+    print("Done loading files for x1=",x1," to x2=",x2)
     return pts
 
 def read_box_of_particles(path, numframe, x1, x2, y1, y2, z1, z2, is2d3v = False):
@@ -595,6 +596,7 @@ def _pts_to_par_dict(pts):
 
 
 def read_restart(path,verbose=True,xlim=None,nthreads=1):
+    #TODO: add 'path_restart' example to example files
     """
     Loads all restart files. Use's modified code from Dr. Colby Haggerty.
 
