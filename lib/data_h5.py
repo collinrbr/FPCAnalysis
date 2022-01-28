@@ -101,6 +101,8 @@ def get_dpar_from_bounds(dpar_folder,x1,x2,verbose=True):
         _pts = read_particles(dpar_folder+f)
         for key in pts.keys():
             pts[key].append(_pts[key][:])
+    for key in pts.keys():
+        pts[key]=np.asarray(pts[key])
     pts['Vframe_relative_to_sim'] = 0. #TODO: track this throughout slicing so we dont have to assume this when loading
 
     return pts
