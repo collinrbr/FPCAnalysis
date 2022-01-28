@@ -637,7 +637,7 @@ def read_restart(path,verbose=True,xlim=None,nthreads=1):
         procs = procs[:-1]
         for _c,_p in enumerate(procs):
             if(verbose):
-                print('loaded proc str(_p): '+ str(_c) + ' of ' + len(procs[-1])) #TODO: fix this output, it does not report first loaded file above
+                print('loaded proc str(_p): '+ str(_c) + ' of ' + len(procs)) #TODO: fix this output, it does not report first loaded file above
             _pts = PM.parts_from_num(_p)
             pts = np.concatenate([pts,_pts],axis=0)
 
