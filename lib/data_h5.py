@@ -75,13 +75,13 @@ def get_dpar_from_bounds(dpar_folder,x1,x2,verbose=True):
 
     leftmostbound_index = -1 #must lag by one to capture all wanted slices
     testidx = 0
-    while(float(bounds[testidx][0])<=float(x1)): #shouldnt have to convert both of these to float, TODO: figure out why and fix it
+    while(float(xbounds[testidx][0])<=x1):
         testidx += 1
         leftmostbound_index += 1
 
     rightmostbound_index = 0
     testidx = 0
-    while(float(bounds[testidx][1])<float(x2)): #shouldnt have to convert both of these to float, TODO: figure out why and fix it
+    while(float(xbounds[testidx][1])<x2):
         testidx += 1
         rightmostbound_index += 1
 
