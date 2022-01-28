@@ -888,7 +888,7 @@ class PartMapper3D(object):
             #xxboxwidth = self.rx / self.px #each restart file contains a subbox
                                      #that normally contains many cells
             bcxr,_,_ = self._box_center(ip+1, jp, kp)
-            bxrl,_,_ = self._box_center(ip-1, jp, kp)
+            bcxl,_,_ = self._box_center(ip-1, jp, kp)
             xxboxwidthright = (bcxr-bcx)#/2. TODO: find out if this should be /2. or not. It should be divided by two if all boxes are the same time
                                                                                             #worse case scenario, we load more than we need so we will leave things like this for now
             xxboxwidthleft = (bcx-bcxl)#/2.
