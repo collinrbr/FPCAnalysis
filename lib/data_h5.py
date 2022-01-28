@@ -885,11 +885,14 @@ class PartMapper3D(object):
         for n in range(0, maxnum):
             ip, jp, kp = self._num_to_index(n)
             bcx,bcy,bcz = self._box_center(ip, jp, kp)
-            xxboxwidth = self.rx / self.px #each restart file contains a subbox
+            #xxboxwidth = self.rx / self.px #each restart file contains a subbox
                                      #that normally contains many cells
+            xxboxwidthright = (self._box_center(ip+1, jp, kp)-self._box_center(ip, jp, kp))#/2. TODO: find out if this should be /2. or not. It should be divided by two if all boxes are the same time
+                                                                                            #worse case scenario, we load more than we need so we will leave things like this for now
+            xxboxwidthleft = (self._box_center(ip, jp, kp)-self._box_center(ip-1, jp, kp))#/2.
 
             #This block will load restart file if it is even partially in the xrange
-            if(bcx+xxboxwidth/2. >= x0 and bcx-xxboxwidth/2. <= x1):
+            if(bcx+xxboxwidthright >= x0 and bcx-xxboxwidthleft <= x1):
                 nums.append(n)
 
         return nums
