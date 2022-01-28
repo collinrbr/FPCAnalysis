@@ -1,5 +1,5 @@
 # supplementary fucntions lifted from other libraries
-# this was done as scipy was not up to date on server i was using to run code
+# this was done as scipy was not up to date on server that was used to run code
 
 import numpy as np
 

@@ -637,7 +637,7 @@ def read_restart(path,verbose=True,xlim=None,nthreads=1):
         procs = procs[:-1]
         for _c,_p in enumerate(procs):
             if(verbose):
-                print(str(_p) + ' of ' + str(procs[-1]))
+                print('loaded proc str(_p): '+ str(_c) + ' of ' + len(procs[-1])) #TODO: fix this output, it does not report first loaded file above
             _pts = PM.parts_from_num(_p)
             pts = np.concatenate([pts,_pts],axis=0)
 
@@ -878,7 +878,7 @@ class PartMapper3D(object):
 
 #         return nums
 
-        #hacky way to do it (would be a bit more efficient to fix the math
+        #hacky way to do it (would be a bit more efficient to fix the math above
         #  in the above commented out block to work for 3d rather than 2d)
         maxnum = self.px*self.py*self.pz
         nums = []
@@ -889,7 +889,7 @@ class PartMapper3D(object):
                                      #that normally contains many cells
 
             #This block will load restart file if it is even partially in the xrange
-            if(bcx+xxboxwidth/2. >= x0 and bcx-xxboxwidth/2. <= x1):
+            if(bcx+xxboxwidth/2. >= x0 or bcx-xxboxwidth/2. <= x1):
                 nums.append(n)
 
         return nums
