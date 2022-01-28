@@ -12,6 +12,38 @@ def compute_wavemodes(xx,dfields,xlim,ylim,zlim,
                      uxkzkykxxx,uykzkykxxx,uzkzkykxxx,
                      vth=None):
 
+    """
+    Creates dwavemodes dictionary, that contains frequency/wavenumber space data of our fields
+    in cartesian coordinates and field aligned coordinates for every discrete computed point in
+    frequency/wavenumber space
+
+    As we use the wavelet transform, this frequency space data can be localized in xx,
+    which we select when computing wavemodes
+
+    Parameters
+    ----------
+    xx : float
+        xx position of the analysis
+    dfields : dict
+        field data dictionary from field_loader
+    xlim : [float,float]
+        bounds of box we want to compute field aligned coordinates in xx
+    ylim : [float,float]
+        bounds of box we want to compute field aligned coordinates in yy
+    zlim : [float,float]
+        bounds of box we want to compute field aligned coordinates in zz
+    kx,ky,kz : 1d array
+        arrays containing wavenumbers grid of analysis
+    **kzkykxxx : 4d array
+        fields/flow that have been transformed using fft in yy,zz and wlt in xx
+        e.g. bxkzkykxxx <=> B_x(kz,ky,kx;xx)
+
+    Returns
+    -------
+    dwavemodes : dict
+        wavemode data in frequency/wavenumber space for every
+    """
+
     from lib.analysis import compute_field_aligned_coord
     from lib.array_ops import find_nearest
 
@@ -106,6 +138,19 @@ def compute_wavemodes(xx,dfields,xlim,ylim,zlim,
     return dwavemodes
 
 def sort_wavemodes(dwavemodes,key):
+    """
+    Sorts wavemode dictionary by provided key
+
+    Paramters
+    ---------
+    dwavemodes : dict
+        dictionary returned by compute_wavemodes
+
+    Returns
+    -------
+    dwavemodes : dict
+        sorted dictionary returned by compute_wavemodes
+    """
     #sorts by key
 
     #get sort index structure
@@ -119,6 +164,19 @@ def sort_wavemodes(dwavemodes,key):
     return dwavemodes
 
 def _wavemodes_key_to_label(key):
+    """
+    Returns plot label provided key from dwavemodes dict
+
+    Parameters
+    ----------
+    key : string
+        key in dwavemodes dict
+
+    Returns
+    -------
+    lbl : string
+        label that can be used with matplotlib to label axis/ tables
+    """
 
     if(key == 'kpar'):
         lbl = r'$k_{||}$'

@@ -1046,6 +1046,9 @@ def compute_field_aligned_coord(dfields,xlim,ylim,zlim):
     from lib.array_ops import find_nearest
     from copy import deepcopy
 
+    if(np.abs(xlim[1]-xlim[0]) > 2.):
+        print("Warning, when computing field aligned coordinates, we found that xlim[1]-xlim[0] is large, are you sure you want to find ")
+
     #TODO: rename vpar,vperp to epar, eperp...
     xavg = (xlim[1]+xlim[0])/2.
     xxidx = find_nearest(dfields['bz_xx'],xavg)
@@ -1308,21 +1311,83 @@ def compute_vrms(dpar,vmax,dv,x1,x2,y1,y2,z1,z2):
 
 def compute_alfven_vel(dfields,dden,x1,x2,y1,y2,z1,z2):
     """
-    Computes v_a/v_{a,ref}
+    Computes the average alfven veloicty normalized to dHybridR units, v_a/v_{a,ref}
+    in the given box.
+
+    Note, v_{a,ref} is defined in the simulation input
+
+    Parameters
+    ----------
+    dfields : dict
+        field data dictionary from field_loader
+    dden : dict
+        fluid density data dictionary from den_loader
+    x1 : float
+        lower x bound
+    x2 : float
+        upper x bound
+    y1 : float
+        lower y bound
+    y2 : float
+        upper y bound
+    z1 : float
+        lower y bound
+    z2 : float
+        upper y bound
+
+    Returns
+    -------
+    v_a : float
+        alfven velocity normalized to reference alfven velocity
+
     """
 
-    num_den_ion = ao.get_average_in_box(x1,x2,y1,y2,z1,z2,dden, 'den')
+    rho = ao.get_average_in_box(x1,x2,y1,y2,z1,z2,dden, 'den')
 
     bx = ao.get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'bx')
     by = ao.get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'by')
     bz = ao.get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'bz')
     btot = math.sqrt(bx**2.+by**2.+bz**2.)
 
-    v_a = btot/num_den_ion
+    v_a = btot/rho
 
     return v_a
 
 def compute_beta_i(dpar,dfields,dden,vmax,dv,x1,x2,y1,y2,z1,z2):
+    """
+    Computes plasma beta for ions using, beta_i = v_ion_th**2./v_ion_a**2.
+
+    Parameters
+    ----------
+    dpar : dict
+        xx vx yy vy zz vz data dictionary from read_particles or read_box_of_particles
+    dfields : dict
+        field data dictionary from field_loader
+    dden : dict
+        fluid density data dictionary from den_loader
+    vmax : float
+        max limit in velocity space used when estimating thermal velocity using moments of the distribution
+    dv : float
+        velocity space grid spacing
+        (assumes square)
+    x1 : float
+        lower x bound
+    x2 : float
+        upper x bound
+    y1 : float
+        lower y bound
+    y2 : float
+        upper y bound
+    z1 : float
+        lower y bound
+    z2 : float
+        upper y bound
+
+    Returns
+    -------
+    beta_i : float
+        average ion plasma beta in box
+    """
 
     #compute v_th
     v_ion_th = compute_vrms(dpar,vmax,dv,x1,x2,y1,y2,z1,z2)
@@ -1335,6 +1400,39 @@ def compute_beta_i(dpar,dfields,dden,vmax,dv,x1,x2,y1,y2,z1,z2):
     return beta_i, v_ion_th, v_ion_a
 
 def compute_electron_temp(dden,x1,x2,y1,y2,z1,z2,Te0=1.,gamma=1.66667,num_den_elec0=1.):
+    """
+    Parameters
+    ----------
+    dden : dict
+        fluid density data dictionary from den_loader
+    x1 : float
+        lower x bound
+    x2 : float
+        upper x bound
+    y1 : float
+        lower y bound
+    y2 : float
+        upper y bound
+    z1 : float
+        lower y bound
+    z2 : float
+        upper y bound
+    Te0 : float
+        upstream (as in newly injected inflow) electron temperature (in code units)
+    gamma : float
+        adiabatic index
+    Te0 : float
+        upstream (as in newly injected inflow) electron density (in code units)
+
+    Returns
+    -------
+    Te : float
+        average electron temperature in given box
+    """
+
+    print("WARNING THIS DOES NOT INCLUDE DRIFT VELOCITY YET")
+
+
     num_den_elec = ao.get_average_in_box(x1,x2,y1,y2,z1,z2,dden, 'den')
 
     Te = Te0*(num_den_elec/num_den_elec0)**(gamma-1)
@@ -1342,6 +1440,41 @@ def compute_electron_temp(dden,x1,x2,y1,y2,z1,z2,Te0=1.,gamma=1.66667,num_den_el
     return Te
 
 def compute_tau(dpar,dden,vmax,dv,x1,x2,y1,y2,z1,z2):
+    """
+    Computes temperature ratio Te/Ti in given box
+
+    Parameters
+    ----------
+    dpar : dict
+        xx vx yy vy zz vz data dictionary from read_particles or read_box_of_particles
+    dden : dict
+        fluid density data dictionary from den_loader
+    vmax : float
+        max limit in velocity space used when estimating thermal velocity using moments of the distribution
+    dv : float
+        velocity space grid spacing
+        (assumes square)
+    x1 : float
+        lower x bound
+    x2 : float
+        upper x bound
+    y1 : float
+        lower y bound
+    y2 : float
+        upper y bound
+    z1 : float
+        lower y bound
+    z2 : float
+        upper y bound
+
+    Returns
+    -------
+    tau : float
+        temperature ration Te/Ti in box
+
+    """
+
+    print("WARNING THIS DOES NOT INCLUDE DRIFT VELOCITY YET")
 
     Te = compute_electron_temp(dden,x1,x2,y1,y2,z1,z2)
 
@@ -1353,6 +1486,40 @@ def compute_tau(dpar,dden,vmax,dv,x1,x2,y1,y2,z1,z2):
     return tau
 
 def va_norm_to_vi_norm(dpar, v_w_anorm, vmax, x1, x2, y1, y2, z1, z2, vti = None):
+    """
+    Given some velocity normalized to v_{a,ref} (defined in dHybridR input), this
+    function converts that velocity to instead normalized to the estimated thermal
+    velocity in the given box
+
+    Parameters
+    ----------
+    dpar : dict
+        xx vx yy vy zz vz data dictionary from read_particles or read_box_of_particles
+    v_w_anorm : float
+        velocity with v_alfven,ref normalization
+    vmax : float
+        max limit in velocity space used when estimating thermal velocity using moments of the distribution
+    dv : float
+        velocity space grid spacing
+        (assumes square)
+    x1 : float
+        lower x bound
+    x2 : float
+        upper x bound
+    y1 : float
+        lower y bound
+    y2 : float
+        upper y bound
+    z1 : float
+        lower y bound
+    z2 : float
+        upper y bound
+
+    Returns
+    -------
+    v_w_tinorm : float
+        velocity with v_ti normalization
+    """
     if(vti == None):
         vti = compute_vrms(dpar,vmax,dv,x1,x2,y1,y2,z1,z2)
 

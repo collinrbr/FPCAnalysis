@@ -139,6 +139,11 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
 #3. dont compute subset each time for CEx, CEy, CEz
 
 def _comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock):
+    """
+    Wrapper function that computes FPC wrt xx, yy, zz and returns all three of them
+
+    See documentation for compute_hist_and_cor
+    """
     vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock, 'ex', 'x')
     vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEy = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock, 'ey', 'y')
     vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEz = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock, 'ez', 'z')
@@ -146,6 +151,11 @@ def _comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock)
     return vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx, CEy, CEz
 
 def _grab_dpar_and_comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dpar_folder, dfields, vshock):
+    """
+    Wrapper function that loads correct particle data from presliced data and computes FPC
+
+    See documentation for compute_hist_and_cor and comp_cor_over_x_multithread
+    """
 
     from lib.data_h5 import get_dpar_from_bounds
 
@@ -157,7 +167,53 @@ def _grab_dpar_and_comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dpar_folder, d
 
 
 def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim=None, ylim=None, zlim=None, max_workers = 8):
+        """
+        Computes distribution function and correlation wrt to given field for every slice in xx using multiprocessing
 
+        Parameters
+        ----------
+        dfields : dict
+            field data dictionary from field_loader
+        dpar_folder : string
+            path to folder containing data from preslicedata.py
+        vmax : float
+            specifies signature domain in velocity space
+            (assumes square and centered about zero)
+        dv : float
+            velocity space grid spacing
+            (assumes square)
+        dx : float
+            integration box size (i.e. the slice size)
+        vshock : float
+            velocity of shock in x direction
+        xlim : [float,float], opt
+            upper and lower bounds of sweep
+        ylim : [float,float], opt
+            upper and lower bounds of integration box
+        zlim : [float,float], opt
+            upper and lower bounds of integration box
+
+        Returns
+        -------
+        CEx_out : 4d array
+            CEx(x; vz, vy, vx) data
+        CEy_out : 4d array
+            CEy(x; vz, vy, vx) data
+        CEz_out : 4d array
+            CEz(x; vz, vy, vx) data
+        x_out : 1d array
+            average x position of each slice
+        Hist_out : 4d array
+            f(x; vz, vy, vx) data
+        vx : 3d array
+            vx velocity grid
+        vy : 3d array
+            vy velocity grid
+        vz : 3d array
+            vz velocity grid
+        num_par_out : 1d array
+            number of particles in box
+        """
     from concurrent.futures import ProcessPoolExecutor
 
     #set up box bounds
@@ -252,10 +308,6 @@ def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim
                     time.sleep(1)
 
     return CEx_out, CEy_out, CEz_out, x_out, Hist_out, vx, vy, vz, num_par_out
-
-
-def compute_all_hist_and_cor():
-    pass
 
 
 def compute_correlation_over_x(dfields, dparticles, vmax, dv, dx, vshock, xlim=None, ylim=None, zlim=None):
@@ -353,10 +405,6 @@ def compute_correlation_over_x(dfields, dparticles, vmax, dv, dx, vshock, xlim=N
         x2 += dx
 
     return CEx_out, CEy_out, CEz_out, x_out, Hist_out, vx, vy, vz, num_par_out
-
-
-def compute_all_correlation_over_x():
-    pass
 
 
 def get_3d_weights(xx, yy, zz, idxxx1, idxxx2, idxyy1, idxyy2, idxzz1, idxzz2, dfields, fieldkey):
