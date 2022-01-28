@@ -27,8 +27,7 @@ try:
     use_restart = sys.argv[3]
 except:
     print("This makes hdf5 files of presliced along x data. Uses xlim and dx specified by analysis input folder.")
-    print("usage: " + sys.argv[0] + " analysisinputflnm outdirname userestart(T/F) num_threads(optional)")
-    print("multiprocessing is only used when use restart is true")
+    print("usage: " + sys.argv[0] + " analysisinputflnm outdirname userestart(T/F)")
     sys.exit()
 
 is2d3v = False #TODO: make compatiable with 2d3v data
@@ -40,12 +39,7 @@ elif(use_restart == 'F'):
 else:
     print('Please pass T or F for userestart...')
 
-try:
-    num_threads = int(sys.argv[4])
-    if(num_threads <= 0):
-        print("Error, please request at least 1 thread...")
-except:
-    num_threads = 1
+num_threads = 1 #TODO: check that this is not needed and remove it
 
 try:
     cmd = 'mkdir ' + outdirname
@@ -63,7 +57,7 @@ path_fields = path
 path_particles = path+"Output/Raw/Sp01/raw_sp01_{:08d}.h5"
 
 #load relevant time slice fields
-print("Loading field data...")
+print("Loading field data (for simulation box dimensions)...") #must load field data to get simulation box dimensions
 dfields = dh5.field_loader(path=path_fields,num=numframe,is2d3v=is2d3v)
 
 #Load all fields along all time slices

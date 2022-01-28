@@ -1266,3 +1266,96 @@ def transform_field_to_kzkykxxx(ddict,fieldkey,retstep=12):
     kx = np.concatenate([negativekx,positivekx])
 
     return kz, ky, kx, fieldkzkykxxx
+
+def compute_vrms(dpar,vmax,dv,x1,x2,y1,y2,z1,z2):
+    """
+    https://farside.ph.utexas.edu/teaching/plasma/lectures/node29.html
+
+    assumes the max speed of any of the particles is less than vmax
+    """
+    #TODO: compute vdrift
+    vzdrift = 0.
+    vydrift = 0.
+    vxdrift = 0.
+
+    # bin into cprime(vx,vy,vz)
+    vxbins = np.arange(-vmax, vmax+dv, dv)
+    vx = (vxbins[1:] + vxbins[:-1])/2.
+    vybins = np.arange(-vmax, vmax+dv, dv)
+    vy = (vybins[1:] + vybins[:-1])/2.
+    vzbins = np.arange(-vmax, vmax+dv, dv)
+    vz = (vzbins[1:] + vzbins[:-1])/2.
+
+    # define mask that includes particles within range and make dist
+    gptsparticle = (x1 <= dpar['x1']) & (dpar['x1'] <= x2) & (y1 <= dpar['x2']) & (dpar['x2'] <= y2) & (z1 <= dpar['x3']) & (dpar['x3'] <= z2)
+    hist,_ = np.histogramdd((dparticles['p3'][gptsparticle][:]-vzdrift, dparticles['p2'][gptsparticle][:]-vydrift, dparticles['p1'][gptsparticle][:]-vxdrift), bins=[vzbins, vybins, vxbins])
+
+    # computure pressure
+    pressure = 0.
+    for i in range(0,len(vx)):
+        for j in range(0,len(vy)):
+            for k in range(0,len(vz)):
+                vel = math.sqrt(vx[i]**2.+vy[j]**2.+vz[k]**2.)
+                pressure += hist[k,j,i]*vel**2.*dv**3.
+    pressure = pressure / 3.
+
+    #compute number density
+    num_den = anl.get_num_par_in_box(dpar,x1,x2,y1,y2,z1,z2)
+
+    vrms_squared = pressure/num_den #TODO: check if im missing a factor here
+
+    return vrms_squared
+
+def compute_alfven_vel(dfields,dden,x1,x2,y1,y2,z1,z2):
+    """
+    Computes v_a/v_{a,ref}
+    """
+
+    num_den_ion = ao.get_average_in_box(x1,x2,y1,y2,z1,z2,dden, 'den')
+
+    bx = ao.get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'bx')
+    by = ao.get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'by')
+    bz = ao.get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'bz')
+    btot = math.sqrt(bx**2.+by**2.+bz**2.)
+
+    v_a = btot/num_den_ion
+
+    return v_a
+
+def compute_beta_i(dpar,dfields,dden,vmax,dv,x1,x2,y1,y2,z1,z2):
+
+    #compute v_th
+    v_ion_th = compute_vrms(dpar,vmax,dv,x1,x2,y1,y2,z1,z2)
+
+    #compute v_alfven_ion
+    v_ion_a = compute_alfven_vel(dfields,dden,x1,x2,y1,y2,z1,z2)
+
+    beta_i = v_ion_th**2./v_ion_a**2.
+
+    return beta_i, v_ion_th, v_ion_a
+
+def compute_electron_temp(dden,x1,x2,y1,y2,z1,z2,Te0=1.,gamma=1.66667,num_den_elec0=1.):
+    num_den_elec = ao.get_average_in_box(x1,x2,y1,y2,z1,z2,dden, 'den')
+
+    Te = Te0*(num_den_elec/num_den_elec0)**(gamma-1)
+
+    return Te
+
+def compute_tau(dpar,dden,vmax,dv,x1,x2,y1,y2,z1,z2):
+
+    Te = compute_electron_temp(dden,x1,x2,y1,y2,z1,z2)
+
+    v_ion_th = compute_vrms(dpar,vmax,dv,x1,x2,y1,y2,z1,z2)
+    Ti = v_ion_th**2.
+
+    tau = Te/Ti
+
+    return tau
+
+def va_norm_to_vi_norm(dpar, v_w_anorm, vmax, x1, x2, y1, y2, z1, z2, vti = None):
+    if(vti == None):
+        vti = compute_vrms(dpar,vmax,dv,x1,x2,y1,y2,z1,z2)
+
+    v_w_tinorm = v_w_anorm / vti
+
+    return v_w_tinorm

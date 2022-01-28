@@ -885,7 +885,7 @@ class PartMapper3D(object):
         for n in range(0, maxnum):
             ip, jp, kp = self._num_to_index(n)
             bcx,bcy,bcz = self._box_center(ip, jp, kp)
-            xxboxwidth = PM.rx / PM.px #each restart file contains a subbox
+            xxboxwidth = self.rx / self.px #each restart file contains a subbox
                                      #that normally contains many cells
 
             #This block will load restart file if it is even partially in the xrange
