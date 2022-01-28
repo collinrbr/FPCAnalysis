@@ -61,8 +61,8 @@ def get_dpar_from_bounds(dpar_folder,x1,x2,verbose=True):
 
     filenames = os.listdir(dpar_folder)
     filenames = sorted(filenames)
-    print("Found files...")
-    print(filenames)
+    # print("Found files...")
+    # #print(filenames)
     try:
         filenames.remove('.DS_store')
     except:
