@@ -889,7 +889,7 @@ class PartMapper3D(object):
                                      #that normally contains many cells
 
             #This block will load restart file if it is even partially in the xrange
-            if(bcx+xxboxwidth/2. >= x0 or bcx-xxboxwidth/2. <= x1):
+            if(bcx+xxboxwidth/2. >= x0 and bcx-xxboxwidth/2. <= x1):
                 nums.append(n)
 
         return nums
