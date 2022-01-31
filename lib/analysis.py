@@ -1342,11 +1342,13 @@ def compute_alfven_vel(dfields,dden,x1,x2,y1,y2,z1,z2):
 
     """
 
-    rho = ao.get_average_in_box(x1,x2,y1,y2,z1,z2,dden, 'den')
+    from lib.array_ops import get_average_in_box
 
-    bx = ao.get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'bx')
-    by = ao.get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'by')
-    bz = ao.get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'bz')
+    rho = get_average_in_box(x1,x2,y1,y2,z1,z2,dden, 'den')
+
+    bx = get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'bx')
+    by = get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'by')
+    bz = get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'bz')
     btot = math.sqrt(bx**2.+by**2.+bz**2.)
 
     v_a = btot/rho
