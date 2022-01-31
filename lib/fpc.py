@@ -168,53 +168,53 @@ def _grab_dpar_and_comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dpar_folder, d
 
 
 def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim=None, ylim=None, zlim=None, max_workers = 8):
-        """
-        Computes distribution function and correlation wrt to given field for every slice in xx using multiprocessing
+    """
+    Computes distribution function and correlation wrt to given field for every slice in xx using multiprocessing
 
-        Parameters
-        ----------
-        dfields : dict
-            field data dictionary from field_loader
-        dpar_folder : string
-            path to folder containing data from preslicedata.py
-        vmax : float
-            specifies signature domain in velocity space
-            (assumes square and centered about zero)
-        dv : float
-            velocity space grid spacing
-            (assumes square)
-        dx : float
-            integration box size (i.e. the slice size)
-        vshock : float
-            velocity of shock in x direction
-        xlim : [float,float], opt
-            upper and lower bounds of sweep
-        ylim : [float,float], opt
-            upper and lower bounds of integration box
-        zlim : [float,float], opt
-            upper and lower bounds of integration box
+    Parameters
+    ----------
+    dfields : dict
+        field data dictionary from field_loader
+    dpar_folder : string
+        path to folder containing data from preslicedata.py
+    vmax : float
+        specifies signature domain in velocity space
+        (assumes square and centered about zero)
+    dv : float
+        velocity space grid spacing
+        (assumes square)
+    dx : float
+        integration box size (i.e. the slice size)
+    vshock : float
+        velocity of shock in x direction
+    xlim : [float,float], opt
+        upper and lower bounds of sweep
+    ylim : [float,float], opt
+        upper and lower bounds of integration box
+    zlim : [float,float], opt
+        upper and lower bounds of integration box
 
-        Returns
-        -------
-        CEx_out : 4d array
-            CEx(x; vz, vy, vx) data
-        CEy_out : 4d array
-            CEy(x; vz, vy, vx) data
-        CEz_out : 4d array
-            CEz(x; vz, vy, vx) data
-        x_out : 1d array
-            average x position of each slice
-        Hist_out : 4d array
-            f(x; vz, vy, vx) data
-        vx : 3d array
-            vx velocity grid
-        vy : 3d array
-            vy velocity grid
-        vz : 3d array
-            vz velocity grid
-        num_par_out : 1d array
-            number of particles in box
-        """
+    Returns
+    -------
+    CEx_out : 4d array
+        CEx(x; vz, vy, vx) data
+    CEy_out : 4d array
+        CEy(x; vz, vy, vx) data
+    CEz_out : 4d array
+        CEz(x; vz, vy, vx) data
+    x_out : 1d array
+        average x position of each slice
+    Hist_out : 4d array
+        f(x; vz, vy, vx) data
+    vx : 3d array
+        vx velocity grid
+    vy : 3d array
+        vy velocity grid
+    vz : 3d array
+        vz velocity grid
+    num_par_out : 1d array
+        number of particles in box
+    """
     from concurrent.futures import ProcessPoolExecutor
 
     #set up box bounds
