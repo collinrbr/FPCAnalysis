@@ -1303,7 +1303,7 @@ def compute_vrms(dpar,vmax,dv,x1,x2,y1,y2,z1,z2):
     pressure = pressure / 3.
 
     #compute number density
-    num_den = anl.get_num_par_in_box(dpar,x1,x2,y1,y2,z1,z2)
+    num_den = get_num_par_in_box(dpar,x1,x2,y1,y2,z1,z2)
 
     vrms_squared = pressure/num_den #TODO: check if im missing a factor here
 
