@@ -1291,7 +1291,7 @@ def compute_vrms(dpar,vmax,dv,x1,x2,y1,y2,z1,z2):
 
     # define mask that includes particles within range and make dist
     gptsparticle = (x1 <= dpar['x1']) & (dpar['x1'] <= x2) & (y1 <= dpar['x2']) & (dpar['x2'] <= y2) & (z1 <= dpar['x3']) & (dpar['x3'] <= z2)
-    hist,_ = np.histogramdd((dparticles['p3'][gptsparticle][:]-vzdrift, dparticles['p2'][gptsparticle][:]-vydrift, dparticles['p1'][gptsparticle][:]-vxdrift), bins=[vzbins, vybins, vxbins])
+    hist,_ = np.histogramdd((dpar['p3'][gptsparticle][:]-vzdrift, dpar['p2'][gptsparticle][:]-vydrift, dpar['p1'][gptsparticle][:]-vxdrift), bins=[vzbins, vybins, vxbins])
 
     # computure pressure
     pressure = 0.
