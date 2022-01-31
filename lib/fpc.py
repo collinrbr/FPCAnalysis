@@ -92,7 +92,7 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
                     goodfieldpts.append(dfields[fieldkey][k][j][i])
 
     # define mask that includes particles within range
-    print('debug: ', x1,x2,y1,y2,z1,z2,'more debug: ',type(dpar['x1']),len(dpar['x1']),type(dpar['x2']),len(dpar['x2']),type(dpar['x3']),len(dpar['x3']))
+    print('debug: ', x1,x2,y1,y2,z1,z2,'more debug: ',type(dpar['x1']),len(dpar['x1']),type(dpar['x2']),len(dpar['x2']),type(dpar['x3']),len(dpar['x3']),dpar)
     gptsparticle = (x1 <= dpar['x1']) & (dpar['x1'] <= x2) & (y1 <= dpar['x2']) & (dpar['x2'] <= y2) & (z1 <= dpar['x3']) & (dpar['x3'] <= z2)
 
     # shift particle data to shock frame if needed TODO:  clean this up
