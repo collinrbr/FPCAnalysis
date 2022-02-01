@@ -36,8 +36,9 @@ def build_metadata(xlim,dx,startval,endval):
 
     metadata = np.zeros(len(array))
     metadata = metadata.astype(int)
-
-    for i in range(0,len(metadata)):
-        if(i >= startidx and i <= endidx):
-            metadata[i] = 1
+    
+    if(startval >= xlim[0] and startval <= xlim[1] or endval >= xlim[0] and endval <= xlim[1]):
+        for i in range(0,len(metadata)):
+            if(i >= startidx and i <= endidx):
+                metadata[i] = 1
     return metadata
