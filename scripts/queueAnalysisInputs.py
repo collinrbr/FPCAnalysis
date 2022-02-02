@@ -58,15 +58,12 @@ for flnm in filenames:
         line = line.split('=')
         if not line:
         	break
-        if(line[0]=='use_restart'):
-            use_restart = line[1]
-        elif(line[0]=='is_2D3V'):
-            is_2D3V = line[1]
-        elif(line[0]=='preslice_dir'):
+        if(line[0]=='preslice_dir'):
             preslice_dir = str(line[1].split("'")[1])
 
-    if(preslice_dir=None):
-        cmd = 'python3 scripts/generateFPC.py '+analysisinputdir+'/'+flnm+' T F '+str(numcores)+' >> '+flnm+'.output'
+    if(preslice_dir==None):
+        print("Warning: multiprocessing requires preslicing...")
+        cmd = 'python3 scripts/generateFPC.py '+analysisinputdir+'/'+flnm+' T F  >> '+flnm+'.output'
     else:
         cmd = 'python3 scripts/generateFPC.py '+analysisinputdir+'/'+flnm+' T F '+str(numcores)+' '+preslice_dir + ' >> '+flnm+'.output'
 
