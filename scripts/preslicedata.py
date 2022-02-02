@@ -136,5 +136,5 @@ while(x2 <= xEnd):
     x2 += dx
 cmd = 'touch origin.txt'
 os.system(cmd)
-cmd = "echo '"path +"'  >>  origin.txt"
+cmd = "echo '"+path +"'  >>  origin.txt"
 print("Done!")
