@@ -112,6 +112,11 @@ if(not(use_restart)):
 #setup sweeping box
 if(xlim == None): #TODO: clean up doing this (same logic is done in multiple places in this script)
      xlim = [dfields['ex_xx'][0],dfields['ex_xx'][-1]]
+if(ylim == None):
+     ylim = [dfields['ex_yy'][0],dfields['ex_yy'][-1]]
+if(zlim == None):
+     zlim = [dfields['ex_zz'][0],dfields['ex_zz'][-1]]
+
 
 x1 = xlim[0]
 x2 = x1+dx
