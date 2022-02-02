@@ -47,7 +47,7 @@ print(filenames)
 
 for flnm in filenames:
     #read input for directions
-    f = open(flnm, "r")
+    f = open(analysisinputdir+'/'+flnm, "r")
     use_restart = 'F'
     is_2D3V = 'F'
     preslice_dir = None
@@ -56,11 +56,13 @@ for flnm in filenames:
         line = f.readline()
         line = line.strip()
         line = line.split('=')
-        if not line:
+        if(len(line)==1):
         	break
         if(line[0]=='preslice_dir'):
             preslice_dir = str(line[1].split("'")[1])
+    f.close()
 
+    os.system('touch '  + flnm+'.output')
     if(preslice_dir==None):
         print("Warning: multiprocessing requires preslicing...")
         cmd = 'python3 scripts/generateFPC.py '+analysisinputdir+'/'+flnm+' T F  >> '+flnm+'.output'
@@ -69,4 +71,4 @@ for flnm in filenames:
 
     print(cmd)
     #exitval = os.system(cmd)
-    print('os.system returned: ' + str(exitval))
+    #print('os.system returned: ' + str(exitval))
