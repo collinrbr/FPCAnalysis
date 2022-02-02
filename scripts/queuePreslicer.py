@@ -49,7 +49,7 @@ for flnm in filenames:
     exitval = os.system(cmd)
     cmd = 'touch '+outmasterdir+'/'+temp[0]+'.output'
     print(cmd)
-    os.system()
+    os.system(cmd)
     cmd = 'python3 scripts/preslicedata.py ' +analysisinputdir+'/'+flnm+' '+outmasterdir+'/'+temp[0]+' T >> '+outmasterdir+'/'+temp[0]+'.output'
     print(cmd)
     exitval = os.system(cmd)
