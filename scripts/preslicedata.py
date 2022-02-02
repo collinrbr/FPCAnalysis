@@ -134,5 +134,7 @@ while(x2 <= xEnd):
     dh5.write_particles_to_hdf5(_tempdpar,outflnm)
     x1 += dx
     x2 += dx
-
+cmd = 'touch origin.txt'
+os.system(cmd)
+cmd = "echo '"path +"'  >>  origin.txt"
 print("Done!")
