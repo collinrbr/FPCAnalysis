@@ -27,8 +27,13 @@ try:
 
 except:
     print("This script queues up generateFPC.py on all analysis inputs in specified folder")
-    print("usage: " + sys.argv[0] + " analysisinputdir")
+    print("usage: " + sys.argv[0] + " analysisinputdir numcores(opt)")
     sys.exit()
+
+try:
+    numcores = sys.argv[2]
+except:
+    numcores = 1
 
 filenames = os.listdir(analysisinputdir)
 filenames = sorted(filenames)
@@ -41,16 +46,30 @@ print("Files that are queued up:")
 print(filenames)
 
 for flnm in filenames:
-    cmd = 'python3 scripts/generateFPC.py '+analysisinputdir+'/'+flnm
-    print(cmd)
-    exitval = os.system(cmd)
-    print('os.system returned: ' + str(exitval))
+    #read input for directions
+    f = open(flnm, "r")
+    use_restart = 'F'
+    is_2D3V = 'F'
+    preslice_dir = None
+    while(True):
+        #read next line
+        line = f.readline()
+        line = line.strip()
+        line = line.split('=')
+        if not line:
+        	break
+        if(line[0]=='use_restart'):
+            use_restart = line[1]
+        elif(line[0]=='is_2D3V'):
+            is_2D3V = line[1]
+        elif(line[0]=='preslice_dir'):
+            preslice_dir = str(line[1].split("'")[1])
 
-    #try using restart files if error occured
-    if(exitval != 0):
-        print('Error loading Raw/Sp01 data, trying restart files...')
-        print('Warning, time of the analysis input file should be the last timeslice in the simulation...')#TODO: check automatically
-        cmd = 'python3 scripts/generateFPC.py '+analysisinputdir+'/'+flnm+' T F'
-        print(cmd)
-        exitval = os.system(cmd)
-        print('os.system returned: ' + str(exitval))
+    if(preslice_dir=None):
+        cmd = 'python3 scripts/generateFPC.py '+analysisinputdir+'/'+flnm+' T F '+str(numcores)+' >> '+flnm+'.output'
+    else:
+        cmd = 'python3 scripts/generateFPC.py '+analysisinputdir+'/'+flnm+' T F '+str(numcores)+' '+preslice_dir + ' >> '+flnm+'.output'
+
+    print(cmd)
+    #exitval = os.system(cmd)
+    print('os.system returned: ' + str(exitval))
