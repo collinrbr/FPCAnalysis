@@ -37,6 +37,12 @@ except:
 
 try:
     logdir = sys.argv[3]+'/'
+    try:
+        cmd = 'mkdir '+logdir
+        print(cmd)
+        os.system(cmd)
+    except:
+        pass
 except:
     logdir = ''
 
