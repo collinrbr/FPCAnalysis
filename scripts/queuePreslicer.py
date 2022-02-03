@@ -46,15 +46,16 @@ for flnm in filenames:
     temp =flnm.split('.')
     cmd = 'mkdir '+outmasterdir+'/'+temp[0]
     print(cmd)
-    #exitval = os.system(cmd)
-    cmd = 'touch '+str(outmasterdir/temp[0])+'.output'
+    exitval = os.system(cmd)
+    cmd = 'touch '+outmasterdir+'/'+temp[0]+'.output'
     print(cmd)
-    #os.system()
-    cmd = 'python3 scripts/preslicedata.py ' +analysisinputdir+'/'+flnm+' '+outmasterdir+'/'+temp[0]+' T >> '+str(outmasterdir/temp[0])+'.output'
+    os.system(cmd)
+    cmd = 'python3 scripts/preslicedata.py ' +analysisinputdir+'/'+flnm+' '+outmasterdir+'/'+temp[0]+' T >> '+outmasterdir+'/'+temp[0]+'.output'
     print(cmd)
-    #exitval = os.system(cmd)
+    exitval = os.system(cmd)
 
     if(exitval != 0):
-        cmd = 'python3 scripts/preslicedata.py ' +analysisinputdir+'/'+flnm+' '+outmasterdir+'/'+temp[0]+' F >> '+str(outmasterdir/temp[0])+'.output'
+        print("Couldn't find restart files, trying standard files")
+        cmd = 'python3 scripts/preslicedata.py ' +analysisinputdir+'/'+flnm+' '+outmasterdir+'/'+temp[0]+' F >> '+outmasterdir+'/'+temp[0]+'.output'
         print(cmd)
-        #exitval = os.system(cmd)
+        exitval = os.system(cmd)
