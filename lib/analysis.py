@@ -5,7 +5,7 @@
 import numpy as np
 import math
 
-def analysis_input(flnm = 'analysisinput.txt'):
+def analysis_input(flnm = 'analysisinput.txt',make_resultsdir=True):
     """
     Loads text file that contains relevant FPC analysis parameters
 
@@ -76,21 +76,22 @@ def analysis_input(flnm = 'analysisinput.txt'):
             resultsdir = str(line[1].split("'")[1])
     f.close()
 
-    #copy this textfile into results directory
-    import os
+    if(make_resultsdir):
+        #copy this textfile into results directory
+        import os
 
-    try:
-        isdiff = not(filecmp.cmp(flnm, flnm+resultsdir))
-    except:
-        isdiff = False #file not found, so can copy it
+        try:
+            isdiff = not(filecmp.cmp(flnm, flnm+resultsdir))
+        except:
+            isdiff = False #file not found, so can copy it
 
-    if(isdiff):
-        print("WANRING: the resultsdir is already used by another analysis input!!!")
-        print("Please make a new resultsdir or risk overwriting/ mixing up results")
-        return
-    else:
-        os.system('mkdir '+str(resultsdir))
-        os.system('cp '+str(flnm)+' '+str(resultsdir))
+        if(isdiff):
+            print("WARNING: the resultsdir is already used by another analysis input!!!")
+            print("Please make a new resultsdir or risk overwriting/ mixing up results")
+            return
+        else:
+            os.system('mkdir '+str(resultsdir))
+            os.system('cp '+str(flnm)+' '+str(resultsdir))
 
     return path,resultsdir,vmax,dv,numframe,dx,xlim,ylim,zlim
 

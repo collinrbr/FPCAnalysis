@@ -52,7 +52,7 @@ except:
 # load data
 #-------------------------------------------------------------------------------
 #load path
-path,resultsdir,vmax,dv,numframe,dx,xlim,ylim,zlim = anl.analysis_input(flnm = analysisinputflnm)
+path,resultsdir,vmax,dv,numframe,dx,xlim,ylim,zlim = anl.analysis_input(flnm = analysisinputflnm,make_resultsdir=False)
 path_fields = path
 path_particles = path+"Output/Raw/Sp01/raw_sp01_{:08d}.h5"
 
@@ -60,8 +60,8 @@ path_particles = path+"Output/Raw/Sp01/raw_sp01_{:08d}.h5"
 print("Loading field data (for simulation box dimensions)...") #must load field data to get simulation box dimensions
 dfields = dh5.field_loader(path=path_fields,num=numframe,is2d3v=is2d3v)
 
-#Load all fields along all time slices
-all_dfields = dh5.all_dfield_loader(path=path_fields, is2d3v=is2d3v)
+# #Load all fields along all time slices
+# all_dfields = dh5.all_dfield_loader(path=path_fields, is2d3v=is2d3v)
 
 #check input to make sure box makes sense
 if(not(is2d3v)): #TODO: add check_input for 2d3v
