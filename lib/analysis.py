@@ -449,8 +449,8 @@ def deconvolve_for_fft(dfields,fieldkey,startval,endval):
     from lib.array_ops import find_nearest
 
     #grab field in ramp
-    startvalidx = ao.find_nearest(startval,dfields[fieldkey])
-    endvalidx = ao.find_nearest(endval,dfields[fieldkey])
+    startvalidx = find_nearest(startval,dfields[fieldkey])
+    endvalidx = find_nearest(endval,dfields[fieldkey])
     fieldinramp = dfields[fieldkey][:,:,startvalidx:endvalidx]
     fieldposinramp = dfields[fieldkey+'_xx'][startvalidx:endvalidx]
 
@@ -1435,8 +1435,10 @@ def compute_electron_temp(dden,x1,x2,y1,y2,z1,z2,Te0=1.,gamma=1.66667,num_den_el
 
     print("WARNING THIS DOES NOT INCLUDE DRIFT VELOCITY YET")
 
+    from array_ops import get_average_in_box
 
-    num_den_elec = ao.get_average_in_box(x1,x2,y1,y2,z1,z2,dden, 'den')
+
+    num_den_elec = get_average_in_box(x1,x2,y1,y2,z1,z2,dden, 'den')
 
     Te = Te0*(num_den_elec/num_den_elec0)**(gamma-1)
 
@@ -1493,6 +1495,9 @@ def va_norm_to_vi_norm(dpar, v_w_anorm, vmax, x1, x2, y1, y2, z1, z2, vti = None
     Given some velocity normalized to v_{a,ref} (defined in dHybridR input), this
     function converts that velocity to instead normalized to the estimated thermal
     velocity in the given box
+
+    It should be noted that v_ti,ref = v_alfven,ref in most simulations. That is
+    the inflowing plasma beta = 1
 
     Parameters
     ----------

@@ -47,7 +47,7 @@ def read_particles(path, numframe=None, is2d3v = False):
 
     return pts
 
-def get_dpar_from_bounds(dpar_folder,x1,x2,verbose=True):
+def get_dpar_from_bounds(dpar_folder,x1,x2,verbose=False):
     """
     Loads all needed particle data files from dpar_folder which is created by preslicedata.py
 
