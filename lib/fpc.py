@@ -92,7 +92,7 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
                     goodfieldpts.append(dfields[fieldkey][k][j][i])
 
     # define mask that includes particles within range
-    print('debug: ', x1,x2,y1,y2,z1,z2,'more debug: ',type(dpar['x1']),len(dpar['x1']),type(dpar['x2']),len(dpar['x2']),type(dpar['x3']),len(dpar['x3']))
+    #print('debug: ', x1,x2,y1,y2,z1,z2,'more debug: ',type(dpar['x1']),len(dpar['x1']),type(dpar['x2']),len(dpar['x2']),type(dpar['x3']),len(dpar['x3']))
     gptsparticle = (x1 <= dpar['x1']) & (dpar['x1'] <= x2) & (y1 <= dpar['x2']) & (dpar['x2'] <= y2) & (z1 <= dpar['x3']) & (dpar['x3'] <= z2)
 
     # shift particle data to shock frame if needed TODO:  clean this up
@@ -280,6 +280,8 @@ def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim
                 _i = 0
                 while(_i < nft):
                     if(futures[_i].done()): #if done get result
+                        print("Found done process,", _i, ", grabbing results...")
+
                         #get results and place in return vars
                         resultidx = jobids[_i]
                         _output = futures[_i].result() #return vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx, CEy, CEz
@@ -293,9 +295,6 @@ def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim
                         CEz_out[resultidx] = _output[8]
                         x_out[resultidx] = (x2task[resultidx]+x1task[resultidx])/2.
 
-                        print('ended scan pos-> x1: ',x1task[resultidx],' x2: ',x2task[resultidx],' y1: ',y1,' y2: ',y2,' z1: ', z1,' z2: ',z2)
-                        print('num particles in box: ', _output[3])
-
                         #update multithreading state vars
                         num_working -= 1
                         tasks_completed += 1
@@ -304,6 +303,9 @@ def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim
                         jobids.pop(_i)
                         nft -= 1
                         _i += 1
+
+                        print('done with process,',_i,'ended scan pos-> x1: ',x1task[resultidx],' x2: ',x2task[resultidx],' y1: ',y1,' y2: ',y2,' z1: ', z1,' z2: ',z2,'num particles in box: ', _output[3])
+
 
                 if(not(exists_idle)):
                     time.sleep(0.001)
