@@ -306,7 +306,7 @@ def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim
                         _i += 1
 
                 if(not(exists_idle)):
-                    time.sleep(1)
+                    time.sleep(0.001)
 
     return CEx_out, CEy_out, CEz_out, x_out, Hist_out, vx, vy, vz, num_par_out
 
