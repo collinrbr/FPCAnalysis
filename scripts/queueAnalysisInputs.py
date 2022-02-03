@@ -27,13 +27,18 @@ try:
 
 except:
     print("This script queues up generateFPC.py on all analysis inputs in specified folder")
-    print("usage: " + sys.argv[0] + " analysisinputdir numcores(opt)")
+    print("usage: " + sys.argv[0] + " analysisinputdir numcores(opt) logdir(opt)")
     sys.exit()
 
 try:
     numcores = sys.argv[2]
 except:
     numcores = 1
+
+try:
+    logdir = sys.argv[3]+'/'
+except:
+    logdir = ''
 
 filenames = os.listdir(analysisinputdir)
 filenames = sorted(filenames)
@@ -62,14 +67,14 @@ for flnm in filenames:
             preslice_dir = str(line[1].split("'")[1])
     f.close()
 
-    cmd = 'touch '  + flnm+'.output'
+    cmd = 'touch '  + logdir + flnm+'.output'
     print(cmd)
     #os.system(cmd)
     if(preslice_dir==None):
         print("Warning: multiprocessing requires preslicing...")
-        cmd = 'python3 scripts/generateFPC.py '+analysisinputdir+'/'+flnm+' T F  >> '+flnm+'.output'
+        cmd = 'python3 scripts/generateFPC.py '+analysisinputdir+'/'+flnm+' T F  >> '+logdir+flnm+'.output'
     else:
-        cmd = 'python3 scripts/generateFPC.py '+analysisinputdir+'/'+flnm+' T F '+str(numcores)+' '+preslice_dir + ' >> '+flnm+'.output'
+        cmd = 'python3 scripts/generateFPC.py '+analysisinputdir+'/'+flnm+' T F '+str(numcores)+' '+preslice_dir + ' >> '+logdir+flnm+'.output'
 
     print(cmd)
     #os.system(cmd)
