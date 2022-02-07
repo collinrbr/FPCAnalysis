@@ -220,6 +220,7 @@ def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim
         number of particles in box
     """
     from concurrent.futures import ProcessPoolExecutor
+    import time
 
     #set up box bounds
     if xlim is not None:
