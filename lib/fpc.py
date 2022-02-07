@@ -306,7 +306,7 @@ def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim
                         futures.pop(_i)
                         jobids.pop(_i)
                         nft -= 1
-                        _i += 1
+                    _i += 1
 
                         print('done with process,',_i,'ended scan pos-> x1: ',x1task[resultidx],' x2: ',x2task[resultidx],' y1: ',y1,' y2: ',y2,' z1: ', z1,' z2: ',z2,'num particles in box: ', _output[3])
 
