@@ -269,9 +269,9 @@ def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim
 
         #queue up jobs
         for tskidx in range(0,len(x1task)): #if there is a free worker and job to do, give job
-            print('queued scan pos-> x1: ',x1task[taskidx],' x2: ',x2task[taskidx],' y1: ',y1,' y2: ',y2,' z1: ', z1,' z2: ',z2)
+            print('queued scan pos-> x1: ',x1task[tskidx],' x2: ',x2task[tskidx],' y1: ',y1,' y2: ',y2,' z1: ', z1,' z2: ',z2)
             futures.append(executor.submit(_grab_dpar_and_comp_all_CEi, vmax, dv, x1task[tskidx], x2task[tskidx], y1, y2, z1, z2, dpar_folder, dfields, vshock))
-        executor.shutdown() #will start to shut things down as resouces get free
+        executor.shutdown() #will start to shut things down as resouces become free
 
         #wait until finished
         print("Done queueing up processes, waiting until done...")
