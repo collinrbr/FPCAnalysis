@@ -170,8 +170,140 @@ def _grab_dpar_and_comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dpar_folder, d
 
     return vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx, CEy, CEz
 
-
 def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim=None, ylim=None, zlim=None, max_workers = 8):
+    """
+    Computes distribution function and correlation wrt to given field for every slice in xx using multiprocessing
+
+    Parameters
+    ----------
+    dfields : dict
+        field data dictionary from field_loader
+    dpar_folder : string
+        path to folder containing data from preslicedata.py
+    vmax : float
+        specifies signature domain in velocity space
+        (assumes square and centered about zero)
+    dv : float
+        velocity space grid spacing
+        (assumes square)
+    dx : float
+        integration box size (i.e. the slice size)
+    vshock : float
+        velocity of shock in x direction
+    xlim : [float,float], opt
+        upper and lower bounds of sweep
+    ylim : [float,float], opt
+        upper and lower bounds of integration box
+    zlim : [float,float], opt
+        upper and lower bounds of integration box
+
+    Returns
+    -------
+    CEx_out : 4d array
+        CEx(x; vz, vy, vx) data
+    CEy_out : 4d array
+        CEy(x; vz, vy, vx) data
+    CEz_out : 4d array
+        CEz(x; vz, vy, vx) data
+    x_out : 1d array
+        average x position of each slice
+    Hist_out : 4d array
+        f(x; vz, vy, vx) data
+    vx : 3d array
+        vx velocity grid
+    vy : 3d array
+        vy velocity grid
+    vz : 3d array
+        vz velocity grid
+    num_par_out : 1d array
+        number of particles in box
+    """
+    from concurrent.futures import ProcessPoolExecutor
+    import time
+
+    #set up box bounds
+    if xlim is not None:
+        x1 = xlim[0]
+        x2 = x1+dx
+        xEnd = xlim[1]
+    # If xlim is None, use lower x edge to upper x edge extents
+    else:
+        x1 = dfields['ex_xx'][0]
+        x2 = x1 + dx
+        xEnd = dfields['ex_xx'][-1]
+    if ylim is not None:
+        y1 = ylim[0]
+        y2 = ylim[1]
+    # If ylim is None, use lower y edge to lower y edge + dx extents
+    else:
+        y1 = dfields['ex_yy'][0]
+        y2 = y1 + dx
+    if zlim is not None:
+        z1 = zlim[0]
+        z2 = zlim[1]
+    # If zlim is None, use lower z edge to lower z edge + dx extents
+    else:
+        z1 = dfields['ex_zz'][0]
+        z2 = z1 + dx
+
+    #build task array
+    x1task = []
+    x2task = []
+    while(x2 <= xEnd):
+        x1task.append(x1)
+        x2task.append(x2)
+        x1 += dx
+        x2 += dx
+
+    #empty results array
+    CEx_out = [None for _tmp in x1task]
+    CEy_out = [None for _tmp in x1task]
+    CEz_out = [None for _tmp in x1task]
+    x_out = [None for _tmp in x1task]
+    Hist_out = [None for _tmp in x1task]
+    num_par_out = [None for _tmp in x1task]
+
+    #do multithreading
+    with ProcessPoolExecutor(max_workers = max_workers) as executor:
+        futures = []
+
+        #queue up jobs
+        for tskidx in range(0,len(x1task)): #if there is a free worker and job to do, give job
+            print('queued scan pos-> x1: ',x1task[taskidx],' x2: ',x2task[taskidx],' y1: ',y1,' y2: ',y2,' z1: ', z1,' z2: ',z2)
+            futures.append(executor.submit(_grab_dpar_and_comp_all_CEi, vmax, dv, x1task[tskidx], x2task[tskidx], y1, y2, z1, z2, dpar_folder, dfields, vshock))
+        executor.shutdown() #will start to shut things down as resouces get free
+
+        #wait until finished
+        print("Done queueing up processes, waiting until done...")
+        not_finished = True
+        while(not_finished):
+            time.sleep(1)
+            not_finished = False
+            for ft in futures:
+                if(not(ft.done())):
+                    not_finished = True
+
+        print("Grabbing Results...")
+        #get results
+        for _i in range(0,len(futures)):
+            _output = futures[_i].result() #return vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx, CEy, CEz
+            vx = _output[0]
+            vy = _output[1]
+            vz = _output[2]
+            num_par_out[_i] = _output[3] #TODO: use consistent ordering of variables
+            Hist_out[_i] = _output[5]
+            CEx_out[_i] = _output[6]
+            CEy_out[_i] = _output[7]
+            CEz_out[_i] = _output[8]
+            x_out[_i] = (x2task[_i]+x1task[_i])/2.
+
+
+        return CEx_out, CEy_out, CEz_out, x_out, Hist_out, vx, vy, vz, num_par_out
+
+
+
+
+def comp_cor_over_x_multithreadv0(dfields, dpar_folder, vmax, dv, dx, vshock, xlim=None, ylim=None, zlim=None, max_workers = 8):
     """
     Computes distribution function and correlation wrt to given field for every slice in xx using multiprocessing
 
