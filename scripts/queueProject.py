@@ -27,7 +27,7 @@ try:
 
 except:
     print("This script queues up projectncdata.py using all analysis inputs in specified folder to find output")
-    print("usage: " + sys.argv[0] + " analysisinputdir outmasterdir")
+    print("usage: " + sys.argv[0] + " analysisinputdir")
     sys.exit()
 
 filenames = os.listdir(analysisinputdir)
@@ -41,6 +41,7 @@ print("Input files that are queued up:")
 print(filenames)
 
 for flnm in filenames:
+    analysisinputflnm = analysisinputdir+'analysisinputdir'+flnm
     path,resultsdir,vmax,dv,numframe,dx,xlim,ylim,zlim = anl.analysis_input(flnm = analysisinputflnm)
 
     projfile = resultsdir+'/FPCnometadata.nc'
