@@ -6,7 +6,7 @@ import numpy as np
 
 
 def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
-                            dpar, dfields, vshock, fieldkey, directionkey):
+                            dpar, dfields, vshock, fieldkey, directionkey,checkFrameandGrabSubset=True):
     """
     Computes distribution function and correlation wrt to given field
 
@@ -50,6 +50,9 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
         name of direction you want to take the derivative with respect to
         x,y,or z
         *should match the direction of the fieldkey*
+    checkFrameandGrabSubset : bool(opt)
+        check if all given particles are in box and in correct frame
+        should typically be true unless trying to save RAM
 
     Returns
     -------
@@ -95,41 +98,47 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
     #print('debug: ', x1,x2,y1,y2,z1,z2,'more debug: ',type(dpar['x1']),len(dpar['x1']),type(dpar['x2']),len(dpar['x2']),type(dpar['x3']),len(dpar['x3']))
     gptsparticle = (x1 <= dpar['x1']) & (dpar['x1'] <= x2) & (y1 <= dpar['x2']) & (dpar['x2'] <= y2) & (z1 <= dpar['x3']) & (dpar['x3'] <= z2)
 
-    # shift particle data to shock frame if needed TODO:  clean this up
-    #TODO: avoid doing this, it is very inefficient with RAM
-    if(dfields['Vframe_relative_to_sim'] == vshock and dpar['Vframe_relative_to_sim'] == 0.): #TODO: use shift particles function
-        dpar_p1 = np.asarray(dpar['p1'][gptsparticle][:])
-        dpar_p1 -= vshock
-        dpar_p2 = np.asarray(dpar['p2'][gptsparticle][:])
-        dpar_p3 = np.asarray(dpar['p3'][gptsparticle][:])
-    elif(dpar['Vframe_relative_to_sim'] != vshock):
-        "WARNING: particles were not in simulation frame or provided vshock frame. This FPC is probably incorrect..."
+    if(checkFrameandGrabSubset):
+        # shift particle data to shock frame if needed TODO:  clean this up
+        #TODO: avoid doing this, it is very inefficient with RAM
+        if(dfields['Vframe_relative_to_sim'] == vshock and dpar['Vframe_relative_to_sim'] == 0.): #TODO: use shift particles function
+            dpar_p1 = np.asarray(dpar['p1'][gptsparticle][:])
+            dpar_p1 -= vshock
+            dpar_p2 = np.asarray(dpar['p2'][gptsparticle][:])
+            dpar_p3 = np.asarray(dpar['p3'][gptsparticle][:])
+        elif(dpar['Vframe_relative_to_sim'] != vshock):
+            "WARNING: particles were not in simulation frame or provided vshock frame. This FPC is probably incorrect..."
+        else:
+            dpar_p1 = np.asarray(dpar['p1'][gptsparticle][:])
+            dpar_p2 = np.asarray(dpar['p2'][gptsparticle][:])
+            dpar_p3 = np.asarray(dpar['p3'][gptsparticle][:])
+
+        totalPtcl = np.sum(gptsparticle)
+
+        # avgfield = np.average(goodfieldpts)
+        totalFieldpts = np.sum(goodfieldpts)
+
+        if(dfields['Vframe_relative_to_sim'] != vshock):
+            "WARNING: dfields is not in the same frame as the provided vshock"
+
+        # build dparticles subset using shifted particle data
+        # TODO: this isnt clean code (using dpar_p1/2/3 'multiple times' in histogram and in compute_cprime)
+        dparsubset = {
+          'p1': dpar_p1,
+          'p2': dpar_p2,
+          'p3': dpar_p3,
+          'x1': dpar['x1'][gptsparticle][:],
+          'x2': dpar['x2'][gptsparticle][:],
+          'x3': dpar['x3'][gptsparticle][:],
+          'Vframe_relative_to_sim': dpar['Vframe_relative_to_sim']
+        }
+
+        cprimebinned, hist, vx, vy, vz = compute_cprime_hist(dparsubset, dfields, fieldkey, vmax, dv)
+
     else:
-        dpar_p1 = np.asarray(dpar['p1'][gptsparticle][:])
-        dpar_p2 = np.asarray(dpar['p2'][gptsparticle][:])
-        dpar_p3 = np.asarray(dpar['p3'][gptsparticle][:])
+        dpar['p1'] -= vshock #TODO: clean this up
+        cprimebinned, hist, vx, vy, vz = compute_cprime_hist(dpar, dfields, fieldkey, vmax, dv)
 
-    totalPtcl = np.sum(gptsparticle)
-
-    # avgfield = np.average(goodfieldpts)
-    totalFieldpts = np.sum(goodfieldpts)
-
-    if(dfields['Vframe_relative_to_sim'] != vshock):
-        "WARNING: dfields is not in the same frame as the provided vshock"
-
-    # build dparticles subset using shifted particle data
-    # TODO: this isnt clean code (using dpar_p1/2/3 'multiple times' in histogram and in compute_cprime)
-    dparsubset = {
-      'p1': dpar_p1,
-      'p2': dpar_p2,
-      'p3': dpar_p3,
-      'x1': dpar['x1'][gptsparticle][:],
-      'x2': dpar['x2'][gptsparticle][:],
-      'x3': dpar['x3'][gptsparticle][:],
-      'Vframe_relative_to_sim': dpar['Vframe_relative_to_sim']
-    }
-
-    cprimebinned, hist, vx, vy, vz = compute_cprime_hist(dparsubset, dfields, fieldkey, vmax, dv)
     cor = compute_cor_from_cprime(cprimebinned, vx, vy, vz, dv, directionkey)
 
     return vx, vy, vz, totalPtcl, totalFieldpts, hist, cor
