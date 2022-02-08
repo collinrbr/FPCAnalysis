@@ -30,8 +30,6 @@ except:
     print("usage: " + sys.argv[0] + " analysisinputdir outmasterdir")
     sys.exit()
 
-outmasterdir = sys.argv[2]
-
 filenames = os.listdir(analysisinputdir)
 filenames = sorted(filenames)
 try:
