@@ -284,6 +284,7 @@ def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim
                 nft = len(futures)
                 _i = 0
                 while(_i < nft):
+                    popped_element = False
                     if(futures[_i].done()): #if done get result
                         print("Found done process,", _i, ", grabbing results...")
 
@@ -306,11 +307,12 @@ def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim
                         exists_idle = True
                         futures.pop(_i)
                         jobids.pop(_i)
+                        popped_element = True
                         nft -= 1
                         print('done with process,',_i,'ended scan pos-> x1: ',x1task[resultidx],' x2: ',x2task[resultidx],' y1: ',y1,' y2: ',y2,' z1: ', z1,' z2: ',z2,'num particles in box: ', _output[3])
-                    _i += 1
 
-
+                    if(popped_element):
+                        _i += 1
 
 
                 if(not(exists_idle)):
