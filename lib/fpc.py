@@ -307,11 +307,11 @@ def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim
                         exists_idle = True
                         futures.pop(_i)
                         jobids.pop(_i)
-                        popped_element = True
+                        popped_element = True #want to carefully iterate
                         nft -= 1
                         print('done with process,',_i,'ended scan pos-> x1: ',x1task[resultidx],' x2: ',x2task[resultidx],' y1: ',y1,' y2: ',y2,' z1: ', z1,' z2: ',z2,'num particles in box: ', _output[3])
 
-                    if(popped_element):
+                    if(not(popped_element)):
                         _i += 1
 
 
