@@ -41,7 +41,7 @@ print("Input files that are queued up:")
 print(filenames)
 
 for flnm in filenames:
-    analysisinputflnm = analysisinputdir+'analysisinputdir'+flnm
+    analysisinputflnm = analysisinputdir+'/'+flnm
     path,resultsdir,vmax,dv,numframe,dx,xlim,ylim,zlim = anl.analysis_input(flnm = analysisinputflnm)
 
     projfile = resultsdir+'/FPCnometadata.nc'
