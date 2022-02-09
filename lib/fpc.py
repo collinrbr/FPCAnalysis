@@ -176,6 +176,8 @@ def _grab_dpar_and_comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dpar_folder, d
 
     vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx, CEy, CEz = _comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dpar, dfields, vshock)
 
+    del dpar #process pool does not clean up memory
+
     print("This worker is done with x1: ",x1,' x2: ',x2,' y1: ',y1,' y2: ',y2,' z1: ', z1,' z2: ',z2)
 
     return vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx, CEy, CEz
