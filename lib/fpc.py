@@ -232,6 +232,7 @@ def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim
     """
     from concurrent.futures import ProcessPoolExecutor
     import time
+    import gc
 
     #set up box bounds
     if xlim is not None:
@@ -278,11 +279,13 @@ def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim
     #do multithreading
     with ProcessPoolExecutor(max_workers = max_workers) as executor:
         futures = []
+        jobidxs = []
 
         #queue up jobs
         for tskidx in range(0,len(x1task)): #if there is a free worker and job to do, give job
             print('queued scan pos-> x1: ',x1task[tskidx],' x2: ',x2task[tskidx],' y1: ',y1,' y2: ',y2,' z1: ', z1,' z2: ',z2)
             futures.append(executor.submit(_grab_dpar_and_comp_all_CEi, vmax, dv, x1task[tskidx], x2task[tskidx], y1, y2, z1, z2, dpar_folder, dfields, vshock))
+            jobidxs.append(tskidx)
         executor.shutdown() #will start to shut things down as resouces become free
 
         #wait until finished
@@ -290,25 +293,27 @@ def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim
         not_finished = True
         while(not_finished):
             time.sleep(1)
-            not_finished = False
-            for ft in futures:
-                if(not(ft.done())):
-                    not_finished = True
+            for _i in range(0,len(futures)):
+                if(not(futures[_i].done())):
+                    _output = futures[_i].result() #return vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx, CEy, CEz
+                    tskidx = jobidxs[_i]
+                    vx = _output[0]
+                    vy = _output[1]
+                    vz = _output[2]
+                    num_par_out[tskidx] = _output[3] #TODO: use consistent ordering of variables
+                    Hist_out[tskidx] = _output[5]
+                    CEx_out[tskidx] = _output[6]
+                    CEy_out[tskidx] = _output[7]
+                    CEz_out[tskidx] = _output[8]
+                    x_out[tskidx] = (x2task[tskidx]+x1task[tskidx])/2.
 
-        print("Grabbing Results...")
-        #get results
-        for _i in range(0,len(futures)):
-            _output = futures[_i].result() #return vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx, CEy, CEz
-            vx = _output[0]
-            vy = _output[1]
-            vz = _output[2]
-            num_par_out[_i] = _output[3] #TODO: use consistent ordering of variables
-            Hist_out[_i] = _output[5]
-            CEx_out[_i] = _output[6]
-            CEy_out[_i] = _output[7]
-            CEz_out[_i] = _output[8]
-            x_out[_i] = (x2task[_i]+x1task[_i])/2.
+                    #saves ram
+                    del futures[_i]
+                    del jobidxs[_i]
+                    gc.collect()
 
+                    if(len(futures) == 0)
+                not_finished = False
 
         return CEx_out, CEy_out, CEz_out, x_out, Hist_out, vx, vy, vz, num_par_out
 
