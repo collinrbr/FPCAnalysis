@@ -312,7 +312,7 @@ def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim
                     del jobidxs[_i]
                     gc.collect()
 
-                    if(len(futures) == 0)
+            if(len(futures) == 0):
                 not_finished = False
 
         return CEx_out, CEy_out, CEz_out, x_out, Hist_out, vx, vy, vz, num_par_out
