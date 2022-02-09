@@ -161,7 +161,72 @@ def _comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock)
 
     return vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx, CEy, CEz
 
-def _grab_dpar_and_comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dpar_folder, dfields, vshock):
+def project_CEi_hist(Hist, CEx, CEy, CEz):
+    """
+    Project to 2V
+    """
+    from array_ops import array_3d_to_2d
+
+    Histxy = []
+    Histxz = []
+    Histyz = []
+    for i in range(0,len(Hist)):
+        tempHistxy = array_3d_to_2d(Hist[i],'xy')
+        tempHistxz = array_3d_to_2d(Hist[i],'xz')
+        tempHistyz = array_3d_to_2d(Hist[i],'yz')
+        Histxy.append(tempHistxy)
+        Histxz.append(tempHistxz)
+        Histyz.append(tempHistyz)
+    Histxy = np.asarray(Histxy)
+    Histxz = np.asarray(Histxz)
+    Histyz = np.asarray(Histyz)
+
+    CExxy = []
+    CExxz = []
+    CExyz = []
+    for i in range(0,len(Hist)):
+        tempCExxy = array_3d_to_2d(CEx[i],'xy')
+        tempCExxz = array_3d_to_2d(CEx[i],'xz')
+        tempCExyz = array_3d_to_2d(CEx[i],'yz')
+        CExxy.append(tempCExxy)
+        CExxz.append(tempCExxz)
+        CExyz.append(tempCExyz)
+    CExxy = np.asarray(CExxy)
+    CExxz = np.asarray(CExxz)
+    CExyz = np.asarray(CExyz)
+
+    CEyxy = []
+    CEyxz = []
+    CEyyz = []
+    for i in range(0,len(Hist)):
+        tempCEyxy = array_3d_to_2d(CEy[i],'xy')
+        tempCEyxz = array_3d_to_2d(CEy[i],'xz')
+        tempCEyyz = array_3d_to_2d(CEy[i],'yz')
+        CEyxy.append(tempCEyxy)
+        CEyxz.append(tempCEyxz)
+        CEyyz.append(tempCEyyz)
+    CEyxy = np.asarray(CEyxy)
+    CEyxz = np.asarray(CEyxz)
+    CEyyz = np.asarray(CEyyz)
+
+    CEzxy = []
+    CEzxz = []
+    CEzyz = []
+    for i in range(0,len(Hist)):
+        tempCEzxy = array_3d_to_2d(CEz[i],'xy')
+        tempCEzxz = array_3d_to_2d(CEz[i],'xz')
+        tempCEzyz = array_3d_to_2d(CEz[i],'yz')
+        CEzxy.append(tempCEzxy)
+        CEzxz.append(tempCEzxz)
+        CEzyz.append(tempCEzyz)
+    CEzxy = np.asarray(CEzxy)
+    CEzxz = np.asarray(CEzxz)
+    CEzyz = np.asarray(CEzyz)
+
+    return Histxy,Histxz,Histyz,CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz
+
+
+def _grab_dpar_and_comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dpar_folder, dfields, vshock, Project=False):
     """
     Wrapper function that loads correct particle data from presliced data and computes FPC
 
@@ -176,11 +241,16 @@ def _grab_dpar_and_comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dpar_folder, d
 
     vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx, CEy, CEz = _comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dpar, dfields, vshock)
 
-    del dpar #process pool does not clean up memory
+    del dpar
 
-    print("This worker is done with x1: ",x1,' x2: ',x2,' y1: ',y1,' y2: ',y2,' z1: ', z1,' z2: ',z2)
+    print("This worker is done with x1: ")
+    if(project):
+        print("starting projection for ",x1,' x2: ',x2,' y1: ',y1,' y2: ',y2,' z1: ', z1,' z2: ',z2)
 
-    return vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx, CEy, CEz
+        Histxy,Histxz,Histyz,CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz = project_CEi_hist(Hist, CEx, CEy, CEz)
+        vx, vy, vz, totalPtcl, totalFieldpts, Histxy,Histxz,Histyz,CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz
+    else:
+        return vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx, CEy, CEz
 
 def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim=None, ylim=None, zlim=None, max_workers = 8):
     """
@@ -210,7 +280,7 @@ def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim
         upper and lower bounds of integration box
 
     Returns
-    -------
+    ------- #TODO: update return documentation
     CEx_out : 4d array
         CEx(x; vz, vy, vx) data
     CEy_out : 4d array
@@ -269,11 +339,24 @@ def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim
         x2 += dx
 
     #empty results array
-    CEx_out = [None for _tmp in x1task]
-    CEy_out = [None for _tmp in x1task]
-    CEz_out = [None for _tmp in x1task]
+    # CEx_out = [None for _tmp in x1task]
+    # CEy_out = [None for _tmp in x1task]
+    # CEz_out = [None for _tmp in x1task]
+    # Hist_out = [None for _tmp in x1task]
+    Histxy = [None for _tmp in x1task]
+    Histxz = [None for _tmp in x1task]
+    Histyz = [None for _tmp in x1task]
+    CExxy = [None for _tmp in x1task]
+    CExxz = [None for _tmp in x1task]
+    CExyz = [None for _tmp in x1task]
+    CEyxy = [None for _tmp in x1task]
+    CEyxz = [None for _tmp in x1task]
+    CEyyz = [None for _tmp in x1task]
+    CEzxy = [None for _tmp in x1task]
+    CEzxz = [None for _tmp in x1task]
+    CEzyz = [None for _tmp in x1task]
     x_out = [None for _tmp in x1task]
-    Hist_out = [None for _tmp in x1task]
+
     num_par_out = [None for _tmp in x1task]
 
     #do multithreading
@@ -284,7 +367,7 @@ def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim
         #queue up jobs
         for tskidx in range(0,len(x1task)): #if there is a free worker and job to do, give job
             print('queued scan pos-> x1: ',x1task[tskidx],' x2: ',x2task[tskidx],' y1: ',y1,' y2: ',y2,' z1: ', z1,' z2: ',z2)
-            futures.append(executor.submit(_grab_dpar_and_comp_all_CEi, vmax, dv, x1task[tskidx], x2task[tskidx], y1, y2, z1, z2, dpar_folder, dfields, vshock))
+            futures.append(executor.submit(_grab_dpar_and_comp_all_CEi, vmax, dv, x1task[tskidx], x2task[tskidx], y1, y2, z1, z2, dpar_folder, dfields, vshock,project=True))
             jobidxs.append(tskidx)
         executor.shutdown() #will start to shut things down as resouces become free
 
@@ -295,16 +378,25 @@ def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim
             time.sleep(1)
             for _i in range(0,len(futures)):
                 if(not(futures[_i].done())):
+                    #vx, vy, vz, totalPtcl, totalFieldpts, Histxy,Histxz,Histyz,CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz
                     _output = futures[_i].result() #return vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx, CEy, CEz
                     tskidx = jobidxs[_i]
                     vx = _output[0]
                     vy = _output[1]
                     vz = _output[2]
+                    Histxy[taskidx] = _output[5]
+                    Histxz[taskidx] = _output[6]
+                    Histyz[taskidx] = _output[7]
+                    CExxy[taskidx] = _output[8]
+                    CExxz[taskidx] = _output[9]
+                    CExyz[taskidx] = _output[10]
+                    CEyxy[taskidx] = _output[11]
+                    CEyxz[taskidx] = _output[12]
+                    CEyyz[taskidx] = _output[13]
+                    CEzxy[taskidx] = _output[14]
+                    CEzxz[taskidx] = _output[15]
+                    CEzyz[taskidx] = _output[16]
                     num_par_out[tskidx] = _output[3] #TODO: use consistent ordering of variables
-                    Hist_out[tskidx] = _output[5]
-                    CEx_out[tskidx] = _output[6]
-                    CEy_out[tskidx] = _output[7]
-                    CEz_out[tskidx] = _output[8]
                     x_out[tskidx] = (x2task[tskidx]+x1task[tskidx])/2.
 
                     #saves ram
@@ -315,7 +407,7 @@ def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim
             if(len(futures) == 0):
                 not_finished = False
 
-        return CEx_out, CEy_out, CEz_out, x_out, Hist_out, vx, vy, vz, num_par_out
+        return CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz,x_out, Histxy,Histxz,Histyz, vx, vy, vz, num_par_out
 
 
 

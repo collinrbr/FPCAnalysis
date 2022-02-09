@@ -172,22 +172,27 @@ if dx is None:
 if(num_threads == 1):
     CEx, CEy, CEz, x, Hist, vx, vy, vz, num_par = fpc.compute_correlation_over_x(dfields, dparticles, vmax, dv, dx, vshock, xlim, ylim, zlim)
 else:
-    CEx, CEy, CEz, x, Hist, vx, vy, vz, num_par = fpc.comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim=xlim, ylim=ylim, zlim=zlim, max_workers=num_threads)
+    CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz,x_out, Histxy,Histxz,Histyz, vx, vy, vz, num_par_out = fpc.comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim=xlim, ylim=ylim, zlim=zlim, max_workers=num_threads)
 
 #-------------------------------------------------------------------------------
 # compute energization
 #-------------------------------------------------------------------------------
 #for now, we project onto vx vy plane until integrating.
-CEx_xy = []
-CEy_xy = []
-CEz_xy = []
-for i in range(0,len(CEx)):
-    CEx_xy2d = ao.array_3d_to_2d(CEx[i],'xy')
-    CEy_xy2d = ao.array_3d_to_2d(CEy[i],'xy')
-    CEz_xy2d = ao.array_3d_to_2d(CEz[i],'xy')
-    CEx_xy.append(CEx_xy2d)
-    CEy_xy.append(CEy_xy2d)
-    CEz_xy.append(CEz_xy2d)
+try: #if already 2V, don't project, TODO: using try except is bad coding, do something else
+    CEx_xy = CExxy
+    CEy_xy = CEyxy
+    CEz_xy = CEzxy
+except:
+    CEx_xy = []
+    CEy_xy = []
+    CEz_xy = []
+    for i in range(0,len(CEx)):
+        CEx_xy2d = ao.array_3d_to_2d(CEx[i],'xy')
+        CEy_xy2d = ao.array_3d_to_2d(CEy[i],'xy')
+        CEz_xy2d = ao.array_3d_to_2d(CEz[i],'xy')
+        CEx_xy.append(CEx_xy2d)
+        CEy_xy.append(CEy_xy2d)
+        CEz_xy.append(CEz_xy2d)
 
 #compute energization from correlations
 enerCEx = anl.compute_energization_over_x(CEx_xy,dv)
@@ -201,6 +206,9 @@ print("Saving results in netcdf4 file...")
 inputdict = dnc.parse_input_file(path)
 params = dnc.build_params(inputdict,numframe)
 
-flnm = 'FPCnometadata.nc'
-dnc.save3Vdata(Hist, CEx, CEy, CEz, vx, vy, vz, x, enerCEx, enerCEy, enerCEz, dfields['Vframe_relative_to_sim'], params = params, num_par = num_par, filename = resultsdir+flnm)
+flnm = 'FPCnometadata'
+if(num_threads == 1):#For now, we pre project if multithreading
+    dnc.save3Vdata(Hist, CEx, CEy, CEz, vx, vy, vz, x, enerCEx, enerCEy, enerCEz, dfields['Vframe_relative_to_sim'], params = params, num_par = num_par, filename = resultsdir+flnm+'.nc')
+else:
+    dnc.save2Vdata(Histxy,Histxz,Histyz,CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz, vx, vy, vz, x, enerCEx, enerCEy, enerCEz, dfields['Vframe_relative_to_sim'], params = params, num_par = num_par, filename = resultsdir+flnm+'_2v.nc')
 print("Done! Please use findShock.py and addMetadata to assign metadata...")
