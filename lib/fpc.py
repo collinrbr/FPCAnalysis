@@ -175,13 +175,13 @@ def project_CEi_hist(Hist, CEx, CEy, CEz):
     CExxz = array_3d_to_2d(CEx,'xz')
     CExyz = array_3d_to_2d(CEx,'yz')
 
-    CEyxy = array_3d_to_2d(CEy[i],'xy')
-    CEyxz = array_3d_to_2d(CEy[i],'xz')
-    CEyyz = array_3d_to_2d(CEy[i],'yz')
+    CEyxy = array_3d_to_2d(CEy,'xy')
+    CEyxz = array_3d_to_2d(CEy,'xz')
+    CEyyz = array_3d_to_2d(CEy,'yz')
 
-    CEzxy = array_3d_to_2d(CEz[i],'xy')
-    CEzxz = array_3d_to_2d(CEz[i],'xz')
-    CEzyz = array_3d_to_2d(CEz[i],'yz')
+    CEzxy = array_3d_to_2d(CEz,'xy')
+    CEzxz = array_3d_to_2d(CEz,'xz')
+    CEzyz = array_3d_to_2d(CEz,'yz')
 
     return Histxy,Histxz,Histyz,CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz
 
