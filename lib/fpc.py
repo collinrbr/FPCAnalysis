@@ -339,6 +339,7 @@ def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim
         #wait until finished
         print("Done queueing up processes, waiting until done...")
         not_finished = True
+        num_completed = 0
         while(not_finished):
             time.sleep(1)
             for _i in range(0,len(futures)):
@@ -363,14 +364,16 @@ def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim
                     CEzyz[tskidx] = _output[16]
                     num_par_out[tskidx] = _output[3] #TODO: use consistent ordering of variables
                     x_out[tskidx] = (x2task[tskidx]+x1task[tskidx])/2.
+                    num_completed += 1
 
-                    #saves ram
-                    del futures[_i]
-                    del jobidxs[_i]
-                    gc.collect()
+                    # #saves ram
+                    # del futures[_i]
+                    # del jobidxs[_i]
+                    # gc.collect()
 
-            if(len(futures) == 0):
+            if(num_completed+1 ==len(jobidxs)):
                 not_finished = False
+                break
 
         return CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz,x_out, Histxy,Histxz,Histyz, vx, vy, vz, num_par_out
 
