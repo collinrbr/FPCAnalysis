@@ -167,61 +167,21 @@ def project_CEi_hist(Hist, CEx, CEy, CEz):
     """
     from array_ops import array_3d_to_2d
 
-    Histxy = []
-    Histxz = []
-    Histyz = []
-    for i in range(0,len(Hist)):
-        tempHistxy = array_3d_to_2d(Hist[i],'xy')
-        tempHistxz = array_3d_to_2d(Hist[i],'xz')
-        tempHistyz = array_3d_to_2d(Hist[i],'yz')
-        Histxy.append(tempHistxy)
-        Histxz.append(tempHistxz)
-        Histyz.append(tempHistyz)
-    Histxy = np.asarray(Histxy)
-    Histxz = np.asarray(Histxz)
-    Histyz = np.asarray(Histyz)
+    Histxy = array_3d_to_2d(Hist,'xy')
+    Histxz = array_3d_to_2d(Hist,'xz')
+    Histyz = array_3d_to_2d(Hist,'yz')
 
-    CExxy = []
-    CExxz = []
-    CExyz = []
-    for i in range(0,len(Hist)):
-        tempCExxy = array_3d_to_2d(CEx[i],'xy')
-        tempCExxz = array_3d_to_2d(CEx[i],'xz')
-        tempCExyz = array_3d_to_2d(CEx[i],'yz')
-        CExxy.append(tempCExxy)
-        CExxz.append(tempCExxz)
-        CExyz.append(tempCExyz)
-    CExxy = np.asarray(CExxy)
-    CExxz = np.asarray(CExxz)
-    CExyz = np.asarray(CExyz)
+    CExxy = array_3d_to_2d(CEx,'xy')
+    CExxz = array_3d_to_2d(CEx,'xz')
+    CExyz = array_3d_to_2d(CEx,'yz')
 
-    CEyxy = []
-    CEyxz = []
-    CEyyz = []
-    for i in range(0,len(Hist)):
-        tempCEyxy = array_3d_to_2d(CEy[i],'xy')
-        tempCEyxz = array_3d_to_2d(CEy[i],'xz')
-        tempCEyyz = array_3d_to_2d(CEy[i],'yz')
-        CEyxy.append(tempCEyxy)
-        CEyxz.append(tempCEyxz)
-        CEyyz.append(tempCEyyz)
-    CEyxy = np.asarray(CEyxy)
-    CEyxz = np.asarray(CEyxz)
-    CEyyz = np.asarray(CEyyz)
+    CEyxy = array_3d_to_2d(CEy[i],'xy')
+    CEyxz = array_3d_to_2d(CEy[i],'xz')
+    CEyyz = array_3d_to_2d(CEy[i],'yz')
 
-    CEzxy = []
-    CEzxz = []
-    CEzyz = []
-    for i in range(0,len(Hist)):
-        tempCEzxy = array_3d_to_2d(CEz[i],'xy')
-        tempCEzxz = array_3d_to_2d(CEz[i],'xz')
-        tempCEzyz = array_3d_to_2d(CEz[i],'yz')
-        CEzxy.append(tempCEzxy)
-        CEzxz.append(tempCEzxz)
-        CEzyz.append(tempCEzyz)
-    CEzxy = np.asarray(CEzxy)
-    CEzxz = np.asarray(CEzxz)
-    CEzyz = np.asarray(CEzyz)
+    CEzxy = array_3d_to_2d(CEz[i],'xy')
+    CEzxz = array_3d_to_2d(CEz[i],'xz')
+    CEzyz = array_3d_to_2d(CEz[i],'yz')
 
     return Histxy,Histxz,Histyz,CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz
 
