@@ -27,6 +27,7 @@ try:
 
 except:
     print("This script queues up generateFPC.py on all analysis inputs in specified folder")
+    print("Warning: this script assumes the user has presliced the data...")
     print("usage: " + sys.argv[0] + " analysisinputdir numcores(opt) logdir(opt)")
     sys.exit()
 
