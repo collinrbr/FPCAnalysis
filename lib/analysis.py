@@ -655,7 +655,7 @@ def get_delta_fields(dfields,B0):
 #
 #     return ddeltaperpfields
 
-def wlt(t,data,w=6,klim=None,retstep=1):
+def wlt(t,data,w=6,klim=None,retstep=1,powerTwoSpace=False):
     """
     Peforms wavelet transform using morlet wavelet on data that is a function of t i.e. data(t)
 
@@ -670,6 +670,8 @@ def wlt(t,data,w=6,klim=None,retstep=1):
     retstep : int, opt
         spacing between samples of k in returned by wavelet transform
         used mostly to save memory as wavelet transform returns dense sampling of k
+    powerTwoSpace : bool, optimize
+        if true, will space widths using powers of two
     """
     from scipy import signal
     from lib.array_ops import find_nearest
@@ -677,8 +679,22 @@ def wlt(t,data,w=6,klim=None,retstep=1):
     dt = t[1]-t[0]
     fs = 1./dt
 
-    freq = np.linspace(.01,fs/2.,len(data))
-    widths = w*fs / (2*freq*np.pi)
+    if(powerTwoSpace): #from Torrence et al 1997 (practical guide to wavelet analysis)
+        s0 = dt*2.
+        delta_j = np.log2(len(data)*dt/s0)/(len(data)) #guess for now
+        print('delta_j, ', delta_j)
+        freq = []
+        for _j in range(0,len(data)):
+            freq.append(s0*2.**(_j*delta_j))
+        freq = np.asarray(freq)
+        widths = w*fs/(2*freq*np.pi)
+
+    else: #default from scipy's example
+        #TOOD: 1/.01 should stricly be larger than fs/2
+        freq = np.linspace(.01,fs/2.,len(data))
+        widths = w*fs / (2*freq*np.pi)
+
+    #print(widths)
 
     try:
         cwtm = signal.cwt(data, signal.morlet2, widths, w=w)

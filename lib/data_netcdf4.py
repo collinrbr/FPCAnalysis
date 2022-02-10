@@ -149,6 +149,10 @@ def save2Vdata(Histxy,Histxz,Histyz,CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CE
     """
     WARNING: DOES NOT NORMALIZE CEi
     """
+
+    from netCDF4 import Dataset
+    from datetime import datetime
+
     # open a netCDF file to write
     ncout = Dataset(filename, 'w', format='NETCDF4')
 
