@@ -166,7 +166,7 @@ def save2Vdata(Histxy,Histxz,Histyz,CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CE
 
     ncout.description = 'dHybridR MLA data 2V format'
     ncout.generationtime = str(datetime.now())
-    ncout.version = dnc.get_git_head()
+    ncout.version = get_git_head()
 
     #make dimensions that dependent data must 'match'
     ncout.createDimension('nx', None)  # NONE <-> unlimited TODO: make limited if it saves memory or improves compression?

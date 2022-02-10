@@ -672,25 +672,29 @@ def wlt(t,data,w=6,klim=None,retstep=1,powerTwoSpace=False):
         used mostly to save memory as wavelet transform returns dense sampling of k
     powerTwoSpace : bool, optimize
         if true, will space widths using powers of two
+
+    #TODO: add returns
     """
     from scipy import signal
     from lib.array_ops import find_nearest
 
     dt = t[1]-t[0]
-    fs = 1./dt
 
-    if(powerTwoSpace): #from Torrence et al 1997 (practical guide to wavelet analysis)
-        s0 = dt*2.
-        delta_j = np.log2(len(data)*dt/s0)/(len(data)) #guess for now
+    if(powerTwoSpace): #from Torrence et al 1997 (practical guide to wavelet analysis) (suggested to use different spacing)
+                       #still WIP, use caution when using
+        s0 = 1.*dt
+        J = len(data)
+        delta_j = np.log2(len(data)*dt/s0)/(J) #guess for now
         print('delta_j, ', delta_j)
-        freq = []
-        for _j in range(0,len(data)):
-            freq.append(s0*2.**(_j*delta_j))
-        freq = np.asarray(freq)
-        widths = w*fs/(2*freq*np.pi)
+        widths = []
+        for _j in range(J-1,-1,-1):
+            widths.append(s0*2.**(_j*delta_j))
+        widths = np.asarray(widths)
+        freq = w/(2*widths*np.pi*s0)
 
     else: #default from scipy's example
         #TOOD: 1/.01 should stricly be larger than fs/2
+        fs = 1./dt
         freq = np.linspace(.01,fs/2.,len(data))
         widths = w*fs / (2*freq*np.pi)
 
@@ -716,6 +720,11 @@ def wlt(t,data,w=6,klim=None,retstep=1,powerTwoSpace=False):
     if(retstep != 1):
         k=k[::retstep]
         cwtm=cwtm[::retstep]
+
+    #normalize
+    for _idx in range(0,len(cwtm[:,0])):
+        cwtm[_idx,:] *= (k[_idx])**0.5
+
 
     return k, cwtm
 
