@@ -165,7 +165,7 @@ def project_CEi_hist(Hist, CEx, CEy, CEz):
     """
     Project to 2V
     """
-    from array_ops import array_3d_to_2d
+    from lib.array_ops import array_3d_to_2d
 
     Histxy = array_3d_to_2d(Hist,'xy')
     Histxz = array_3d_to_2d(Hist,'xz')
