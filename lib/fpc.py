@@ -134,12 +134,14 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
         }
 
         cprimebinned, hist, vx, vy, vz = compute_cprime_hist(dparsubset, dfields, fieldkey, vmax, dv)
+        del dparsubset
 
     else:
         dpar['p1'] -= vshock #TODO: clean this up
         cprimebinned, hist, vx, vy, vz = compute_cprime_hist(dpar, dfields, fieldkey, vmax, dv)
 
     cor = compute_cor_from_cprime(cprimebinned, vx, vy, vz, dv, directionkey)
+    del cprimebinned
 
     return vx, vy, vz, totalPtcl, totalFieldpts, hist, cor
 
@@ -814,6 +816,7 @@ def compute_cprime_hist(dparticles, dfields, fieldkey, vmax, dv):
 
     hist,_ = np.histogramdd((dparticles['p3'], dparticles['p2'], dparticles['p1']), bins=[vzbins, vybins, vxbins])
     cprimebinned,_ = np.histogramdd((dparticles['p3'], dparticles['p2'], dparticles['p1']), bins=[vzbins, vybins, vxbins], weights=cprimew)
+    del cprimew
 
     # make the bins 3d arrays
     _vx = np.zeros((len(vz), len(vy), len(vx)))
