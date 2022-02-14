@@ -907,8 +907,8 @@ def xyz_wlt_fft_filter(kz,ky,kx,xx,bxkzkykxxx,bykzkykxxx,bzkzkykxxx,
     #inverse transform
     for key in keys:
         #take iwlt (inverse transform in xx direction)
-        for _kzidx in len(freq_space[key][:,0,0,0]):
-            for _kyidx in len(freq_space[key][_kzidx,:,0,0]):
+        for _kzidx in range(0,len(freq_space[key][:,0,0,0])):
+            for _kyidx in range(0,len(freq_space[key][_kzidx,:,0,0])):
                 filteredfields[key][_kzidx,_kyidx,:]  = midpass_wlt_filter(xx,freq_space[key][_kzidx,_kyidx,:,:],kx_center0,kx_width0)
 
         #take ifft2 (inverse transform in yy/zz direction)
