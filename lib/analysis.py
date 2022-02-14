@@ -915,8 +915,8 @@ def xyz_wlt_fft_filter(kz,ky,kx,xx,bxkzkykxxx,bykzkykxxx,bzkzkykxxx,
         filteredfields[key] = np.swapaxes(filteredfields[key], 0, 2) #change index order from (kz,ky,x) to (x,ky,kz)
         filteredfields[key] = np.swapaxes(filteredfields[key], 1, 2) #change index order from  (x,ky,kz) to (x,kz,ky)
         filteredfields[key] = _iffttransform_in_yz(filteredfields,key) #note: input index order is (x,kz,ky) and output is (x,z,y)
-        dfieldsfiltered[key] = np.swapaxes(dfieldsfiltered[key], 0, 2) #change index order from (x,z,y) to (y,z,x)
-        dfieldsfiltered[key] = np.swapaxes(dfieldsfiltered[key], 0, 1) #change index order from (y,z,x) to (z,y,x)
+        filteredfields[key] = np.swapaxes(filteredfields[key], 0, 2) #change index order from (x,z,y) to (y,z,x)
+        filteredfields[key] = np.swapaxes(filteredfields[key], 0, 1) #change index order from (y,z,x) to (z,y,x)
         filteredfields[key] = np.real(filteredfields[key])
 
     return filteredfields
