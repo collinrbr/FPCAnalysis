@@ -336,14 +336,22 @@ def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim
             print('queued scan pos-> x1: ',x1task[tskidx],' x2: ',x2task[tskidx],' y1: ',y1,' y2: ',y2,' z1: ', z1,' z2: ',z2)
             futures.append(executor.submit(_grab_dpar_and_comp_all_CEi, vmax, dv, x1task[tskidx], x2task[tskidx], y1, y2, z1, z2, dpar_folder, dfields, vshock, project=True))
             jobidxs.append(tskidx)
-        executor.shutdown() #will start to shut things down as resouces become free
 
         #wait until finished
         print("Done queueing up processes, waiting until done...")
         not_finished = True
+        while(not_finished):
+            not_finished = False
+            for _i in range(0,len(futures)):
+                if(not(futures[_i].done())):
+                    not_finished = True
+                if(not_finished):
+                    gc.collect()
+                    time.sleep(100.)
+
+        print("Done with processes! Grabbing results!")
         num_completed = 0
         while(not_finished):
-            time.sleep(1)
             for _i in range(0,len(futures)):
             #    if(futures[_i].done()):
                     print("Got result for x1: ",x1task[tskidx]," x2: ",x2task[tskidx])
@@ -376,6 +384,8 @@ def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim
             #if(num_completed+1 ==len(jobidxs)):
             #    not_finished = False
             break
+
+        executor.shutdown() #will start to shut things down as resouces become free
 
         return CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz,x_out, Histxy,Histxz,Histyz, vx, vy, vz, num_par_out
 
