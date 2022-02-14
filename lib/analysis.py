@@ -877,6 +877,8 @@ def xyz_wlt_fft_filter(xx,bxkzkykxxx,bykzkykxxx,bzkzkykxxx,
     #
     # dfieldsfiltered = deepcopy(dfields)
 
+    from lib.array_ops import find_nearest
+
     keys = {'ex','ey','ez','bx','by','bz'}
 
     freq_space = {'ex':exkzkykxxx,'ey':eykzkykxxx,'ez':ezkzkykxxx,'bx':bxkzkykxxx,'by':bykzkykxxx,'bz':bzkzkykxxx}
