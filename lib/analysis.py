@@ -861,21 +861,68 @@ def yz_fft_filter(dfields,ky0,kz0):
     #take ifft
     for key in keys:
         dfieldsfiltered[key] = _iffttransform_in_yz(dfieldsfiltered,key) #note: input index order is (x,kz,ky) and output is (x,z,y)
-        dfieldsfiltered[key] = np.swapaxes(dfieldsfiltered[key], 0, 2) #change index order from (x,z,y) to (z,y,x)
-        dfieldsfiltered[key] = np.swapaxes(dfieldsfiltered[key], 0, 1)
+        dfieldsfiltered[key] = np.swapaxes(dfieldsfiltered[key], 0, 2) #change index order from (x,z,y) to (y,z,x)
+        dfieldsfiltered[key] = np.swapaxes(dfieldsfiltered[key], 0, 1) #change index order from (y,z,x) to (z,y,x)
         dfieldsfiltered[key] = np.real(dfieldsfiltered[key])
 
     return dfieldsfiltered
 
-def xyz_wlt_fft_filter(dfields,kx_center0,kx_width0,ky0,kz0):
+def xyz_wlt_fft_filter(xx,bxkzkykxxx,bykzkykxxx,bzkzkykxxx,
+                exkzkykxxx,bykzkykxxx,bzkzkykxxx
+                kx_center0,kx_width0,ky0,kz0,dontfilter=False):
     """
+    dontfilter is used to debug
     """
-    from copy import deepcopy
-
-    dfieldsfiltered = deepcopy(dfields)
+    # from copy import deepcopy
+    #
+    # dfieldsfiltered = deepcopy(dfields)
 
     keys = {'ex','ey','ez','bx','by','bz'}
 
+    freq_space = {'ex':exkzkykxxx,'ey':eykzkykxxx,'ez':ezkzkykxxx,'bx':bxkzkykxxx,'by':bykzkykxxx,'bz':bzkzkykxxx}
+
+    ky0idx = find_nearest(ky, ky0)
+    kz0idx = find_nearest(kz, kz0)
+
+    #make dictionary
+    filteredfields = {} #TODO: use consistent naming between similar functions
+    for key in keys:
+        filteredfields[key] = np.zeros((len(freq_space[key][:,0,0,0]),len(freq_space[key][0,:,0,0]),len(freq_space[key][0,0,0,:]))) #makes empty arrays of length of zz by yy by xx (warning, length of kx is technically arbitrary as it is the product of the wavelet transform)
+
+    #to test/debug inverse transform, we inverse transform without filterings
+    if(not(dontfilter)):
+        for key in keys:
+            #filter xx
+            for _kzidx in range(0,len(freq_space[key][:,0,0,0])):
+                for _kyidx in range(0,len(freq_space[key][_kzidx,:,0,0])):
+                        for _kxidx in range(0,len(freq_space[key][_kzidx,_kyidx,:,0])):
+                            for _xxidx in range(0,len(freq_space[key][_kzidx,_kyidx,_kxidx,:])):
+                                if(not(_kidx <= kidx_upper and _kidx >=kidx_lower)):
+                                     freq_space[key][_kzidx,_kyidx,_kxidx,_xxidx] = 0.
+                                if(not(_kyidx == ky0idx and _kzidx == kz0idx)):
+                                    freq_space[key][_kzidx,_kyidx,_kxidx,_xxidx]  = 0.
+
+    #inverse transform
+    for key in keys:
+        #take iwlt (inverse transform in xx direction)
+        for _kzidx in len(freq_space[key][:,0,0,0]):
+            for _kyidx in len(freq_space[key][_kzidx,:,0,0]):
+                filteredfields[key][_kzidx,_kyidx,:]  = midpass_wlt_filter(xx,freq_space[key][_kzidx,_kyidx,:,:],kx_center0,kx_width0)
+
+        #take ifft2 (inverse transform in yy/zz direction)
+        filteredfields[key] = np.swapaxes(filteredfields[key], 0, 2) #change index order from (kz,ky,x) to (x,ky,kz)
+        filteredfields[key] = np.swapaxes(filteredfields[key], 1, 2) #change index order from  (x,ky,kz) to (x,kz,ky)
+        filteredfields[key] = _iffttransform_in_yz(filteredfields,key) #note: input index order is (x,kz,ky) and output is (x,z,y)
+        dfieldsfiltered[key] = np.swapaxes(dfieldsfiltered[key], 0, 2) #change index order from (x,z,y) to (y,z,x)
+        dfieldsfiltered[key] = np.swapaxes(dfieldsfiltered[key], 0, 1) #change index order from (y,z,x) to (z,y,x)
+        filteredfields[key] = np.real(filteredfields[key])
+
+    return filteredfields
+
+def _iffttransform_in_yz(fftdfields,fieldkey):
+    """
+    Takes f(x,kz,ky) and computes f(x,z,y) using a 2d fft for some given field
+    """
 
 
 def find_potential_wavemodes(dfields,fieldkey,xpos,cutoffconst=.1):
