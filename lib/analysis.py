@@ -671,7 +671,7 @@ def wlt(t,data,w=6,klim=None,retstep=1,powerTwoSpace=False):
         spacing between samples of k in returned by wavelet transform
         used mostly to save memory as wavelet transform returns dense sampling of k
     powerTwoSpace : bool, optimize
-        if true, will space widths using powers of two
+        if true, will space widths using powers of two (not well tested, avoid use)
 
     #TODO: add returns
     """
@@ -727,6 +727,68 @@ def wlt(t,data,w=6,klim=None,retstep=1,powerTwoSpace=False):
 
 
     return k, cwtm
+
+def iwlt_noscale(t,k,cwtdata):
+    """
+    Computes inverse wavelet transform, without preserving scale
+    i.e given f(t) with w.l.t. W{f(t)}, this function will return A*f(t) = W^(-1){W{f(t)}} where A is some unknown constant
+
+    This function is meant to only be used until we learn how to implement a WLT that preserves this scale.
+    """
+
+    N = len(t)
+    J = len(k)
+
+    f_t = []
+    for _n in range(0,N):
+        f_ti = 0.
+        for _kidx in range(0,len(k)):
+            f_ti += np.real(cwtdata[_kidx,_n])/k[_kidx]**1.
+        f_t.append(f_ti)
+    f_t = np.asarray(f_t)
+
+    return f_t
+
+def force_find_iwlt_scale(t,w=6):
+    """
+    Finds the inverse wlt scale empirically for a morlet wave
+    """
+    t = np.asarray(t)
+    dt = t[1]-t[0]
+    _yy = np.cos(10.*dt*t)
+
+
+    k, cwt = anl.wlt(t,_yy)
+    _yyreconstructed = iwlt_noscale(t,k,cwt)
+
+    ratio = np.sum(np.abs(_yy))/np.sum(np.abs(_yyreconstructed)) #take ratio of integrals of abs(data)
+
+    return ratio
+
+def iwlt(t,k,cwtdata,w=6):
+    #TODO: stop using force_find_iwlt scale
+
+    f_t = iwlt_noscale(t,k,cwtdata)
+    ratio = force_find_iwlt_scale(t,w=6)
+    f_t = ratio*f_t
+
+    return f_t
+
+def midpass_wlt_filter(t,data,k_filter_center,k_filter_width):
+    from lib.array_ops import find_nearest
+    k, cwt = anl.wlt(t,data)
+
+    kidx_upper = find_nearest(k,k_filter_center+k_filter_width/2.)
+    kidx_lower = find_nearest(k,k_filter_center-k_filter_width/2.)
+
+    for _tidx in range(0,len(cwt[0,:])):
+        for _kidx in range(0,len(cwt[:,0])):
+            if(not(_kidx <= kidx_upper and _kidx >=kidx_lower)):
+                 cwt[_kidx,_tidx] = 0.
+
+    data = iwlt(t,k,cwt)
+
+    return data
 
 def _ffttransform_in_yz(dfields,fieldkey):
     """
@@ -804,6 +866,15 @@ def yz_fft_filter(dfields,ky0,kz0):
         dfieldsfiltered[key] = np.real(dfieldsfiltered[key])
 
     return dfieldsfiltered
+
+def xyz_wlt_fft_filter(dfields,kx_center0,kx_width0,ky0,kz0):
+    """
+    """
+    from copy import deepcopy
+
+    dfieldsfiltered = deepcopy(dfields)
+
+    keys = {'ex','ey','ez','bx','by','bz'}
 
 
 
