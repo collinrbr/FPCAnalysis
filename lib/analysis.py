@@ -867,7 +867,7 @@ def yz_fft_filter(dfields,ky0,kz0):
 
     return dfieldsfiltered
 
-def xyz_wlt_fft_filter(xx,bxkzkykxxx,bykzkykxxx,bzkzkykxxx,
+def xyz_wlt_fft_filter(kz,ky,kx,xx,bxkzkykxxx,bykzkykxxx,bzkzkykxxx,
                 exkzkykxxx,eykzkykxxx,ezkzkykxxx,
                 kx_center0,kx_width0,ky0,kz0,dontfilter=False):
     """
