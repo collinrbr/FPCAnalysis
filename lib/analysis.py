@@ -758,7 +758,7 @@ def force_find_iwlt_scale(t,w=6):
     _yy = np.cos(10.*dt*t)
 
 
-    k, cwt = anl.wlt(t,_yy)
+    k, cwt = wlt(t,_yy)
     _yyreconstructed = iwlt_noscale(t,k,cwt)
 
     ratio = np.sum(np.abs(_yy))/np.sum(np.abs(_yyreconstructed)) #take ratio of integrals of abs(data)
@@ -776,7 +776,7 @@ def iwlt(t,k,cwtdata,w=6):
 
 def midpass_wlt_filter(t,data,k_filter_center,k_filter_width):
     from lib.array_ops import find_nearest
-    k, cwt = anl.wlt(t,data)
+    k, cwt = wlt(t,data)
 
     kidx_upper = find_nearest(k,k_filter_center+k_filter_width/2.)
     kidx_lower = find_nearest(k,k_filter_center-k_filter_width/2.)
