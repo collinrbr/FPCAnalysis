@@ -695,7 +695,7 @@ def wlt(t,data,w=6,klim=None,retstep=1,powerTwoSpace=False):
     else: #default from scipy's example
         #TOOD: 1/.01 should stricly be larger than fs/2
         fs = 1./dt
-        freq = np.linspace(.01,fs/2.,len(data))
+        freq = np.linspace(.01,fs/2.,int(len(data)/retstep))
         widths = w*fs / (2*freq*np.pi)
 
     #print(widths)
@@ -717,9 +717,9 @@ def wlt(t,data,w=6,klim=None,retstep=1,powerTwoSpace=False):
         k = k[loweridx:upperkidx+1]
         cwtm = cwtm[loweridx:upperkidx+1,:]
 
-    if(retstep != 1):
-        k=k[::retstep]
-        cwtm=cwtm[::retstep]
+    # if(retstep != 1):
+    #     k=k[::retstep]
+    #     cwtm=cwtm[::retstep]
 
     #normalize
     for _idx in range(0,len(cwtm[:,0])):
