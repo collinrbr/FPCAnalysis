@@ -342,48 +342,73 @@ def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim
         not_finished = True
         while(not_finished):
             not_finished = False
-            for _i in range(0,len(futures)):
-                if(not(futures[_i].done())):
-                    not_finished = True
-                if(not_finished):
-                    gc.collect()
-                    time.sleep(100.)
+            if(len(futures) >= 0):
+                for _i in range(0,len(futures)):
+                    if(not(futures[_i].done())):
+                        not_finished = True
+                        print("Got result for x1: ",x1task[tskidx]," x2: ",x2task[tskidx])
+                        _output = futures[_i].result() #return vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx, CEy, CEz
+                        tskidx = jobidxs[_i]
+                        vx = _output[0]
+                        vy = _output[1]
+                        vz = _output[2]
+                        Histxy[tskidx] = _output[5]
+                        Histxz[tskidx] = _output[6]
+                        Histyz[tskidx] = _output[7]
+                        CExxy[tskidx] = _output[8]
+                        CExxz[tskidx] = _output[9]
+                        CExyz[tskidx] = _output[10]
+                        CEyxy[tskidx] = _output[11]
+                        CEyxz[tskidx] = _output[12]
+                        CEyyz[tskidx] = _output[13]
+                        CEzxy[tskidx] = _output[14]
+                        CEzxz[tskidx] = _output[15]
+                        CEzyz[tskidx] = _output[16]
+                        num_par_out[tskidx] = _output[3] #TODO: use consistent ordering of variables
+                        x_out[tskidx] = (x2task[tskidx]+x1task[tskidx])/2.
+                        num_completed += 1
 
-        print("Done with processes! Grabbing results!")
-        num_completed = 0
-        while(not_finished):
-            for _i in range(0,len(futures)):
-            #    if(futures[_i].done()):
-                    print("Got result for x1: ",x1task[tskidx]," x2: ",x2task[tskidx])
-                    _output = futures[_i].result() #return vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx, CEy, CEz
-                    tskidx = jobidxs[_i]
-                    vx = _output[0]
-                    vy = _output[1]
-                    vz = _output[2]
-                    Histxy[tskidx] = _output[5]
-                    Histxz[tskidx] = _output[6]
-                    Histyz[tskidx] = _output[7]
-                    CExxy[tskidx] = _output[8]
-                    CExxz[tskidx] = _output[9]
-                    CExyz[tskidx] = _output[10]
-                    CEyxy[tskidx] = _output[11]
-                    CEyxz[tskidx] = _output[12]
-                    CEyyz[tskidx] = _output[13]
-                    CEzxy[tskidx] = _output[14]
-                    CEzxz[tskidx] = _output[15]
-                    CEzyz[tskidx] = _output[16]
-                    num_par_out[tskidx] = _output[3] #TODO: use consistent ordering of variables
-                    x_out[tskidx] = (x2task[tskidx]+x1task[tskidx])/2.
-                    num_completed += 1
+                        #saves ram
+                        print("Deleting future for x1: ",x1task[tskidx]," x2: ",x2task[tskidx])
+                        del futures[_i]
+                        del jobidxs[_i]
+                        gc.collect()
 
-                    # #saves ram
-                    # del futures[_i]
-                    # del jobidxs[_i]
-                    # gc.collect()
-
-            #if(num_completed+1 ==len(jobidxs)):
-            #    not_finished = False
-            break
+        print("Done with processes!")
+        # num_completed = 0
+        # while(not_finished):
+        #     for _i in range(0,len(futures)):
+        #     #    if(futures[_i].done()):
+        #             print("Got result for x1: ",x1task[tskidx]," x2: ",x2task[tskidx])
+        #             _output = futures[_i].result() #return vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx, CEy, CEz
+        #             tskidx = jobidxs[_i]
+        #             vx = _output[0]
+        #             vy = _output[1]
+        #             vz = _output[2]
+        #             Histxy[tskidx] = _output[5]
+        #             Histxz[tskidx] = _output[6]
+        #             Histyz[tskidx] = _output[7]
+        #             CExxy[tskidx] = _output[8]
+        #             CExxz[tskidx] = _output[9]
+        #             CExyz[tskidx] = _output[10]
+        #             CEyxy[tskidx] = _output[11]
+        #             CEyxz[tskidx] = _output[12]
+        #             CEyyz[tskidx] = _output[13]
+        #             CEzxy[tskidx] = _output[14]
+        #             CEzxz[tskidx] = _output[15]
+        #             CEzyz[tskidx] = _output[16]
+        #             num_par_out[tskidx] = _output[3] #TODO: use consistent ordering of variables
+        #             x_out[tskidx] = (x2task[tskidx]+x1task[tskidx])/2.
+        #             num_completed += 1
+        #
+        #             # #saves ram
+        #             # del futures[_i]
+        #             # del jobidxs[_i]
+        #             # gc.collect()
+        #
+        #     #if(num_completed+1 ==len(jobidxs)):
+        #     #    not_finished = False
+        #     break
 
         executor.shutdown() #will start to shut things down as resouces become free
 
