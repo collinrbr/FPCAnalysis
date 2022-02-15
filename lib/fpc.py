@@ -347,9 +347,9 @@ def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim
                     if(not(futures[_i].done())):
                         not_finished = True
                     if(futures[_i].done()):
+                        tskidx = jobidxs[_i]
                         print("Got result for x1: ",x1task[tskidx]," x2: ",x2task[tskidx])
                         _output = futures[_i].result() #return vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx, CEy, CEz
-                        tskidx = jobidxs[_i]
                         vx = _output[0]
                         vy = _output[1]
                         vz = _output[2]
@@ -367,13 +367,15 @@ def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim
                         CEzyz[tskidx] = _output[16]
                         num_par_out[tskidx] = _output[3] #TODO: use consistent ordering of variables
                         x_out[tskidx] = (x2task[tskidx]+x1task[tskidx])/2.
-                        num_completed += 1
+                        #num_completed += 1
 
                         #saves ram
                         print("Deleting future for x1: ",x1task[tskidx]," x2: ",x2task[tskidx])
                         del futures[_i]
                         del jobidxs[_i]
                         gc.collect()
+                        print("Done deleting (and garbage collecting) future for x1: ",x1task[tskidx]," x2: ",x2task[tskidx])
+                    time.sleep(10.)
 
         print("Done with processes!")
         # num_completed = 0
