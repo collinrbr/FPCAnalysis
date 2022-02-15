@@ -347,7 +347,6 @@ def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim
                     if(not(futures[_i].done())):
                         not_finished = True
                     if(futures[_i].done()):
-                        not_finished = True
                         print("Got result for x1: ",x1task[tskidx]," x2: ",x2task[tskidx])
                         _output = futures[_i].result() #return vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx, CEy, CEz
                         tskidx = jobidxs[_i]
