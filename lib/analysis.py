@@ -749,7 +749,7 @@ def iwlt_noscale(t,k,cwtdata):
 
     return f_t
 
-def force_find_iwlt_scale(t,w=6,restep=1):
+def force_find_iwlt_scale(t,w=6,retstep=1):
     """
     Finds the inverse wlt scale empirically for a morlet wave
     """
