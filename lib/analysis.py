@@ -749,7 +749,7 @@ def iwlt_noscale(t,k,cwtdata):
 
     return f_t
 
-def force_find_iwlt_scale(t,w=6):
+def force_find_iwlt_scale(t,w=6,restep=1):
     """
     Finds the inverse wlt scale empirically for a morlet wave
     """
@@ -758,7 +758,7 @@ def force_find_iwlt_scale(t,w=6):
     _yy = np.cos(10.*dt*t)
 
 
-    k, cwt = wlt(t,_yy)
+    k, cwt = wlt(t,_yy,retstep=restep)
     _yyreconstructed = iwlt_noscale(t,k,cwt)
 
     ratio = np.sum(np.abs(_yy))/np.sum(np.abs(_yyreconstructed)) #take ratio of integrals of abs(data)
@@ -769,7 +769,8 @@ def iwlt(t,k,cwtdata,w=6):
     #TODO: stop using force_find_iwlt scale
 
     f_t = iwlt_noscale(t,k,cwtdata)
-    ratio = force_find_iwlt_scale(t,w=6)
+    retstep = int(len(t)/len(k))
+    ratio = force_find_iwlt_scale(t,w=6,retstep=retstep)
     f_t = ratio*f_t
 
     return f_t
