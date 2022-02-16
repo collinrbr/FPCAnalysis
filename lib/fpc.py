@@ -328,7 +328,7 @@ def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim
 
     #do multithreading
     with ProcessPoolExecutor(max_workers = max_workers) as executor:
-        futures = []
+        #futures = []
         jobidxs = []
 
         #queue up jobs
@@ -343,10 +343,13 @@ def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim
         while(not_finished):
             not_finished = False
             if(len(futures) >= 0):
-                for _i in range(0,len(futures)):
+                #for _i in range(0,len(futures)):
+                _i = 0
+                while(_i < len(futures)):
                     if(not(futures[_i].done())):
                         not_finished = True
-                    if(futures[_i].done()):
+                        _i += 1
+                    else(futures[_i].done()):
                         tskidx = jobidxs[_i]
                         print("Got result for x1: ",x1task[tskidx]," x2: ",x2task[tskidx])
                         _output = futures[_i].result() #return vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx, CEy, CEz
@@ -373,6 +376,7 @@ def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim
                         print("Deleting future for x1: ",x1task[tskidx]," x2: ",x2task[tskidx])
                         del futures[_i]
                         del jobidxs[_i]
+
                         gc.collect()
                         print("Done deleting (and garbage collecting) future for x1: ",x1task[tskidx]," x2: ",x2task[tskidx])
                     time.sleep(10.)
