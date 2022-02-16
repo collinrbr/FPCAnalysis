@@ -915,7 +915,7 @@ def xyz_wlt_fft_filter(kz,ky,kx,xx,bxkzkykxxx,bykzkykxxx,bzkzkykxxx,
         nkx = int(len(freq_space[key][0,0,:,0])/2) #need to rebuild signal from only positive kxs
         for _kzidx in range(0,len(freq_space[key][:,0,0,0])):
             for _kyidx in range(0,len(freq_space[key][_kzidx,:,0,0])):
-                filteredfields[key][_kzidx,_kyidx,:]  = iwlt(xx,kx,freq_space[key][_kzidx,_kyidx,nkx:,:])
+                filteredfields[key][_kzidx,_kyidx,:]  = iwlt(xx,kx[nkx:],freq_space[key][_kzidx,_kyidx,nkx:,:])
 
         #take ifft2 (inverse transform in yy/zz direction)
         filteredfields[key] = np.swapaxes(filteredfields[key], 0, 2) #change index order from (kz,ky,x) to (x,ky,kz)
