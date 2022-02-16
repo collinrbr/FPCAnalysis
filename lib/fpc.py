@@ -208,13 +208,16 @@ def _grab_dpar_and_comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dpar_folder, d
 
     print("This worker is done with x1: ",x1,' x2: ',x2,' y1: ',y1,' y2: ',y2,' z1: ', z1,' z2: ',z2)
     if(project):
+        import sys
         print("starting projection for ",x1,' x2: ',x2,' y1: ',y1,' y2: ',y2,' z1: ', z1,' z2: ',z2)
         Histxy,Histxz,Histyz,CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz = project_CEi_hist(Hist, CEx, CEy, CEz)
         del CEx
         del CEy
         del CEz
+        del Hist
         gc.collect()
-        print("done with projection for ",x1,' x2: ',x2,' y1: ',y1,' y2: ',y2,' z1: ', z1,' z2: ',z2)
+        outputsize = sys.getsizeof([vx, vy, vz, totalPtcl, totalFieldpts, Histxy,Histxz,Histyz,CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz])
+        print("done with projection for ",x1,' x2: ',x2,' y1: ',y1,' y2: ',y2,' z1: ', z1,' z2: ',z2,' sizeofoutput: ', outputsize)
         return vx, vy, vz, totalPtcl, totalFieldpts, Histxy,Histxz,Histyz,CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz
     else:
         return vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx, CEy, CEz
@@ -328,7 +331,7 @@ def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim
 
     #do multithreading
     with ProcessPoolExecutor(max_workers = max_workers) as executor:
-        #futures = []
+        futures = []
         jobidxs = []
 
         #queue up jobs
@@ -346,10 +349,11 @@ def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim
                 #for _i in range(0,len(futures)):
                 _i = 0
                 while(_i < len(futures)):
+                    #print(_i)
                     if(not(futures[_i].done())):
                         not_finished = True
                         _i += 1
-                    else(futures[_i].done()):
+                    else:#(futures[_i].done()):
                         tskidx = jobidxs[_i]
                         print("Got result for x1: ",x1task[tskidx]," x2: ",x2task[tskidx])
                         _output = futures[_i].result() #return vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx, CEy, CEz
@@ -379,7 +383,7 @@ def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim
 
                         gc.collect()
                         print("Done deleting (and garbage collecting) future for x1: ",x1task[tskidx]," x2: ",x2task[tskidx])
-                    time.sleep(10.)
+                time.sleep(10.)
 
         print("Done with processes!")
         # num_completed = 0

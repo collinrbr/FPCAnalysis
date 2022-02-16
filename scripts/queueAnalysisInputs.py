@@ -76,7 +76,7 @@ for flnm in filenames:
 
     cmd = 'touch '  + logdir + flnm+'.output'
     print(cmd)
-    #os.system(cmd)
+    os.system(cmd)
     if(preslice_dir==None):
         print("Warning: multiprocessing requires preslicing...")
         cmd = 'python3 scripts/generateFPC.py '+analysisinputdir+'/'+flnm+' T F  >> '+logdir+flnm+'.output'
@@ -84,5 +84,5 @@ for flnm in filenames:
         cmd = 'python3 scripts/generateFPC.py '+analysisinputdir+'/'+flnm+' T F '+str(numcores)+' '+preslice_dir + ' >> '+logdir+flnm+'.output'
 
     print(cmd)
-    #os.system(cmd)
+    os.system(cmd)
     #print('os.system returned: ' + str(exitval))

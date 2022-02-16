@@ -474,23 +474,31 @@ def load2vdata(filename):
     vx = _vx
     vy = _vy
     vz = _vz
-
-    if(npar_in != None):
-        return (Hist_vxvy, Hist_vxvz, Hist_vyvz,
+    try:
+        if(npar_in != None):#TODO: clean this up, this does not work when npar_in has values
+            return (Hist_vxvy, Hist_vxvz, Hist_vyvz,
                C_Ex_vxvy, C_Ex_vxvz, C_Ex_vyvz,
                C_Ey_vxvy, C_Ey_vxvz, C_Ey_vyvz,
                C_Ez_vxvy, C_Ez_vxvz, C_Ez_vyvz,
                vx, vy, vz, x_in,
                enerCEx_in, enerCEy_in, enerCEz_in,
                npar_in, Vframe_relative_to_sim_in, metadata_in, params_in)
-    else:
-        return (Hist_vxvy, Hist_vxvz, Hist_vyvz,
+        else:
+            return (Hist_vxvy, Hist_vxvz, Hist_vyvz,
                C_Ex_vxvy, C_Ex_vxvz, C_Ex_vyvz,
                C_Ey_vxvy, C_Ey_vxvz, C_Ey_vyvz,
                C_Ez_vxvy, C_Ez_vxvz, C_Ez_vyvz,
                vx, vy, vz, x_in,
                enerCEx_in, enerCEy_in, enerCEz_in,
                Vframe_relative_to_sim_in, metadata_in, params_in)
+    except:
+            return (Hist_vxvy, Hist_vxvz, Hist_vyvz,
+               C_Ex_vxvy, C_Ex_vxvz, C_Ex_vyvz,
+               C_Ey_vxvy, C_Ey_vxvz, C_Ey_vyvz,
+               C_Ez_vxvy, C_Ez_vxvz, C_Ez_vyvz,
+               vx, vy, vz, x_in,
+               enerCEx_in, enerCEy_in, enerCEz_in,
+               npar_in, Vframe_relative_to_sim_in, metadata_in, params_in)
 
 
 #TODO: parse_input_file and read_input tries to do the same thing. However,
