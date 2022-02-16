@@ -758,7 +758,7 @@ def force_find_iwlt_scale(t,w=6,retstep=1):
     _yy = np.cos(10.*dt*t)
 
 
-    k, cwt = wlt(t,_yy,retstep=restep)
+    k, cwt = wlt(t,_yy,retstep=retstep)
     _yyreconstructed = iwlt_noscale(t,k,cwt)
 
     ratio = np.sum(np.abs(_yy))/np.sum(np.abs(_yyreconstructed)) #take ratio of integrals of abs(data)
