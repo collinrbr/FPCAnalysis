@@ -872,7 +872,7 @@ def xyz_wlt_fft_filter(kz,ky,kx,xx,bxkzkykxxx,bykzkykxxx,bzkzkykxxx,
                 exkzkykxxx,eykzkykxxx,ezkzkykxxx,
                 kx_center0,kx_width0,ky0,kz0,dontfilter=False):
     """
-    dontfilter is used to debug
+    dontfilter is used to debug when set to true
     """
     # from copy import deepcopy
     #
@@ -880,10 +880,14 @@ def xyz_wlt_fft_filter(kz,ky,kx,xx,bxkzkykxxx,bykzkykxxx,bzkzkykxxx,
 
     from lib.array_ops import find_nearest
 
+    if(kx_center0 <= 0 or kx_center0-kx_width0/2. <=0):
+        print('Warning, at least part of the mid pass filter is negative (i.e. kx_center <= 0 or kx_center0-kx_width0/2. <=0).')#TODO: implement
+        print('This function does not yet have the ability to filter negative kx values.')
+        print('Breaking call...')
+        return
+
     keys = {'ex','ey','ez','bx','by','bz'}
-
     freq_space = {'ex':exkzkykxxx,'ey':eykzkykxxx,'ez':ezkzkykxxx,'bx':bxkzkykxxx,'by':bykzkykxxx,'bz':bzkzkykxxx}
-
     ky0idx = find_nearest(ky, ky0)
     kz0idx = find_nearest(kz, kz0)
 
@@ -908,9 +912,10 @@ def xyz_wlt_fft_filter(kz,ky,kx,xx,bxkzkykxxx,bykzkykxxx,bzkzkykxxx,
     #inverse transform
     for key in keys:
         #take iwlt (inverse transform in xx direction)
+        nkx = int(len(freq_space[key][0,0,:,0])/2) #need to rebuild signal from only positive kxs
         for _kzidx in range(0,len(freq_space[key][:,0,0,0])):
             for _kyidx in range(0,len(freq_space[key][_kzidx,:,0,0])):
-                filteredfields[key][_kzidx,_kyidx,:]  = iwlt(xx,kx,freq_space[key][_kzidx,_kyidx,:,:])
+                filteredfields[key][_kzidx,_kyidx,:]  = iwlt(xx,kx,freq_space[key][_kzidx,_kyidx,nkx:,:])
 
         #take ifft2 (inverse transform in yy/zz direction)
         filteredfields[key] = np.swapaxes(filteredfields[key], 0, 2) #change index order from (kz,ky,x) to (x,ky,kz)
@@ -1393,6 +1398,7 @@ def transform_field_to_kzkykxxx(ddict,fieldkey,retstep=12):
 
     Returns
     -------
+    TODO: add returns
     """
 
     kz, ky, fieldxkzky = _ffttransform_in_yz(ddict,fieldkey)
