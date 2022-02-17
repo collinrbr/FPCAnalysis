@@ -79,11 +79,21 @@ def get_dpar_from_bounds(dpar_folder,x1,x2,verbose=False):
         testidx += 1
         leftmostbound_index += 1
 
+        if(testidx >= len(xbounds)):
+            print("warning, requested x1 greater than the upper bound of the domain we are working with...")
+            print("returning empty array")
+            return {'p1':[],'p2':[],'p3':[],'x1':[],'x2':[],'x3':[],'Vframe_relative_to_sim':0.0}
+
     rightmostbound_index = 0
     testidx = 0
     while(float(xbounds[testidx][1])<x2):
         testidx += 1
         rightmostbound_index += 1
+        if(testidx >= len(xbounds)):
+            rightmostbound_index -= 1.
+            print("warning, requested x2 greater than the upper bound of the domain we are working with...")
+            print("returning everything that is in the given domain...")
+            break
 
     filenames = filenames[leftmostbound_index:rightmostbound_index+1]
 

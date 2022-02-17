@@ -742,7 +742,7 @@ def iwlt_noscale(t,k,cwtdata):
     f_t = []
     for _n in range(0,N):
         f_ti = 0.
-        for _kidx in range(0,len(k)):
+        for _kidx in range(0,J):
             f_ti += np.real(cwtdata[_kidx,_n])/k[_kidx]**1.
         f_t.append(f_ti)
     f_t = np.asarray(f_t)
