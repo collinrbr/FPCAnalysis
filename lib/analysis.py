@@ -695,7 +695,7 @@ def wlt(t,data,w=6,klim=None,retstep=1,powerTwoSpace=False):
     else: #default from scipy's example
         #TOOD: 1/.01 should stricly be larger than fs/2
         fs = 1./dt
-        freq = np.linspace(.01,fs/2.,int(len(data)/retstep))
+        freq = np.linspace(dt/10,fs/4.,int(len(data)/retstep))
         widths = w*fs / (2*freq*np.pi)
 
     #print(widths)
@@ -915,7 +915,7 @@ def xyz_wlt_fft_filter(kz,ky,kx,xx,bxkzkykxxx,bykzkykxxx,bzkzkykxxx,
         nkx = int(len(freq_space[key][0,0,:,0])/2) #need to rebuild signal from only positive kxs
         for _kzidx in range(0,len(freq_space[key][:,0,0,0])):
             for _kyidx in range(0,len(freq_space[key][_kzidx,:,0,0])):
-                filteredfields[key][_kzidx,_kyidx,:]  = iwlt(xx,kx,freq_space[key][_kzidx,_kyidx,nkx:,:])
+                filteredfields[key][_kzidx,_kyidx,:]  = iwlt(xx,kx[nkx:],freq_space[key][_kzidx,_kyidx,nkx:,:])
 
         #take ifft2 (inverse transform in yy/zz direction)
         filteredfields[key] = np.swapaxes(filteredfields[key], 0, 2) #change index order from (kz,ky,x) to (x,ky,kz)
