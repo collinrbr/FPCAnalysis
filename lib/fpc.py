@@ -137,6 +137,7 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
         del dparsubset
 
     else:
+        #TODO: check frame!!!!!!
         dpar['p1'] -= vshock #TODO: clean this up
         cprimebinned, hist, vx, vy, vz = compute_cprime_hist(dpar, dfields, fieldkey, vmax, dv)
 
