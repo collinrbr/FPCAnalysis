@@ -137,6 +137,8 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
         del dparsubset
 
     else:
+        totalPtcl = len(dpar['p1'][:])
+        totalFieldpts = -1 # TODO just remove this varaible, doesn't make sense anymore
         #TODO: check frame!!!!!!
         dpar['p1'] -= vshock #TODO: clean this up
         cprimebinned, hist, vx, vy, vz = compute_cprime_hist(dpar, dfields, fieldkey, vmax, dv)
@@ -356,7 +358,7 @@ def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim
                         _i += 1
                     else:#(futures[_i].done()):
                         tskidx = jobidxs[_i]
-                        print("Got result for x1: ",x1task[tskidx]," x2: ",x2task[tskidx])
+                        print("Got result for x1: ",x1task[tskidx]," x2: ",x2task[tskidx],' npar:', _output[3])
                         _output = futures[_i].result() #return vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx, CEy, CEz
                         vx = _output[0]
                         vy = _output[1]
