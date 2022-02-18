@@ -172,11 +172,11 @@ def plot_wavemodes_and_compare_to_sweeps_kperp(kpars,beta_i,tau,wavemodes_matchi
         omegas.append(omega)
         omega_errors.append(omega_error)
 
-    if(len(kpars) != 3):
-        print('Error, this function is set up to plot 3 curves (per wavemode) only... TODO: generalize this')
-        return
+    #if(len(kpars) != 3):
+        #print('Error, this function is set up to plot 3 curves (per wavemode) only... TODO: generalize this')
+        #return
 
-    linestyle = ['--',':','-']
+    linestyle = ['-',':','-','-.','.',',']
     lnwidth = 1.75
 
     plt.figure(figsize=(10,10))
@@ -271,11 +271,12 @@ def plot_wavemodes_and_compare_to_sweeps_kpar(kperps,beta_i,tau,wavemodes_matchi
         omegas.append(omega)
         omega_errors.append(omega_error)
 
-    if(len(kperps) != 3):
-        print('Error, this function is set up to plot 3 curves (per wavemode) only... TODO: generalize this')
-        return
+    #if(len(kperps) != 3):
+        #print('Error, this function is set up to plot 3 curves (per wavemode) only... TODO: generalize this')
+        #return
 
-    linestyle = ['--',':','-']
+    #linestyle = ['--',':','-']
+    linestyle = ['-',':','-','-.','.',',']
     lnwidth = 1.75
 
     plt.figure(figsize=(10,10))

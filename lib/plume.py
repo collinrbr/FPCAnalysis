@@ -178,7 +178,7 @@ def rotate_and_norm_to_plume_basis(wavemode,epar,eperp1,eperp2,comp_error_prop=F
     plume_basis_wavemode['normE'] = np.linalg.norm([plume_basis_wavemode['Ex'],plume_basis_wavemode['Ey'],plume_basis_wavemode['Ez']])
 
     if(comp_error_prop):
-        print("Warning, we should consider tracking error of fields...")
+        #print("Warning, we should consider tracking error of fields...")
         #throw = error#TODO: grab errors for fields?
 
     plume_basis_wavemode['eperp1'] = eperp1
@@ -342,13 +342,13 @@ def select_wavemodes(dwavemodes, depth, kpars, kperps, tol=0.05):
     #iterate over kpars
     wavemodes_matching_kpar = []
 
-    for kpar in kpars:
+    for kpar,kperp in zip(kpars,kperps):
         _wvmds = {'wavemodes':[]}
 
         #pick out wavemodes
         for k in range(0,depth):
             wvmd = rotate_and_norm_to_plume_basis(dwavemodes['wavemodes'][k],dwavemodes['epar'],dwavemodes['eperp1'],dwavemodes['eperp2']) #need to be in plume basis so that kperp2 = 0
-            if(np.abs(wvmd['kpar']-kpar)<tol):
+            if(np.abs(wvmd['kpar']-kpar)<tol and np.abs(wvmd['kperp']-kperp)<tol):
                 _wvmds['wavemodes'].append(wvmd)
 
         #save to output arrays
@@ -356,20 +356,20 @@ def select_wavemodes(dwavemodes, depth, kpars, kperps, tol=0.05):
 
     #iterate over kperps
     wavemodes_matching_kperp = []
-    for kperp in kperps:
+    for kpar,kperp in zip(kpars,kperps):
         _wvmds = {'wavemodes':[]}
 
         #pick out wavemodes
         for k in range(0,depth):
             wvmd = rotate_and_norm_to_plume_basis(dwavemodes['wavemodes'][k],dwavemodes['epar'],dwavemodes['eperp1'],dwavemodes['eperp2']) #need to be in plume basis so that kperp2 = 0
-            if(np.abs(wvmd['kperp']-kperp)<tol):
+            if(np.abs(wvmd['kpar']-kpar)<tol and np.abs(wvmd['kperp']-kperp)<tol):
                 _wvmds['wavemodes'].append(wvmd)
 
         #save to output arrays
         wavemodes_matching_kperp.append(_wvmds)
 
     #return
-    return wavemodes_matching_kpar, wavemodes_matching_kperp
+    return wavemodes_matching_kpar, wavemodes_matching_kperp #TODO: these are the same thing, only return 1 thing and fix elsewhere
 
 def get_freq_from_wvmd(wm,tol=0.01, comp_error_prop=False, ):
     """
@@ -438,15 +438,15 @@ def _angle_between_vecs(vec1,vec2):
         from uncertainties.umath import sqrt
         from uncertainties import ufloat
 
-        print("typage of vecs in angle")
-        print(type(vec1))
-        print(type(vec1[0]))
-        print(type(vec1[1]))
-        print(type(vec1[2]))
-        print(type(vec2))
-        print(type(vec2[0]))
-        print(type(vec2[1]))
-        print(type(vec2[2]))
+        #print("typage of vecs in angle")
+        #print(type(vec1))
+        #print(type(vec1[0]))
+        #print(type(vec1[1]))
+        #print(type(vec1[2]))
+        #print(type(vec2))
+        #print(type(vec2[0]))
+        #print(type(vec2[1]))
+        #print(type(vec2[2]))
 
         len1 = sqrt(vec1[0]**2.+vec1[1]**2.+vec1[2]**2.) #this function uses sqrt, which requires it's own uncertainties function when working with ufloat
         len2 = sqrt(vec2[0]**2.+vec2[1]**2.+vec2[2]**2.)
@@ -483,11 +483,11 @@ def _rotate(tht,rotationaxis,vect):
     except:
         from uncertainties.umath import cos, sin
         from uncertainties import ufloat
-        print(tht)
-        print(type(tht))
-        print(cos(tht))
-        print(ux**2.)
-        print(1.-cos(tht))
+        #print(tht)
+        #print(type(tht))
+        #print(cos(tht))
+        #print(ux**2.)
+        #print(1.-cos(tht))
         r11 = cos(tht)+ux**2.*(1.-cos(tht))
         r21 = uy*ux*(1.-cos(tht))+uz*sin(tht)
         r31 = uz*ux*(1.-cos(tht))-uy*sin(tht)
