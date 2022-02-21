@@ -125,6 +125,15 @@ if(use_restart and dpar_folder == None):
     if zlim is None:
         zlim = [dfields['ex_zz'][0],dfields['ex_zz'][-1]]
 
+#setup bounds if dpar_folder is used
+if(dpar_folder != None): #TODO: clean up how xlim, ylim, zlim is assigned everywhere in code!!!
+        if xlim is None:
+            xlim = [dfields['ex_xx'][0],dfields['ex_xx'][-1]]
+        if ylim is None:
+            ylim = [dfields['ex_yy'][0],dfields['ex_yy'][-1]]
+        if zlim is None:
+            zlim = [dfields['ex_zz'][0],dfields['ex_zz'][-1]]
+
 #-------------------------------------------------------------------------------
 # If vmax is not specified, use maximum particle velocity as vmax
 #-------------------------------------------------------------------------------

@@ -176,13 +176,13 @@ def plot_wavemodes_and_compare_to_sweeps_kperp(kpars,beta_i,tau,wavemodes_matchi
         #print('Error, this function is set up to plot 3 curves (per wavemode) only... TODO: generalize this')
         #return
 
-    linestyle = ['-',':','-','-.','.',',']
+    linestyle = ['-',':','--','-.','.',',']
     lnwidth = 1.75
 
     plt.figure(figsize=(10,10))
     for i in range(0,len(kawcrvs)):
         plt.errorbar(plotkperps[i],np.real(omegas[i]), xerr = plotkperp_errors[i], yerr=omega_errors[i], fmt="o",color='C0')
-        plt.plot(kperps,kawcrvs[i],linestyle[i],color='black',linewidth=lnwidth)
+        plt.plot(kperps,kawcrvs[i],linestyle[i],color='black',linewidth=lnwidth,label='$k_{||}$='+str(format(kpars[i],'.2f')))
         plt.fill_between(kperps,kawcrvs[i]-kawcrv_errors[i],kawcrvs[i]+kawcrv_errors[i],alpha=.2,color='black')
         plt.plot(kperps,fastcrvs[i],linestyle[i],color='blue',linewidth=lnwidth)
         plt.fill_between(kperps,fastcrvs[i]-fastcrv_errors[i],fastcrvs[i]+fastcrv_errors[i],alpha=.2,color='blue')
@@ -193,6 +193,7 @@ def plot_wavemodes_and_compare_to_sweeps_kperp(kpars,beta_i,tau,wavemodes_matchi
 
     plt.yscale('log')
     plt.xscale('log')
+    plt.legend()
     plt.xlabel('$k_{\perp} d_i$')
     plt.ylabel('$\omega / \Omega_i$')
     plt.grid(True, which="both", ls="-")
@@ -276,13 +277,13 @@ def plot_wavemodes_and_compare_to_sweeps_kpar(kperps,beta_i,tau,wavemodes_matchi
         #return
 
     #linestyle = ['--',':','-']
-    linestyle = ['-',':','-','-.','.',',']
+    linestyle = ['-',':','--','-.','.',',']
     lnwidth = 1.75
 
     plt.figure(figsize=(10,10))
     for i in range(0,len(kawcrvs)):
         plt.errorbar(plotkpars[i],np.real(omegas[i]), xerr = plotkpar_errors[i], yerr=omega_errors[i], fmt="o",color='C0')
-        plt.plot(kpars,kawcrvs[i],linestyle[i],color='black',linewidth=lnwidth)
+        plt.plot(kpars,kawcrvs[i],linestyle[i],color='black',linewidth=lnwidth,label='$k_\perp$='+str(format(kperps[i],'.2f')))
         plt.fill_between(kpars,kawcrvs[i]-kawcrv_errors[i],kawcrvs[i]+kawcrv_errors[i],alpha=.2,color='black')
         plt.plot(kpars,fastcrvs[i],linestyle[i],color='blue',linewidth=lnwidth)
         plt.fill_between(kpars,fastcrvs[i]-fastcrv_errors[i],fastcrvs[i]+fastcrv_errors[i],alpha=.2,color='blue')
@@ -293,6 +294,7 @@ def plot_wavemodes_and_compare_to_sweeps_kpar(kperps,beta_i,tau,wavemodes_matchi
 
     plt.yscale('log')
     plt.xscale('log')
+    plt.legend()
     plt.xlabel('$k_{||} d_i$')
     plt.ylabel('$\omega / \Omega_i$')
     plt.grid(True, which="both", ls="-")

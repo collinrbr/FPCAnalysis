@@ -358,8 +358,8 @@ def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim
                         _i += 1
                     else:#(futures[_i].done()):
                         tskidx = jobidxs[_i]
-                        print("Got result for x1: ",x1task[tskidx]," x2: ",x2task[tskidx],' npar:', _output[3])
                         _output = futures[_i].result() #return vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx, CEy, CEz
+                        print("Got result for x1: ",x1task[tskidx]," x2: ",x2task[tskidx],' npar:', _output[3])
                         vx = _output[0]
                         vy = _output[1]
                         vz = _output[2]
