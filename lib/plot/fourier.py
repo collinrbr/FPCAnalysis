@@ -287,18 +287,20 @@ def _sort_for_contour(xcoord,ycoord,dheight):
 
     return xcoord, ycoord, dheight
 
-def plot_wlt(xx, kx, wlt, ky0 = None, kz0 = None, flnm = '', plotstrongestkx = False, xlim = None, ylim = None, xxline = None, yyline = None):
+def plot_wlt(xx, kx, wlt, ky0 = None, kz0 = None, flnm = '', plotstrongestkx = False, xlim = None, ylim = None, xxline = None, yyline = None, clrbarlbl = None,axhline=None):
     """
     (ky kz should be floats if passed (because we commonly take WLT of f(x,ky0,kz0)))
     """
 
     from lib.array_ops import find_nearest
 
-    plt.figure()
+    plt.figure(figsize=(10,5))
     plt.pcolormesh(xx,kx,np.abs(wlt),cmap='viridis', shading='gouraud')
-    plt.colorbar()
-    plt.xlabel('x')
-    plt.ylabel('kx')
+    cbar = plt.colorbar()
+    if(clrbarlbl != None):
+        cbar.set_label(clrbarlbl,labelpad=25, rotation=270)
+    plt.xlabel('$x$')
+    plt.ylabel('$k_x$')
     plt.grid()
     if(ky0 != None and kz0 != None):
         plt.title('ky='+str(ky0)[0:6]+' kz='+str(kz0)[0:6])
@@ -313,6 +315,8 @@ def plot_wlt(xx, kx, wlt, ky0 = None, kz0 = None, flnm = '', plotstrongestkx = F
         for i in range(0,len(xx)):
             kxline.append(kx[find_nearest(wlt[:,i],np.max(wlt[:,i]))])
         plt.plot(xx,kxline)
+    if(axhline != None):
+        plt.axhline(axhline)
 
     if(flnm == ''):
         plt.show()

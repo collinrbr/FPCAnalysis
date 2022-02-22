@@ -177,9 +177,9 @@ def rotate_and_norm_to_plume_basis(wavemode,epar,eperp1,eperp2,comp_error_prop=F
     plume_basis_wavemode['normB'] = np.linalg.norm([plume_basis_wavemode['Bx'],plume_basis_wavemode['By'],plume_basis_wavemode['Bz']])
     plume_basis_wavemode['normE'] = np.linalg.norm([plume_basis_wavemode['Ex'],plume_basis_wavemode['Ey'],plume_basis_wavemode['Ez']])
 
-    if(comp_error_prop):
-        print("Warning, we should consider tracking error of fields...")
-        throw = error#TODO: grab errors for fields?
+    #if(comp_error_prop):
+    #    print("Warning, we should consider tracking error of fields...")
+    #    throw = error#TODO: grab errors for fields?
 
     plume_basis_wavemode['eperp1'] = eperp1
     plume_basis_wavemode['eperp2'] = eperp2

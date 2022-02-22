@@ -329,11 +329,56 @@ def time_stack_line_plot(dfieldsdict, fieldkey, pts = [], axis = '_xx', xxindex 
             fieldval = np.asarray([dfieldsdict['dfields'][k][fieldkey][xxindex][yyindex][i] for i in range(0,len(dfieldsdict['dfields'][k][fieldkey+axis]))])
             xlbl = 'x'
 
-        axs[k].plot(fieldcoord,fieldval)
+        axs[k].plot(fieldcoord,fieldval,linewidth=1.5*4)
         if(len(pts) > 0):
             axs[k].scatter([pts[k]],[0.])
         #axs[k].ylabel(fieldkey+'(frame = '+str(dfielddict['frame'][k])+')')
 
+    plt.show()
+
+def time_stack_line_plot2(dfieldsdict, fieldkey, offsetval = 2., pts = [], axis = '_xx', xxindex = 0, yyindex = 0, zzindex = 0):
+    """
+    Plots field data at some static frame down a line along x,y,z for some
+    selected field for each frame in seperate panels
+
+    This plot is primarily used to test shock_from_ex_cross
+
+    Parameters
+    ----------
+    dfieldsdict : dict
+        dictonary of dfields and corresponding frame number from all_field_loader
+    fieldkey : str
+        name of field you want to plot (ex, ey, ez, bx, by, bz)
+    offsetval : float
+        spacing between lines
+    pts : 1d array
+        array containing independent axis position of singular point to be plotted on each panel
+        point will have dependent axis position equal to the selected field
+    axis : str, optional
+        name of axis you want to plot along (_xx, _yy, _zz)
+    xxindex : int, optional
+        index of data along xx axis (ignored if axis = '_xx')
+    yyindex : int, optional
+        index of data along yy axis (ignored if axis = '_yy')
+    zzindex : int, optional
+        index of data along zz axis (ignored if axis = '_zz')
+    """
+
+    #fig, axs = plt.subplots(len(dfieldsdict['frame']), sharex=True, sharey=True)
+    fig = plt.figure()
+    fieldcoord = np.asarray(dfieldsdict['dfields'][0][fieldkey+axis])
+    fig.set_size_inches(18.5, 30.)
+
+    _i = 0
+    for k in range(0,len(dfieldsdict['dfields'])):
+        fieldval = np.asarray([dfieldsdict['dfields'][k][fieldkey][xxindex][yyindex][i] for i in range(0,len(dfieldsdict['dfields'][k][fieldkey+axis]))])+_i*offsetval
+        plt.plot(fieldcoord,fieldval)
+        _i += 1
+
+    #TODO: generalize this for all axis keys
+    plt.ylabel('time')
+    plt.xlabel('$x$')
+    plt.yticks([])
     plt.show()
 
 def plot_stack_field_along_x(dfields,fieldkey,stackaxis,yyindex=0,zzindex=0,xlow=None,xhigh=None,flnm=''):

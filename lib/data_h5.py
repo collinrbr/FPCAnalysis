@@ -105,6 +105,7 @@ def get_dpar_from_bounds(dpar_folder,x1,x2,verbose=False):
 
     if(len(filenames) == 0):
         print("Warning: no files with wanted particle data was found...")
+        return {'p1':[0.],'p2':[0.],'p3':[0.],'x1':[05.*(x1+x2)],'x2':[0.404],'x3':[0.404],'Vframe_relative_to_sim':0.0}
 
     pts = {'p1':[],'p2':[],'p3':[],'x1':[],'x2':[],'x3':[]}
     for f in filenames:
