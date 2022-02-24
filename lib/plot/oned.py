@@ -336,32 +336,8 @@ def time_stack_line_plot(dfieldsdict, fieldkey, pts = [], axis = '_xx', xxindex 
 
     plt.show()
 
-def time_stack_line_plot2(dfieldsdict, fieldkey, offsetval = 2., pts = [], axis = '_xx', xxindex = 0, yyindex = 0, zzindex = 0):
+def time_stack_line_plot2(dfieldsdict, fieldkey, offsetval = 2., pts = [], axis = '_xx', xxindex = 0, yyindex = 0, zzindex = 0,flnm=''):
     """
-    Plots field data at some static frame down a line along x,y,z for some
-    selected field for each frame in seperate panels
-
-    This plot is primarily used to test shock_from_ex_cross
-
-    Parameters
-    ----------
-    dfieldsdict : dict
-        dictonary of dfields and corresponding frame number from all_field_loader
-    fieldkey : str
-        name of field you want to plot (ex, ey, ez, bx, by, bz)
-    offsetval : float
-        spacing between lines
-    pts : 1d array
-        array containing independent axis position of singular point to be plotted on each panel
-        point will have dependent axis position equal to the selected field
-    axis : str, optional
-        name of axis you want to plot along (_xx, _yy, _zz)
-    xxindex : int, optional
-        index of data along xx axis (ignored if axis = '_xx')
-    yyindex : int, optional
-        index of data along yy axis (ignored if axis = '_yy')
-    zzindex : int, optional
-        index of data along zz axis (ignored if axis = '_zz')
     """
 
     #fig, axs = plt.subplots(len(dfieldsdict['frame']), sharex=True, sharey=True)
@@ -379,7 +355,11 @@ def time_stack_line_plot2(dfieldsdict, fieldkey, offsetval = 2., pts = [], axis 
     plt.ylabel('time')
     plt.xlabel('$x$')
     plt.yticks([])
-    plt.show()
+    if(flnm == ''):
+        plt.show()
+    else:
+        plt.savefig(flnm+'.png',format='png')
+    plt.close()
 
 def plot_stack_field_along_x(dfields,fieldkey,stackaxis,yyindex=0,zzindex=0,xlow=None,xhigh=None,flnm=''):
     """

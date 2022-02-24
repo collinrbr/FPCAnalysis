@@ -454,8 +454,8 @@ def _angle_between_vecs(vec1,vec2):
         tht = unumpy.arccos(np.dot(_vec1,_vec2)/(len1*len2))
         tht = tht.ravel()[0] #above function returns ndarray that does have the wanted attributes used by later functions, must convert back to ufloat
 
-        print('type in func')
-        print(type(tht))
+        #print('type in func')
+        #print(type(tht))
     return tht
 
 def _rotate(tht,rotationaxis,vect):
