@@ -25,7 +25,7 @@ try:
     analysisinputflnm = sys.argv[1]
 except:
     print("This generates FPC netcdf4 file. Use_restart is false by default.")
-    print("usage: " + sys.argv[0] + " analysisinputflnm use_restart(T/F) is_2D3V(T/F) num_threads(default 1) dpar_folder")
+    print("usage: " + sys.argv[0] + " analysisinputflnm use_restart(T/F) is_2D3V(T/F) num_threads(default 1) dpar_folder use_dfluc(default F)")
     sys.exit()
 
 try:
@@ -65,6 +65,15 @@ if(use_restart == 'T'):
     use_restart = True
 else:
     use_restart = False
+
+try:
+    use_dfluc = sys.argv[6]
+    if(use_dfluc == 'T'):
+        use_dfluc = True
+    else:
+        use_dfluc = False
+except:
+    use_dfluc = False
 
 if(num_threads != 1 and dpar_folder == None): #TODO: clean up code that assumes multithreading without preslicing data
     print("Error, multithreading now expects pre-slicing of the data.")
@@ -169,6 +178,12 @@ _fields = []
 for k in range(0,len(all_dfields['dfields'])):
     _fields.append(ft.lorentz_transform_vx(all_dfields['dfields'][k],vshock))
 all_dfields['dfields'] = _fields
+
+#-------------------------------------------------------------------------------
+# use fluc if requested
+#-------------------------------------------------------------------------------
+if(use_dfluc):
+    dfields = anl.remove_average_fields_over_yz(dfields)
 
 #-------------------------------------------------------------------------------
 # do FPC analysis

@@ -295,7 +295,7 @@ def plot_wlt(xx, kx, wlt, ky0 = None, kz0 = None, flnm = '', plotstrongestkx = F
     from lib.array_ops import find_nearest
 
     plt.figure(figsize=(10,5))
-    plt.pcolormesh(xx,kx,np.abs(wlt),cmap='viridis', shading='gouraud')
+    plt.pcolormesh(xx,kx,np.abs(wlt),cmap='coolwarm', shading='gouraud')
     cbar = plt.colorbar()
     if(clrbarlbl != None):
         cbar.set_label(clrbarlbl,labelpad=25, rotation=270)
