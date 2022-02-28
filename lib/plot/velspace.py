@@ -510,9 +510,9 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     axs[0,1].set_ylabel(r"$v_z/v_{ti}$")
     axs[0,1].set_aspect('equal', 'box')
     axs[0,1].grid()
+    clrbar01 = plt.colorbar(im01, ax=axs[0,1])#,format='%.1e')
     if(not(plotLog)):
-        clrbar01 = plt.colorbar(im01, ax=axs[0,1])#,format='%.1e')
-    clrbar01.formatter.set_powerlimits((0, 0))
+        clrbar01.formatter.set_powerlimits((0, 0))
 
     #H_yz
     if(plotLog):
@@ -583,7 +583,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
 
     #CEy_xy
     maxCe = max(np.max(CEy_xy),abs(np.max(CEy_xy)))
-    if(plogLog):
+    if(plotLog):
         im20 = axs[2,0].pcolormesh(vy_xy,vx_xy,CEy_xy,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
     else:
         im20 = axs[2,0].pcolormesh(vy_xy,vx_xy,CEy_xy,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
@@ -671,10 +671,15 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         JdotE = compute_energization(CEz_xz,dv)
         axs[3,1].title.set_text('$C_{Ez}(v_x,v_z)$; $J \cdot E_z$ = ' + "{:.2e}".format(JdotE))
     clrbar31 = plt.colorbar(im31, ax=axs[3,1])#,format='%.1e')
-    clrbar31.formatter.set_powerlimits((0, 0))
+    if(not(plotLog)):
+        clrbar31.formatter.set_powerlimits((0, 0))
+    
     #CEz_yz
     maxCe = max(np.max(CEz_yz),abs(np.max(CEz_yz)))
-    im32 = axs[3,2].pcolormesh(vz_yz,vy_yz,CEz_yz.T,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
+    if(plotLog):
+        im32 = axs[3,2].pcolormesh(vz_yz,vy_yz,CEz_yz.T,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
+    else:
+        im32 = axs[3,2].pcolormesh(vz_yz,vy_yz,CEz_yz.T,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
     #axs[3,2].set_title('$C_{Ez}(v_y,v_z)$')
     axs[3,2].set_ylabel(r"$v_y/v_{ti}$")
     axs[3,2].set_xlabel(r"$v_z/v_{ti}$")
