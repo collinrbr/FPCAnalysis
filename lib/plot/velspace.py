@@ -417,7 +417,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
                                 CEx_xy,CEx_xz, CEx_yz,
                                 CEy_xy,CEy_xz, CEy_yz,
                                 CEz_xy,CEz_xz, CEz_yz,
-                                flnm = '', ttl = '', computeJdotE = False, params = None, metadata = None, xpos = None):
+                                flnm = '', ttl = '', computeJdotE = False, params = None, metadata = None, xpos = None, plotLog = False):
     """
     Makes super figure of distribution and velocity sigantures from all different projections
     i.e. different viewing angles
@@ -473,8 +473,15 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     # title.set_position(ax0label.get_position() + offset)
     # title.set_rotation(90)
 
+    minHxyval = np.min(H_xy[np.nonzero(H_xy)])
+    minHxzval = np.min(H_xz[np.nonzero(H_xz)])
+    minHyzval = np.min(H_yz[np.nonzero(H_yz)])
+
     #H_xy
-    im00= axs[0,0].pcolormesh(vy_xy, vx_xy, H_xy, cmap="plasma", shading="gouraud")
+    if(plotLog):
+        im00= axs[0,0].pcolormesh(vy_xy, vx_xy, H_xy, cmap="plasma", shading="gouraud",norm=LogNorm(vmin=minHxyval, vmax=H_xy.max()))
+    else:
+        im00= axs[0,0].pcolormesh(vy_xy, vx_xy, H_xy, cmap="plasma", shading="gouraud")
     #axs[0,0].set_title(r"$f(v_x, v_y)$")
     axs[0,0].set_ylabel(r"$v_y/v_{ti}$")
     axs[0,0].set_aspect('equal', 'box')
@@ -493,6 +500,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     axs[0,1].grid()
     clrbar01 = plt.colorbar(im01, ax=axs[0,1])#,format='%.1e')
     clrbar01.formatter.set_powerlimits((0, 0))
+
     #H_yz
     im02 = axs[0,2].pcolormesh(vz_yz, vy_yz, H_yz.T, cmap="plasma", shading="gouraud")
     #axs[0,2].set_title(r"$f(v_y, v_z)$")
@@ -501,9 +509,13 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     axs[0,2].grid()
     clrbar02 = plt.colorbar(im02, ax=axs[0,2])#,format='%.1e')
     clrbar02.formatter.set_powerlimits((0, 0))
+
     #CEx_xy
     maxCe = max(np.max(CEx_xy),abs(np.max(CEx_xy)))
-    im10 = axs[1,0].pcolormesh(vy_xy,vx_xy,CEx_xy,vmax=maxCe,vmin=-maxCe,cmap="seismic", shading="gouraud")
+    if(plotLog):
+        im10 = axs[1,0].pcolormesh(vy_xy,vx_xy,CEx_xy,vmax=maxCe,vmin=-maxCe,cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
+    else:
+        im10 = axs[1,0].pcolormesh(vy_xy,vx_xy,CEx_xy,vmax=maxCe,vmin=-maxCe,cmap="seismic", shading="gouraud")
     #axs[1,0].set_title('$C_{Ex}(v_x,v_y)$')
     axs[1,0].set_ylabel(r"$v_y/v_{ti}$")
     axs[1,0].set_aspect('equal', 'box')
@@ -516,11 +528,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         axs[1,0].title.set_text('$C_{Ex}(v_x,v_y)$; $J \cdot E_x$ = ' + "{:.2e}".format(JdotE))
     clrbar10 = plt.colorbar(im10, ax=axs[1,0])#,format='%.1e')
     clrbar10.formatter.set_powerlimits((0, 0))
-    # print('clrbar10.ax.yaxis.get_label().get_position()')
-    # print(clrbar10.ax.yaxis.get_label().get_position())
-    # print(clrbar10.ax.yaxis)
-    # print(clrbar10.ax.yaxis.label)
-    # clrbar10.ax.yaxis.set_label_coords(clrbar10.ax.yaxis.get_label().get_position()[0] + clboffset[0], clrbar10.ax.yaxis.get_label().get_position()[1] + clboffset[1])
+
     #CEx_xz
     maxCe = max(np.max(CEx_xz),abs(np.max(CEx_xz)))
     im11 = axs[1,1].pcolormesh(vz_xz,vx_xz,CEx_xz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
@@ -532,6 +540,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         JdotE = compute_energization(CEx_xz,dv)
         axs[1,1].title.set_text('$C_{Ex}(v_x,v_y)$; $J \cdot E_x$ = ' + "{:.2e}".format(JdotE))
     clrbar11 = plt.colorbar(im11, ax=axs[1,1])#,format='%.1e')
+
     clrbar11.formatter.set_powerlimits((0, 0))
     #CEx_yz
     maxCe = max(np.max(CEx_yz),abs(np.max(CEx_yz)))
