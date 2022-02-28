@@ -154,23 +154,31 @@ def plot_wavemodes_and_compare_to_sweeps_kperp(kpars,beta_i,tau,wavemodes_matchi
     plotkperp_errors = []
     omegas = []
     omega_errors = []
+    omegas0 = []
+    omega0_errors = []
     #grab points and compute error for each wavemode
     for match_list in wavemodes_matching_kpar:
         plotkperp = []
         plotkperp_error = []
         omega = []
         omega_error = []
+        omega0 = []
+        omega0_error = []
         for wvmd in match_list['wavemodes']:
-            _,_,omega_faradayreal,_,_,_ = get_freq_from_wvmd(wvmd,comp_error_prop=True)
+            omega_faradayreal0,_,omega_faradayreal,_,omega_faradayreal1,_ = get_freq_from_wvmd(wvmd,comp_error_prop=True)
             plotkperp.append(wvmd['kperp'])
             plotkperp_error.append(wvmd['delta_kperp1'])
             omega.append(omega_faradayreal.n)
             omega_error.append(omega_faradayreal.s)
+            omega0.append(omega_faradayreal0.n)
+            omega0_error.append(omega_faradayreal0.s)
 
         plotkperps.append(plotkperp)
         plotkperp_errors.append(plotkperp_error)
         omegas.append(omega)
         omega_errors.append(omega_error)
+        omegas0.append(omega0)
+        omega0_errors.append(omega0_error)
 
     #if(len(kpars) != 3):
         #print('Error, this function is set up to plot 3 curves (per wavemode) only... TODO: generalize this')
@@ -182,6 +190,7 @@ def plot_wavemodes_and_compare_to_sweeps_kperp(kpars,beta_i,tau,wavemodes_matchi
     plt.figure(figsize=(10,10))
     for i in range(0,len(kawcrvs)):
         plt.errorbar(plotkperps[i],np.real(omegas[i]), xerr = plotkperp_errors[i], yerr=omega_errors[i], fmt="o",color='C0')
+        plt.errorbar(plotkperps[i],np.real(omegas0[i]), xerr = plotkperp_errors[i], yerr=omega0_errors[i], fmt="s",color='C1')
         plt.plot(kperps,kawcrvs[i],linestyle[i],color='black',linewidth=lnwidth,label='$k_{||}$='+str(format(kpars[i],'.2f')))
         plt.fill_between(kperps,kawcrvs[i]-kawcrv_errors[i],kawcrvs[i]+kawcrv_errors[i],alpha=.2,color='black')
         plt.plot(kperps,fastcrvs[i],linestyle[i],color='blue',linewidth=lnwidth)

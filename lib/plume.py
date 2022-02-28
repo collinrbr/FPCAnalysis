@@ -389,8 +389,12 @@ def get_freq_from_wvmd(wm,tol=0.01, comp_error_prop=False, ):
         #should have delta_kpar and delta_kperp at this stage
         kperp1 = ufloat(wm['kperp1'],wm['delta_kperp1'])
         kperp2 = ufloat(wm['kperp2'],wm['delta_kperp2'])
+        kpar = ufloat(wm['kpar'],wm['delta_kpar'])
 
-        omega1 = -wm['kpar']/(wm['Bperp1']*wm['Eperp2'])
+        omega1 = -kpar.n/(wm['Bperp1']*wm['Eperp2']) #kpar is assumed to have no error in it
+        omega1_error = -kpar.s/(wm['Bperp1']*wm['Eperp2'])
+        omega1real = ufloat(omega1.real,np.abs(omega1_error.real))
+        omega1imag = ufloat(omega1.imag,np.abs(omega1_error.imag))
 
         omega2 = -(1./wm['Bperp2'])*(wm['kpar']*wm['Eperp1']-kperp1.n*wm['Epar'])
         omega2_error = -(1./wm['Bperp2'])*(kperp1.s*wm['Epar']) #uncertainties does not handle complex numbers yet, but fornuately, as these complex numbers are scalars w/o error, it's trivial to do by hand
@@ -402,7 +406,7 @@ def get_freq_from_wvmd(wm,tol=0.01, comp_error_prop=False, ):
         omega3real = ufloat(omega3.real,np.abs(omega3_error.real))
         omega3imag = ufloat(omega3.imag,np.abs(omega3_error.imag))
 
-        return omega1.real, omega1.imag, omega2real, omega2imag, omega3real, omega3imag
+        return omega1real, omega1imag, omega2real, omega2imag, omega3real, omega3imag
 
     else:
         #get omega using first constraint
