@@ -450,7 +450,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     from lib.array_ops import mesh_3d_to_2d
     from lib.analysis import compute_energization
     from matplotlib.colors import LogNorm
-    import matplotlib.colors as colors 
+    import matplotlib.colors as colors
 
     plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
 
@@ -502,22 +502,30 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         axs[0,0].text(-vmax*2.6,0, '$M_A = $ ' + str(abs(params['MachAlfven'])), ha='center', rotation=90, wrap=False)
 
     #H_xz
-    im01 = axs[0,1].pcolormesh(vz_xz, vx_xz, H_xz, cmap="plasma", shading="gouraud")
+    if(plotLog):
+        im01 = axs[0,1].pcolormesh(vz_xz, vx_xz, H_xz, cmap="plasma", shading="gouraud",norm=LogNorm(vmin=minHxzval, vmax=H_xz.max()))
+    else:
+        im01 = axs[0,1].pcolormesh(vz_xz, vx_xz, H_xz, cmap="plasma", shading="gouraud")
     #axs[0,1].set_title(r"$f(v_x, v_z)$")
     axs[0,1].set_ylabel(r"$v_z/v_{ti}$")
     axs[0,1].set_aspect('equal', 'box')
     axs[0,1].grid()
-    clrbar01 = plt.colorbar(im01, ax=axs[0,1])#,format='%.1e')
+    if(not(plotLog)):
+        clrbar01 = plt.colorbar(im01, ax=axs[0,1])#,format='%.1e')
     clrbar01.formatter.set_powerlimits((0, 0))
 
     #H_yz
-    im02 = axs[0,2].pcolormesh(vz_yz, vy_yz, H_yz.T, cmap="plasma", shading="gouraud")
+    if(plotLog):
+        im02 = axs[0,2].pcolormesh(vz_yz, vy_yz, H_yz.T, cmap="plasma", shading="gouraud",norm=LogNorm(vmin=minHyzval, vmax=H_yz.max()))
+    else:
+        im02 = axs[0,2].pcolormesh(vz_yz, vy_yz, H_yz.T, cmap="plasma", shading="gouraud")
     #axs[0,2].set_title(r"$f(v_y, v_z)$")
     axs[0,2].set_ylabel(r"$v_y/v_{ti}$")
     axs[0,2].set_aspect('equal', 'box')
     axs[0,2].grid()
     clrbar02 = plt.colorbar(im02, ax=axs[0,2])#,format='%.1e')
-    clrbar02.formatter.set_powerlimits((0, 0))
+    if(not(plotLog)):
+        clrbar02.formatter.set_powerlimits((0, 0))
 
     #CEx_xy
     maxCe = max(np.max(CEx_xy),abs(np.max(CEx_xy)))
@@ -541,7 +549,10 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
 
     #CEx_xz
     maxCe = max(np.max(CEx_xz),abs(np.max(CEx_xz)))
-    im11 = axs[1,1].pcolormesh(vz_xz,vx_xz,CEx_xz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
+    if(plotLog):
+        im11 = axs[1,1].pcolormesh(vz_xz,vx_xz,CEx_xz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
+    else:
+        im11 = axs[1,1].pcolormesh(vz_xz,vx_xz,CEx_xz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
     #axs[1,1].set_title('$C_{Ex}(v_x,v_z)$')
     axs[1,1].set_ylabel(r"$v_z/v_{ti}$")
     axs[1,1].set_aspect('equal', 'box')
@@ -550,11 +561,15 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         JdotE = compute_energization(CEx_xz,dv)
         axs[1,1].title.set_text('$C_{Ex}(v_x,v_y)$; $J \cdot E_x$ = ' + "{:.2e}".format(JdotE))
     clrbar11 = plt.colorbar(im11, ax=axs[1,1])#,format='%.1e')
+    if(not(plotLog)):
+        clrbar11.formatter.set_powerlimits((0, 0))
 
-    clrbar11.formatter.set_powerlimits((0, 0))
     #CEx_yz
     maxCe = max(np.max(CEx_yz),abs(np.max(CEx_yz)))
-    im12 = axs[1,2].pcolormesh(vz_yz,vy_yz,CEx_yz.T,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
+    if(plotLog):
+        im12 = axs[1,2].pcolormesh(vz_yz,vy_yz,CEx_yz.T,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
+    else:
+        im12 = axs[1,2].pcolormesh(vz_yz,vy_yz,CEx_yz.T,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
     #axs[1,2].set_title('$C_{Ex}(v_y,v_z)$')
     axs[1,2].set_ylabel(r"$v_y/v_{ti}$")
     axs[1,2].set_aspect('equal', 'box')
@@ -563,10 +578,15 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         JdotE = compute_energization(CEx_yz.T,dv)
         axs[1,2].title.set_text('$C_{Ex}(v_y,v_z)$; $J \cdot E_x$ = ' + "{:.2e}".format(JdotE))
     clrbar12 = plt.colorbar(im12, ax=axs[1,2])#,format='%.1e')
-    clrbar12.formatter.set_powerlimits((0, 0))
+    if(not(plotLog)):
+        clrbar12.formatter.set_powerlimits((0, 0))
+
     #CEy_xy
     maxCe = max(np.max(CEy_xy),abs(np.max(CEy_xy)))
-    im20 = axs[2,0].pcolormesh(vy_xy,vx_xy,CEy_xy,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
+    if(plogLog):
+        im20 = axs[2,0].pcolormesh(vy_xy,vx_xy,CEy_xy,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
+    else:
+        im20 = axs[2,0].pcolormesh(vy_xy,vx_xy,CEy_xy,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
     #axs[2,0].set_title('$C_{Ey}(v_x,v_y)$')
     axs[2,0].set_ylabel(r"$v_y/v_{ti}$")
     axs[2,0].set_aspect('equal', 'box')
@@ -578,11 +598,15 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         JdotE = compute_energization(CEy_xy,dv)
         axs[2,0].title.set_text('$C_{Ey}(v_x,v_y)$; $J \cdot E_y$ = ' + "{:.2e}".format(JdotE))
     clrbar20 = plt.colorbar(im20, ax=axs[2,0])#,format='%.1e')
-    clrbar20.formatter.set_powerlimits((0, 0))
+    if(not(plotLog)):
+        clrbar20.formatter.set_powerlimits((0, 0))
 
     #CEy_xz
     maxCe = max(np.max(CEy_xz),abs(np.max(CEy_xz)))
-    im21 = axs[2,1].pcolormesh(vz_xz,vx_xz,CEy_xz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
+    if(plotLog):
+        im21 = axs[2,1].pcolormesh(vz_xz,vx_xz,CEy_xz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
+    else:
+        im21 = axs[2,1].pcolormesh(vz_xz,vx_xz,CEy_xz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
     #axs[2,1].set_title('$C_{Ey}(v_x,v_z)$')
     axs[2,1].set_ylabel(r"$v_z/v_{ti}$")
     axs[2,1].set_aspect('equal', 'box')
@@ -591,11 +615,15 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         JdotE = compute_energization(CEy_xz,dv)
         axs[2,1].title.set_text('$C_{Ey}(v_x,v_z)$; $J \cdot E_y$ = ' + "{:.2e}".format(JdotE))
     clrbar21 = plt.colorbar(im21, ax=axs[2,1])#,format='%.1e')
-    clrbar21.formatter.set_powerlimits((0, 0))
+    if(not(plotLog)):
+        clrbar21.formatter.set_powerlimits((0, 0))
 
     #CEy_yz
     maxCe = max(np.max(CEy_yz),abs(np.max(CEy_yz)))
-    im22 = axs[2,2].pcolormesh(vz_yz,vy_yz,CEy_yz.T,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
+    if(plotLog):
+        im22 = axs[2,2].pcolormesh(vz_yz,vy_yz,CEy_yz.T,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
+    else:
+        im22 = axs[2,2].pcolormesh(vz_yz,vy_yz,CEy_yz.T,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
     #axs[2,2].set_title('$C_{Ey}(v_y,v_z)$')
     axs[2,2].set_ylabel(r"$v_y/v_{ti}$")
     axs[2,2].set_aspect('equal', 'box')
@@ -604,11 +632,15 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         JdotE = compute_energization(CEy_yz.T,dv)
         axs[2,2].title.set_text('$C_{Ey}(v_y,v_z)$; $J \cdot E_y$ = ' + "{:.2e}".format(JdotE))
     clrbar22 = plt.colorbar(im22, ax=axs[2,2])#,format='%.1e')
-    clrbar22.formatter.set_powerlimits((0, 0))
+    if(not(plotLog)):
+        clrbar22.formatter.set_powerlimits((0, 0))
 
     #CEz_xy
     maxCe = max(np.max(CEz_xy),abs(np.max(CEz_xy)))
-    im30 = axs[3,0].pcolormesh(vy_xy,vx_xy,CEz_xy,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
+    if(plotLog):
+        im30 = axs[3,0].pcolormesh(vy_xy,vx_xy,CEz_xy,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
+    else:
+        im30 = axs[3,0].pcolormesh(vy_xy,vx_xy,CEz_xy,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
     #axs[3,0].set_title('$C_{Ez}(v_x,v_y)$')
     axs[3,0].set_xlabel(r"$v_x/v_{ti}$")
     axs[3,0].set_ylabel(r"$v_y/v_{ti}$")
@@ -621,11 +653,15 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         JdotE = compute_energization(CEz_xy,dv)
         axs[3,0].title.set_text('$C_{Ez}(v_x,v_y)$; $J \cdot E_z$ = ' + "{:.2e}".format(JdotE))
     clrbar30 = plt.colorbar(im30, ax=axs[3,0])#,format='%.1e')
-    clrbar30.formatter.set_powerlimits((0, 0))
+    if(not(plotLog)):
+        clrbar30.formatter.set_powerlimits((0, 0))
 
     #CEz_xz
     maxCe = max(np.max(CEz_xz),abs(np.max(CEz_xz)))
-    im31 = axs[3,1].pcolormesh(vz_xz,vx_xz,CEz_xz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
+    if(plotLog):
+        im31 = axs[3,1].pcolormesh(vz_xz,vx_xz,CEz_xz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
+    else:
+        im31 = axs[3,1].pcolormesh(vz_xz,vx_xz,CEz_xz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
     #axs[3,1].set_title('$C_{Ez}(v_x,v_z)$')
     axs[3,1].set_xlabel(r"$v_x/v_{ti}$")
     axs[3,1].set_ylabel(r"$v_z/v_{ti}$")
@@ -648,7 +684,8 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         JdotE = compute_energization(CEz_yz.T,dv)
         axs[3,2].title.set_text('$C_{Ez}(v_y,v_z)$; $J \cdot E_z$ = ' + "{:.2e}".format(JdotE))
     clrbar32 = plt.colorbar(im32, ax=axs[3,2])#,format='%.1e')
-    clrbar32.formatter.set_powerlimits((0, 0))
+    if(not(plotLog)):
+        clrbar32.formatter.set_powerlimits((0, 0))
 
     #set ticks
     intvl = 10.
