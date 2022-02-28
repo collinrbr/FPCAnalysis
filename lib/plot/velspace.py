@@ -453,7 +453,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
 
     fig, axs = plt.subplots(4,3,figsize=(4*5,3*5),sharex=True)
-    
+
     _hspace = .1
     if(computeJdotE):
         _hspace+=.1
