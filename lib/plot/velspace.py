@@ -449,15 +449,19 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     """
     from lib.array_ops import mesh_3d_to_2d
     from lib.analysis import compute_energization
+    from matplotlib.colors import LogNorm
+    import matplotlib.colors as colors 
 
     plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
 
     fig, axs = plt.subplots(4,3,figsize=(4*5,3*5),sharex=True)
 
     _hspace = .1
+    _wspace = -.35
     if(computeJdotE):
         _hspace+=.1
-    fig.subplots_adjust(hspace=_hspace,wspace=-0.35)
+        _wspace+=.1
+    fig.subplots_adjust(hspace=_hspace,wspace=_wspace)
 
     vx_xy, vy_xy = mesh_3d_to_2d(vx,vy,vz,'xy')
     vx_xz, vz_xz = mesh_3d_to_2d(vx,vy,vz,'xz')
@@ -491,7 +495,8 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     axs[0,0].set_aspect('equal', 'box')
     axs[0,0].grid()
     clrbar00 = plt.colorbar(im00, ax=axs[0,0])#,format='%.1e')
-    clrbar00.formatter.set_powerlimits((0, 0))
+    if(not(plotLog)):
+        clrbar00.formatter.set_powerlimits((0, 0))
     axs[0,0].text(-vmax*2.0,0, r"$f$", ha='center', rotation=90, wrap=False)
     if(params != None):
         axs[0,0].text(-vmax*2.6,0, '$M_A = $ ' + str(abs(params['MachAlfven'])), ha='center', rotation=90, wrap=False)
@@ -531,7 +536,8 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         JdotE = compute_energization(CEx_xy,dv)
         axs[1,0].title.set_text('$C_{Ex}(v_x,v_y)$; $J \cdot E_x$ = ' + "{:.2e}".format(JdotE))
     clrbar10 = plt.colorbar(im10, ax=axs[1,0])#,format='%.1e')
-    clrbar10.formatter.set_powerlimits((0, 0))
+    if(not(plotLog)):
+        clrbar10.formatter.set_powerlimits((0, 0))
 
     #CEx_xz
     maxCe = max(np.max(CEx_xz),abs(np.max(CEx_xz)))
