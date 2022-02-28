@@ -723,7 +723,7 @@ def wlt(t,data,w=6,klim=None,retstep=1,powerTwoSpace=False):
 
     #normalize
     for _idx in range(0,len(cwtm[:,0])):
-        cwtm[_idx,:] *= (k[_idx])**0.5
+        cwtm[_idx,:] *= (np.abs(k[_idx]))**0.5 #TODO: double check if this should be abs value
 
 
     return k, cwtm
