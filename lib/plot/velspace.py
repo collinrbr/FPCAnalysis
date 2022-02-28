@@ -453,7 +453,11 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
 
     fig, axs = plt.subplots(4,3,figsize=(4*5,3*5),sharex=True)
-    fig.subplots_adjust(hspace=0.1,wspace=-0.35)
+    
+    _hspace = .1
+    if(computeJdotE):
+        _hspace+=.1
+    fig.subplots_adjust(hspace=_hspace,wspace=-0.35)
 
     vx_xy, vy_xy = mesh_3d_to_2d(vx,vy,vz,'xy')
     vx_xz, vz_xz = mesh_3d_to_2d(vx,vy,vz,'xz')
