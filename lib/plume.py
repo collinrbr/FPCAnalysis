@@ -371,8 +371,9 @@ def select_wavemodes(dwavemodes, depth, kpars, kperps, tol=0.05):
     #return
     return wavemodes_matching_kpar, wavemodes_matching_kperp #TODO: these are the same thing, only return 1 thing and fix elsewhere
 
-def get_freq_from_wvmd(wm,tol=0.01, comp_error_prop=False, ):
+def get_freq_from_wvmd(wm,tol=0.01, comp_error_prop=False,debug=False):
     """
+    TODO: there might be two different 'tol' vars in this function. remove/rename one
     """
     if(np.abs(wm['kperp2'])>tol):
         print("WARNING: not in correct basiss... Please normalize such that kperp2 = 0 (see rotate_and_norm_to_plume_basis())...")
@@ -391,8 +392,8 @@ def get_freq_from_wvmd(wm,tol=0.01, comp_error_prop=False, ):
         kperp2 = ufloat(wm['kperp2'],wm['delta_kperp2'])
         kpar = ufloat(wm['kpar'],wm['delta_kpar'])
 
-        omega1 = -kpar.n/(wm['Bperp1']*wm['Eperp2']) #kpar is assumed to have no error in it
-        omega1_error = -kpar.s/(wm['Bperp1']*wm['Eperp2'])
+        omega1 = (-kpar.n/wm['Bperp1'])*wm['Eperp2'] #kpar is assumed to have no error in it
+        omega1_error = (-kpar.s/wm['Bperp1'])*wm['Eperp2']
         omega1real = ufloat(omega1.real,np.abs(omega1_error.real))
         omega1imag = ufloat(omega1.imag,np.abs(omega1_error.imag))
 
@@ -406,11 +407,18 @@ def get_freq_from_wvmd(wm,tol=0.01, comp_error_prop=False, ):
         omega3real = ufloat(omega3.real,np.abs(omega3_error.real))
         omega3imag = ufloat(omega3.imag,np.abs(omega3_error.imag))
 
+        tol = 0.5
+        if(np.abs(np.abs(omega1)-np.abs(omega3))>tol and debug):
+            print("WARNING!!! Omega1 != omega3 using our faradays law!!! Previously, we have assumed these two equations were equivalent")
+
+            print('omega1',omega1)
+            print('omega3',omega3)
+
         return omega1real, omega1imag, omega2real, omega2imag, omega3real, omega3imag
 
     else:
         #get omega using first constraint
-        omega1 = -wm['kpar']/wm['Bperp1']*wm['Eperp2']
+        omega1 = (-wm['kpar']/wm['Bperp1'])*wm['Eperp2']
 
         #get omega using first constraint
         omega2 = -(1./wm['Bperp2'])*(wm['kpar']*wm['Eperp1']-wm['kperp1']*wm['Epar'])
@@ -418,6 +426,12 @@ def get_freq_from_wvmd(wm,tol=0.01, comp_error_prop=False, ):
         #get omega using second constraint
         omega3 = wm['kperp1']/wm['Bpar']*wm['Eperp2']
 
+        tol = 0.5
+        if(np.abs(np.abs(omega1)-np.abs(omega3))>tol and debug):
+            print("WARNING!!! Omega1 != omega3 using our faradays law!!! Previously, we have assumed these two equations were equivalent")
+
+            print('omega1',omega1)
+            print('omega3',omega3)
         return omega1, omega2, omega3
 
 def _project_onto_plane(norm,vec):

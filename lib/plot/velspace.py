@@ -460,7 +460,8 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     _wspace = -.35
     if(computeJdotE):
         _hspace+=.1
-        _wspace+=.1
+    if(plotLog):
+        _wspace+=.175
     fig.subplots_adjust(hspace=_hspace,wspace=_wspace)
 
     vx_xy, vy_xy = mesh_3d_to_2d(vx,vy,vz,'xy')
@@ -714,7 +715,7 @@ def make_9panel_sweep_from_2v(Hist_vxvy, Hist_vxvz, Hist_vyvz,
                               C_Ey_vxvy, C_Ey_vxvz, C_Ey_vyvz,
                               C_Ez_vxvy, C_Ez_vxvz, C_Ez_vyvz,
                               vx, vy,vz,params_in,x,metadata,
-                              directory):
+                              directory,plotLog=False):
     """
 
     """
@@ -735,7 +736,7 @@ def make_9panel_sweep_from_2v(Hist_vxvy, Hist_vxvz, Hist_vyvz,
                                     C_Ex_vxvy[i], C_Ex_vxvz[i], C_Ex_vyvz[i],
                                     C_Ey_vxvy[i], C_Ey_vxvz[i], C_Ey_vyvz[i],
                                     C_Ez_vxvy[i], C_Ez_vxvz[i], C_Ez_vyvz[i],
-                                    flnm = directory+str(i), computeJdotE = False, params = params_in, metadata = mdt, xpos = x[i])
+                                    flnm = directory+str(i), computeJdotE = False, params = params_in, metadata = mdt, xpos = x[i], plotLog=plotLog)
 
 def make_superplot_gif(vx, vy, vz, vmax, Hist, CEx, CEy, CEz, x, directory):
     """

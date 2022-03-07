@@ -28,8 +28,20 @@ try:
 
 except:
     print("This script plots CEi and dist func for each slice of x for a given netcdf4 file")
-    print("usage: " + sys.argv[0] + " path")
+    print("usage: " + sys.argv[0] + " path plotLog(default F)")
     sys.exit()
+
+try:
+    plotLog = sys.argv[2]
+    if(plotLog == 'T'):
+        plotLog = True
+        print("Plotting with log scale!")
+    else:
+        plotLog = False
+        print("Plotting with normal scale!")
+except:
+    plotLog = False #TODO: more input parsing
+    print("Plotting with normal scale!")
 
 #load data
 try:
@@ -49,7 +61,11 @@ except:
     enerCEx_in, enerCEy_in, enerCEz_in,
     Vframe_relative_to_sim_in, metadata_in, params_in) = dnc.load2vdata(path)
 
-directory = path+'.9panelplot/'
+if(plotLog):
+    directory = path+'.log9panelplot/'
+else:
+    directory = path+'.9panelplot/'
+
 try:
     os.system('mkdir ' + directory)
 except:
@@ -59,8 +75,11 @@ pltvv.make_9panel_sweep_from_2v(Hist_vxvy, Hist_vxvz, Hist_vyvz,
                                 C_Ey_vxvy, C_Ey_vxvz, C_Ey_vyvz,
                                 C_Ez_vxvy, C_Ez_vxvz, C_Ez_vyvz,
                                 vx, vy,vz,params_in,x_in,metadata_in,
-                                directory)
+                                directory,plotLog=plotLog)
 
 #make gif from png
-outname = path+'.9panelplot'
+if(plotLog):
+    outname = path+'log.9panelplot'
+else:
+    outname = path+'.9panelplot'
 rsltmng.make_gif_from_folder(directory,outname+'.gif')

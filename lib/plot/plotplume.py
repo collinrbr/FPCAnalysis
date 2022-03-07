@@ -106,7 +106,7 @@ def plot_sweep(plume_sweeps,xaxiskey,yaxiskey,wavemodes=[''],xlbl='',ylbl='',lbl
         plt.show()
 
 #todo: make sure given wavemodes are close to give kpars
-def plot_wavemodes_and_compare_to_sweeps_kperp(kpars,beta_i,tau,wavemodes_matching_kpar,kperplim = [.1,10], flnm = '',delta_beta_i = 0, delta_tau = 0):
+def plot_wavemodes_and_compare_to_sweeps_kperp(kpars,beta_i,tau,wavemodes_matching_kpar,kperplim = [.1,10], flnm = '',delta_beta_i = 0, delta_tau = 0,xlim=[],ylim=[]):
     from lib.plume import get_freq_from_wvmd
     from lib.plume import kaw_curve
     from lib.plume import fastmagson_curve
@@ -156,6 +156,8 @@ def plot_wavemodes_and_compare_to_sweeps_kperp(kpars,beta_i,tau,wavemodes_matchi
     omega_errors = []
     omegas0 = []
     omega0_errors = []
+    omegas2 = []
+    omega2_errors = []
     #grab points and compute error for each wavemode
     for match_list in wavemodes_matching_kpar:
         plotkperp = []
@@ -164,14 +166,18 @@ def plot_wavemodes_and_compare_to_sweeps_kperp(kpars,beta_i,tau,wavemodes_matchi
         omega_error = []
         omega0 = []
         omega0_error = []
+        omega2 = []
+        omega2_error = []
         for wvmd in match_list['wavemodes']:
-            omega_faradayreal0,_,omega_faradayreal,_,omega_faradayreal1,_ = get_freq_from_wvmd(wvmd,comp_error_prop=True)
+            omega_faradayreal0,_,omega_faradayreal,_,omega_faradayreal2,_ = get_freq_from_wvmd(wvmd,comp_error_prop=True)
             plotkperp.append(wvmd['kperp'])
             plotkperp_error.append(wvmd['delta_kperp1'])
             omega.append(omega_faradayreal.n)
             omega_error.append(omega_faradayreal.s)
             omega0.append(omega_faradayreal0.n)
             omega0_error.append(omega_faradayreal0.s)
+            omega2.append(omega_faradayreal2.n)
+            omega2_error.append(omega_faradayreal2.s)
 
         plotkperps.append(plotkperp)
         plotkperp_errors.append(plotkperp_error)
@@ -179,18 +185,21 @@ def plot_wavemodes_and_compare_to_sweeps_kperp(kpars,beta_i,tau,wavemodes_matchi
         omega_errors.append(omega_error)
         omegas0.append(omega0)
         omega0_errors.append(omega0_error)
+        omegas2.append(omega2)
+        omega2_errors.append(omega2_error)
 
     #if(len(kpars) != 3):
         #print('Error, this function is set up to plot 3 curves (per wavemode) only... TODO: generalize this')
         #return
 
-    linestyle = ['-',':','--','-.','.',',']
+    linestyle = ['-',':','--','-.','.',',','-',':','--','-.','.',',','-',':','--','-.','.',',','-',':','--','-.','.',',']
     lnwidth = 1.75
 
     plt.figure(figsize=(10,10))
     for i in range(0,len(kawcrvs)):
         plt.errorbar(plotkperps[i],np.real(omegas[i]), xerr = plotkperp_errors[i], yerr=omega_errors[i], fmt="o",color='C0')
         plt.errorbar(plotkperps[i],np.real(omegas0[i]), xerr = plotkperp_errors[i], yerr=omega0_errors[i], fmt="s",color='C1')
+        plt.errorbar(plotkperps[i],np.real(omegas2[i]), xerr = plotkperp_errors[i], yerr=omega2_errors[i], fmt='*',color='C3')
         plt.plot(kperps,kawcrvs[i],linestyle[i],color='black',linewidth=lnwidth,label='$k_{||}$='+str(format(kpars[i],'.2f')))
         plt.fill_between(kperps,kawcrvs[i]-kawcrv_errors[i],kawcrvs[i]+kawcrv_errors[i],alpha=.2,color='black')
         plt.plot(kperps,fastcrvs[i],linestyle[i],color='blue',linewidth=lnwidth)
@@ -207,15 +216,21 @@ def plot_wavemodes_and_compare_to_sweeps_kperp(kpars,beta_i,tau,wavemodes_matchi
     plt.ylabel('$\omega / \Omega_i$')
     plt.grid(True, which="both", ls="-")
     plt.axis('scaled')
-    plt.ylim(.1,10)
-    plt.xlim(.1,10)
+    if(ylim == []):
+        plt.ylim(.1,10)
+    else:
+        plt.ylim(ylim[0],ylim[1])
+    if(xlim == []):
+        plt.xlim(.1,10)
+    else:
+        plt.xlim(xlim[0],xlim[1])
     if(flnm != ''):
         plt.savefig(flnm+'.png',format='png',dpi=600,bbox_inches="tight")
     else:
         plt.show()
 
 #TODO: make sure given wavemodes are close to given kperps
-def plot_wavemodes_and_compare_to_sweeps_kpar(kperps,beta_i,tau,wavemodes_matching_kpar,kparlim = [.1,10], flnm = '',delta_beta_i = 0, delta_tau = 0):
+def plot_wavemodes_and_compare_to_sweeps_kpar(kperps,beta_i,tau,wavemodes_matching_kpar,kparlim = [.1,10], flnm = '',delta_beta_i = 0, delta_tau = 0,xlim=[],ylim=[]):
     from lib.plume import get_freq_from_wvmd
     from lib.plume import kaw_curve
     from lib.plume import fastmagson_curve
@@ -263,35 +278,48 @@ def plot_wavemodes_and_compare_to_sweeps_kpar(kperps,beta_i,tau,wavemodes_matchi
     plotkpar_errors = []
     omegas = []
     omega_errors = []
+    omegas0 = []
+    omega0_errors = []
+    omegas2 = []
+    omega2_errors = []
     #grab points and compute error for each wavemode
     for match_list in wavemodes_matching_kpar:
         plotkpar = []
         plotkpar_error = []
         omega = []
         omega_error = []
+        omega0 = []
+        omega0_error = []
+        omega2 = []
+        omega2_error = []
         for wvmd in match_list['wavemodes']:
-            _,_,omega_faradayreal,_,_,_ = get_freq_from_wvmd(wvmd,comp_error_prop=True)
+            omega_faradayreal0,_,omega_faradayreal,_,omega_faradayreal2,_ = get_freq_from_wvmd(wvmd,comp_error_prop=True)
             plotkpar.append(wvmd['kpar'])
             plotkpar_error.append(wvmd['delta_kpar'])
             omega.append(omega_faradayreal.n)
             omega_error.append(omega_faradayreal.s)
+            omega0.append(omega_faradayreal0.n)
+            omega0_error.append(omega_faradayreal0.s)
+            omega2.append(omega_faradayreal2.n)
+            omega2_error.append(omega_faradayreal2.s)
 
         plotkpars.append(plotkpar)
         plotkpar_errors.append(plotkpar_error)
         omegas.append(omega)
         omega_errors.append(omega_error)
-
-    #if(len(kperps) != 3):
-        #print('Error, this function is set up to plot 3 curves (per wavemode) only... TODO: generalize this')
-        #return
-
+        omegas0.append(omega0)
+        omega0_errors.append(omega0_error)
+        omegas2.append(omega2)
+        omega2_errors.append(omega2_error)
     #linestyle = ['--',':','-']
-    linestyle = ['-',':','--','-.','.',',']
+    linestyle = ['-',':','--','-.','.',',','-',':','--','-.','.',',','-',':','--','-.','.',',','-',':','--','-.','.',',']
     lnwidth = 1.75
 
     plt.figure(figsize=(10,10))
     for i in range(0,len(kawcrvs)):
         plt.errorbar(plotkpars[i],np.real(omegas[i]), xerr = plotkpar_errors[i], yerr=omega_errors[i], fmt="o",color='C0')
+        plt.errorbar(plotkpars[i],np.real(omegas0[i]), xerr = plotkpar_errors[i], yerr=omega0_errors[i], fmt="s",color='C1')
+        plt.errorbar(plotkpars[i],np.real(omegas2[i]), xerr = plotkpar_errors[i], yerr=omega2_errors[i], fmt="*",color='C3')
         plt.plot(kpars,kawcrvs[i],linestyle[i],color='black',linewidth=lnwidth,label='$k_\perp$='+str(format(kperps[i],'.2f')))
         plt.fill_between(kpars,kawcrvs[i]-kawcrv_errors[i],kawcrvs[i]+kawcrv_errors[i],alpha=.2,color='black')
         plt.plot(kpars,fastcrvs[i],linestyle[i],color='blue',linewidth=lnwidth)
@@ -308,8 +336,14 @@ def plot_wavemodes_and_compare_to_sweeps_kpar(kperps,beta_i,tau,wavemodes_matchi
     plt.ylabel('$\omega / \Omega_i$')
     plt.grid(True, which="both", ls="-")
     plt.axis('scaled')
-    plt.ylim(.1,10)
-    plt.xlim(.1,10)
+    if(ylim == []):
+        plt.ylim(.1,10)
+    else:
+        plt.ylim(ylim[0],ylim[1])
+    if(xlim == []):
+        plt.xlim(.1,10)
+    else:
+        plt.xlim(xlim[0],xlim[1])
     if(flnm != ''):
         plt.savefig(flnm+'.png',format='png',dpi=600,bbox_inches="tight")
     else:
