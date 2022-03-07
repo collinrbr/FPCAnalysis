@@ -154,6 +154,15 @@ def get_compression_ratio(dfields,upstreambound,downstreambound):
         field data dictionary from field_loader
     xShock : float
         x position of shock
+
+    Returns
+    -------
+    ratio : float
+        compression ratio
+    bzupstrm : float
+        avg bz upstream
+    bzdownstrm : float
+        avg bz downstream
     """
     numupstream = 0.
     bzsumupstrm = 0.
@@ -622,7 +631,18 @@ def remove_average_flow_over_yz(dflow):
 
 def get_delta_fields(dfields,B0):
     """
-    Computes the delta between the local B field and the external B field
+    Computes the delta between the local average B field and the external B field
+
+    WARNING: this function is only valid for small ranges in position space as B0 typically changes rapidly throughout a simulation
+
+    TODO: make get_delta_fields and related functions compatable with 1d 2d or 3d sims
+
+    Parameters
+    ----------
+    dfields : dict
+        flow data dictionary from field
+    B0 : array
+        [Bx,By,Bz] average field
     """
 
     from copy import deepcopy
@@ -637,23 +657,10 @@ def get_delta_fields(dfields,B0):
     ddeltafields['by'] = ddeltafields['by'] - B0[1]
     ddeltafields['bz'] = ddeltafields['bz'] - B0[2]
 
-    return ddeltafields
+    print('WARNING: this function is only valid for small ranges in position space as B0 typically changes rapidly throughout a simulation...')
+    print("WARNING: this function is not the same remove_average_flow_over_yz() and is typically not as useful. Make sure this operation is correct for your analysis...")
 
-## This is unused and misguided, should remove
-# def get_delta_perp_fields(dfields,B0):
-#     """
-#     Computes the perpendicular component of the delta fields wrt the total magnetic field at each point
-#     """
-#
-#     from copy import deepcopy
-#
-#     ddeltaperpfields = get_delta_fields(dfields,B0)
-#
-#     ddeltaperpfields['bx'] = ddeltaperpfields['bx'] - (ddeltaperpfields['bx']*B0[0]+ddeltaperpfields['by']*B0[1]+ddeltaperpfields['bz']*B0[2])/(B0[0]**2+B0[1]**2+B0[2]**2)*B0[0]
-#     ddeltaperpfields['by'] = ddeltaperpfields['by'] - (ddeltaperpfields['bx']*B0[0]+ddeltaperpfields['by']*B0[1]+ddeltaperpfields['bz']*B0[2])/(B0[0]**2+B0[1]**2+B0[2]**2)*B0[1]
-#     ddeltaperpfields['bz'] = ddeltaperpfields['bz'] - (ddeltaperpfields['bx']*B0[0]+ddeltaperpfields['by']*B0[1]+ddeltaperpfields['bz']*B0[2])/(B0[0]**2+B0[1]**2+B0[2]**2)*B0[2]
-#
-#     return ddeltaperpfields
+    return ddeltafields
 
 def wlt(t,data,w=6,klim=None,retstep=1,powerTwoSpace=False):
     """
@@ -734,6 +741,22 @@ def iwlt_noscale(t,k,cwtdata):
     i.e given f(t) with w.l.t. W{f(t)}, this function will return A*f(t) = W^(-1){W{f(t)}} where A is some unknown constant
 
     This function is meant to only be used until we learn how to implement a WLT that preserves this scale.
+
+    Parameters
+    ----------
+    t : array
+        time/position axis of wavelet transform
+    k : array
+        freq/wavenumber axis of wavelet transform
+    cwtdata : 2d array
+        wavelet transform data from wlt() function
+
+    Returns
+    -------
+    f_t : 1d array
+        reconstructed original signal computed using inverse wavelet transform
+        note this signal will almost always be off by some constant factor
+        WARNING: some signals can not be reconstructed well
     """
 
     N = len(t)
@@ -752,6 +775,25 @@ def iwlt_noscale(t,k,cwtdata):
 def force_find_iwlt_scale(t,w=6,retstep=1):
     """
     Finds the inverse wlt scale empirically for a morlet wave
+
+    Out inverse wlt function is off by some reconstruction constant, this attempts to compute that constant
+
+    TODO: compute this value analytically
+
+    Parameters
+    ----------
+    t : array
+        time/position axis of wavelet transform
+    w : float, optional
+        width parameter of morlet wave
+    retstep : float, optional
+        spacing using when computing wlt transform
+        see wlt() documentation
+
+    Returns
+    -------
+    ratio : float
+        constant ratio between original and reconstructed signal
     """
     t = np.asarray(t)
     dt = t[1]-t[0]
@@ -766,6 +808,24 @@ def force_find_iwlt_scale(t,w=6,retstep=1):
     return ratio
 
 def iwlt(t,k,cwtdata,w=6):
+    """
+    Parameters
+    ----------
+    t : array
+        time/position axis of wavelet transform
+    k : array
+        freq/wavenumber axis of wavelet transform
+    cwtdata : 2d array
+        wavelet transform data from wlt() function
+    w : float, optional
+        width parameter of morlet wave
+
+    Returns
+    -------
+    f_t : 1d array
+        reconstructed original signal computed using inverse wavelet transform
+        WARNING: some signals can not be reconstructed well
+    """
     #TODO: stop using force_find_iwlt scale
 
     f_t = iwlt_noscale(t,k,cwtdata)
@@ -776,6 +836,25 @@ def iwlt(t,k,cwtdata,w=6):
     return f_t
 
 def midpass_wlt_filter(t,data,k_filter_center,k_filter_width):
+    """
+    Midpass filter using wlt
+
+    Paramters
+    --------
+    t : array
+        time/position axis of wavelet transform
+    data : 1d array
+        data to be filtered
+    k_filter_center : float
+        midpass center in wavenumber/freq space
+    k_filter_width : float
+        midpass width in wavenumber/freq space
+
+    Returns
+    -------
+    data : 1d array
+        filtered data
+    """
     from lib.array_ops import find_nearest
     k, cwt = wlt(t,data)
 
@@ -794,6 +873,20 @@ def midpass_wlt_filter(t,data,k_filter_center,k_filter_width):
 def _ffttransform_in_yz(dfields,fieldkey):
     """
     Takes f(z,y,x) and computes f(x,kz,ky) using a 2d fft for some given field
+
+    Parameters
+    ----------
+    dfields : dict
+        dict from field_loader
+    fieldkey : str
+        name of field you want to transform (ex, ey, ez, bx, by, bz, ux, uy, uz)
+
+    Returns
+    -------
+    ky/kz : 1d array
+        coordinates in wavenumber space
+    fieldfftsweepoverx : 3d array
+        f(x,kz,ky) for specified field f
     """
 
     fieldfftsweepoverx = []
@@ -811,7 +904,15 @@ def take_ifft2(data):
     """
     Computes 2d ifft on given data
 
+    Parameters
+    ----------
+    data : 2d array
+        data in freq space
 
+    Returns
+    -------
+    ifftdata : 2d array
+        data in cartesian space
     """
 
     ifftdata = np.fft.ifft2(data)*(float(len(data)*len(data[1])))
@@ -821,6 +922,13 @@ def take_ifft2(data):
 def _iffttransform_in_yz(fftdfields,fieldkey):
     """
     Takes f(x,kz,ky) and computes f(x,z,y) using a 2d fft for some given field
+
+    Parameters
+    ----------
+    fftdfields : dict
+        dict of fields that have been fft transformed in yz
+    fieldkey : str
+        name of field you want to inverse transform (ex, ey, ez, bx, by, bz, ux, uy, uz)
     """
 
     fieldifftsweepoverx = []
@@ -832,9 +940,22 @@ def _iffttransform_in_yz(fftdfields,fieldkey):
 
     return fieldifftsweepoverx
 
-#filter fields to specified k
+
 def yz_fft_filter(dfields,ky0,kz0):
     """
+    Filter fields at exactly specified k
+
+    Parameters
+    ----------
+    dfields : dict
+        dict returned by field_loader
+    ky0/kz0 : float
+        value of midpass location
+
+    Returns
+    -------
+    dfieldsfiltered : dict
+        filted field dict
     """
 
     from lib.array_ops import find_nearest
@@ -872,7 +993,28 @@ def xyz_wlt_fft_filter(kz,ky,kx,xx,bxkzkykxxx,bykzkykxxx,bzkzkykxxx,
                 exkzkykxxx,eykzkykxxx,ezkzkykxxx,
                 kx_center0,kx_width0,ky0,kz0,dontfilter=False):
     """
-    dontfilter is used to debug when set to true
+    Mid pass filter in x y and z
+    Uses a single wavenumber in y and z and a small range in x to filter
+
+    We assume the user already has axis to the fields in freq space as it takes a long time to compute
+
+    Note: some signals are difficult to filter as the inverse wavelet transform can not reconstruct the original singal well
+
+    Parameters
+    ----------
+    kz/ky/kx/xx : 1d array
+        coordinate arrays
+    **kzkykxxx : 4d array
+        fields transformed by fft in yy/zz and wlt in xx
+    k_filter_center : float
+        midpass center in wavenumber/freq space (related to xx direction)
+    k_filter_width : float
+        midpass width in wavenumber/freq space (related to xx direction)
+    ky0/kz0 : float
+        value of midpass location
+    dontfilter : bool, optional
+        when true, will skip filter to see how well the original signal can be rebuilt
+        used to debug
     """
     # from copy import deepcopy
     #
@@ -927,76 +1069,86 @@ def xyz_wlt_fft_filter(kz,ky,kx,xx,bxkzkykxxx,bykzkykxxx,bzkzkykxxx,
 
     return filteredfields
 
-def _iffttransform_in_yz(fftdfields,fieldkey):
-    """
-    Takes f(x,kz,ky) and computes f(x,z,y) using a 2d fft for some given field
-    """
-
-
-def find_potential_wavemodes(dfields,fieldkey,xpos,cutoffconst=.1):
-    """
-    This function didnt lead to useful results, and is no longer used...
-    """
-
-    from lib.array_ops import find_nearest
-
-    #compute delta fields
-    dfieldsfluc = remove_average_fields_over_yz(dfields)
-
-    #spacing in grids, needed to get wavenumber from fft
-    daxis0 = dfieldsfluc[fieldkey+'_zz'][1]-dfieldsfluc[fieldkey+'_zz'][0]
-    daxis1 = dfieldsfluc[fieldkey+'_yy'][1]-dfieldsfluc[fieldkey+'_yy'][0]
-
-    kz, ky, fieldfftsweepoverx = _ffttransform_in_yz(dfieldsfluc,fieldkey)
-
-    #pick slice nearest to given xpos
-    xxidx = find_nearest(dfieldsfluc[fieldkey+'_xx'],xpos)
-    fftslice = fieldfftsweepoverx[xxidx,:,:]
-
-    #find field(xpos,ky0,kz0) with norm greater than cutoffconst*max(norm(fftslice))
-    fftslice = np.real(fftslice*np.conj(fftslice))/(float(len(kz)*len(ky)))  #convert to norm
-    maxnorm = np.max(fftslice)
-    kylist = []
-    kzlist = []
-    prcntmaxlist = []
-    for i in range(0,len(kz)):
-        for j in range(0,len(ky)):
-            if(fftslice[i][j] >= cutoffconst*maxnorm):
-                kzlist.append(kz[i])
-                kylist.append(ky[j])
-                prcntmaxlist.append(fftslice[i][j]/maxnorm)
-
-    #do wavelet transform for each ky, kz
-    kxlist = []
-    kxplotlist = []
-    wltlist = []
-    for i in range(0,len(kylist)):
-        ky0 = kylist[i]
-        ky0idx = find_nearest(ky,ky0)
-        kz0 = kzlist[i]
-        kz0idx = find_nearest(kz,kz0)
-
-        xkykzdata = fieldfftsweepoverx[:,kz0idx,ky0idx]
-
-        kx, wltdata = wlt(dfieldsfluc[fieldkey+'_xx'],xkykzdata)
-        kxplotlist.append(kx)
-        wltlist.append(wltdata)
-
-        kxidx = find_nearest(wltdata[:,xxidx],np.max(wltdata[:,xxidx]))
-        kxlist.append(kx[kxidx])
-
-    #add negative values for kx
-    nkx = len(kxlist)
-    for i in range(0,nkx):
-        kxlist.append(-1*kxlist[i])
-        kylist.append(kylist[i])
-        kzlist.append(kzlist[i])
-
-    return kxlist, kylist, kzlist, kxplotlist, wltlist, prcntmaxlist
+# def find_potential_wavemodes(dfields,fieldkey,xpos,cutoffconst=.1):
+#     """
+#     This function didnt lead to useful results, and is no longer used...
+#     """
+#
+#     from lib.array_ops import find_nearest
+#
+#     #compute delta fields
+#     dfieldsfluc = remove_average_fields_over_yz(dfields)
+#
+#     #spacing in grids, needed to get wavenumber from fft
+#     daxis0 = dfieldsfluc[fieldkey+'_zz'][1]-dfieldsfluc[fieldkey+'_zz'][0]
+#     daxis1 = dfieldsfluc[fieldkey+'_yy'][1]-dfieldsfluc[fieldkey+'_yy'][0]
+#
+#     kz, ky, fieldfftsweepoverx = _ffttransform_in_yz(dfieldsfluc,fieldkey)
+#
+#     #pick slice nearest to given xpos
+#     xxidx = find_nearest(dfieldsfluc[fieldkey+'_xx'],xpos)
+#     fftslice = fieldfftsweepoverx[xxidx,:,:]
+#
+#     #find field(xpos,ky0,kz0) with norm greater than cutoffconst*max(norm(fftslice))
+#     fftslice = np.real(fftslice*np.conj(fftslice))/(float(len(kz)*len(ky)))  #convert to norm
+#     maxnorm = np.max(fftslice)
+#     kylist = []
+#     kzlist = []
+#     prcntmaxlist = []
+#     for i in range(0,len(kz)):
+#         for j in range(0,len(ky)):
+#             if(fftslice[i][j] >= cutoffconst*maxnorm):
+#                 kzlist.append(kz[i])
+#                 kylist.append(ky[j])
+#                 prcntmaxlist.append(fftslice[i][j]/maxnorm)
+#
+#     #do wavelet transform for each ky, kz
+#     kxlist = []
+#     kxplotlist = []
+#     wltlist = []
+#     for i in range(0,len(kylist)):
+#         ky0 = kylist[i]
+#         ky0idx = find_nearest(ky,ky0)
+#         kz0 = kzlist[i]
+#         kz0idx = find_nearest(kz,kz0)
+#
+#         xkykzdata = fieldfftsweepoverx[:,kz0idx,ky0idx]
+#
+#         kx, wltdata = wlt(dfieldsfluc[fieldkey+'_xx'],xkykzdata)
+#         kxplotlist.append(kx)
+#         wltlist.append(wltdata)
+#
+#         kxidx = find_nearest(wltdata[:,xxidx],np.max(wltdata[:,xxidx]))
+#         kxlist.append(kx[kxidx])
+#
+#     #add negative values for kx
+#     nkx = len(kxlist)
+#     for i in range(0,nkx):
+#         kxlist.append(-1*kxlist[i])
+#         kylist.append(kylist[i])
+#         kzlist.append(kzlist[i])
+#
+#     return kxlist, kylist, kzlist, kxplotlist, wltlist, prcntmaxlist
 
 def is_perp(vec1,vec2,tol=0.001):
     """
+    Returns true if perpendicular
 
+    Parameters
+    ----------
+    vec1 : array
+        a vector
+    vec2 : array
+        a vector
+    tol : float
+        tolerance to closeness to zero
+
+    Returns
+    -------
+    : bool
+        True if perpendicular
+    dotprod : float
+        dotprod of vectors
     """
 
     #normalize vector
@@ -1012,7 +1164,23 @@ def is_perp(vec1,vec2,tol=0.001):
 
 def is_parallel(vec1,vec2,tol=0.001):
     """
+    Returns true if parallel
 
+    Parameters
+    ----------
+    vec1 : array
+        a vector
+    vec2 : array
+        a vector
+    tol : float
+        tolerance to closeness to zero
+
+    Returns
+    -------
+    : bool
+        True if perpendicular
+    dotprod : float
+        dotprod of vectors
     """
 
     #normalize vector
@@ -1030,6 +1198,18 @@ def is_parallel(vec1,vec2,tol=0.001):
 def get_B_yzavg(dfields,xxidx):
     """
     Returns <B(x0,y,z)>_(y,z)
+
+    Parameters
+    ----------
+    dfields : dict
+        dict from field loader
+    xxidx : int
+        xx index to computer average at
+
+    Returns
+    -------
+    [B0x, B0y, B0z] : [float,float,float]
+        <B(x0,y,z)>_(y,z) at specified xx
     """
 
     dfavg = get_average_fields_over_yz(dfields)
@@ -1041,6 +1221,21 @@ def get_B_yzavg(dfields,xxidx):
     return [B0x, B0y, B0z]
 
 def get_B_avg(dfields,xlim,ylim,zlim):
+    """
+    Gets average B in box
+
+    Parameters
+    ----------
+    dfields : dict
+        dict from field_loader
+    *lim : [float,float]
+        upper and lower bounds of box
+
+    Returns
+    -------
+    [B0x, B0y, B0z] : [float,float,float]
+        B0 at specified xx
+    """
 
     from lib.array_ops import get_average_in_box
 
@@ -1059,7 +1254,22 @@ def get_B_avg(dfields,xlim,ylim,zlim):
 
 def predict_kx_alfven(ky,kz,B0,delBperp):
     """
-    routine that computes what kx would need to be given ky kz for the fluctuation to be alfvenic
+    Routine that computes what kx would need to be given ky kz for the fluctuation to be alfvenic (in mhd limit)
+
+    Parameters
+    ----------
+    ky/kz : float
+        value in wavenumber space
+    B0 : float
+        average B0 (formatted [B0x, B0y, B0z]) in region
+    delBperp : float
+        fourier coefficient
+        e.g. delBperp*e^{i k dot x}
+
+    Returns
+    -------
+    kx : float
+        kx needed to be alfvenic
     """
 
     Bx = B0[0]
@@ -1075,6 +1285,11 @@ def predict_kx_alfven(ky,kz,B0,delBperp):
 def _get_perp_component(x1,y1):
     """
     Computes x1perp wrt y1
+
+    Paramters
+    ---------
+    x1/y1 : [float,float,float]
+        vectors
     """
     x1perpx = x1[0]-(x1[0]*y1[0]+x1[1]*y1[1]+x1[2]*y1[2])/(y1[0]*y1[0]+y1[1]*y1[1]+y1[2]*y1[2])*y1[0]
     x1perpy = x1[1]-(x1[0]*y1[0]+x1[1]*y1[1]+x1[2]*y1[2])/(y1[0]*y1[0]+y1[1]*y1[1]+y1[2]*y1[2])*y1[1]
@@ -1082,118 +1297,140 @@ def _get_perp_component(x1,y1):
 
     return [x1perpx,x1perpy,x1perpz]
 
-def alfven_wave_check(dfields,dfieldfluc,klist,xx,tol=.05):
-    """
-    Checks if basic properties of an alfven wave are seen at some location in the simulation
-
-    Note: dfields is normally the yz averaged removed fields (e.g. B_fluc(x,y,z) = B(x,y,z)-<B(x,y,z)>_(y,z))
-    """
-
-    from lib.array_ops import find_nearest
-
-    xxidx = find_nearest(dfields['bz_xx'],xx)
-
-    #TODO: rename these variables. Data is ordered B(x/kx,kz,ky)
-    #TODO: make function that can compute del B/E (kx,ky,kz;xx)
-    kz, ky, bxkzkyx = _ffttransform_in_yz(dfieldfluc,'bx')
-    kz, ky, bykzkyx = _ffttransform_in_yz(dfieldfluc,'by')
-    kz, ky, bzkzkyx = _ffttransform_in_yz(dfieldfluc,'bz')
-
-    kz, ky, exkzkyx = _ffttransform_in_yz(dfieldfluc,'ex')
-    kz, ky, eykzkyx = _ffttransform_in_yz(dfieldfluc,'ey')
-    kz, ky, ezkzkyx = _ffttransform_in_yz(dfieldfluc,'ez')
-
-    B0 = get_B_yzavg(dfields,xxidx)
-
-    # #get delta perp fields
-    # dperpf = get_delta_perp_fields(dfields,B0)
-
-    # check if any of the given k's have the expected properties of an alfven wave
-    # i.e. is deltaBperp parallel to kcrossB0, deltaB is perpendicular to B0, and delB is perpendicular to k
-    # where deltaB is from
-    results = []
-    kxexpected = [] #what kx needs to be for the wave to be alfvenic for each k in klist
-    delBlist = []
-    delElist = []
-    for i in range(0,len(klist)):
-        #pick a k and compute kperp
-        k = klist[i]
-        kperp = _get_perp_component(k,B0) #
-
-        #find nearest discrete point in (x,ky,kz) space we have data for
-        kyidx = find_nearest(ky,k[1])
-        kzidx = find_nearest(kz,k[2])
-        kyperpidx = find_nearest(ky,kperp[1])
-        kzperpidx = find_nearest(kz,kperp[2])
-
-        if(k[0] < 0):
-            _bxkzkyx = np.conj(bxkzkyx)
-            _bykzkyx = np.conj(bykzkyx)
-            _bzkzkyx = np.conj(bzkzkyx)
-            _exkzkyx = np.conj(exkzkyx)
-            _eykzkyx = np.conj(eykzkyx)
-            _ezkzkyx = np.conj(ezkzkyx)
-        else:
-            _bxkzkyx = bxkzkyx
-            _bykzkyx = bykzkyx
-            _bzkzkyx = bzkzkyx
-            _exkzkyx = exkzkyx
-            _eykzkyx = eykzkyx
-            _ezkzkyx = ezkzkyx
-
-        #finalize transform into k space i.e. compute B(kx0,kz0,ky0) from B(x,kz,ky) for k and k perp
-        #note: we never have an array B(kx,ky,kz), just that scalar quantities at k0 and kperp0, which we get from
-        # the just for B(x,kz,ky) as computing the entire B(kx,ky,kz) array would be computationally expensive.
-        # would have to perform wavelet transform for each (ky0,kz0)
-        kx, bxkz0ky0kxxx = wlt(dfieldfluc['bx_xx'],_bxkzkyx[:,kzidx,kyidx]) #note kx is that same for all 6 returns here
-        kx, bykz0ky0kxxx = wlt(dfieldfluc['by_xx'],_bykzkyx[:,kzidx,kyidx])
-        kx, bzkz0ky0kxxx = wlt(dfieldfluc['bz_xx'],_bzkzkyx[:,kzidx,kyidx])
-        kx, exkz0ky0kxxx = wlt(dfieldfluc['ex_xx'],_exkzkyx[:,kzidx,kyidx])
-        kx, eykz0ky0kxxx = wlt(dfieldfluc['ey_xx'],_eykzkyx[:,kzidx,kyidx])
-        kx, ezkz0ky0kxxx = wlt(dfieldfluc['ez_xx'],_ezkzkyx[:,kzidx,kyidx])
-
-        kx, bxperpkz0ky0kxxx = wlt(dfieldfluc['bx_xx'],_bxkzkyx[:,kzperpidx,kyperpidx])
-        kx, byperpkz0ky0kxxx = wlt(dfieldfluc['by_xx'],_bykzkyx[:,kzperpidx,kyperpidx])
-        kx, bzperpkz0ky0kxxx = wlt(dfieldfluc['bz_xx'],_bzkzkyx[:,kzperpidx,kyperpidx])
-
-        kxidx = find_nearest(kx,np.abs(k[0])) #WLT can not find negative kx. Instead we assume symmetry by taking np.abs
-        kxperpidx = find_nearest(kx,np.abs(kperp[0]))
-
-        # if(k[0] < 0): #use reality condition to correct for the fact that we cant compute negative kx using the wlt
-        #     bxkz0ky0kxxx = np.conj(bxkz0ky0kxxx)
-        #     bykz0ky0kxxx = np.conj(bykz0ky0kxxx)
-        #     bzkz0ky0kxxx = np.conj(bzkz0ky0kxxx)
-        #     bxperpkz0ky0kxxx = np.conj(bxperpkz0ky0kxxx)
-        #     byperpkz0ky0kxxx = np.conj(byperpkz0ky0kxxx)
-        #     bzperpkz0ky0kxxx = np.conj(bzperpkz0ky0kxxx)
-
-        kcrossB0 = np.cross(k,B0)
-        delB = [bxkz0ky0kxxx[kxidx,xxidx],bykz0ky0kxxx[kxidx,xxidx],bzkz0ky0kxxx[kxidx,xxidx]]
-        delE = [exkz0ky0kxxx[kxidx,xxidx],eykz0ky0kxxx[kxidx,xxidx],ezkz0ky0kxxx[kxidx,xxidx]]
-        delBlist.append(delB)
-        delElist.append(delE)
-        delBperp = [bxperpkz0ky0kxxx[kxperpidx,xxidx],byperpkz0ky0kxxx[kxperpidx,xxidx],bzperpkz0ky0kxxx[kxperpidx,xxidx]]
-
-        kxexpected.append(predict_kx_alfven(k[1],k[2],B0,delBperp))
-
-        #results.append([is_parallel(delBperp,kcrossB0,tol=0.1),is_perp(delB,B0,tol=0.1),is_perp(k,delB,tol=.1)])
-        testAlfvenval = np.cross(delB,np.cross(k,B0))
-        testAlfvenval /= (np.linalg.norm(delB)*np.linalg.norm(np.cross(k,B0)))
-        if(np.linalg.norm(testAlfvenval) <= tol):
-            belowtol = True
-        else:
-            belowtol = False
-        #belowtol = (testAlfvenval <= tol)
-
-        results.append([(belowtol,np.linalg.norm(testAlfvenval)),is_perp(k,delB,tol=tol)])
-
-    #TODO: consider cleaning up computing delB (maybe move to own function)
-    return results, kxexpected, delBlist, delElist
+#OLD AND NOT USED AND PROBABLY NOT THE BEST SCIENCE
+# def alfven_wave_check(dfields,dfieldfluc,klist,xx,tol=.05):
+#     """
+#     Checks if basic properties of an alfven wave are seen at some location in the simulation
+#
+#     Note: dfields is normally the yz averaged removed fields (e.g. B_fluc(x,y,z) = B(x,y,z)-<B(x,y,z)>_(y,z))
+#     """
+#
+#     from lib.array_ops import find_nearest
+#
+#     xxidx = find_nearest(dfields['bz_xx'],xx)
+#
+#     #TODO: rename these variables. Data is ordered B(x/kx,kz,ky)
+#     #TODO: make function that can compute del B/E (kx,ky,kz;xx)
+#     kz, ky, bxkzkyx = _ffttransform_in_yz(dfieldfluc,'bx')
+#     kz, ky, bykzkyx = _ffttransform_in_yz(dfieldfluc,'by')
+#     kz, ky, bzkzkyx = _ffttransform_in_yz(dfieldfluc,'bz')
+#
+#     kz, ky, exkzkyx = _ffttransform_in_yz(dfieldfluc,'ex')
+#     kz, ky, eykzkyx = _ffttransform_in_yz(dfieldfluc,'ey')
+#     kz, ky, ezkzkyx = _ffttransform_in_yz(dfieldfluc,'ez')
+#
+#     B0 = get_B_yzavg(dfields,xxidx)
+#
+#     # #get delta perp fields
+#     # dperpf = get_delta_perp_fields(dfields,B0)
+#
+#     # check if any of the given k's have the expected properties of an alfven wave
+#     # i.e. is deltaBperp parallel to kcrossB0, deltaB is perpendicular to B0, and delB is perpendicular to k
+#     # where deltaB is from
+#     results = []
+#     kxexpected = [] #what kx needs to be for the wave to be alfvenic for each k in klist
+#     delBlist = []
+#     delElist = []
+#     for i in range(0,len(klist)):
+#         #pick a k and compute kperp
+#         k = klist[i]
+#         kperp = _get_perp_component(k,B0) #
+#
+#         #find nearest discrete point in (x,ky,kz) space we have data for
+#         kyidx = find_nearest(ky,k[1])
+#         kzidx = find_nearest(kz,k[2])
+#         kyperpidx = find_nearest(ky,kperp[1])
+#         kzperpidx = find_nearest(kz,kperp[2])
+#
+#         if(k[0] < 0):
+#             _bxkzkyx = np.conj(bxkzkyx)
+#             _bykzkyx = np.conj(bykzkyx)
+#             _bzkzkyx = np.conj(bzkzkyx)
+#             _exkzkyx = np.conj(exkzkyx)
+#             _eykzkyx = np.conj(eykzkyx)
+#             _ezkzkyx = np.conj(ezkzkyx)
+#         else:
+#             _bxkzkyx = bxkzkyx
+#             _bykzkyx = bykzkyx
+#             _bzkzkyx = bzkzkyx
+#             _exkzkyx = exkzkyx
+#             _eykzkyx = eykzkyx
+#             _ezkzkyx = ezkzkyx
+#
+#         #finalize transform into k space i.e. compute B(kx0,kz0,ky0) from B(x,kz,ky) for k and k perp
+#         #note: we never have an array B(kx,ky,kz), just that scalar quantities at k0 and kperp0, which we get from
+#         # the just for B(x,kz,ky) as computing the entire B(kx,ky,kz) array would be computationally expensive.
+#         # would have to perform wavelet transform for each (ky0,kz0)
+#         kx, bxkz0ky0kxxx = wlt(dfieldfluc['bx_xx'],_bxkzkyx[:,kzidx,kyidx]) #note kx is that same for all 6 returns here
+#         kx, bykz0ky0kxxx = wlt(dfieldfluc['by_xx'],_bykzkyx[:,kzidx,kyidx])
+#         kx, bzkz0ky0kxxx = wlt(dfieldfluc['bz_xx'],_bzkzkyx[:,kzidx,kyidx])
+#         kx, exkz0ky0kxxx = wlt(dfieldfluc['ex_xx'],_exkzkyx[:,kzidx,kyidx])
+#         kx, eykz0ky0kxxx = wlt(dfieldfluc['ey_xx'],_eykzkyx[:,kzidx,kyidx])
+#         kx, ezkz0ky0kxxx = wlt(dfieldfluc['ez_xx'],_ezkzkyx[:,kzidx,kyidx])
+#
+#         kx, bxperpkz0ky0kxxx = wlt(dfieldfluc['bx_xx'],_bxkzkyx[:,kzperpidx,kyperpidx])
+#         kx, byperpkz0ky0kxxx = wlt(dfieldfluc['by_xx'],_bykzkyx[:,kzperpidx,kyperpidx])
+#         kx, bzperpkz0ky0kxxx = wlt(dfieldfluc['bz_xx'],_bzkzkyx[:,kzperpidx,kyperpidx])
+#
+#         kxidx = find_nearest(kx,np.abs(k[0])) #WLT can not find negative kx. Instead we assume symmetry by taking np.abs
+#         kxperpidx = find_nearest(kx,np.abs(kperp[0]))
+#
+#         # if(k[0] < 0): #use reality condition to correct for the fact that we cant compute negative kx using the wlt
+#         #     bxkz0ky0kxxx = np.conj(bxkz0ky0kxxx)
+#         #     bykz0ky0kxxx = np.conj(bykz0ky0kxxx)
+#         #     bzkz0ky0kxxx = np.conj(bzkz0ky0kxxx)
+#         #     bxperpkz0ky0kxxx = np.conj(bxperpkz0ky0kxxx)
+#         #     byperpkz0ky0kxxx = np.conj(byperpkz0ky0kxxx)
+#         #     bzperpkz0ky0kxxx = np.conj(bzperpkz0ky0kxxx)
+#
+#         kcrossB0 = np.cross(k,B0)
+#         delB = [bxkz0ky0kxxx[kxidx,xxidx],bykz0ky0kxxx[kxidx,xxidx],bzkz0ky0kxxx[kxidx,xxidx]]
+#         delE = [exkz0ky0kxxx[kxidx,xxidx],eykz0ky0kxxx[kxidx,xxidx],ezkz0ky0kxxx[kxidx,xxidx]]
+#         delBlist.append(delB)
+#         delElist.append(delE)
+#         delBperp = [bxperpkz0ky0kxxx[kxperpidx,xxidx],byperpkz0ky0kxxx[kxperpidx,xxidx],bzperpkz0ky0kxxx[kxperpidx,xxidx]]
+#
+#         kxexpected.append(predict_kx_alfven(k[1],k[2],B0,delBperp))
+#
+#         #results.append([is_parallel(delBperp,kcrossB0,tol=0.1),is_perp(delB,B0,tol=0.1),is_perp(k,delB,tol=.1)])
+#         testAlfvenval = np.cross(delB,np.cross(k,B0))
+#         testAlfvenval /= (np.linalg.norm(delB)*np.linalg.norm(np.cross(k,B0)))
+#         if(np.linalg.norm(testAlfvenval) <= tol):
+#             belowtol = True
+#         else:
+#             belowtol = False
+#         #belowtol = (testAlfvenval <= tol)
+#
+#         results.append([(belowtol,np.linalg.norm(testAlfvenval)),is_perp(k,delB,tol=tol)])
+#
+#     #TODO: consider cleaning up computing delB (maybe move to own function)
+#     return results, kxexpected, delBlist, delElist
 
 def compute_field_aligned_coord(dfields,xlim,ylim,zlim):
     """
     Computes field aligned coordinate basis using average B0 in provided box
+
+    vpar in parallel to B0
+    vperp2 is in direction of [xhat] cross vpar
+    vperp is in direction of vpar cross vperp2
+
     TODO: rename vars (vperp->eperp, etc...)
+
+    Parameters
+    ----------
+    dfields : dict
+        dict returned by field_loader
+    xlim : array
+        xx bounds of analysis (i.e. where the sweep starts and stops)
+    ylim : array
+        yy bounds of each integration box
+    zlim : array
+        zz bounds of each integration box
+
+    Returns
+    -------
+    vparbasis/vperp1basis/vperp2basis : [float,float,float]
+        field aligned basis (ordered [vx,vy,vz])
     """
     from lib.array_ops import find_nearest
     from copy import deepcopy
@@ -1227,6 +1464,24 @@ def change_velocity_basis(dfields,dpar,xlim,ylim,zlim,debug=False):
     """
     Converts to field aligned coordinate system
     Parallel direction is along average magnetic field direction at average in limits
+
+    Parameters
+    ----------
+    dfields : dict
+        dict returned by field_loader
+    dpar : dict
+        dict returned by read_particles
+    xlim : array
+        xx bounds of analysis (i.e. where the sweep starts and stops)
+    ylim : array
+        yy bounds of each integration box
+    zlim : array
+        zz bounds of each integration box
+
+    Returns
+    -------
+    dparnewbasis : dict
+        particle dictionary in new basis
     """
     from copy import deepcopy
 
@@ -1271,7 +1526,21 @@ def compute_temp_aniso(dparfieldaligned,vmax,dv,V=[0.,0.,0.]):
 
     Assumes particles with velocity greater than vmax (along any direction) are negligible
 
+    Parameters
+    ----------
+    dparfieldaligned : dict
+        dict returned by change_velocity_basis
+    vmax : float
+        max velocity to build distribution functions up to
+    dv : float
+        space in velocity space
+    V : [float,float,float]
+        drift velocity formatted Vx Vy Vz
 
+    Returns
+    -------
+    Tperp_over_Tpar : float
+        estimated temp anisotropy
     """
     from copy import deepcopy
 
@@ -1329,57 +1598,6 @@ def take_ifft2(data):
 
     return ifftdata
 
-def _iffttransform_in_yz(fftdfields,fieldkey):
-    """
-    Takes f(x,kz,ky) and computes f(x,z,y) using a 2d fft for some given field
-    """
-
-    fieldifftsweepoverx = []
-    for xxindex in range(0,len(fftdfields[fieldkey])):
-        fieldslicefft = np.asarray(fftdfields[fieldkey])[xxindex,:,:]
-        fieldslice = take_ifft2(fieldslicefft)
-        fieldifftsweepoverx.append(fieldslice)
-    fieldifftsweepoverx = np.asarray(fieldifftsweepoverx)
-
-    return fieldifftsweepoverx
-
-def yz_fft_filter(dfields,ky0,kz0):
-    """
-    Filter fields to specified k
-    """
-    from copy import deepcopy
-    from lib.array_ops import find_nearest
-
-    dfieldsfiltered = deepcopy(dfields)
-
-    keys = {'ex','ey','ez','bx','by','bz'}
-
-    #take fft
-    for key in keys:
-        kz,ky,dfieldsfiltered[key] = _ffttransform_in_yz(dfieldsfiltered,key)
-
-    #filter
-    ky0idx = find_nearest(ky, ky0)
-    kz0idx = find_nearest(kz, kz0)
-    for key in keys:
-        for _xxidx in range(0,len(dfieldsfiltered[key])):
-            for _kzidx in range(0,len(dfieldsfiltered[key][_xxidx])):
-                for _kyidx in range(0,len(dfieldsfiltered[key][_xxidx][_kzidx])):
-                    if(not(_kyidx == ky0idx and _kzidx == kz0idx)):
-                        dfieldsfiltered[key][_xxidx,_kzidx,_kyidx] = 0
-
-    #take ifft
-    for key in keys:
-        dfieldsfiltered[key] = _iffttransform_in_yz(dfieldsfiltered,key) #note: input index order is (x,kz,ky) and output is (x,z,y)
-
-        dfieldsfiltered[key] = np.swapaxes(dfieldsfiltered[key], 0, 2) #change index order from (x,z,y) to (z,y,x)
-        dfieldsfiltered[key] = np.swapaxes(dfieldsfiltered[key], 0, 1)
-
-        dfieldsfiltered[key] = np.real(dfieldsfiltered[key])
-
-
-    return dfieldsfiltered
-
 def transform_field_to_kzkykxxx(ddict,fieldkey,retstep=12):
     """
     Takes fft in y and z and wavelet transform in x of given field/ flow.
@@ -1398,7 +1616,10 @@ def transform_field_to_kzkykxxx(ddict,fieldkey,retstep=12):
 
     Returns
     -------
-    TODO: add returns
+    kz,ky,kx : 1d array
+        coordinates
+    fieldkzkykxxx : 4d array
+        transformed fields
     """
 
     kz, ky, fieldxkzky = _ffttransform_in_yz(ddict,fieldkey)
@@ -1428,6 +1649,21 @@ def compute_vrms(dpar,vmax,dv,x1,x2,y1,y2,z1,z2):
     https://farside.ph.utexas.edu/teaching/plasma/lectures/node29.html
 
     assumes the max speed of any of the particles is less than vmax
+
+    Parameters
+    ----------
+    dpar : dict
+        particle dictionary returned by read_particles
+    dv : float
+        spacing in velocity space
+    x1,x2,y1,y2,z1,z2 : float
+        bounds of box used to compute vrms
+
+    Returns
+    -------
+    vrms_squared : float
+        velocity using root mean squared
+        note that the value is squared
     """
     #TODO: compute vdrift
     vzdrift = 0.
@@ -1628,7 +1864,6 @@ def compute_tau(dpar,dden,vmax,dv,x1,x2,y1,y2,z1,z2):
     -------
     tau : float
         temperature ration Te/Ti in box
-
     """
 
     print("WARNING THIS DOES NOT INCLUDE DRIFT VELOCITY YET")

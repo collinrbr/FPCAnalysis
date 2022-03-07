@@ -147,7 +147,29 @@ def save3Vdata(Hist_out, CEx_out, CEy_out, CEz_out, vx_out, vy_out, vz_out, x_ou
 
 def save2Vdata(Histxy,Histxz,Histyz,CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz, vx, vy, vz, x, enerCEx, enerCEy, enerCEz, Vframe_relative_to_sim, num_par = [], metadata = [], params = {}, filename = 'full2Vdata.nc' ):
     """
+    Saves projected data into netcdf4 file
+
     WARNING: DOES NOT NORMALIZE CEi
+
+    Parameters
+    ----------
+    (Hist/CEi)** : 3d array
+        FPC data along xx axis
+        note, first axis is xx (Hist/CEi)**[xx,v*,v*]
+    vx,vy,vz,x : array
+        coordinate data
+    enerCEi : array
+        energization computed by integrating CEi
+    Vframe_relative_to_sim : float
+        velocity of analysis frame relative to simulation frame
+    num_par : array, opt
+        number of particles in each integration box
+    metadata : array, opt
+        sda metadata associated with each integration box
+    params : dict, opt
+        input parameter dictionary
+    filename : str, opt
+        outputfilename
     """
 
     from netCDF4 import Dataset
@@ -389,8 +411,23 @@ def load3Vnetcdf4(filename):
 
 def load2vdata(filename):
     """
-    Loads 3v netcdf4 data created by projection script
+    Loads 2v netcdf4 data created by projection script
 
+    Parameters
+    ----------
+    filename : str
+        filename/path of netcdf4 file
+
+    Returns
+    -------
+    (Hist_vxvy, Hist_vxvz, Hist_vyvz,
+       C_Ex_vxvy, C_Ex_vxvz, C_Ex_vyvz,
+       C_Ey_vxvy, C_Ey_vxvz, C_Ey_vyvz,
+       C_Ez_vxvy, C_Ez_vxvz, C_Ez_vyvz,
+       vx, vy, vz, x_in,
+       enerCEx_in, enerCEy_in, enerCEz_in,
+       Vframe_relative_to_sim_in, metadata_in, params_in) : 3d/1d and floats
+          data from save2Vdata(). See save2Vdata
     """
     from netCDF4 import Dataset
     from datetime import datetime

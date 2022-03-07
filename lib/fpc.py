@@ -171,6 +171,22 @@ def _comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock,
 def project_CEi_hist(Hist, CEx, CEy, CEz):
     """
     Project to 2V
+
+    Parameters
+    ----------
+    Hist : 3D array
+        distrubution function
+    CEx : 3D array
+        FPC wrt Ex fields
+    CEy : 3D array
+        FPC wrt Ey fields
+    CEz : 3D array
+        FPC wrt Ez fields
+
+    Returns
+    -------
+    (Hist/CEi)** : 2D array
+        2D projection onto ** axis
     """
     from lib.array_ops import array_3d_to_2d
 
@@ -313,11 +329,7 @@ def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim
         x1 += dx
         x2 += dx
 
-    #empty results array
-    # CEx_out = [None for _tmp in x1task]
-    # CEy_out = [None for _tmp in x1task]
-    # CEz_out = [None for _tmp in x1task]
-    # Hist_out = [None for _tmp in x1task]
+    #make empty results array
     Histxy = [None for _tmp in x1task]
     Histxz = [None for _tmp in x1task]
     Histyz = [None for _tmp in x1task]
@@ -351,14 +363,12 @@ def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim
         while(not_finished):
             not_finished = False
             if(len(futures) >= 0):
-                #for _i in range(0,len(futures)):
                 _i = 0
                 while(_i < len(futures)):
-                    #print(_i)
                     if(not(futures[_i].done())):
                         not_finished = True
                         _i += 1
-                    else:#(futures[_i].done()):
+                    else:
                         tskidx = jobidxs[_i]
                         _output = futures[_i].result() #return vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx, CEy, CEz
                         print("Got result for x1: ",x1task[tskidx]," x2: ",x2task[tskidx],' npar:', _output[3])
@@ -379,7 +389,6 @@ def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim
                         CEzyz[tskidx] = _output[16]
                         num_par_out[tskidx] = _output[3] #TODO: use consistent ordering of variables
                         x_out[tskidx] = (x2task[tskidx]+x1task[tskidx])/2.
-                        #num_completed += 1
 
                         #saves ram
                         print("Deleting future for x1: ",x1task[tskidx]," x2: ",x2task[tskidx])
@@ -391,41 +400,6 @@ def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim
                 time.sleep(10.)
 
         print("Done with processes!")
-        # num_completed = 0
-        # while(not_finished):
-        #     for _i in range(0,len(futures)):
-        #     #    if(futures[_i].done()):
-        #             print("Got result for x1: ",x1task[tskidx]," x2: ",x2task[tskidx])
-        #             _output = futures[_i].result() #return vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx, CEy, CEz
-        #             tskidx = jobidxs[_i]
-        #             vx = _output[0]
-        #             vy = _output[1]
-        #             vz = _output[2]
-        #             Histxy[tskidx] = _output[5]
-        #             Histxz[tskidx] = _output[6]
-        #             Histyz[tskidx] = _output[7]
-        #             CExxy[tskidx] = _output[8]
-        #             CExxz[tskidx] = _output[9]
-        #             CExyz[tskidx] = _output[10]
-        #             CEyxy[tskidx] = _output[11]
-        #             CEyxz[tskidx] = _output[12]
-        #             CEyyz[tskidx] = _output[13]
-        #             CEzxy[tskidx] = _output[14]
-        #             CEzxz[tskidx] = _output[15]
-        #             CEzyz[tskidx] = _output[16]
-        #             num_par_out[tskidx] = _output[3] #TODO: use consistent ordering of variables
-        #             x_out[tskidx] = (x2task[tskidx]+x1task[tskidx])/2.
-        #             num_completed += 1
-        #
-        #             # #saves ram
-        #             # del futures[_i]
-        #             # del jobidxs[_i]
-        #             # gc.collect()
-        #
-        #     #if(num_completed+1 ==len(jobidxs)):
-        #     #    not_finished = False
-        #     break
-
         executor.shutdown() #will start to shut things down as resouces become free
 
         return CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz,x_out, Histxy,Histxz,Histyz, vx, vy, vz, num_par_out

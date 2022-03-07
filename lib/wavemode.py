@@ -255,10 +255,25 @@ def _wavemodes_key_to_label(key):
     return lbl
 
 def wavemodes_table(dwavemodes,keys,depth,flnm='',writeToText=False):
-    #makes table of keys
-    #depth is int that determines how many are printed in order starting from the biggest
-    #will need to build column labels
+    """
+    Makes table of properties of wavemodes
 
+    TODO: move to plot lib folder
+
+    Parameters
+    ----------
+    dwavemodes : dict
+        dictionary returned by compute_wavemodes
+    keys : array of strings
+        keys associated with properties of wavemodes
+        call dwavemodes['wavemodes'][0].keys() to see list of possible keys
+    depth : int
+        number of wavemodes plotted on table in order starting with first wavemode in dict
+    flnm : string (opt)
+        name of file to save table to
+    writeToText : bool (opt)
+        if true, will also print out text file containing same data as table
+    """
     from lib.plot.table import make_table
 
     collbls = [_wavemodes_key_to_label(key) for key in keys]

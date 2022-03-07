@@ -7,6 +7,19 @@ import matplotlib.pyplot as plt
 import os
 
 def make_gif_from_folder(directory,flnm):
+    """
+    Makes a gif using the pngs in given directory
+
+    Frames are ordered alphanumerically using sorted() function
+
+    Parameters
+    ----------
+    directory : str
+        name of directory with pngs in it
+    flnm : str
+        output file name of gif
+    """
+
     #Not sure why this is necessary to break this up into a seperate function rather than including in make_superplot_gif
     #make gif
     import imageio #should import here as it might not be installed on every machine
@@ -29,6 +42,18 @@ def keyname_to_plotname(keyname,axis):
     Takes keyname and return string of appropriate format for plotting
 
     TODO: add flow keynames
+
+    Parameters
+    ----------
+    keyname : str
+        keyname to be formatted
+    axis : str, optional
+        name of axis in position space (_xx, _yy, _zz)
+
+    Returns
+    -------
+    plotname : str
+        formatted string
     """
     plotname = ''
 
@@ -56,7 +81,17 @@ def keyname_to_plotname(keyname,axis):
 
 def plume_keyname_to_plotname(keyname):
     """
+    Returns formatted string associated with keyname to make better looking plots
 
+    Parameters
+    ----------
+    keyname : str
+        keyname to be formatted
+
+    Returns
+    -------
+    plotname : str
+        formatted string
     """
     plotname = ''
 

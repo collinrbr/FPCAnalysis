@@ -674,7 +674,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     clrbar31 = plt.colorbar(im31, ax=axs[3,1])#,format='%.1e')
     if(not(plotLog)):
         clrbar31.formatter.set_powerlimits((0, 0))
-    
+
     #CEz_yz
     maxCe = max(np.max(CEz_yz),abs(np.max(CEz_yz)))
     if(plotLog):
@@ -717,7 +717,34 @@ def make_9panel_sweep_from_2v(Hist_vxvy, Hist_vxvz, Hist_vyvz,
                               vx, vy,vz,params_in,x,metadata,
                               directory,plotLog=False):
     """
+    Makes sweep of super figure of distribution and velocity sigantures from all different projections
+    i.e. different viewing angles
 
+    Parameters
+    ----------
+    vx : 2d array
+        vx velocity grid
+    vy : 2d array
+        vy velocity grid
+    vmax : float
+        specifies signature domain in velocity space
+        (assumes square and centered about zero)
+    H_** : 2d array
+        projection onto ** axis of distribution function
+    CE*_* : 2d array
+        projection onto ** axis of CE*
+    flnm : str, optional
+        specifies filename if plot is to be saved as png.
+        if set to default, plt.show() will be called instead
+    params : dict
+        dictionary with simulation parameters in it
+    metadata : array of strings
+        array where each element is a string describing metadata to be shown on plot
+    directory : string
+        name of output directory for pngs of each frame of sweep
+    plotLog : bool
+        if true will plot using colors.SymLogNorm()
+        that is will plot both negative and positive values using a log color scale when possible and a linear scale from -1 to 1
     """
 
     try:

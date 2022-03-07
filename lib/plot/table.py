@@ -9,7 +9,16 @@ import os
 
 def make_table(rowlbls,collbls,data,ttl='',flnm=''):
     """
-    Makes a simple table
+    Makes a simple table using matplotlibs default table
+
+    Parameters
+    ----------
+    rowlbls : array of strings
+        label of each row
+    collbls : array of strings
+        label of each column
+    data : 2d array
+        data to be plotted
     """
     fig, ax = plt.subplots()
     fig.set_figheight(.5*len(rowlbls))

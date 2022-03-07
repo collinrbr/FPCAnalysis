@@ -7,7 +7,19 @@ import math
 
 def load_plume_sweep(flnm):
     """
+    Load data from plume sweep
+
     Assumes 2 species
+
+    Parameters
+    ----------
+    flnm : str
+        path to sweep to be loaded
+
+    Returns
+    -------
+    plume_sweep : dict
+        dictionary of data related to plume
     """
 
     f = open(flnm)
@@ -96,7 +108,20 @@ def load_plume_sweep(flnm):
 
 def rotate_and_norm_to_plume_basis(wavemode,epar,eperp1,eperp2,comp_error_prop=False):
     """
-    Note: plume's basis of x,y,z is not the same as our simulations basis of x,y,z
+    Rotates wavemode around epar axis so that eperp2 = 0
+
+    WARNING: plume's basis of x,y,z is not the same as our simulations basis of x,y,z
+    This notation is overloaded
+
+    Parameters
+    ----------
+    wavemode : dict
+        subdictionary of dwavemodes from compute_wavemodes
+    epar,eperp1,eperp2 : [float,float,float]
+        vectors of field aligned coordinate basis
+    comp_error_prop : bool, opt
+        when true, propogates error from delta_kx everywhere
+        WARNING: must manually assign delta_kx for wavemode before setting equal to True
     """
     from copy import deepcopy
     plume_basis_wavemode = deepcopy(wavemode)
@@ -205,39 +230,32 @@ def rotate_and_norm_to_plume_basis(wavemode,epar,eperp1,eperp2,comp_error_prop=F
 
     return plume_basis_wavemode
 
-#TODO: remove either this or get_freq_from_wvmd
-def get_freq_from_wavemode(wm,epar,eperp1,eperp2):
-    """
-    Predicts dispersion relation frequency using faradays law and assuming plane wave solutions
-
-    Note: this leads to three constraint equations that can all be used to independently calculate frequency
-    These equations predict similar values
-    """
-
-    wm = rotate_and_norm_to_plume_basis(wm,epar,eperp1,eperp2) #need to be in plume basis i.e. kperp2 = 0
-
-    #consistency check using div B = 0
-    kdotb=(wm['Bperp1']*wm['kperp1']+wm['Bpar']*wm['kpar'])/(np.linalg.norm([wm['kperp1'],wm['kperp2'],wm['kpar']])*np.linalg.norm([wm['Bperp1'],wm['Bperp2'],wm['Bpar']]))
-    if(np.abs(kdotb) > 0.1):
-        print("Warning, div B != 0: div B = " + str(kdotb))
-
-    #get omega using first constraint
-    omega1 = -wm['kpar']/wm['Bperp1']*wm['Eperp2']
-
-    #get omega using first constraint
-    omega2 = -(1./wm['Bperp2'])*(wm['kpar']*wm['Eperp1']-wm['kperp1']*wm['Epar'])
-
-    #get omega using second constraint
-    omega3 = wm['kperp1']/wm['Bpar']*wm['Eperp2']
-
-    return omega1, omega2, omega3, wm
-
 def kaw_curve(kperp,kpar,beta_i,tau,
               comp_error_prop=False,delta_kperp = 0., delta_kpar = 0., delta_beta_i = 0., delta_tau = 0.):
     """
-    Dispersion relation for a kinetic alfven wave
+    Empirical dispersion relation for a kinetic alfven wave
 
     From Howes et al. 2014
+
+    Parameters
+    ----------
+    kperp : float
+        kperp value
+    kpar : float
+        kpar value
+    beta_i : float
+        ion plasma beta
+    tau : float
+        Ti/Te temperature ratio
+    comp_error_prop : bool, opt
+        if true, propogates error
+    delta_kperp,delta_kpar,delta_beta_i,delta_tau : float
+        source error
+
+    Returns
+    -------
+    omega_over_Omega_i : float
+        ratio of freq to gyrofreq
     """
 
     if(comp_error_prop):
@@ -259,9 +277,31 @@ def kaw_curve(kperp,kpar,beta_i,tau,
 def fastmagson_curve(kperp,kpar,beta_i,tau,
               comp_error_prop=False,delta_kperp = 0., delta_kpar = 0., delta_beta_i = 0., delta_tau = 0.):
     """
+    Dispersion for fast magnetosonic wave
 
     From Klein et al. 2012
+
+    Parameters
+    ----------
+    kperp : float
+        kperp value
+    kpar : float
+        kpar value
+    beta_i : float
+        ion plasma beta
+    tau : float
+        Ti/Te temperature ratio
+    comp_error_prop : bool, opt
+        if true, propogates error
+    delta_kperp,delta_kpar,delta_beta_i,delta_tau : float
+        source error
+
+    Returns
+    -------
+    omega_over_Omega_i : float
+        ratio of freq to gyrofreq
     """
+
     if(comp_error_prop):
         from uncertainties import ufloat
         from uncertainties.umath import sqrt
@@ -287,8 +327,29 @@ def fastmagson_curve(kperp,kpar,beta_i,tau,
 def slowmagson_curve(kperp,kpar,beta_i,tau,
               comp_error_prop=False,delta_kperp = 0., delta_kpar = 0., delta_beta_i = 0., delta_tau = 0.):
     """
+    Dispersion for slow magnetosonic wave
 
     From Klein et al. 2012
+
+    Parameters
+    ----------
+    kperp : float
+        kperp value
+    kpar : float
+        kpar value
+    beta_i : float
+        ion plasma beta
+    tau : float
+        Ti/Te temperature ratio
+    comp_error_prop : bool, opt
+        if true, propogates error
+    delta_kperp,delta_kpar,delta_beta_i,delta_tau : float
+        source error
+
+    Returns
+    -------
+    omega_over_Omega_i : float
+        ratio of freq to gyrofreq
     """
     if(comp_error_prop):
         from uncertainties import ufloat
@@ -315,8 +376,27 @@ def slowmagson_curve(kperp,kpar,beta_i,tau,
 def whistler_curve(kperp,kpar,beta_i,tau,
               comp_error_prop=False,delta_kperp = 0., delta_kpar = 0., delta_beta_i = 0., delta_tau = 0.):
     """
+    Analytical limit of fastmagson_curve(kperp,kpar) when kpar << kperp
 
-    Limit of fastmagson_curve(kperp,kpar) when kpar << kperp
+    Parameters
+    ----------
+    kperp : float
+        kperp value
+    kpar : float
+        kpar value
+    beta_i : float
+        ion plasma beta
+    tau : float
+        Ti/Te temperature ratio
+    comp_error_prop : bool, opt
+        if true, propogates error
+    delta_kperp,delta_kpar,delta_beta_i,delta_tau : float
+        source error
+
+    Returns
+    -------
+    omega_over_Omega_i : float
+        ratio of freq to gyrofreq
     """
     if(comp_error_prop):
         from uncertainties import ufloat
@@ -337,6 +417,20 @@ def whistler_curve(kperp,kpar,beta_i,tau,
 
 def select_wavemodes(dwavemodes, depth, kpars, kperps, tol=0.05):
     """
+    Grabs wavemodes with given kpar and kperp from kpar/kperp list
+
+    Searches only the first 0 to depth in dwavemodess
+
+    Parameters
+    ----------
+    dwavemodes : dict
+        dict returned by compute wavemodes
+    depth : int
+        depth to search dictionary
+    kpars/kperps : array
+        parallel arrays that specify kpar and kperp of desired wavemode
+    tol : float, opt
+        tolerance of agreement between wavemode and given kpar/kperp
     """
     from lib.plume import rotate_and_norm_to_plume_basis
     #iterate over kpars
@@ -354,7 +448,7 @@ def select_wavemodes(dwavemodes, depth, kpars, kperps, tol=0.05):
         #save to output arrays
         wavemodes_matching_kpar.append(_wvmds)
 
-    #iterate over kperps
+    #iterate over wavemodes
     wavemodes_matching_kperp = []
     for kpar,kperp in zip(kpars,kperps):
         _wvmds = {'wavemodes':[]}
@@ -373,7 +467,36 @@ def select_wavemodes(dwavemodes, depth, kpars, kperps, tol=0.05):
 
 def get_freq_from_wvmd(wm,tol=0.01, comp_error_prop=False,debug=False):
     """
+    Computes frequency using faradays law of given wavemode
+
+    There are different returns depending on comp_error_prop
+
+    Note: there are 3 equations that we can derive using faraday's law, assuming plane wave solutions, and k = kperp + kpar
+
     TODO: there might be two different 'tol' vars in this function. remove/rename one
+
+    Parameters
+    ----------
+    wm : dict
+        wavemode from rotate_and_norm_to_plume_basis
+    tol : float
+        tolerance of agreement between omega1 and omega3
+    comp_error_prop : bool, optional
+        if true, propogates error
+        note: must propgate error in rotate_and_norm_to_plume_basis first
+    debug : bool, optional
+        if true, will print debug statements
+
+    Returns (comp_eror_prop == True)
+    --------------------------------
+    omega1real, omega1imag, omega2real, omega2imag, omega3real, omega3imag : ufloat
+        omega/Omega_i using different constraints
+        must break up like this as ufloat does not handle complex numbers yet
+
+    Returns (comp_eror_prop == False)
+    --------------------------------
+    omega1, omega2, omega3 : float
+        omega/Omega_i using different constraints
     """
     if(np.abs(wm['kperp2'])>tol):
         print("WARNING: not in correct basiss... Please normalize such that kperp2 = 0 (see rotate_and_norm_to_plume_basis())...")
@@ -436,6 +559,19 @@ def get_freq_from_wvmd(wm,tol=0.01, comp_error_prop=False,debug=False):
 
 def _project_onto_plane(norm,vec):
     """
+    Projects vector onto plane
+
+    Parameters
+    ----------
+    norm : [float,float,float]
+        normal of plane
+    vec : [float,float,float]
+        vector to be projected
+
+    Returns
+    -------
+    projection : [float,float,float]
+        projection onto plane
     """
     norm = np.asarray(norm)
     vec = np.asarray(vec)
@@ -445,6 +581,17 @@ def _project_onto_plane(norm,vec):
 
 def _angle_between_vecs(vec1,vec2):
     """
+    Computes angle between two vectors
+
+    Parameters
+    ----------
+    vec1,vec2 : [float,float,float]
+        vectors
+
+    Returns
+    -------
+    tht : float
+        angle between vectors
     """
     _vec1 = np.asarray(vec1)
     _vec2 = np.asarray(vec2)
@@ -456,28 +603,29 @@ def _angle_between_vecs(vec1,vec2):
         from uncertainties.umath import sqrt
         from uncertainties import ufloat
 
-        #print("typage of vecs in angle")
-        #print(type(vec1))
-        #print(type(vec1[0]))
-        #print(type(vec1[1]))
-        #print(type(vec1[2]))
-        #print(type(vec2))
-        #print(type(vec2[0]))
-        #print(type(vec2[1]))
-        #print(type(vec2[2]))
-
         len1 = sqrt(vec1[0]**2.+vec1[1]**2.+vec1[2]**2.) #this function uses sqrt, which requires it's own uncertainties function when working with ufloat
         len2 = sqrt(vec2[0]**2.+vec2[1]**2.+vec2[2]**2.)
 
         tht = unumpy.arccos(np.dot(_vec1,_vec2)/(len1*len2))
         tht = tht.ravel()[0] #above function returns ndarray that does have the wanted attributes used by later functions, must convert back to ufloat
 
-        #print('type in func')
-        #print(type(tht))
     return tht
 
 def _rotate(tht,rotationaxis,vect):
     """
+    Rotates vect about rotationaxis by angle
+
+    Parameters
+    ----------
+    tht : float
+        angle to rotate by
+    rotationaxis : [float,float,float]
+        axis to rotate around
+
+    Returns
+    -------
+    rotatedvec : [float,float,float]
+        rotated vector
     """
     rotationaxis = np.asarray(rotationaxis)
     vect = np.asarray(vect)
@@ -501,11 +649,7 @@ def _rotate(tht,rotationaxis,vect):
     except:
         from uncertainties.umath import cos, sin
         from uncertainties import ufloat
-        #print(tht)
-        #print(type(tht))
-        #print(cos(tht))
-        #print(ux**2.)
-        #print(1.-cos(tht))
+
         r11 = cos(tht)+ux**2.*(1.-cos(tht))
         r21 = uy*ux*(1.-cos(tht))+uz*sin(tht)
         r31 = uz*ux*(1.-cos(tht))-uy*sin(tht)

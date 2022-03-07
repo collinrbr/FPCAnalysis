@@ -11,7 +11,7 @@ import os
 
 def load_fields(path_fields, num):
     """
-
+    WIP
     """
     field_vars = 'ex ey ez bx by bz'.split()
     field = {}

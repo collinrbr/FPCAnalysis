@@ -1,5 +1,6 @@
 # supplementary fucntions lifted from other libraries
 # this was done as scipy was not up to date on server that was used to run code
+# TODO: update server and remove this
 
 import numpy as np
 

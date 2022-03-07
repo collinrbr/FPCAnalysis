@@ -175,7 +175,17 @@ def read_box_of_particles(path, numframe, x1, x2, y1, y2, z1, z2, is2d3v = False
     return pts
 
 def write_particles_to_hdf5(dpar,flnm):
+    """
+    Writes particle data to hdf5 file in similar format to original dHybridR data
     #TODO: make work for 2d data
+
+    Parameters
+    ----------
+    dpar : dict
+        particle dictionary similar to one from read_particles
+    flnm : str
+        output file name
+    """
     try:#if vframe_relative_to_sim key is present, check it
         if(dpar['Vframe_relative_to_sim'] != 0.0):
             print("Warning: this data is not in the frame of the simulation.")
@@ -709,14 +719,26 @@ def read_restart(path,verbose=True,xlim=None,nthreads=1):
 
 def _multi_process_part_mapper(filenum,path):
     """
+    Seperate function used when using multiprocessing
 
+    Grabs particle data from restart file
+
+    Parameters
+    ----------
+    filenum : int
+        number associated with file
+    path : str
+        path to restart file
+
+    Returns
+    -------
+    _pts : dict
+        particle dictionary
     """
     PM = PartMapper3D(path)
     _pts = PM.parts_from_num(filenum)
 
     return _pts
-
-
 
 class PartMapper3D(object):
     """
