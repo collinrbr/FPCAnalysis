@@ -8,7 +8,7 @@ import h5py
 import os
 
 
-def read_particles(path, num, is2d3v = False):
+def read_particles(path, numframe=None, is2d3v = False):
     """
     Loads dHybridR particle data
     TODO: rename to read_dhybridr_particles
@@ -16,8 +16,9 @@ def read_particles(path, num, is2d3v = False):
     Parameters
     ----------
     path : string
-        path to data folder
-    num : int
+        when numframe = none, this is the path and filename (e.g. foo/bar/data.hdf5)
+        when numframe != none, this is the path to data with place to  numframe != none (e.g. Output/Raw/Sp01/raw_sp01_{:08d}.h5)
+    numframe : int, opt
         frame of data this function will load
     is2d3v : bool, opt
         set true is simualation is 2D 3V
@@ -34,7 +35,11 @@ def read_particles(path, num, is2d3v = False):
         dens_vars = 'p1 p2 p3 x1 x2 x3'.split()
 
     pts = {}
-    with h5py.File(path.format(num),'r') as f:
+    if(numframe != None):
+        loadfilename = path.format(numframe)
+    else:
+        loadfilename = path
+    with h5py.File(loadfilename,'r') as f:
         for k in dens_vars:
             pts[k] = f[k][:]
 
@@ -42,8 +47,79 @@ def read_particles(path, num, is2d3v = False):
 
     return pts
 
+def get_dpar_from_bounds(dpar_folder,x1,x2,verbose=False):
+    """
+    Loads all needed particle data files from dpar_folder which is created by preslicedata.py
 
-def read_box_of_particles(path, num, x1, x2, y1, y2, z1, z2, is2d3v = False):
+    TODO: check inputs
+    """
+    import os
+
+    if(x2 < x1):
+        print("Warning, x1 should be less than x2")
+        return
+
+    filenames = os.listdir(dpar_folder)
+    filenames = sorted(filenames)
+    # print("Found files...")
+    # #print(filenames)
+    try:
+        filenames.remove('.DS_store')
+    except:
+        pass
+
+    xbounds = []
+    for f in filenames:
+        bounds = f.split('_')
+        xbounds.append([float(bounds[0]),float(bounds[1])])
+
+    leftmostbound_index = -1 #must lag by one to capture all wanted slices
+    testidx = 0
+    while(float(xbounds[testidx][0])<=x1):
+        testidx += 1
+        leftmostbound_index += 1
+
+        if(testidx >= len(xbounds)):
+            print("warning, requested x1 greater than the upper bound of the domain we are working with...")
+            print("returning single particle with 'x1':[05.*(x1+x2)],'x2':[0.404],'x3':[0.404]")#Lazy, but since v1=v2=v3=0, shouldnt impact FPCs...
+            return {'p1':[0.],'p2':[0.],'p3':[0.],'x1':[05.*(x1+x2)],'x2':[0.404],'x3':[0.404],'Vframe_relative_to_sim':0.0}
+
+    rightmostbound_index = 0
+    testidx = 0
+    while(float(xbounds[testidx][1])<x2):
+        testidx += 1
+        rightmostbound_index += 1
+        if(testidx >= len(xbounds)):
+            rightmostbound_index -= 1.
+            print("warning, requested x2 greater than the upper bound of the domain we are working with...")
+            print("returning everything that is in the given domain...")
+            break
+
+    filenames = filenames[leftmostbound_index:rightmostbound_index+1]
+
+    if(verbose):
+        print('Loading the following files...')
+        for f in filenames:
+            print(f)
+        print('----')
+
+    if(len(filenames) == 0):
+        print("Warning: no files with wanted particle data was found...")
+        return {'p1':[0.],'p2':[0.],'p3':[0.],'x1':[05.*(x1+x2)],'x2':[0.404],'x3':[0.404],'Vframe_relative_to_sim':0.0}
+
+    pts = {'p1':[],'p2':[],'p3':[],'x1':[],'x2':[],'x3':[]}
+    for f in filenames:
+        _pts = read_particles(dpar_folder+f)
+        for key in pts.keys():
+            pts[key].extend(_pts[key][:])
+    for key in pts.keys():
+        pts[key]=np.asarray(pts[key])
+    pts['Vframe_relative_to_sim'] = 0. #TODO: track this throughout slicing so we dont have to assume this when loading
+
+    print("Done loading files for x1=",x1," to x2=",x2)
+    return pts
+
+def read_box_of_particles(path, numframe, x1, x2, y1, y2, z1, z2, is2d3v = False):
     """
     Loads subset of dHybridR particle data
 
@@ -56,7 +132,7 @@ def read_box_of_particles(path, num, x1, x2, y1, y2, z1, z2, is2d3v = False):
     ----------
     path : string
         path to data folder
-    num : int
+    numframe : int
         frame of data this function will load
     x1 : float
         lower x bound
@@ -83,7 +159,7 @@ def read_box_of_particles(path, num, x1, x2, y1, y2, z1, z2, is2d3v = False):
     dens_vars = 'p1 p2 p3 x1 x2 x3'.split()
 
     pts = {}
-    with h5py.File(path.format(num),'r') as f:
+    with h5py.File(path.format(numframe),'r') as f:
         gptsx = (x1 < f['x1'][:] ) & (f['x1'][:] < x2)
         gptsy = (y1 < f['x2'][:] ) & (f['x2'][:] < y2)
         if(not(is2d3v)):
@@ -97,6 +173,35 @@ def read_box_of_particles(path, num, x1, x2, y1, y2, z1, z2, is2d3v = False):
     pts['Vframe_relative_to_sim'] = 0.
 
     return pts
+
+def write_particles_to_hdf5(dpar,flnm):
+    """
+    Writes particle data to hdf5 file in similar format to original dHybridR data
+    #TODO: make work for 2d data
+
+    Parameters
+    ----------
+    dpar : dict
+        particle dictionary similar to one from read_particles
+    flnm : str
+        output file name
+    """
+    try:#if vframe_relative_to_sim key is present, check it
+        if(dpar['Vframe_relative_to_sim'] != 0.0):
+            print("Warning: this data is not in the frame of the simulation.")
+            print("dpar['Vframe_relative_to_sim'] = ",dpar['Vframe_relative_to_sim'],"!=0")
+            print("Please return this data to the simulation frame and call it again...")
+            return
+    except:
+        pass
+
+    f = h5py.File(flnm,'w')
+
+    dens_vars = 'p1 p2 p3 x1 x2 x3'.split()
+    for key in dens_vars:
+        f.create_dataset(key,(len(dpar[key]),),data=dpar[key])
+
+    f.close()
 
 def build_slice(x1, x2, y1, y2, z1, z2):
     """
@@ -287,7 +392,7 @@ def all_dfield_loader(field_vars='all', components='all', num=None,
 
     return alld
 
-
+#TODO: load all fluid quantities and rename this to fluid_loader (and rename flow to fluid where appropriate)
 def flow_loader(flow_vars=None, num=None, path='./', sp=1, verbose=False, is2d3v=False):
     """
     Loads dHybridR flow data
@@ -352,6 +457,70 @@ def flow_loader(flow_vars=None, num=None, path='./', sp=1, verbose=False, is2d3v
     d['Vframe_relative_to_sim'] = 0.
     return d
 
+def den_loader(num=None, path='./', sp=1, verbose=False, is2d3v=False):
+    """
+    Loads dHybridR fluid density data
+
+    Parameters
+    num : int
+        used to specify which frame (i.e. time slice) is loaded
+    path : string
+        path to data folder
+    sp : int
+        species number. Used to load different species
+    verbose : boolean
+        if true, prints debug information
+    is2d3v : bool, opt
+        set true is simualation is 2D 3V
+
+    Returns
+    -------
+    d : dict
+        dictionary containing den information and location. Ordered (z,y,x)
+    """
+
+    import glob
+    if path[-1] != '/':
+        path = path + '/'
+    dpath = path+"Output/Phase/x3x2x1/Sp{sp:02d}/dens_sp{sp:02d}_{tm:08}.h5"
+    d = {}
+
+    if verbose: print(dpath.format(sp=sp, tm=num))
+    with h5py.File(dpath.format(sp=sp, tm=num),'r') as f:
+        _ = f['DATA'].shape
+        dim = len(_)
+        d['den'] = f['DATA'][:]
+        if is2d3v:
+            _N2,_N1 = _
+            x1,x2 = f['AXIS']['X1 AXIS'][:], f['AXIS']['X2 AXIS'][:]
+            dx1 = (x1[1]-x1[0])/_N1
+            dx2 = (x2[1]-x2[0])/_N2
+            d['den_xx'] = dx1*np.arange(_N1) + dx1/2. + x1[0]
+            d['den_yy'] = dx2*np.arange(_N2) + dx2/2. + x2[0]
+        else:
+            _N3,_N2,_N1 = _
+            x1 = f['AXIS']['X1 AXIS'][:]
+            x2 = f['AXIS']['X2 AXIS'][:]
+            x3 = f['AXIS']['X3 AXIS'][:]
+            dx1 = (x1[1]-x1[0])/_N1
+            dx2 = (x2[1]-x2[0])/_N2
+            dx3 = (x3[1]-x3[0])/_N3
+            d['den_xx'] = dx1*np.arange(_N1) + dx1/2. + x1[0]
+            d['den_yy'] = dx2*np.arange(_N2) + dx2/2. + x2[0]
+            d['den_zz'] = dx3*np.arange(_N3) + dx3/2. + x3[0]
+
+        x1 = f['AXIS']['X1 AXIS'][:]
+        x2 = f['AXIS']['X2 AXIS'][:]
+        x3 = f['AXIS']['X3 AXIS'][:]
+        dx1 = (x1[1]-x1[0])/_N1
+        dx2 = (x2[1]-x2[0])/_N2
+        dx3 = (x3[1]-x3[0])/_N3
+        d['den_xx'] = dx1*np.arange(_N1) + dx1/2. + x1[0]
+        d['den_yy'] = dx2*np.arange(_N2) + dx2/2. + x2[0]
+        d['den_zz'] = dx3*np.arange(_N3) + dx3/2. + x3[0]
+
+    d['Vframe_relative_to_sim'] = 0.
+    return d
 
 def dict_2d_to_3d(dict, axis):
     """
@@ -447,7 +616,8 @@ def _pts_to_par_dict(pts):
     return dpar
 
 
-def read_restart(path,verbose=False,xlim=None):
+def read_restart(path,verbose=True,xlim=None,nthreads=1):
+    #TODO: add 'path_restart' example to example files
     """
     Loads all restart files. Use's modified code from Dr. Colby Haggerty.
 
@@ -483,20 +653,92 @@ def read_restart(path,verbose=False,xlim=None):
                                                     #the results will be the same
                                                     #TODO: optimize by restricting in
                                                     #yy and zz too
+    if(nthreads == 1):
+        pts = PM.parts_from_num(procs[-1])
+        procs = procs[:-1]
+        for _c,_p in enumerate(procs):
+            if(verbose):
+                print('loaded proc str(_p): '+ str(_c) + ' of ' + str(len(procs))) #TODO: fix this output, it does not report first loaded file above
+            _pts = PM.parts_from_num(_p)
+            pts = np.concatenate([pts,_pts],axis=0)
 
-    pts = PM.parts_from_num(procs[-1])
-    procs = procs[:-1]
-    for _c,_p in enumerate(procs):
-        if(verbose):
-            print(str(_p) + ' of ' + str(procs[-1]))
-        _pts = PM.parts_from_num(_p)
-        pts = np.concatenate([pts,_pts],axis=0)
+    else:
+        from concurrent.futures import ProcessPoolExecutor
+
+        #empty results array
+        pts = PM.parts_from_num(procs[0])
+
+        tasks = procs[1:]
+
+        #do multithreading
+        with ProcessPoolExecutor(max_workers = nthreads) as executor:
+            futures = []
+            jobids = [] #array to track where in results array result returned by thread should go
+            num_working = 0
+            tasks_completed = 0
+            taskidx = 0
+
+            while(tasks_completed < len(tasks)): #while there are jobs to do
+                if(num_working < nthreads and taskidx < len(tasks)): #if there is a free worker and job to do, give job
+                    if(verbose):
+                        print('Loading '+str(taskidx) + ' of ' + str(procs[-1]))
+                    futures.append(executor.submit(_multi_process_part_mapper,tasks[taskidx],path))
+                    jobids.append(taskidx)
+                    taskidx += 1
+                    num_working += 1
+                else:
+                    exists_idle = False
+                    nft = len(futures)
+                    _i = 0
+                    while(_i < nft):
+                        if(futures[_i].done()): #if done get result
+                            #get results and place in return vars
+                            resultidx = jobids[_i]
+                            _output = futures[_i].result() #return vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx, CEy, CEz
+                            pts = np.concatenate([pts,_output],axis=0)
+
+                            if(verbose):
+                                print('Loaded '+str(resultidx) + ' of ' + str(procs[-1]))
+
+                            #update multithreading state vars
+                            num_working -= 1
+                            tasks_completed += 1
+                            exists_idle = True
+                            futures.pop(_i)
+                            jobids.pop(_i)
+                            nft -= 1
+                            _i += 1
+
+                    if(not(exists_idle)):
+                        time.sleep(1)
 
     dpar = _pts_to_par_dict(pts)
     del pts
 
     return dpar
 
+def _multi_process_part_mapper(filenum,path):
+    """
+    Seperate function used when using multiprocessing
+
+    Grabs particle data from restart file
+
+    Parameters
+    ----------
+    filenum : int
+        number associated with file
+    path : str
+        path to restart file
+
+    Returns
+    -------
+    _pts : dict
+        particle dictionary
+    """
+    PM = PartMapper3D(path)
+    _pts = PM.parts_from_num(filenum)
+
+    return _pts
 
 class PartMapper3D(object):
     """
@@ -658,7 +900,7 @@ class PartMapper3D(object):
         Returns
         -------
         nums : array
-            has nums associated
+            has nums associated with pariticles within specified range
         """
 #         i0 = np.int(np.floor(x0/self.rx*self.px))
 #         i1 = np.int(np.min([np.ceil(x1/self.rx*self.px), self.px - 1]))
@@ -669,18 +911,23 @@ class PartMapper3D(object):
 
 #         return nums
 
-        #hacky way to do it (would be a bit more efficient to fix the math
+        #hacky way to do it (would be a bit more efficient to fix the math above
         #  in the above commented out block to work for 3d rather than 2d)
         maxnum = self.px*self.py*self.pz
         nums = []
         for n in range(0, maxnum):
             ip, jp, kp = self._num_to_index(n)
             bcx,bcy,bcz = self._box_center(ip, jp, kp)
-            xxboxwidth = PM.rx / PM.px #each restart file contains a subbox
+            #xxboxwidth = self.rx / self.px #each restart file contains a subbox
                                      #that normally contains many cells
+            bcxr,_,_ = self._box_center(ip+1, jp, kp)
+            bcxl,_,_ = self._box_center(ip-1, jp, kp)
+            xxboxwidthright = (bcxr-bcx)#/2. TODO: find out if this should be /2. or not. It should be divided by two if all boxes are the same time
+                                                                                            #worse case scenario, we load more than we need so we will leave things like this for now
+            xxboxwidthleft = (bcx-bcxl)#/2.
 
             #This block will load restart file if it is even partially in the xrange
-            if(bcx+xxboxwidth/2. >= x0 and bcx-xxboxwidth/2. <= x1):
+            if(bcx+xxboxwidthright >= x0 and bcx-xxboxwidthleft <= x1):
                 nums.append(n)
 
         return nums

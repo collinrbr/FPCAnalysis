@@ -5,119 +5,8 @@
 import numpy as np
 import math
 
-def savedata(CEx_out, CEy_out, vx_out, vy_out, x_out, enerCEx_out, enerCEy_out, Vframe_relative_to_sim_out, metadata_out = [], params = {}, filename = 'dHybridRSDAtest.nc' ):
-    """
-    Creates netcdf4 data of normalized correlation data to send to MLA algo.
-
-    Parameters
-    ----------
-    CEx_out : 3d array
-        Ex correlation data created by analysis functions
-    CEy_out : 3d array
-        Ey correlation data created by analysis functions
-    vx_out : 2d array
-        velocity space grid created by analysis functions
-    vy_out : 2d array
-        velocity space grid created by analysis functions
-    x_out : 1d array
-        x slice position data created by analysis functions
-    enerCEx_out : 1d array
-        integral over velocity space of CEx
-    enerCEy_out : 1d array
-        integral over velocity space of CEy
-    metadata_out : 1d array, optional
-        meta data array with length equal to x_out and axis 3 of correlation data
-        normally needs to be made by hand
-    params : dict, optional
-        dictionary containing parameters relating to data/ simulation input.
-        contains mostly physical input parameters from original simulation
-    filename : str, optional
-        filename of netcdf4. Should be formatted like *.nc
-    """
-
-    from netCDF4 import Dataset
-    from datetime import datetime
-
-    #normalize CEx, CEy to 1-------------------------------------------------------
-    #Here we normalize to the maximum value in either CEx, CEy
-    maxCval = max(np.amax(np.abs(CEx_out)),np.amax(np.abs(CEy_out)))
-    CEx_out /= maxCval
-    CEy_out /= maxCval
-
-    # open a netCDF file to write
-    ncout = Dataset(filename, 'w', format='NETCDF4')
-
-
-    #save data in netcdf file-------------------------------------------------------
-    #define simulation parameters
-    for key in params:
-        #setattr(ncout,key,params[key])
-        if(not(isinstance(params[key],str))):
-            _ = ncout.createVariable(key,None)
-            _[:] = params[key]
-
-    ncout.description = 'dHybridR MLA data test 1' #TODO: report dHybridR pipeline version here
-    ncout.generationtime = str(datetime.now())
-    ncout.version = get_git_head()
-
-    #make dimensions that dependent data must 'match'
-    ncout.createDimension('nx', None)  # NONE <-> unlimited TODO: make limited if it saves memory or improves compression?
-    ncout.createDimension('nvx', None)
-    ncout.createDimension('nvy', None)
-
-    vx_out = vx_out[0][:]
-    vx = ncout.createVariable('vx','f4', ('nvx',))
-    vx.nvx = len(vx_out)
-    vx.longname = 'v_x/v_ti'
-    vx[:] = vx_out[:]
-
-    vy_out = np.asarray([vy_out[i][0] for i in range(0,len(vy_out))])
-    vy = ncout.createVariable('vy','f4', ('nvy',))
-    vy.nvy = len(vy_out)
-    vy.longname = 'v_y/v_ti'
-    vy[:] = vy_out[:]
-
-    x = ncout.createVariable('x','f4',('nx',))
-    x.nx = len(x_out)
-    x[:] = x_out[:]
-
-    #tranpose data to match previous netcdf4 formatting
-    for i in range(0,len(CEx_out)):
-        tempCex = CEx_out[i].T
-        CEx_out[i] = tempCex
-        tempCey = CEy_out[i].T
-        CEy_out[i] = tempCey
-
-    C_ex = ncout.createVariable('C_Ex','f4', ('nx', 'nvx', 'nvy'))
-    C_ex.longname = 'C_{Ex}'
-    C_ex[:] = CEx_out[:]
-
-    C_ey = ncout.createVariable('C_Ey','f4', ('nx', 'nvx', 'nvy'))
-    C_ey.longname = 'C_{Ey}'
-    C_ey[:] = CEy_out[:]
-
-    metadata = ncout.createVariable('sda','f4',('nx',))
-    metadata.description = '1 = signature, 0 = no signature'
-    metadata[:] = metadata_out[:]
-
-    enerCEx = ncout.createVariable('E_CEx','f4',('nx',))
-    enerCEx.description = 'Energization computed by integrating over CEx in velocity space'
-    enerCEx[:] = enerCEx_out[:]
-
-    enerCEy = ncout.createVariable('E_CEy','f4',('nx',))
-    enerCEy.description = 'Energization computed by integrating over CEy in velocity space'
-    enerCEy[:] = enerCEy_out[:]
-
-    Vframe_relative_to_sim = ncout.createVariable('Vframe_relative_to_sim', 'f4')
-    Vframe_relative_to_sim[:] = Vframe_relative_to_sim_out
-
-    #Save data into netcdf4 file-----------------------------------------------------
-    print("Saving data into netcdf4 file")
-
-    #save file
-    ncout.close()
-
-def save3Vdata(Hist_out, CEx_out, CEy_out, CEz_out, vx_out, vy_out, vz_out, x_out, enerCEx_out, enerCEy_out, enerCEz_out, Vframe_relative_to_sim_out, metadata_out = [], params = {}, filename = 'full3Vdata.nc' ):
+#TODO: make num_par not optional
+def save3Vdata(Hist_out, CEx_out, CEy_out, CEz_out, vx_out, vy_out, vz_out, x_out, enerCEx_out, enerCEy_out, enerCEz_out, Vframe_relative_to_sim_out, num_par = [], metadata_out = [], params = {}, filename = 'full3Vdata.nc' ):
     """
     Creates netcdf4 data of normalized correlation data to send to MLA algo.
 
@@ -145,6 +34,8 @@ def save3Vdata(Hist_out, CEx_out, CEy_out, CEz_out, vx_out, vy_out, vz_out, x_ou
         integral over velocity space of CEy
     enerCEz_out : 1d array
         integral over velocity space of CEy
+    num_par_out : 1d array
+        number of particles in box
     metadata_out : 1d array, optional
         meta data array with length equal to x_out and axis 3 of correlation data
         normally needs to be made by hand
@@ -225,6 +116,10 @@ def save3Vdata(Hist_out, CEx_out, CEy_out, CEz_out, vx_out, vy_out, vz_out, x_ou
     Hist.longname = 'Hist'
     Hist[:] = Hist_out[:]
 
+    n_par = ncout.createVariable('n_par','f4',('nx',))
+    n_par.description = 'number of particles in each integration box. Note: this number might not match zeroth moment of the distribution function (i.e. integration over velocity space of hist) as particles outside the range of vmax are not counted in hist'
+    n_par[:] = num_par[:]
+
     sda = ncout.createVariable('sda','f4',('nx',))
     sda.description = '1 = signature, 0 = no signature'
     sda[:] = metadata_out[:]
@@ -250,93 +145,148 @@ def save3Vdata(Hist_out, CEx_out, CEy_out, CEz_out, vx_out, vy_out, vz_out, x_ou
     #save file
     ncout.close()
 
-def load_netcdf4(filename):
+def save2Vdata(Histxy,Histxz,Histyz,CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz, vx, vy, vz, x, enerCEx, enerCEy, enerCEz, Vframe_relative_to_sim, num_par = [], metadata = [], params = {}, filename = 'full2Vdata.nc' ):
     """
-    Loads netcdf4 data created by savedata function
+    Saves projected data into netcdf4 file
+
+    WARNING: DOES NOT NORMALIZE CEi
 
     Parameters
     ----------
-    filename : str, optional
-        filename of netcdf4. Should be formatted like *.nc
-
-    Returns
-    -------
-    CEx_in  : 3d array
-        Ex correlation data created by analysis functions
-    CEy_in : 3d array
-        Ey correlation data created by analysis functions
-    vx_in : 2d array
-        velocity space grid created by analysis functions
-    vy_in : 2d array
-        velocity space grid created by analysis functions
-    x_in : 1d array
-        x slice position data created by analysis functions
-    enerCEx_out : 1d array
-        integral over velocity space of CEx
-    enerCEy_out : 1d array
-        integral over velocity space of CEy
-    metadata_in : 1d array, optional
-        meta data array with length equal to x_out and axis 3 of correlation data
-        normally needs to be made by hand
-    params_in : dict, optional
-        dictionary containing global attributes relating to data.
-        contains mostly physical input parameters from original simulation
+    (Hist/CEi)** : 3d array
+        FPC data along xx axis
+        note, first axis is xx (Hist/CEi)**[xx,v*,v*]
+    vx,vy,vz,x : array
+        coordinate data
+    enerCEi : array
+        energization computed by integrating CEi
+    Vframe_relative_to_sim : float
+        velocity of analysis frame relative to simulation frame
+    num_par : array, opt
+        number of particles in each integration box
+    metadata : array, opt
+        sda metadata associated with each integration box
+    params : dict, opt
+        input parameter dictionary
+    filename : str, opt
+        outputfilename
     """
+
     from netCDF4 import Dataset
     from datetime import datetime
 
-    ncin = Dataset(filename, 'r', format='NETCDF4')
-    ncin.set_auto_mask(False)
+    # open a netCDF file to write
+    ncout = Dataset(filename, 'w', format='NETCDF4')
 
-    params_in = {}
-    for key in ncin.variables.keys():
-        if(key == 'x'):
-            x_in = ncin.variables['x'][:]
-        elif(key == 'vx'):
-            vx_in = ncin.variables['vx'][:]
-        elif(key == 'vy'):
-            vy_in = ncin.variables['vy'][:]
-        elif(key == 'C_Ex'):
-            CEx_in = ncin.variables['C_Ex'][:]
-        elif(key == 'C_Ey'):
-            CEy_in = ncin.variables['C_Ey'][:]
-        elif(key == 'sda'):
-            metadata_in = ncin.variables['sda'][:] #TODO: add ability to handle multiple types of metadata
-        elif(key == 'E_CEx'):
-            enerCEx_in = ncin.variables['E_CEx'][:]
-        elif(key == 'E_CEy'):
-            enerCEy_in = ncin.variables['E_CEy'][:]
-        elif(key == 'Vframe_relative_to_sim'):
-            Vframe_relative_to_sim_in = ncin.variables['Vframe_relative_to_sim'][:]
-        else:
-            if(not(isinstance(ncin.variables[key][:], str))):
-                params_in[key] = ncin.variables[key][:]
+    #save data in netcdf file-------------------------------------------------------
+    #define simulation parameters
+    for key in params:
+        #setattr(ncout,key,params[key])
+        if(not(isinstance(params[key],str))):
+            _ = ncout.createVariable(key,None)
+            _[:] = params[key]
 
-    #add global attributes
-    params_in.update(ncin.__dict__)
+    ncout.description = 'dHybridR MLA data 2V format'
+    ncout.generationtime = str(datetime.now())
+    ncout.version = get_git_head()
 
-    #tranpose data back to match dHybridR pipeline ordering #TODO: remove this if no bugs show up. Unsure if ordering is consistent everywhere
-    for i in range(0,len(CEx_in)):
-        tempCex = CEx_in[i].T
-        CEx_in[i] = tempCex
-        tempCey = CEy_in[i].T
-        CEy_in[i] = tempCey
+    #make dimensions that dependent data must 'match'
+    ncout.createDimension('nx', None)  # NONE <-> unlimited TODO: make limited if it saves memory or improves compression?
+    ncout.createDimension('nvx', None)
+    ncout.createDimension('nvy', None)
+    ncout.createDimension('nvz', None)
 
-    #reconstruct vx, vy 2d arrays
-    _vx = np.zeros((len(vy_in),len(vx_in)))
-    _vy = np.zeros((len(vy_in),len(vx_in)))
-    for i in range(0,len(vy_in)):
-        for j in range(0,len(vx_in)):
-            _vx[i][j] = vx_in[j]
+    vx = vx[0][0][:]
+    vx_out = ncout.createVariable('vx','f4', ('nvx',))
+    vx_out.nvx = len(vx)
+    vx_out.longname = 'v_x/v_ti'
+    vx_out[:] = vx[:]
 
-    for i in range(0,len(vy_in)):
-        for j in range(0,len(vx_in)):
-            _vy[i][j] = vy_in[i]
+    vy = np.asarray([vy[0][i][0] for i in range(0,len(vy))])
+    vy_out = ncout.createVariable('vy','f4', ('nvy',))
+    vy_out.nvy = len(vy)
+    vy_out.longname = 'v_y/v_ti'
+    vy_out[:] = vy[:]
 
-    vx_in = _vx
-    vy_in = _vy
+    vz = np.asarray([vz[i][0][0] for i in range(0,len(vz))]) #assumes same number of data points along all axis in vz_out mesh var
+    vz_out = ncout.createVariable('vz','f4', ('nvz',))
+    vz_out.nvz = len(vz)
+    vz_out.longname = 'v_z/v_ti'
+    vz_out[:] = vz[:]
 
-    return CEx_in, CEy_in, vx_in, vy_in, x_in, enerCEx_in, enerCEy_in, Vframe_relative_to_sim_in, metadata_in, params_in
+    x_out = ncout.createVariable('x','f4',('nx',))
+    x_out.nx = len(x)
+    x_out[:] = x[:]
+
+    C_ex_vxvy = ncout.createVariable('C_Ex_vxvy','f4',('nx','nvx','nvy'))
+    C_ex_vxvy.longname = 'C_{Ex}(x;vx,vy)'
+    C_ex_vxvy[:] = CExxy[:]
+    C_ex_vxvz = ncout.createVariable('C_Ex_vxvz','f4',('nx','nvx','nvz'))
+    C_ex_vxvz.longname = 'C_{Ex}(x;vx,vz)'
+    C_ex_vxvz[:] = CExxz[:]
+    C_ex_vyvz = ncout.createVariable('C_Ex_vyvz','f4',('nx','nvy','nvz'))
+    C_ex_vyvz.longname = 'C_{Ex}(x;vy,vz)'
+    C_ex_vyvz[:] = CExyz[:]
+
+    C_ey_vxvy = ncout.createVariable('C_Ey_vxvy','f4',('nx','nvx','nvy'))
+    C_ey_vxvy.longname = 'C_{Ey}(x;vx,vy)'
+    C_ey_vxvy[:] = CEyxy[:]
+    C_ey_vxvz = ncout.createVariable('C_Ey_vxvz','f4',('nx','nvx','nvz'))
+    C_ey_vxvz.longname = 'C_{Ey}(x;vx,vz)'
+    C_ey_vxvz[:] = CEyxz[:]
+    C_ey_vyvz = ncout.createVariable('C_Ey_vyvz','f4',('nx','nvy','nvz'))
+    C_ey_vyvz.longname = 'C_{Ey}(x;vy,vz)'
+    C_ey_vyvz[:] = CEyyz[:]
+
+    C_ez_vxvy = ncout.createVariable('C_Ez_vxvy','f4',('nx','nvx','nvy'))
+    C_ez_vxvy.longname = 'C_{Ez}(x;vx,vy)'
+    C_ez_vxvy[:] = CEzxy[:]
+    C_ez_vxvz = ncout.createVariable('C_Ez_vxvz','f4',('nx','nvx','nvz'))
+    C_ez_vxvz.longname = 'C_{Ez}(x;vx,vz)'
+    C_ez_vxvz[:] = CEzxz[:]
+    C_ez_vyvz = ncout.createVariable('C_Ez_vyvz','f4',('nx','nvy','nvz'))
+    C_ez_vyvz.longname = 'C_{Ez}(x;vy,vz)'
+    C_ez_vyvz[:] = CEzyz[:]
+
+    Hist_vxvy = ncout.createVariable('Hist_vxvy','f4',('nx','nvx','nvy'))
+    Hist_vxvy.longname = 'Hist(x;vx,vy)'
+    Hist_vxvy[:] = Histxy[:]
+    Hist_vxvz = ncout.createVariable('Hist_vxvz','f4',('nx','nvx','nvz'))
+    Hist_vxvz.longname = 'Hist(x;vx,vz)'
+    Hist_vxvz[:] = Histxz[:]
+    Hist_vyvz = ncout.createVariable('Hist_vyvz','f4',('nx','nvy','nvz'))
+    Hist_vyvz.longname = 'Hist(x;vy,vz)'
+    Hist_vyvz[:] = Histyz[:]
+
+    sda = ncout.createVariable('sda','f4',('nx',))
+    sda.description = '1 = signature, 0 = no signature'
+    sda[:] = metadata[:]
+
+    enerCEx_out = ncout.createVariable('E_CEx','f4',('nx',))
+    enerCEx_out.description = 'Energization computed by integrating over CEx in velocity space'
+    enerCEx_out[:] = enerCEx[:]
+
+    enerCEy_out = ncout.createVariable('E_CEy','f4',('nx',))
+    enerCEy_out.description = 'Energization computed by integrating over CEy in velocity space'
+    enerCEy_out[:] = enerCEy[:]
+
+    enerCEz_out = ncout.createVariable('E_CEz','f4',('nx',))
+    enerCEz_out.description = 'Energization computed by integrating over CEy in velocity space'
+    enerCEz_out[:] = enerCEz[:]
+
+    try:
+        n_par_out = ncout.createVariable('n_par','f4',('nx',))
+        n_par_out.description = 'number of particles in each integration box. Note: this number might not match zeroth moment of the distribution function (i.e. integration over velocity space of hist) as particles outside the range of vmax are not counted in hist'
+        n_par_out[:] = npar[:]
+    except:
+        pass
+
+    Vframe_relative_to_sim_out = ncout.createVariable('Vframe_relative_to_sim', 'f4')
+    Vframe_relative_to_sim_out[:] = Vframe_relative_to_sim
+
+    #save file
+    ncout.close()
+
 
 def load3Vnetcdf4(filename):
     """
@@ -375,6 +325,8 @@ def load3Vnetcdf4(filename):
         integral over velocity space of CEy
     enerCEz_in : 1d array
         integral over velocity space of CEy
+    num_par_out : 1d array
+        number of particles in box
     Vframe_relative_to_sim_in : float
         velocity of frame analysis was done in relative to the static simulation box frame
     metadata_in : 1d array, optional
@@ -389,6 +341,7 @@ def load3Vnetcdf4(filename):
 
     ncin = Dataset(filename, 'r', format='NETCDF4')
     ncin.set_auto_mask(False)
+    npar_in = None #quick fix to fact that not all netcdf4 files have this parameter
 
     params_in = {}
     for key in ncin.variables.keys():
@@ -416,6 +369,8 @@ def load3Vnetcdf4(filename):
             enerCEy_in = ncin.variables['E_CEy'][:]
         elif(key == 'E_CEz'):
             enerCEz_in = ncin.variables['E_CEz'][:]
+        elif(key == 'n_par'):
+            npar_in = ncin.variables['n_par'][:]
         elif(key == 'Vframe_relative_to_sim'):
             Vframe_relative_to_sim_in = ncin.variables['Vframe_relative_to_sim'][:]
         else:
@@ -448,7 +403,139 @@ def load3Vnetcdf4(filename):
     vy = _vy
     vz = _vz
 
-    return Hist_in, CEx_in, CEy_in, CEz_in, vx, vy, vz, x_in, enerCEx_in, enerCEy_in, enerCEz_in, Vframe_relative_to_sim_in, metadata_in, params_in
+    try:
+        if(len(npar_in) > 0):
+            return Hist_in, CEx_in, CEy_in, CEz_in, vx, vy, vz, x_in, enerCEx_in, enerCEy_in, enerCEz_in, npar_in, Vframe_relative_to_sim_in, metadata_in, params_in
+    except:
+        return Hist_in, CEx_in, CEy_in, CEz_in, vx, vy, vz, x_in, enerCEx_in, enerCEy_in, enerCEz_in, Vframe_relative_to_sim_in, metadata_in, params_in
+
+def load2vdata(filename):
+    """
+    Loads 2v netcdf4 data created by projection script
+
+    Parameters
+    ----------
+    filename : str
+        filename/path of netcdf4 file
+
+    Returns
+    -------
+    (Hist_vxvy, Hist_vxvz, Hist_vyvz,
+       C_Ex_vxvy, C_Ex_vxvz, C_Ex_vyvz,
+       C_Ey_vxvy, C_Ey_vxvz, C_Ey_vyvz,
+       C_Ez_vxvy, C_Ez_vxvz, C_Ez_vyvz,
+       vx, vy, vz, x_in,
+       enerCEx_in, enerCEy_in, enerCEz_in,
+       Vframe_relative_to_sim_in, metadata_in, params_in) : 3d/1d and floats
+          data from save2Vdata(). See save2Vdata
+    """
+    from netCDF4 import Dataset
+    from datetime import datetime
+
+    ncin = Dataset(filename, 'r', format='NETCDF4')
+    ncin.set_auto_mask(False)
+    npar_in = None #quick fix to fact that not all netcdf4 files have this parameter
+
+    params_in = {}
+    for key in ncin.variables.keys():
+        if(key == 'x'):
+            x_in = ncin.variables['x'][:]
+        elif(key == 'vx'):
+            vx_in = ncin.variables['vx'][:]
+        elif(key == 'vy'):
+            vy_in = ncin.variables['vy'][:]
+        elif(key == 'vz'):
+            vz_in = ncin.variables['vz'][:]
+        elif(key == 'C_Ex_vxvy'):
+            C_Ex_vxvy = ncin.variables['C_Ex_vxvy'][:]
+        elif(key == 'C_Ex_vxvz'):
+            C_Ex_vxvz = ncin.variables['C_Ex_vxvz'][:]
+        elif(key == 'C_Ex_vyvz'):
+            C_Ex_vyvz = ncin.variables['C_Ex_vyvz'][:]
+        elif(key == 'C_Ey_vxvy'):
+            C_Ey_vxvy = ncin.variables['C_Ey_vxvy'][:]
+        elif(key == 'C_Ey_vxvz'):
+            C_Ey_vxvz = ncin.variables['C_Ey_vxvz'][:]
+        elif(key == 'C_Ey_vyvz'):
+            C_Ey_vyvz = ncin.variables['C_Ey_vyvz'][:]
+        elif(key == 'C_Ez_vxvy'):
+            C_Ez_vxvy = ncin.variables['C_Ez_vxvy'][:]
+        elif(key == 'C_Ez_vxvz'):
+            C_Ez_vxvz = ncin.variables['C_Ez_vxvz'][:]
+        elif(key == 'C_Ez_vyvz'):
+            C_Ez_vyvz = ncin.variables['C_Ez_vyvz'][:]
+        elif(key == 'Hist_vxvy'):
+            Hist_vxvy = ncin.variables['Hist_vxvy'][:]
+        elif(key == 'Hist_vxvz'):
+            Hist_vxvz = ncin.variables['Hist_vxvz'][:]
+        elif(key == 'Hist_vyvz'):
+            Hist_vyvz = ncin.variables['Hist_vyvz'][:]
+        elif(key == 'sda'):
+            metadata_in = ncin.variables['sda'][:] #TODO: add ability to handle multiple types of metadata
+        elif(key == 'E_CEx'):
+            enerCEx_in = ncin.variables['E_CEx'][:]
+        elif(key == 'E_CEy'):
+            enerCEy_in = ncin.variables['E_CEy'][:]
+        elif(key == 'E_CEz'):
+            enerCEz_in = ncin.variables['E_CEz'][:]
+        elif(key == 'n_par'):
+            npar_in = ncin.variables['n_par'][:]
+        elif(key == 'Vframe_relative_to_sim'):
+            Vframe_relative_to_sim_in = ncin.variables['Vframe_relative_to_sim'][:]
+        else:
+            if(not(isinstance(ncin.variables[key][:], str))):
+                params_in[key] = ncin.variables[key][:]
+
+    #add global attributes
+    params_in.update(ncin.__dict__)
+
+    #reconstruct vx, vy, vz 3d arrays
+    _vx = np.zeros((len(vz_in),len(vy_in),len(vx_in)))
+    _vy = np.zeros((len(vz_in),len(vy_in),len(vx_in)))
+    _vz = np.zeros((len(vz_in),len(vy_in),len(vx_in)))
+    for i in range(0,len(vx_in)):
+        for j in range(0,len(vy_in)):
+            for k in range(0,len(vz_in)):
+                _vx[k][j][i] = vx_in[i]
+
+    for i in range(0,len(vx_in)):
+        for j in range(0,len(vy_in)):
+            for k in range(0,len(vz_in)):
+                _vy[k][j][i] = vy_in[j]
+
+    for i in range(0,len(vx_in)):
+        for j in range(0,len(vy_in)):
+            for k in range(0,len(vz_in)):
+                _vz[k][j][i] = vz_in[k]
+
+    vx = _vx
+    vy = _vy
+    vz = _vz
+    try:
+        if(npar_in != None):#TODO: clean this up, this does not work when npar_in has values
+            return (Hist_vxvy, Hist_vxvz, Hist_vyvz,
+               C_Ex_vxvy, C_Ex_vxvz, C_Ex_vyvz,
+               C_Ey_vxvy, C_Ey_vxvz, C_Ey_vyvz,
+               C_Ez_vxvy, C_Ez_vxvz, C_Ez_vyvz,
+               vx, vy, vz, x_in,
+               enerCEx_in, enerCEy_in, enerCEz_in,
+               npar_in, Vframe_relative_to_sim_in, metadata_in, params_in)
+        else:
+            return (Hist_vxvy, Hist_vxvz, Hist_vyvz,
+               C_Ex_vxvy, C_Ex_vxvz, C_Ex_vyvz,
+               C_Ey_vxvy, C_Ey_vxvz, C_Ey_vyvz,
+               C_Ez_vxvy, C_Ez_vxvz, C_Ez_vyvz,
+               vx, vy, vz, x_in,
+               enerCEx_in, enerCEy_in, enerCEz_in,
+               Vframe_relative_to_sim_in, metadata_in, params_in)
+    except:
+            return (Hist_vxvy, Hist_vxvz, Hist_vyvz,
+               C_Ex_vxvy, C_Ex_vxvz, C_Ex_vyvz,
+               C_Ey_vxvy, C_Ey_vxvz, C_Ey_vyvz,
+               C_Ez_vxvy, C_Ez_vxvz, C_Ez_vyvz,
+               vx, vy, vz, x_in,
+               enerCEx_in, enerCEy_in, enerCEz_in,
+               npar_in, Vframe_relative_to_sim_in, metadata_in, params_in)
 
 
 #TODO: parse_input_file and read_input tries to do the same thing. However,

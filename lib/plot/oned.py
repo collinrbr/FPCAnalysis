@@ -29,6 +29,8 @@ def plot_field(dfields, fieldkey, axis='_xx', xxindex = 0, yyindex = 0, zzindex 
         x position of vertical line on plot
     axvx2 : float, optional
         x position of vertical line on plot
+    flnm : str, optional
+        if specified will save plot to flnm
     """
 
     from lib.plot.resultsmanager import keyname_to_plotname
@@ -329,16 +331,87 @@ def time_stack_line_plot(dfieldsdict, fieldkey, pts = [], axis = '_xx', xxindex 
             fieldval = np.asarray([dfieldsdict['dfields'][k][fieldkey][xxindex][yyindex][i] for i in range(0,len(dfieldsdict['dfields'][k][fieldkey+axis]))])
             xlbl = 'x'
 
-        axs[k].plot(fieldcoord,fieldval)
+        axs[k].plot(fieldcoord,fieldval,linewidth=1.5*4)
         if(len(pts) > 0):
             axs[k].scatter([pts[k]],[0.])
         #axs[k].ylabel(fieldkey+'(frame = '+str(dfielddict['frame'][k])+')')
 
     plt.show()
 
-def plot_stack_field_along_x(dfields,fieldkey,stackaxis,yyindex=0,zzindex=0,xlow=None,xhigh=None,flnm=''):
+def time_stack_line_plot2(dfieldsdict, fieldkey, offsetval = 2., axis = '_xx', xxindex = 0, yyindex = 0, zzindex = 0,flnm=''):
+    """
+    Plots field data at some static frame down a line along x,y,z for some
+    selected field for each frame on same panel
+
+    Used to qualitatively identify shock reformation
+
+    Parameters
+    ----------
+    dfieldsdict : dict
+        dictonary of dfields and corresponding frame number from all_field_loader
+    fieldkey : str
+        name of field you want to plot (ex, ey, ez, bx, by, bz)
+    offsetval : float opt
+        spacing between plots
+    axis : str, optional
+        name of axis you want to plot along (_xx, _yy, _zz)
+    xxindex : int, optional
+        index of data along xx axis (ignored if axis = '_xx')
+    yyindex : int, optional
+        index of data along yy axis (ignored if axis = '_yy')
+    zzindex : int, optional
+        index of data along zz axis (ignored if axis = '_zz')
+    flnm : str, optional
+        if specified will save plot to flnm
     """
 
+    #fig, axs = plt.subplots(len(dfieldsdict['frame']), sharex=True, sharey=True)
+    fig = plt.figure()
+    fieldcoord = np.asarray(dfieldsdict['dfields'][0][fieldkey+axis])
+    fig.set_size_inches(18.5, 30.)
+
+    _i = 0
+    for k in range(0,len(dfieldsdict['dfields'])):
+        fieldval = np.asarray([dfieldsdict['dfields'][k][fieldkey][xxindex][yyindex][i] for i in range(0,len(dfieldsdict['dfields'][k][fieldkey+axis]))])+_i*offsetval
+        plt.plot(fieldcoord,fieldval)
+        _i += 1
+
+    #TODO: generalize this for all axis keys
+    plt.ylabel('time')
+    plt.xlabel('$x$')
+    plt.yticks([])
+    if(flnm == ''):
+        plt.show()
+    else:
+        plt.savefig(flnm+'.png',format='png')
+    plt.close()
+
+def plot_stack_field_along_x(dfields,fieldkey,stackaxis,yyindex=0,zzindex=0,xlow=None,xhigh=None,flnm=''):
+    """
+    Stack several 1d line plots of field as a function of xx
+
+    Used to look for shock ripple and get an idea of how the amplitude is
+
+    Parameters
+    ----------
+    dfields : dict
+        field data dictionary from field_loader
+    fieldkey : str
+        name of field you want to plot (ex, ey, ez, bx, by, bz)
+    stackaxis : str
+        '_yy' or '_zz'
+        axis we want to grab 1d line plots along
+    yyindex : int, optional
+        index of data along yy axis (ignored if axis = '_yy')
+    zzindex : int, optional
+        index of data along zz axis (ignored if axis = '_zz')
+    xlow : float
+        lower plot bound in x
+        TODO rename to be consistent elsewhere in the code
+    xhigh : float
+        upper plot bound in x
+    flnm : str, optional
+        if specified will save plot to flnm
     """
     from lib.plot.resultsmanager import keyname_to_plotname
 
@@ -380,6 +453,14 @@ def plot_compression_ratio(dfields, upstreambound, downstreambound, xxindex=0, y
         x position of the end of the upstream position
     upstreambound : float
         x position of the end of the downstream position
+    xxindex : int, optional
+        index of data along xx axis (ignored if axis = '_xx')
+    yyindex : int, optional
+        index of data along yy axis (ignored if axis = '_yy')
+    zzindex : int, optional
+        index of data along zz axis (ignored if axis = '_zz')
+    flnm : str, optional
+        if specified will save plot to flnm
     """
 
     from lib.frametransform import get_comp_ratio
@@ -411,10 +492,31 @@ def plot_compression_ratio(dfields, upstreambound, downstreambound, xxindex=0, y
 
 def compare_fields(dfields1, dfields2, fieldkey, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0, axvx1 = float('nan'), axvx2 = float('nan'), flnm = ''):
     """
+    Compares fields of two different simulations on same plot
 
+    Parameters
+    ----------
+    dfields1 : dict
+        field data dictionary from field_loader from first simulation
+    dfields2 : dict
+        field data dictionary from field_loader from second simulation
+    fieldkey : str
+        name of field you want to plot (ex, ey, ez, bx, by, bz)
+    axis : str, optional
+        name of axis you want to plot along (_xx, _yy, _zz)
+    xxindex : int, optional
+        index of data along xx axis (ignored if axis = '_xx')
+    yyindex : int, optional
+        index of data along yy axis (ignored if axis = '_yy')
+    zzindex : int, optional
+        index of data along zz axis (ignored if axis = '_zz')
+    axvx1 : float, optional
+        x position of vertical line on plot
+    axvx2 : float, optional
+        x position of vertical line on plot
+    flnm : str, optional
+        if specified will save plot to flnm
     """
-
-
     if(axis == '_zz'):
         fieldval1 = np.asarray([dfields1[fieldkey][i][yyindex][xxindex] for i in range(0,len(dfields1[fieldkey+axis]))])
         fieldval2 = np.asarray([dfields2[fieldkey][i][yyindex][xxindex] for i in range(0,len(dfields2[fieldkey+axis]))])
@@ -446,15 +548,33 @@ def compare_fields(dfields1, dfields2, fieldkey, axis='_xx', xxindex = 0, yyinde
         plt.savefig(flnm,format='png')
     plt.close()
 
-def make_field_scan_gif(dfields, fieldkey, directory, axis='_xx'):
+def make_field_scan_gif(dfields, fieldkey, directory, axis='_yy'):
+    """
+    Makes gif of fields as a sweep along _yy or _zz
+
+    Parameters
+    ----------
+    dfields : dict
+        field data dictionary from field_loader
+    fieldkey : str
+        name of field you want to plot (ex, ey, ez, bx, by, bz)
+    directory : str
+        name of directory to dump pngs of each frame of the gif inot
+    axis : str, optional
+        name of axis you want to plot along (_xx, _yy, _zz)
+    """
 
     try:
         os.mkdir(directory)
     except:
         pass
 
+    if(axis != '_yy' or axis != '_zz'):
+        print("axis should equal '_yy' or '_zz'")
+        return
+
     sweepvar = dfields[fieldkey+'_xx'][:]
     for i in range(0,len(sweepvar)):
         print('Making plot '+str(i)+' of '+str(len(sweepvar)))
         flnm = directory+'/'+str(i).zfill(6)
-        plot_field(dfields, fieldkey, axis='_xx', xxindex = i, yyindex = 0, zzindex = 0, axvx1 = dfields[fieldkey+'_xx'][i], axvx2 = float('nan'), flnm = flnm)
+        plot_field(dfields, fieldkey, axis=axis, xxindex = i, yyindex = 0, zzindex = 0, axvx1 = dfields[fieldkey+'_xx'][i], axvx2 = float('nan'), flnm = flnm)

@@ -6,16 +6,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 
-def make_field_pmesh(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, xxindex=float('nan'), yyindex=float('nan'), zzindex=float('nan'), xlimmin=None,xlimmax=None):
+def make_field_pmesh(ddict,fieldkey,planename,flnm = '',takeaxisaverage=False, xxindex=float('nan'), yyindex=float('nan'), zzindex=float('nan'), xlimmin=None,xlimmax=None):
     """
     Makes pmesh of given field
 
     Parameters
     ----------
-    dfields : dict
-        field data dictionary from field_loader
+    ddict : dict
+        field or flow data dictionary
     fieldkey : str
-        name of field you want to plot (ex, ey, ez, bx, by, bz)
+        name of field you want to plot (ex, ey, ez, bx, by, bz, ux, uy, uz)
     planename : str
         name of plane you want to plot (xy, xz, yz)
     flnm : str
@@ -47,13 +47,19 @@ def make_field_pmesh(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, 
         fieldttl = '$B_y'
     elif(fieldkey == 'bz'):
         fieldttl = '$B_z'
+    elif(fieldkey == 'ux'):
+        fieldttl = '$U_x'
+    elif(fieldkey == 'uy'):
+        fieldttl = '$U_y'
+    elif(fieldkey == 'uz'):
+        fieldttl = '$U_z'
 
     if(planename=='xy'):
         ttl = fieldttl+'(x,y)$ at '
         xlbl = '$x$ (di)'
         ylbl = '$y$ (di)'
-        xplot1d = dfields[fieldkey+'_xx'][:]
-        yplot1d = dfields[fieldkey+'_yy'][:]
+        xplot1d = ddict[fieldkey+'_xx'][:]
+        yplot1d = ddict[fieldkey+'_yy'][:]
         axisidx = 0 #used to take average along z if no index is specified
         axis = '_zz'
 
@@ -61,8 +67,8 @@ def make_field_pmesh(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, 
         ttl = fieldttl+'(x,z)$ at '
         xlbl = '$x$ (di)'
         ylbl = '$z$ (di)'
-        xplot1d = dfields[fieldkey+'_xx'][:]
-        yplot1d = dfields[fieldkey+'_zz'][:]
+        xplot1d = ddict[fieldkey+'_xx'][:]
+        yplot1d = ddict[fieldkey+'_zz'][:]
         axisidx = 1 #used to take average along y if no index is specified
         axis = '_yy'
 
@@ -70,19 +76,19 @@ def make_field_pmesh(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, 
         ttl = fieldttl+'(y,z)$ at '
         xlbl = '$y$ (di)'
         ylbl = '$z$ (di)'
-        xplot1d = dfields[fieldkey+'_yy'][:]
-        yplot1d = dfields[fieldkey+'_zz'][:]
+        xplot1d = ddict[fieldkey+'_yy'][:]
+        yplot1d = ddict[fieldkey+'_zz'][:]
         axisidx = 2 #used to take average along x if no index is specified
         axis = '_xx'
 
     if(takeaxisaverage):
-        fieldpmesh = np.mean(dfields[fieldkey],axis=axisidx)
+        fieldpmesh = np.mean(ddict[fieldkey],axis=axisidx)
     elif(planename == 'xy'):
-        fieldpmesh = np.asarray(dfields[fieldkey])[zzindex,:,:]
+        fieldpmesh = np.asarray(ddict[fieldkey])[zzindex,:,:]
     elif(planename == 'xz'):
-        fieldpmesh = np.asarray(dfields[fieldkey])[:,yyindex,:]
+        fieldpmesh = np.asarray(ddict[fieldkey])[:,yyindex,:]
     elif(planename == 'yz'):
-        fieldpmesh = np.asarray(dfields[fieldkey])[:,:,xxindex]
+        fieldpmesh = np.asarray(ddict[fieldkey])[:,:,xxindex]
 
     #make 2d arrays for more explicit plotting
     xplot = np.zeros((len(yplot1d),len(xplot1d)))
@@ -104,11 +110,11 @@ def make_field_pmesh(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, 
     if(takeaxisaverage):
         plt.title(ttl,loc="right")
     elif(planename == 'xy'):
-        plt.title(ttl+' z = '+str(dfields[fieldkey+axis][zzindex])+' (di)',loc="right")
+        plt.title(ttl+' z = '+str(ddict[fieldkey+axis][zzindex])+' (di)',loc="right")
     elif(planename == 'xz'):
-        plt.title(ttl+' y = '+str(dfields[fieldkey+axis][yyindex])+' (di)',loc="right")
+        plt.title(ttl+' y = '+str(ddict[fieldkey+axis][yyindex])+' (di)',loc="right")
     elif(planename == 'yz'):
-        plt.title(ttl+' x = '+str(dfields[fieldkey+axis][xxindex])+' (di)',loc="right")
+        plt.title(ttl+' x = '+str(ddict[fieldkey+axis][xxindex])+' (di)',loc="right")
     plt.xlabel(xlbl)
     plt.ylabel(ylbl)
     plt.grid(color="k", linestyle="-", linewidth=1.0, alpha=0.6)
@@ -119,7 +125,7 @@ def make_field_pmesh(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, 
     if(xlimmin != None and xlimmax != None):
         plt.xlim(xlimmin, xlimmax)
     if(flnm != ''):
-        plt.savefig(flnm+'.png',format='png')
+        plt.savefig(flnm+'.png',format='png',dpi=300)
         plt.close('all')#saves RAM
     else:
         plt.show()

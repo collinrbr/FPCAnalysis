@@ -306,7 +306,7 @@ def plot_dist(vx, vy, vmax, H,flnm = '',ttl=''):
         plt.show()
     plt.close()
 
-def dist_log_plot_3dir(vx, vy, vz, vmax, H_in, flnm = '',ttl=''):
+def dist_log_plot_3dir(vx, vy, vz, vmax, H_in, flnm = '',ttl='',xlbl=r"$v_x/v_{ti}$",ylbl=r"$v_y/v_{ti}$",zlbl=r"$v_z/v_{ti}$"):
     """
     Makes 3 panel plot of the distribution function in log space
 
@@ -360,7 +360,7 @@ def dist_log_plot_3dir(vx, vy, vz, vmax, H_in, flnm = '',ttl=''):
     cmap.set_under(bkgcolor) #this doesn't really work like it's supposed to, so we just change the background color to black
     #ax = plt.gca()
     axs[0].set_facecolor(bkgcolor)
-    axs[0].pcolormesh(vx_xy, vy_xy, H_xy, cmap=cmap, shading="gouraud",norm=LogNorm(vmin=minval, vmax=H.max()))
+    pcm0 = axs[0].pcolormesh(vy_xy, vx_xy, H_xy, cmap=cmap, shading="gouraud",norm=LogNorm(vmin=minval, vmax=H.max()))
     axs[0].set_xlim(-vmax, vmax)
     axs[0].set_ylim(-vmax, vmax)
     axs[0].set_xticks(np.linspace(-vmax, vmax, numtks))
@@ -369,34 +369,40 @@ def dist_log_plot_3dir(vx, vy, vz, vmax, H_in, flnm = '',ttl=''):
     #     plt.title(r"$f(v_x, v_y)$",loc="right")
     # else:
     #     plt.title(ttl)
-    axs[0].set_xlabel(r"$v_x/v_{ti}$")
-    axs[0].set_ylabel(r"$v_y/v_{ti}$")
+    axs[0].set_xlabel(xlbl)
+    axs[0].set_ylabel(ylbl)
     axs[0].grid(color="grey", linestyle="--", linewidth=1.0, alpha=0.6)
     axs[0].set_aspect('equal', 'box')
     #axs[0].colorbar(cmap = cmap, extend='min')
     #axs[0].gcf().subplots_adjust(bottom=0.15)
 
     axs[1].set_facecolor(bkgcolor)
-    axs[1].pcolormesh(vx_xz,vz_xz,H_xz, cmap=cmap, shading="gourand",norm=LogNorm(vmin=minval, vmax=H.max()))
+    pcm1 = axs[1].pcolormesh(vz_xz,vx_xz,H_xz, cmap=cmap, shading="gourand",norm=LogNorm(vmin=minval, vmax=H.max()))
     axs[1].set_xlim(-vmax, vmax)
     axs[1].set_ylim(-vmax, vmax)
     axs[1].set_xticks(np.linspace(-vmax, vmax, numtks))
     axs[1].set_yticks(np.linspace(-vmax, vmax, numtks))
-    axs[1].set_xlabel(r"$v_x/v_{ti}$")
-    axs[1].set_ylabel(r"$v_z/v_{ti}$")
+    axs[1].set_xlabel(xlbl)
+    axs[1].set_ylabel(zlbl)
     axs[1].grid(color="grey", linestyle="--", linewidth=1.0, alpha=0.6)
     axs[1].set_aspect('equal', 'box')
+    #axs[1].colorbar(cmap = cmap, extend='min')
 
     axs[2].set_facecolor(bkgcolor)
-    axs[2].pcolormesh(vy_yz,vz_yz,H_yz, cmap=cmap, shading="gourand",norm=LogNorm(vmin=minval, vmax=H.max()))
+    pcm2 = axs[2].pcolormesh(vz_yz,vy_yz,H_yz, cmap=cmap, shading="gourand",norm=LogNorm(vmin=minval, vmax=H.max()))
     axs[2].set_xlim(-vmax, vmax)
     axs[2].set_ylim(-vmax, vmax)
     axs[2].set_xticks(np.linspace(-vmax, vmax, numtks))
     axs[2].set_yticks(np.linspace(-vmax, vmax, numtks))
-    axs[2].set_xlabel(r"$v_y/v_{ti}$")
-    axs[2].set_ylabel(r"$v_z/v_{ti}$")
+    axs[2].set_xlabel(ylbl)
+    axs[2].set_ylabel(zlbl)
     axs[2].grid(color="grey", linestyle="--", linewidth=1.0, alpha=0.6)
     axs[2].set_aspect('equal', 'box')
+    #axs[2].colorbar(cmap = cmap, extend='min')
+
+    fig.colorbar(pcm0, ax=axs[0])
+    fig.colorbar(pcm1, ax=axs[1])
+    fig.colorbar(pcm2, ax=axs[2])
 
     plt.subplots_adjust(hspace=.5,wspace=.5)
 
@@ -411,7 +417,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
                                 CEx_xy,CEx_xz, CEx_yz,
                                 CEy_xy,CEy_xz, CEy_yz,
                                 CEz_xy,CEz_xz, CEz_yz,
-                                flnm = '', ttl = ''):
+                                flnm = '', ttl = '', computeJdotE = False, params = None, metadata = None, xpos = None, plotLog = False):
     """
     Makes super figure of distribution and velocity sigantures from all different projections
     i.e. different viewing angles
@@ -434,122 +440,332 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         if set to default, plt.show() will be called instead
     ttl : str, optional
         title of plot
+    computeJdotE : bool, optional
+        compute and write JdotE for each panel as title of each sub plot
+    params : dict, optional
+        dictionary with simulation parameters in it
+    metadata : string, optional
+        string describing metadata to be shown on plot
     """
     from lib.array_ops import mesh_3d_to_2d
+    from lib.analysis import compute_energization
+    from matplotlib.colors import LogNorm
+    import matplotlib.colors as colors
 
     plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
 
-    fig, axs = plt.subplots(4,3,figsize=(4*5,3*5))
+    fig, axs = plt.subplots(4,3,figsize=(4*5,3*5),sharex=True)
+
+    _hspace = .1
+    _wspace = -.35
+    if(computeJdotE):
+        _hspace+=.1
+    if(plotLog):
+        _wspace+=.175
+    fig.subplots_adjust(hspace=_hspace,wspace=_wspace)
 
     vx_xy, vy_xy = mesh_3d_to_2d(vx,vy,vz,'xy')
     vx_xz, vz_xz = mesh_3d_to_2d(vx,vy,vz,'xz')
     vy_yz, vz_yz = mesh_3d_to_2d(vx,vy,vz,'yz')
 
+    dv = vy_yz[1][1]-vy_yz[0][0] #assumes square velocity grid
+
     fig.suptitle(ttl)
 
+    # fig, axes = plt.subplots(nrows=2)
+    # ax0label = axes[0].set_ylabel('Axes 0')
+    # ax1label = axes[1].set_ylabel('Axes 1')
+    #
+    # title = axes[0].set_title('Title')
+    #
+    clboffset = np.array([vmax*.15,-vmax*.15])
+    # title.set_position(ax0label.get_position() + offset)
+    # title.set_rotation(90)
+
+    minHxyval = np.min(H_xy[np.nonzero(H_xy)])
+    minHxzval = np.min(H_xz[np.nonzero(H_xz)])
+    minHyzval = np.min(H_yz[np.nonzero(H_yz)])
+
     #H_xy
-    im00= axs[0,0].pcolormesh(vy_xy, vx_xy, H_xy, cmap="plasma", shading="gouraud")
-    axs[0,0].set_title(r"$f(v_x, v_y)$")
-    axs[0,0].set_xlabel(r"$v_x/v_{ti}$")
+    if(plotLog):
+        im00= axs[0,0].pcolormesh(vy_xy, vx_xy, H_xy, cmap="plasma", shading="gouraud",norm=LogNorm(vmin=minHxyval, vmax=H_xy.max()))
+    else:
+        im00= axs[0,0].pcolormesh(vy_xy, vx_xy, H_xy, cmap="plasma", shading="gouraud")
+    #axs[0,0].set_title(r"$f(v_x, v_y)$")
     axs[0,0].set_ylabel(r"$v_y/v_{ti}$")
     axs[0,0].set_aspect('equal', 'box')
-    plt.colorbar(im00, ax=axs[0,0])
+    axs[0,0].grid()
+    clrbar00 = plt.colorbar(im00, ax=axs[0,0])#,format='%.1e')
+    if(not(plotLog)):
+        clrbar00.formatter.set_powerlimits((0, 0))
+    axs[0,0].text(-vmax*2.0,0, r"$f$", ha='center', rotation=90, wrap=False)
+    if(params != None):
+        axs[0,0].text(-vmax*2.6,0, '$M_A = $ ' + str(abs(params['MachAlfven'])), ha='center', rotation=90, wrap=False)
+
     #H_xz
-    im01 = axs[0,1].pcolormesh(vz_xz, vx_xz, H_xz, cmap="plasma", shading="gouraud")
-    axs[0,1].set_title(r"$f(v_x, v_z)$")
-    axs[0,1].set_xlabel(r"$v_x/v_{ti}$")
+    if(plotLog):
+        im01 = axs[0,1].pcolormesh(vz_xz, vx_xz, H_xz, cmap="plasma", shading="gouraud",norm=LogNorm(vmin=minHxzval, vmax=H_xz.max()))
+    else:
+        im01 = axs[0,1].pcolormesh(vz_xz, vx_xz, H_xz, cmap="plasma", shading="gouraud")
+    #axs[0,1].set_title(r"$f(v_x, v_z)$")
     axs[0,1].set_ylabel(r"$v_z/v_{ti}$")
     axs[0,1].set_aspect('equal', 'box')
-    plt.colorbar(im01, ax=axs[0,1])
+    axs[0,1].grid()
+    clrbar01 = plt.colorbar(im01, ax=axs[0,1])#,format='%.1e')
+    if(not(plotLog)):
+        clrbar01.formatter.set_powerlimits((0, 0))
+
     #H_yz
-    im02 = axs[0,2].pcolormesh(vz_yz, vy_yz, H_yz.T, cmap="plasma", shading="gouraud")
-    axs[0,2].set_title(r"$f(v_y, v_z)$")
+    if(plotLog):
+        im02 = axs[0,2].pcolormesh(vz_yz, vy_yz, H_yz.T, cmap="plasma", shading="gouraud",norm=LogNorm(vmin=minHyzval, vmax=H_yz.max()))
+    else:
+        im02 = axs[0,2].pcolormesh(vz_yz, vy_yz, H_yz.T, cmap="plasma", shading="gouraud")
+    #axs[0,2].set_title(r"$f(v_y, v_z)$")
     axs[0,2].set_ylabel(r"$v_y/v_{ti}$")
-    axs[0,2].set_xlabel(r"$v_z/v_{ti}$")
     axs[0,2].set_aspect('equal', 'box')
-    plt.colorbar(im02, ax=axs[0,2])
+    axs[0,2].grid()
+    clrbar02 = plt.colorbar(im02, ax=axs[0,2])#,format='%.1e')
+    if(not(plotLog)):
+        clrbar02.formatter.set_powerlimits((0, 0))
+
     #CEx_xy
     maxCe = max(np.max(CEx_xy),abs(np.max(CEx_xy)))
-    im10 = axs[1,0].pcolormesh(vy_xy,vx_xy,CEx_xy,vmax=maxCe,vmin=-maxCe,cmap="seismic", shading="gouraud")
-    axs[1,0].set_title('$C_{Ex}(v_x,v_y)$')
-    axs[1,0].set_xlabel(r"$v_x/v_{ti}$")
+    if(plotLog):
+        im10 = axs[1,0].pcolormesh(vy_xy,vx_xy,CEx_xy,vmax=maxCe,vmin=-maxCe,cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
+    else:
+        im10 = axs[1,0].pcolormesh(vy_xy,vx_xy,CEx_xy,vmax=maxCe,vmin=-maxCe,cmap="seismic", shading="gouraud")
+    #axs[1,0].set_title('$C_{Ex}(v_x,v_y)$')
     axs[1,0].set_ylabel(r"$v_y/v_{ti}$")
     axs[1,0].set_aspect('equal', 'box')
-    plt.colorbar(im10, ax=axs[1,0])
+    axs[1,0].grid()
+    axs[1,0].text(-vmax*2.0,0, r"$C_{Ex}$", ha='center', rotation=90, wrap=False)
+    if(params != None):
+        axs[1,0].text(-vmax*2.6,0, '$\Theta_{Bn} = $ ' + str(params['thetaBn']), ha='center', rotation=90, wrap=False)
+    if(computeJdotE):
+        JdotE = compute_energization(CEx_xy,dv)
+        axs[1,0].title.set_text('$C_{Ex}(v_x,v_y)$; $J \cdot E_x$ = ' + "{:.2e}".format(JdotE))
+    clrbar10 = plt.colorbar(im10, ax=axs[1,0])#,format='%.1e')
+    if(not(plotLog)):
+        clrbar10.formatter.set_powerlimits((0, 0))
+
     #CEx_xz
     maxCe = max(np.max(CEx_xz),abs(np.max(CEx_xz)))
-    im11 = axs[1,1].pcolormesh(vz_xz,vx_xz,CEx_xz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
-    axs[1,1].set_title('$C_{Ex}(v_x,v_z)$')
-    axs[1,1].set_xlabel(r"$v_x/v_{ti}$")
+    if(plotLog):
+        im11 = axs[1,1].pcolormesh(vz_xz,vx_xz,CEx_xz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
+    else:
+        im11 = axs[1,1].pcolormesh(vz_xz,vx_xz,CEx_xz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
+    #axs[1,1].set_title('$C_{Ex}(v_x,v_z)$')
     axs[1,1].set_ylabel(r"$v_z/v_{ti}$")
     axs[1,1].set_aspect('equal', 'box')
-    plt.colorbar(im11, ax=axs[1,1])
+    axs[1,1].grid()
+    if(computeJdotE):
+        JdotE = compute_energization(CEx_xz,dv)
+        axs[1,1].title.set_text('$C_{Ex}(v_x,v_y)$; $J \cdot E_x$ = ' + "{:.2e}".format(JdotE))
+    clrbar11 = plt.colorbar(im11, ax=axs[1,1])#,format='%.1e')
+    if(not(plotLog)):
+        clrbar11.formatter.set_powerlimits((0, 0))
+
     #CEx_yz
     maxCe = max(np.max(CEx_yz),abs(np.max(CEx_yz)))
-    im12 = axs[1,2].pcolormesh(vz_yz,vy_yz,CEx_yz.T,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
-    axs[1,2].set_title('$C_{Ex}(v_y,v_z)$')
+    if(plotLog):
+        im12 = axs[1,2].pcolormesh(vz_yz,vy_yz,CEx_yz.T,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
+    else:
+        im12 = axs[1,2].pcolormesh(vz_yz,vy_yz,CEx_yz.T,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
+    #axs[1,2].set_title('$C_{Ex}(v_y,v_z)$')
     axs[1,2].set_ylabel(r"$v_y/v_{ti}$")
-    axs[1,2].set_xlabel(r"$v_z/v_{ti}$")
     axs[1,2].set_aspect('equal', 'box')
-    plt.colorbar(im12, ax=axs[1,2])
+    axs[1,2].grid()
+    if(computeJdotE):
+        JdotE = compute_energization(CEx_yz.T,dv)
+        axs[1,2].title.set_text('$C_{Ex}(v_y,v_z)$; $J \cdot E_x$ = ' + "{:.2e}".format(JdotE))
+    clrbar12 = plt.colorbar(im12, ax=axs[1,2])#,format='%.1e')
+    if(not(plotLog)):
+        clrbar12.formatter.set_powerlimits((0, 0))
+
     #CEy_xy
     maxCe = max(np.max(CEy_xy),abs(np.max(CEy_xy)))
-    im20 = axs[2,0].pcolormesh(vy_xy,vx_xy,CEy_xy,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
-    axs[2,0].set_title('$C_{Ey}(v_x,v_y)$')
-    axs[2,0].set_xlabel(r"$v_x/v_{ti}$")
+    if(plotLog):
+        im20 = axs[2,0].pcolormesh(vy_xy,vx_xy,CEy_xy,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
+    else:
+        im20 = axs[2,0].pcolormesh(vy_xy,vx_xy,CEy_xy,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
+    #axs[2,0].set_title('$C_{Ey}(v_x,v_y)$')
     axs[2,0].set_ylabel(r"$v_y/v_{ti}$")
     axs[2,0].set_aspect('equal', 'box')
-    plt.colorbar(im20, ax=axs[2,0])
+    axs[2,0].text(-vmax*2.0,0, r"$C_{Ey}$", ha='center', rotation=90, wrap=False)
+    axs[2,0].grid()
+    if(xpos != None):
+        axs[2,0].text(-vmax*2.6,0,'$x/d_i = $' + str(xpos), ha='center', rotation=90, wrap=False)
+    if(computeJdotE):
+        JdotE = compute_energization(CEy_xy,dv)
+        axs[2,0].title.set_text('$C_{Ey}(v_x,v_y)$; $J \cdot E_y$ = ' + "{:.2e}".format(JdotE))
+    clrbar20 = plt.colorbar(im20, ax=axs[2,0])#,format='%.1e')
+    if(not(plotLog)):
+        clrbar20.formatter.set_powerlimits((0, 0))
+
     #CEy_xz
     maxCe = max(np.max(CEy_xz),abs(np.max(CEy_xz)))
-    im21 = axs[2,1].pcolormesh(vz_xz,vx_xz,CEy_xz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
-    axs[2,1].set_title('$C_{Ey}(v_x,v_z)$')
-    axs[2,1].set_xlabel(r"$v_x/v_{ti}$")
+    if(plotLog):
+        im21 = axs[2,1].pcolormesh(vz_xz,vx_xz,CEy_xz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
+    else:
+        im21 = axs[2,1].pcolormesh(vz_xz,vx_xz,CEy_xz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
+    #axs[2,1].set_title('$C_{Ey}(v_x,v_z)$')
     axs[2,1].set_ylabel(r"$v_z/v_{ti}$")
     axs[2,1].set_aspect('equal', 'box')
-    plt.colorbar(im21, ax=axs[2,1])
+    axs[2,1].grid()
+    if(computeJdotE):
+        JdotE = compute_energization(CEy_xz,dv)
+        axs[2,1].title.set_text('$C_{Ey}(v_x,v_z)$; $J \cdot E_y$ = ' + "{:.2e}".format(JdotE))
+    clrbar21 = plt.colorbar(im21, ax=axs[2,1])#,format='%.1e')
+    if(not(plotLog)):
+        clrbar21.formatter.set_powerlimits((0, 0))
+
     #CEy_yz
     maxCe = max(np.max(CEy_yz),abs(np.max(CEy_yz)))
-    im22 = axs[2,2].pcolormesh(vz_yz,vy_yz,CEy_yz.T,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
-    axs[2,2].set_title('$C_{Ey}(v_y,v_z)$')
+    if(plotLog):
+        im22 = axs[2,2].pcolormesh(vz_yz,vy_yz,CEy_yz.T,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
+    else:
+        im22 = axs[2,2].pcolormesh(vz_yz,vy_yz,CEy_yz.T,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
+    #axs[2,2].set_title('$C_{Ey}(v_y,v_z)$')
     axs[2,2].set_ylabel(r"$v_y/v_{ti}$")
-    axs[2,2].set_xlabel(r"$v_z/v_{ti}$")
     axs[2,2].set_aspect('equal', 'box')
-    plt.colorbar(im22, ax=axs[2,2])
+    axs[2,2].grid()
+    if(computeJdotE):
+        JdotE = compute_energization(CEy_yz.T,dv)
+        axs[2,2].title.set_text('$C_{Ey}(v_y,v_z)$; $J \cdot E_y$ = ' + "{:.2e}".format(JdotE))
+    clrbar22 = plt.colorbar(im22, ax=axs[2,2])#,format='%.1e')
+    if(not(plotLog)):
+        clrbar22.formatter.set_powerlimits((0, 0))
+
     #CEz_xy
     maxCe = max(np.max(CEz_xy),abs(np.max(CEz_xy)))
-    im30 = axs[3,0].pcolormesh(vy_xy,vx_xy,CEz_xy,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
-    axs[3,0].set_title('$C_{Ez}(v_x,v_y)$')
+    if(plotLog):
+        im30 = axs[3,0].pcolormesh(vy_xy,vx_xy,CEz_xy,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
+    else:
+        im30 = axs[3,0].pcolormesh(vy_xy,vx_xy,CEz_xy,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
+    #axs[3,0].set_title('$C_{Ez}(v_x,v_y)$')
     axs[3,0].set_xlabel(r"$v_x/v_{ti}$")
     axs[3,0].set_ylabel(r"$v_y/v_{ti}$")
     axs[3,0].set_aspect('equal', 'box')
-    plt.colorbar(im30, ax=axs[3,0])
+    axs[3,0].text(-vmax*2.0,0, r"$C_{Ez}$", ha='center', rotation=90, wrap=False)
+    axs[3,0].grid()
+    if(metadata != None):
+        axs[3,0].text(-vmax*2.6,0, metadata, ha='center', rotation=90, wrap=False)
+    if(computeJdotE):
+        JdotE = compute_energization(CEz_xy,dv)
+        axs[3,0].title.set_text('$C_{Ez}(v_x,v_y)$; $J \cdot E_z$ = ' + "{:.2e}".format(JdotE))
+    clrbar30 = plt.colorbar(im30, ax=axs[3,0])#,format='%.1e')
+    if(not(plotLog)):
+        clrbar30.formatter.set_powerlimits((0, 0))
+
     #CEz_xz
     maxCe = max(np.max(CEz_xz),abs(np.max(CEz_xz)))
-    im31 = axs[3,1].pcolormesh(vz_xz,vx_xz,CEz_xz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
-    axs[3,1].set_title('$C_{Ez}(v_x,v_z)$')
+    if(plotLog):
+        im31 = axs[3,1].pcolormesh(vz_xz,vx_xz,CEz_xz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
+    else:
+        im31 = axs[3,1].pcolormesh(vz_xz,vx_xz,CEz_xz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
+    #axs[3,1].set_title('$C_{Ez}(v_x,v_z)$')
     axs[3,1].set_xlabel(r"$v_x/v_{ti}$")
     axs[3,1].set_ylabel(r"$v_z/v_{ti}$")
     axs[3,1].set_aspect('equal', 'box')
-    plt.colorbar(im31, ax=axs[3,1])
+    axs[3,1].grid()
+    if(computeJdotE):
+        JdotE = compute_energization(CEz_xz,dv)
+        axs[3,1].title.set_text('$C_{Ez}(v_x,v_z)$; $J \cdot E_z$ = ' + "{:.2e}".format(JdotE))
+    clrbar31 = plt.colorbar(im31, ax=axs[3,1])#,format='%.1e')
+    if(not(plotLog)):
+        clrbar31.formatter.set_powerlimits((0, 0))
+
     #CEz_yz
     maxCe = max(np.max(CEz_yz),abs(np.max(CEz_yz)))
-    im32 = axs[3,2].pcolormesh(vz_yz,vy_yz,CEz_yz.T,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
-    axs[3,2].set_title('$C_{Ez}(v_y,v_z)$')
+    if(plotLog):
+        im32 = axs[3,2].pcolormesh(vz_yz,vy_yz,CEz_yz.T,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
+    else:
+        im32 = axs[3,2].pcolormesh(vz_yz,vy_yz,CEz_yz.T,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
+    #axs[3,2].set_title('$C_{Ez}(v_y,v_z)$')
     axs[3,2].set_ylabel(r"$v_y/v_{ti}$")
     axs[3,2].set_xlabel(r"$v_z/v_{ti}$")
     axs[3,2].set_aspect('equal', 'box')
-    plt.colorbar(im32, ax=axs[3,2])
+    axs[3,2].grid()
+    if(computeJdotE):
+        JdotE = compute_energization(CEz_yz.T,dv)
+        axs[3,2].title.set_text('$C_{Ez}(v_y,v_z)$; $J \cdot E_z$ = ' + "{:.2e}".format(JdotE))
+    clrbar32 = plt.colorbar(im32, ax=axs[3,2])#,format='%.1e')
+    if(not(plotLog)):
+        clrbar32.formatter.set_powerlimits((0, 0))
 
-    plt.subplots_adjust(hspace=.5,wspace=-.3)
+    #set ticks
+    intvl = 10.
+    tcks = np.arange(0,vmax,intvl)
+    tcks = np.concatenate((-1*np.flip(tcks),tcks))
+    for _i in range(0,4):
+        for _j in range(0,3):
+            axs[_i,_j].set_xticks(tcks)
+            axs[_i,_j].set_yticks(tcks)
+
+    #plt.subplots_adjust(hspace=.5,wspace=-.3)
     if(flnm != ''):
-        plt.savefig(flnm+'.png',format='png')
+        plt.savefig(flnm+'.png',format='png',dpi=250,bbox_inches='tight')
         plt.close('all') #saves RAM
     else:
         plt.show()
     plt.close()
 
-def make_superplot_gif(vx, vy, vz, vmax, Hist, CEx, CEy, CEz, x, directory, flnm):
+def make_9panel_sweep_from_2v(Hist_vxvy, Hist_vxvz, Hist_vyvz,
+                              C_Ex_vxvy, C_Ex_vxvz, C_Ex_vyvz,
+                              C_Ey_vxvy, C_Ey_vxvz, C_Ey_vyvz,
+                              C_Ez_vxvy, C_Ez_vxvz, C_Ez_vyvz,
+                              vx, vy,vz,params_in,x,metadata,
+                              directory,plotLog=False):
+    """
+    Makes sweep of super figure of distribution and velocity sigantures from all different projections
+    i.e. different viewing angles
+
+    Parameters
+    ----------
+    vx : 2d array
+        vx velocity grid
+    vy : 2d array
+        vy velocity grid
+    vmax : float
+        specifies signature domain in velocity space
+        (assumes square and centered about zero)
+    H_** : 2d array
+        projection onto ** axis of distribution function
+    CE*_* : 2d array
+        projection onto ** axis of CE*
+    flnm : str, optional
+        specifies filename if plot is to be saved as png.
+        if set to default, plt.show() will be called instead
+    params : dict
+        dictionary with simulation parameters in it
+    metadata : array of strings
+        array where each element is a string describing metadata to be shown on plot
+    directory : string
+        name of output directory for pngs of each frame of sweep
+    plotLog : bool
+        if true will plot using colors.SymLogNorm()
+        that is will plot both negative and positive values using a log color scale when possible and a linear scale from -1 to 1
+    """
+
+    try:
+        os.mkdir(directory)
+    except:
+        pass
+
+    vmax = np.max(vz)
+    print(vmax)
+
+    for i in range(0,len(Hist_vxvy)):
+        print('Making plot ' + str(i) + ' of ' + str(len(Hist_vxvy)))
+        mdt = str('Metadata = ' + str(metadata[i]))
+        plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
+                                    Hist_vxvy[i], Hist_vxvz[i], Hist_vyvz[i],
+                                    C_Ex_vxvy[i], C_Ex_vxvz[i], C_Ex_vyvz[i],
+                                    C_Ey_vxvy[i], C_Ey_vxvz[i], C_Ey_vyvz[i],
+                                    C_Ez_vxvy[i], C_Ez_vxvz[i], C_Ez_vyvz[i],
+                                    flnm = directory+str(i), computeJdotE = False, params = params_in, metadata = mdt, xpos = x[i], plotLog=plotLog)
+
+def make_superplot_gif(vx, vy, vz, vmax, Hist, CEx, CEy, CEz, x, directory):
     """
     Make superplots of data and put into directory
 
@@ -577,8 +793,6 @@ def make_superplot_gif(vx, vy, vz, vmax, Hist, CEx, CEy, CEz, x, directory, flnm
     directory : str
         name of directory you want to create and put plots into
         (omit final '/')
-    flnm : str
-        filename of the final gif
     """
 
     from lib.array_ops import array_3d_to_2d
