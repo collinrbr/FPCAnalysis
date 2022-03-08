@@ -92,9 +92,10 @@ def mesh_3d_to_2d(meshx, meshy, meshz, planename):
     meshz2d : 2d array
         2d meshz grid
     """
+    nz,ny,nx = meshx.shape
     if(planename == 'xy'):
-        meshx2d = np.zeros((len(meshy), len(meshx)))
-        meshy2d = np.zeros((len(meshy), len(meshx)))
+        meshx2d = np.zeros((ny, nx))
+        meshy2d = np.zeros((ny, nx))
 
         meshx2d[:, :] = meshx[0, :, :]
         meshy2d[:, :] = meshy[0, :, :]
@@ -102,8 +103,8 @@ def mesh_3d_to_2d(meshx, meshy, meshz, planename):
         return meshx2d, meshy2d
 
     elif(planename == 'xz'):
-        meshx2d = np.zeros((len(meshz), len(meshx)))
-        meshz2d = np.zeros((len(meshz), len(meshx)))
+        meshx2d = np.zeros((nz, nx))
+        meshz2d = np.zeros((nz, nx))
 
         meshx2d[:, :] = meshx[:, 0, :]
         meshz2d[:, :] = meshz[:, 0, :]
@@ -111,14 +112,13 @@ def mesh_3d_to_2d(meshx, meshy, meshz, planename):
         return meshx2d, meshz2d
 
     elif(planename == 'yz'):
-        meshy2d = np.zeros((len(meshz), len(meshy)))
-        meshz2d = np.zeros((len(meshz), len(meshy)))
+        meshy2d = np.zeros((nz, ny))
+        meshz2d = np.zeros((nz, ny))
 
         meshy2d[:, :] = meshy[:, :, 0]
         meshz2d[:, :] = meshz[:, :, 0]
 
         return meshy2d, meshz2d
-
 
 def array_3d_to_2d(arr3d, planename):
     """
@@ -136,26 +136,22 @@ def array_3d_to_2d(arr3d, planename):
     arr2d : 2d array
         2d projection of the data
     """
-    arr2d = np.zeros((len(arr3d), len(arr3d[0])))
+    nz = len(arr3d)
+    ny = len(arr3d[0])
+    nx = len(arr3d[0][0])
     if(planename == 'xy'):
-        for i in range(0, len(arr3d)):
-            for j in range(0, len(arr3d[i])):
-                for k in range(0, len(arr3d[i][j])):
-                    arr2d[k][j] += arr3d[i][j][k]
+        arr2d = np.apply_along_axis(np.sum, 0, arr3d)
+        arr2d = np.swapaxes(arr2d, 0, 1) #rest of the code assumes this ordering
         return arr2d
 
     elif(planename == 'xz'):
-        for i in range(0, len(arr3d)):
-            for j in range(0, len(arr3d[i])):
-                for k in range(0, len(arr3d[i][j])):
-                    arr2d[k][i] += arr3d[i][j][k]
+        arr2d = np.apply_along_axis(np.sum, 1, arr3d)
+        arr2d = np.swapaxes(arr2d, 0, 1) #rest of the code assumes this ordering
         return arr2d
 
     elif(planename == 'yz'):
-        for i in range(0, len(arr3d)):
-            for j in range(0, len(arr3d[i])):
-                for k in range(0, len(arr3d[i][j])):
-                    arr2d[j][i] += arr3d[i][j][k]
+        arr2d = np.apply_along_axis(np.sum, 1, arr3d)
+        arr2d = np.swapaxes(arr2d, 0, 1) #rest of the code assumes this ordering
         return arr2d
     else:
         print("Please enter xy, xz, or yz for planename...")
