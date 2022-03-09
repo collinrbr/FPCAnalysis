@@ -24,7 +24,7 @@ import numpy as np
 try:
     analysisinputflnm = sys.argv[1]
 except:
-    print("This generates FPC netcdf4 file. Use_restart is false by default.")
+    print("This generates FPC netcdf4 file from dHybridR data. Use_restart is false by default.")
     print("usage: " + sys.argv[0] + " analysisinputflnm use_restart(T/F) is_2D3V(T/F) num_threads(default 1) dpar_folder use_dfluc(default F)")
     sys.exit()
 

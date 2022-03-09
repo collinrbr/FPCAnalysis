@@ -218,8 +218,10 @@ def get_comp_ratio(dfields, upstreambound, downstreambound):
     """
     Find ratio of downstream bz and upstream bz
 
-    Note, typically upstreambound != downstream bound. We should exclude the
+    Note, typically upstreambound != downstream bound. That is we often exclude the
     the fields within the shock.
+
+    Assumes downstream is towards the origin and upstream is away from the origin
 
     Parameters
     ----------

@@ -81,8 +81,8 @@ def get_dpar_from_bounds(dpar_folder,x1,x2,verbose=False):
 
         if(testidx >= len(xbounds)):
             print("warning, requested x1 greater than the upper bound of the domain we are working with...")
-            print("returning single particle with 'x1':[05.*(x1+x2)],'x2':[0.404],'x3':[0.404]")#Lazy, but since v1=v2=v3=0, shouldnt impact FPCs...
-            return {'p1':[0.],'p2':[0.],'p3':[0.],'x1':[05.*(x1+x2)],'x2':[0.404],'x3':[0.404],'Vframe_relative_to_sim':0.0}
+            print("returning single particle with 'x1':[05.*(x1+x2)],'x2':[0.404],'x3':[0.404]")#Lazy, but since v1=v2=v3=0, wont impact FPCs and negative x2,x3 means it wont impact distribution function either
+            return {'p1':[0.],'p2':[0.],'p3':[0.],'x1':[05.*(x1+x2)],'x2':[-0.404],'x3':[-0.404],'Vframe_relative_to_sim':0.0}
 
     rightmostbound_index = 0
     testidx = 0

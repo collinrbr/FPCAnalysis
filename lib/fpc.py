@@ -868,7 +868,7 @@ def compute_cprime_hist(dparticles, dfields, fieldkey, vmax, dv):
 
     return cprimebinned, hist, vx, vy, vz
 
-
+#TODO: add and track charge!!!
 def compute_cor_from_cprime(cprimebinned, vx, vy, vz, dv, directionkey):
     """
     Computes correlation from cprime
@@ -889,6 +889,11 @@ def compute_cor_from_cprime(cprimebinned, vx, vy, vz, dv, directionkey):
         (assumes square)
     directionkey : str
         direction we are taking the derivative w.r.t. (x,y,z)
+
+    Returns
+    -------
+    cor : 3d array
+        FPC data
     """
 
     if(directionkey == 'x'):
@@ -903,3 +908,142 @@ def compute_cor_from_cprime(cprimebinned, vx, vy, vz, dv, directionkey):
 
     cor = -vv/2.*np.gradient(cprimebinned, dv, edge_order=2, axis=axis) + cprimebinned / 2.
     return cor
+
+#-----------------------------------------------------------------------------------------------------------------------
+# Functions related to computing FPC if hist function is already computed
+#-----------------------------------------------------------------------------------------------------------------------
+def compute_fpc_from_dist(fieldval,hist,vx,vy,vz,vshock,directionkey,q=1.):
+    """
+    hist is 3d array (vz,vy,vx as axes)
+    fieldval is avg field value
+    """
+    if(directionkey == 'x'):
+        axis = 2
+        vv = vx-vshock
+        dv = vx[0,0,1]-vx[0,0,0]
+    elif(directionkey == 'y'):
+        axis = 1
+        vv = vy
+        dv = vy[0,1,0]-vy[0,0,0]
+    elif(directionkey == 'z'):
+        axis = 0
+        vv = vz
+        dv = vz[1,0,0]-vz[0,0,0]
+
+    cor = -q*(vv**2./2)*np.gradient(hist, dv, edge_order=2, axis=axis)*fieldval
+
+    totalPtcl = np.sum(hist)
+
+    return vx, vy, vz, totalPtcl, hist, cor
+
+def _comp_all_CEi_from_dist(x1, x2, y1, y2, z1, z2, ddist, dfields, vshock):
+    #TODO: make 2D and 3D compatable
+
+    #bin histograms and take field average
+    _hist = []
+    fieldkeys = ['ex','ey','ez','bx','by','bz']
+    for fkey in fieldkeys:
+        locals()[fkey+'avg'] = 0.
+    num_field_points = 0
+    for xxidx, x0 in enumerate(ddist['hist_xx']):
+        if(x0 >= x1 and x0 <= x2):
+            if(_hist == []):
+                _hist = ddist['hist'][xxidx]
+            else:
+                _hist += ddist['hist'][xxidx]
+
+            for fkey in fieldkeys:
+                locals()[fkey+'avg'] += dfields[fkey][0,0,xxidx] #not 3d or 2d compatable
+
+            num_field_points += 1
+
+    for key in fieldkeys:
+        locals()[key+'avg'] /= num_field_points #not 3d or 2d compatable
+
+    vx = ddist['vx']
+    vy = ddist['vy']
+    vz = ddist['vz']
+    for fkey in fieldkeys:
+        dkey = fkey[-1]
+        vx,vy,vz,totalPtcl,hist,locals()['C'+fkey] = compute_fpc_from_dist(locals()[fkey+'avg'],_hist,vx,vy,vz,vshock,dkey)
+
+    return totalPtcl, _hist, locals()['Cex'], locals()['Cey'], locals()['Cez']
+
+def compute_correlation_over_x_from_dist(ddist,dfields, vmax, dx, vshock, xlim=None, ylim=None, zlim=None):
+
+
+    CEx_out = []
+    CEy_out = []
+    CEz_out = []
+    x_out = []
+    Hist_out = []
+    num_par_out = []
+
+    if(dx < ddist['hist_xx'][1]-ddist['hist_xx'][0]):
+        print("ERROR: dx is smaller than spacing between distribution functions")
+        return #TODO raise error here
+
+    if xlim is not None:
+        x1 = xlim[0]
+        x2 = x1+dx
+        xEnd = xlim[1]
+    # If xlim is None, use lower x edge to upper x edge extents
+    else:
+        x1 = ddist['hist_xx'][0]
+        x2 = x1 + dx
+        xEnd = ddist['hist_xx'][-1]
+    if ylim is not None:
+        y1 = ylim[0]
+        y2 = ylim[1]
+    # If ylim is None, use lower y edge to lower y edge + dx extents
+    else:
+        y1 = dfields['ex_yy'][0]
+        y2 = y1 + dx
+    if zlim is not None:
+        z1 = zlim[0]
+        z2 = zlim[1]
+    # If zlim is None, use lower z edge to lower z edge + dx extents
+    else:
+        z1 = dfields['ex_zz'][0]
+        z2 = z1 + dx
+
+    while(x2 <= xEnd):
+        print('scan pos-> x1: ',x1,' x2: ',x2,' y1: ',y1,' y2: ',y2,' z1: ', z1,' z2: ',z2)
+        totalPtcl, hist, CEx, CEy, CEz = _comp_all_CEi_from_dist(x1, x2, y1, y2, z1, z2, ddist, dfields, vshock)
+        print('num particles in box: ', totalPtcl)
+        x_out.append(np.mean([x1,x2]))
+        CEx_out.append(CEx)
+        CEy_out.append(CEy)
+        CEz_out.append(CEz)
+        Hist_out.append(hist)
+        num_par_out.append(totalPtcl)
+        x1 += dx
+        x2 += dx
+
+    vx = ddist['vx']
+    vy = ddist['vy']
+    vz = ddist['vz']
+
+    return CEx_out, CEy_out, CEz_out, x_out, Hist_out, vx, vy, vz, num_par_out
+
+def project_and_store(vx,vy,vz,xx,CEx,CEy,CEz,Hist):
+    """
+    projects 4d data
+    """
+
+    dfpckeys = ['Histvxvy','Histvxvz','Histvyvz','CExvxvy','CExvxvz','CExvyvz','CEyvxvy','CEyvxvz','CEyvyvz','CEzvxvy','CEzvxvz','CEzvyvz']
+    dfpc = {}
+    for key in dfpckeys:
+        dfpc[key] = []
+    dfpc['xx'] = xx
+    dfpc['vx'] = vx
+    dfpc['vy'] = vy
+    dfpc['vz'] = vz
+
+    for xxidx, x0 in enumerate(xx):
+        print("Projecting ",x0,' of ',xx[-1])
+        Histvxvy,Histvxvz,Histvyvz,CExvxvy,CExvxvz,CExvyvz,CEyvxvy,CEyvxvz,CEyvyvz,CEzvxvy,CEzvxvz,CEzvyvz = project_CEi_hist(Hist[xxidx], CEx[xxidx], CEy[xxidx], CEz[xxidx])
+        for key in dfpckeys:
+            dfpc[key].append(locals()[key])
+
+    return dfpc

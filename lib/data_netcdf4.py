@@ -541,6 +541,7 @@ def load2vdata(filename):
 #TODO: parse_input_file and read_input tries to do the same thing. However,
 # both functions have different potential flaws. Need to make parse function
 # that does not have flaws
+#TODO: move to data_h5 or data_dhybridr
 def parse_input_file(path):
     """
     Puts dHybridR input file into dictionary.
@@ -725,7 +726,7 @@ def build_params(inputdict, numframe):
     #define attributes/ simulation parameters
     params = {}
     params["MachAlfven"] = inputdict['plasma_injector_1_vdrift(1:3)'][0]
-    params["MachAlfvenNote"] = 'TODO: compute mach alfven for this run'
+    params["MachAlfvenNote"] = 'TODO: compute mach alfven for this run (using inflow as place holder)'
     params["thetaBn"] = shocknormalangle
     params["thetaBndesc"] = 'units of degrees'
     params["betaelec"] = betaelec
@@ -753,7 +754,8 @@ def _auto_cast(k):
 
     Returns
     -------
-
+    str(k) or True/False : str
+        Value associated with the cast of k
     """
     k = k.replace('"','').replace("'",'')
     for try_type in [int, float]:

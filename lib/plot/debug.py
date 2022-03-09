@@ -30,7 +30,8 @@ def plot_1d_dist(dparticles, parkey, vmax, x1, x2, y1, y2, flnm = ''):
     """
 
     #TODO: make gpts particles work for spatial domain
-    gptsparticle = (x1 < dparticles['x1'] ) & (dparticles['x1'] < x2) & (y1 < dparticles['x2'] ) & (dparticles['x2'] < y2)
+    gptsparticle = (x1 <= dparticles['x1'] ) & (dparticles['x1'] <= x2) & (y1 <= dparticles['x2'] ) & (dparticles['x2'] <= y2)
+    print(gptsparticle)
     histdata = dparticles[parkey][gptsparticle]
     binsplt = np.linspace(-vmax,vmax,1000)
 
