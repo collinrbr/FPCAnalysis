@@ -155,7 +155,7 @@ def make_super_pmeshplot(dfields,dflow,dden,zzindex = 0,flnm=''):
     fig.colorbar(bi_im, ax=axes.ravel().tolist()[0:3])
 
     #Btot
-    btot = np.zeros(dfields['bx'].shape)cmap = mpl.cm.cool
+    btot = np.zeros(dfields['bx'].shape)
     for _i in range(0,len(btot)):
         for _j in range(0,len(btot[_i])):
             for _k in range(0,len(btot[_i][_j])):
