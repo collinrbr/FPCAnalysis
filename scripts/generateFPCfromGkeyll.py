@@ -22,7 +22,7 @@ import os
 import math
 import numpy as np
 try:
-    flnm_prefix = str(sys.argv[1].upper())
+    flnm_prefix = str(sys.argv[1])
 except:
     print("This generates FPC netcdf4 file using Gkeyll data...")
     print("usage: " + sys.argv[0] + " flnm_prefix framenum")
@@ -57,6 +57,7 @@ dfields = ft.lorentz_transform_vx(dfields,vshock)
 # Compute FPC
 #-------------------------------------------------------------------------------
 dx = ddist['hist_xx'][1]-ddist['hist_xx'][0]
+vmax = np.max([ddist['vx'],ddist['vy'],ddist['vz']])
 CEx_out, CEy_out, CEz_out, x_out, Hist_out, vx, vy, vz, num_par_out = fpc.compute_correlation_over_x_from_dist(ddist,dfields, vmax, dx, vshock, xlim=None, ylim=[0,1], zlim=[0,1])
 
 dfpc = fpc.project_and_store(vx,vy,vz,x_out,CEx_out,CEy_out,CEz_out,Hist_out)
