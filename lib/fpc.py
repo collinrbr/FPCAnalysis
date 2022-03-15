@@ -969,15 +969,31 @@ def _comp_all_CEi_from_dist(x1, x2, y1, y2, z1, z2, ddist, dfields, vshock):
 
     return totalPtcl, _hist, locals()['Cex'], locals()['Cey'], locals()['Cez']
 
-def compute_correlation_over_x_from_dist(ddist,dfields, vmax, dx, vshock, xlim=None, ylim=None, zlim=None):
+def compute_correlation_over_x_from_dist(ddist,dfields, vmax, dx, vshock, xlim=None, ylim=None, zlim=None, project=False):
 
 
-    CEx_out = []
-    CEy_out = []
-    CEz_out = []
     x_out = []
-    Hist_out = []
     num_par_out = []
+    if(project == False):
+        CEx_out = []
+        CEy_out = []
+        CEz_out = []
+        Hist_out = []
+    else:
+        dfpckeys = ['Histvxvy','Histvxvz','Histvyvz','CExvxvy','CExvxvz','CExvyvz','CEyvxvy','CEyvxvz','CEyvyvz','CEzvxvy','CEzvxvz','CEzvyvz']
+        dfpc = {}
+        CExvxvy_out = []
+        CExvxvz_out = []
+        CExvyvz_out = []
+        CEyvxvy_out = []
+        CEyvxvz_out = []
+        CEyvyvz_out = []
+        CEzvxvy_out = []
+        CEzvxvz_out = []
+        CEzvyvz_out = []
+        Histvxvy_out = []
+        Histvxvz_out = []
+        Histvyvz_out = []
 
     if(dx < ddist['hist_xx'][1]-ddist['hist_xx'][0]):
         print("ERROR: dx is smaller than spacing between distribution functions")
@@ -1012,10 +1028,15 @@ def compute_correlation_over_x_from_dist(ddist,dfields, vmax, dx, vshock, xlim=N
         totalPtcl, hist, CEx, CEy, CEz = _comp_all_CEi_from_dist(x1, x2, y1, y2, z1, z2, ddist, dfields, vshock)
         print('num particles in box: ', totalPtcl)
         x_out.append(np.mean([x1,x2]))
-        CEx_out.append(CEx)
-        CEy_out.append(CEy)
-        CEz_out.append(CEz)
-        Hist_out.append(hist)
+        if(project == False):
+            CEx_out.append(CEx)
+            CEy_out.append(CEy)
+            CEz_out.append(CEz)
+            Hist_out.append(hist)
+        else:
+            Histvxvy,Histvxvz,Histvyvz,CExvxvy,CExvxvz,CExvyvz,CEyvxvy,CEyvxvz,CEyvyvz,CEzvxvy,CEzvxvz,CEzvyvz = project_CEi_hist(hist, CEx, CEy, CEz)
+            for key in dfpckeys:
+                dfpc[key].append(locals()[key])
         num_par_out.append(totalPtcl)
         x1 += dx
         x2 += dx
@@ -1024,7 +1045,16 @@ def compute_correlation_over_x_from_dist(ddist,dfields, vmax, dx, vshock, xlim=N
     vy = ddist['vy']
     vz = ddist['vz']
 
-    return CEx_out, CEy_out, CEz_out, x_out, Hist_out, vx, vy, vz, num_par_out
+    if(project == False):
+        return CEx_out, CEy_out, CEz_out, x_out, Hist_out, vx, vy, vz, num_par_out
+    else:
+        dfpc['num_par'] = num_par_out
+        dfpc['xx'] = x_out
+        dfpc['vx'] = ddist['vx']
+        dfpc['vy'] = ddist['vy']
+        dfpc['vz'] = ddist['vz']
+
+        return dfpc
 
 def project_and_store(vx,vy,vz,xx,CEx,CEy,CEz,Hist):
     """

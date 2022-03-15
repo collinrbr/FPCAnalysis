@@ -57,9 +57,9 @@ dfields = ft.lorentz_transform_vx(dfields,vshock)
 # Compute FPC
 #-------------------------------------------------------------------------------
 dx = ddist['hist_xx'][1]-ddist['hist_xx'][0]
-CEx_out, CEy_out, CEz_out, x_out, Hist_out, vx, vy, vz, num_par_out = fpc.compute_correlation_over_x_from_dist(ddist,dfields, vmax, dx, vshock, xlim=None, ylim=[0,1], zlim=[0,1])
-
-dfpc = fpc.project_and_store(vx,vy,vz,x_out,CEx_out,CEy_out,CEz_out,Hist_out)
+vmax = np.max(ddist['vx'])
+dfpc = fpc.compute_correlation_over_x_from_dist(ddist,dfields, vmax, dx, vshock, xlim=None, ylim=[0,1], zlim=[0,1],project=True)
+#dfpc = fpc.project_and_store(vx,vy,vz,x_out,CEx_out,CEy_out,CEz_out,Hist_out)
 
 #compute energization from correlations
 dv = dfpcfinal['vz'][1,0,0]-dfpcfinal['vz'][0,0,0]
