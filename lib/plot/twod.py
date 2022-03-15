@@ -133,7 +133,7 @@ def make_field_pmesh(ddict,fieldkey,planename,flnm = '',takeaxisaverage=False, x
 
 def make_super_pmeshplot(dfields,dflow,dden,zzindex = 0,flnm=''):
 
-    fig, axs = plt.subplots(8,figsize=(10,8))
+    fig, axs = plt.subplots(8,figsize=(10,8*2))
 
     #Bx
     bx_im = axs[0].pcolormesh(dfields['bx_xx'], dfields['bx_yy'], dfields['bx'][zzindex,:,:], cmap="plasma", shading="gouraud")
@@ -152,7 +152,7 @@ def make_super_pmeshplot(dfields,dflow,dden,zzindex = 0,flnm=''):
         bi_im = bz_im
         bi_max = np.max(dfields['bz'][zzindex,:,:])
 
-    fig.colorbar(bi_im, ax=axes.ravel().tolist()[0:3])
+    fig.colorbar(bi_im, ax=axs.ravel().tolist()[0:3])
 
     #Btot
     btot = np.zeros(dfields['bx'].shape)
