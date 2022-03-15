@@ -220,6 +220,7 @@ def spoof_particle_data(hist,vx,vy,vz,x1,x2,y1,y2,z1,z2,Vframe_relative_to_sim,n
 def get_input_params(flnm_prefix,num,species='ion'):
     """
     """
+    print("Getting input params from %s_%s_M1i_%d.bp" % (flnm_prefix,species,num)) 
     fh = adios.file("%s_%s_M1i_%d.bp" % (flnm_prefix,species,num)) #get input file from field data
     inputFile = adios.attr(fh, 'inputfile').value.decode('UTF-8')
     fh.close()

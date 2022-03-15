@@ -22,7 +22,7 @@ import os
 import math
 import numpy as np
 try:
-    flnm_prefix = str(sys.argv[1].upper())
+    flnm_prefix = str(sys.argv[1])
 except:
     print("This generates FPC netcdf4 file using Gkeyll data...")
     print("usage: " + sys.argv[0] + " flnm_prefix framenum")
