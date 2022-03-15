@@ -133,36 +133,51 @@ def make_field_pmesh(ddict,fieldkey,planename,flnm = '',takeaxisaverage=False, x
 
 def make_super_pmeshplot(dfields,dflow,dden,zzindex = 0,flnm=''):
 
-    fig, axs = plt.subplots(8,figsize=(15,8))
+    fig, axs = plt.subplots(8,figsize=(10,8))
 
     #Bx
-    axs[0].pcolormesh(dfields['bx_xx'], dfields['bx_yy'], dfields['bx'][zzindex,:,:], cmap="plasma", shading="gouraud")
+    bx_im = axs[0].pcolormesh(dfields['bx_xx'], dfields['bx_yy'], dfields['bx'][zzindex,:,:], cmap="plasma", shading="gouraud")
+    bi_im = bx_im #Mappable used when making color bar. Will use one with largest value
+    bi_max = np.max(dfields['bx'][zzindex,:,:])
 
     #By
-    axs[1].pcolormesh(dfields['by_xx'], dfields['by_yy'], dfields['by'][zzindex,:,:], cmap="plasma", shading="gouraud")
+    by_im = axs[1].pcolormesh(dfields['by_xx'], dfields['by_yy'], dfields['by'][zzindex,:,:], cmap="plasma", shading="gouraud")
+    if(np.max(dfields['by'][zzindex,:,:]) > bi_max):
+        bi_im = by_im
+        bi_max = np.max(dfields['by'][zzindex,:,:])
 
     #Bz
-    axs[2].pcolormesh(dfields['bz_xx'], dfields['bz_yy'], dfields['bz'][zzindex,:,:], cmap="plasma", shading="gouraud")
+    bz_im = axs[2].pcolormesh(dfields['bz_xx'], dfields['bz_yy'], dfields['bz'][zzindex,:,:], cmap="plasma", shading="gouraud")
+    if(np.max(dfields['bz'][zzindex,:,:]) > bi_max):
+        bi_im = bz_im
+        bi_max = np.max(dfields['bz'][zzindex,:,:])
+
+    fig.colorbar(bi_im, ax=axes.ravel().tolist()[0:3])
 
     #Btot
-    btot = np.zeros(dfields['bx'].shape)
+    btot = np.zeros(dfields['bx'].shape)cmap = mpl.cm.cool
     for _i in range(0,len(btot)):
         for _j in range(0,len(btot[_i])):
             for _k in range(0,len(btot[_i][_j])):
                 btot[_i,_j,_k] = np.linalg.norm([dfields['bx'][_i,_j,_k],dfields['by'][_i,_j,_k],dfields['bz'][_i,_j,_k]])
-    axs[3].pcolormesh(dfields['bx_xx'], dfields['bx_yy'], btot[zzindex,:,:], cmap="magma", shading="gouraud")
+    btot_im = axs[3].pcolormesh(dfields['bx_xx'], dfields['bx_yy'], btot[zzindex,:,:], cmap="magma", shading="gouraud")
+    fig.colorbar(btot_im, ax=axs[3])
 
     #den
-    axs[4].pcolormesh(dden['den_xx'],dden['den_yy'],dden['den'][zzindex,:,:], cmap="Spectral", shading="gouraud")
+    den_im = axs[4].pcolormesh(dden['den_xx'],dden['den_yy'],dden['den'][zzindex,:,:], cmap="Spectral", shading="gouraud")
+    fig.colorbar(den_im, ax=axs[4])
 
     #vx
-    axs[5].pcolormesh(dflow['ux_xx'],dden['ux_yy'],dden['ux'][zzindex,:,:], cmap="bwr", shading="gouraud")
+    vx_im = axs[5].pcolormesh(dflow['ux_xx'],dflow['ux_yy'],dflow['ux'][zzindex,:,:], cmap="bwr", shading="gouraud")
+    fig.colorbar(vx_im, ax=axs[5])
 
     #vy
-    axs[6].pcolormesh(dflow['uy_xx'],dden['uy_yy'],dden['uy'][zzindex,:,:], cmap="bwr", shading="gouraud")
+    vy_im = axs[6].pcolormesh(dflow['uy_xx'],dflow['uy_yy'],dflow['uy'][zzindex,:,:], cmap="bwr", shading="gouraud")
+    fig.colorbar(vy_im, ax=axs[6])
 
     #vz
-    axs[7].pcolormesh(dflow['uz_xx'],dden['uz_yy'],dden['uz'][zzindex,:,:], cmap="bwr", shading="gouraud")
+    vz_im = axs[7].pcolormesh(dflow['uz_xx'],dflow['uz_yy'],dflow['uz'][zzindex,:,:], cmap="bwr", shading="gouraud")
+    fig.colorbar(vz_im, ax=axs[7])
 
     if(flnm != ''):
         plt.savefig(flnm+'.png',format='png',dpi=300)
