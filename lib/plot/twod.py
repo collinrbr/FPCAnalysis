@@ -131,6 +131,45 @@ def make_field_pmesh(ddict,fieldkey,planename,flnm = '',takeaxisaverage=False, x
         plt.show()
         plt.close()
 
+def make_super_pmeshplot(dfields,dflow,dden,zzindex = 0,flnm=''):
+
+    fig, axs = plt.subplots(8,figsize=(15,8))
+
+    #Bx
+    axs[0].pcolormesh(dfields['bx_xx'], dfields['bx_yy'], dfields['bx'][zzindex,:,:], cmap="plasma", shading="gouraud")
+
+    #By
+    axs[1].pcolormesh(dfields['by_xx'], dfields['by_yy'], dfields['by'][zzindex,:,:], cmap="plasma", shading="gouraud")
+
+    #Bz
+    axs[2].pcolormesh(dfields['bz_xx'], dfields['bz_yy'], dfields['bz'][zzindex,:,:], cmap="plasma", shading="gouraud")
+
+    #Btot
+    btot = np.zeros(dfields['bx'].shape)
+    for _i in range(0,len(btot)):
+        for _j in range(0,len(btot[_i])):
+            for _k in range(0,len(btot[_i][_j])):
+                btot[_i,_j,_k] = np.linalg.norm([dfields['bx'][_i,_j,_k],dfields['by'][_i,_j,_k],dfields['bz'][_i,_j,_k]])
+    axs[3].pcolormesh(dfields['bx_xx'], dfields['bx_yy'], btot[zzindex,:,:], cmap="magma", shading="gouraud")
+
+    #den
+    axs[4].pcolormesh(dden['den_xx'],dden['den_yy'],dden['den'][zzindex,:,:], cmap="Spectral", shading="gouraud")
+
+    #vx
+    axs[5].pcolormesh(dflow['ux_xx'],dden['ux_yy'],dden['ux'][zzindex,:,:], cmap="bwr", shading="gouraud")
+
+    #vy
+    axs[6].pcolormesh(dflow['uy_xx'],dden['uy_yy'],dden['uy'][zzindex,:,:], cmap="bwr", shading="gouraud")
+
+    #vz
+    axs[7].pcolormesh(dflow['uz_xx'],dden['uz_yy'],dden['uz'][zzindex,:,:], cmap="bwr", shading="gouraud")
+
+    if(flnm != ''):
+        plt.savefig(flnm+'.png',format='png',dpi=300)
+    else:
+        plt.show()
+        plt.close()
+
 def make_fieldpmesh_sweep(dfields,fieldkey,planename,directory,xlimmin=None,xlimmax=None):
     """
     Makes sweep gif of field pmesh

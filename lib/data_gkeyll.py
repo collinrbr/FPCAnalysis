@@ -33,7 +33,7 @@ def load_dist(flnm_prefix,num,species='ion',polyorder=2,interpLevel=3,xpos=None)
     if(distf.shape[-1] != 1):
         raise TypeError("This function can only load data of a singular frame at a time (TODO: implement multiple frame loading)")
 
-    vti = get_input_params(flnm_prefix,num,species='ion')['vti']
+    vti = get_input_params(flnm_prefix,num,species='ion',verbose=False)['vti']
 
     ddist = {}
     ddist['hist_xx'] = [(coords[0][i]+coords[0][i])/2 for i in range(0,len(coords[0])-1)]
@@ -217,10 +217,11 @@ def spoof_particle_data(hist,vx,vy,vz,x1,x2,y1,y2,z1,z2,Vframe_relative_to_sim,n
 
     return dpar
 
-def get_input_params(flnm_prefix,num,species='ion'):
+def get_input_params(flnm_prefix,num,species='ion',verbose=True):
     """
     """
-    print("Getting input params from %s_%s_M1i_%d.bp" % (flnm_prefix,species,num)) 
+    if(verbose):
+        print("Getting input params from %s_%s_M1i_%d.bp" % (flnm_prefix,species,num))
     fh = adios.file("%s_%s_M1i_%d.bp" % (flnm_prefix,species,num)) #get input file from field data
     inputFile = adios.attr(fh, 'inputfile').value.decode('UTF-8')
     fh.close()
