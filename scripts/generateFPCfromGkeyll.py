@@ -25,7 +25,7 @@ try:
     flnm_prefix = str(sys.argv[1])
 except:
     print("This generates FPC netcdf4 file using Gkeyll data...")
-    print("usage: " + sys.argv[0] + " flnm_prefix framenum")
+    print("usage: " + sys.argv[0] + " flnm_prefix framenum species(ion by default)")
     sys.exit()
 
 try:
@@ -34,15 +34,20 @@ except:
     print("Please enter frame number...")
     sys.exit()
 
+try:
+    species = sys.argv[3]
+except:
+    species = 'ion'
+
 #TODO: make work for all (1D/2D/3D)(2V/3V) data
 
 #-------------------------------------------------------------------------------
 # Load data
 #-------------------------------------------------------------------------------
-params = dgkl.get_input_params(flnm_prefix,num)
-ddist = dgkl.load_dist(flnm_prefix,num)
-dfields = dgkl.load_fields(flnm_prefix,num)
-dflow = dgkl.load_flow(flnm_prefix,num)
+params = dgkl.get_input_params(flnm_prefix,num,species=species)
+ddist = dgkl.load_dist(flnm_prefix,num,species=species)
+dfields = dgkl.load_fields(flnm_prefix,num,species=species)
+dflow = dgkl.load_flow(flnm_prefix,num,species=species)
 
 #-------------------------------------------------------------------------------
 # Compute Shock Velocity and Transform Frame
