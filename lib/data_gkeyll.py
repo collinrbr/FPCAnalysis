@@ -11,7 +11,7 @@ import adios
 #TODO: polyorder is specified in the input file. Consider grabbing from input file rather than letting the user specify it
 def load_dist(flnm_prefix,num,species='ion',polyorder=2,interpLevel=3,xpos=None):
     """
-    TODO: NORMALIZE TO VTI,0
+
     """
     # Read in and interpolate the distribution function
     print("Loading distribution function from %s_%s_%d.bp..." % (flnm_prefix, species, num))
@@ -33,7 +33,7 @@ def load_dist(flnm_prefix,num,species='ion',polyorder=2,interpLevel=3,xpos=None)
     if(distf.shape[-1] != 1):
         raise TypeError("This function can only load data of a singular frame at a time (TODO: implement multiple frame loading)")
 
-    vti = get_input_params(flnm_prefix,num,species='ion',verbose=False)['vti']
+    vti = get_input_params(flnm_prefix,num,species=species,verbose=False)['vti'] #TODO: rename this variable to vts
 
     ddist = {}
     ddist['hist_xx'] = [(coords[0][i]+coords[0][i])/2 for i in range(0,len(coords[0])-1)]
@@ -91,7 +91,7 @@ def load_dist(flnm_prefix,num,species='ion',polyorder=2,interpLevel=3,xpos=None)
 
 def load_fields(flnm_prefix,num,species='ion',polyorder=2,interpLevel=9,xpos=None):
     """
-    TODO: consider loading by using file prefix with species and frame
+
     """
 
     print("Loading fields from %s_field_%d.bp..." % (flnm_prefix, num))
@@ -156,6 +156,9 @@ def load_flow(flnm_prefix,num,species='ion',polyorder=2,interpLevel=9,xpos=None)
     if(ux.shape[-1] != 1):
         raise TypeError("This function can only load data of a singular frame at a time (TODO: implement multiple frame loading)")
 
+    #used to normalize data
+    vti = get_input_params(flnm_prefix,num,species=species,verbose=False)['vti'] #TODO: rename vti to vts
+
     flowkeys = ['ux','uy','uz']
     dflow = {}
     for key in flowkeys:
@@ -171,7 +174,10 @@ def load_flow(flnm_prefix,num,species='ion',polyorder=2,interpLevel=9,xpos=None)
         else:
             raise TypeError("This function can only had 1d data right now, TODO: fix this")
 
-        dflow['Vframe_relative_to_sim'] = 0.
+        dflow[key] /= vti
+
+    dflow['Vframe_relative_to_sim'] = 0.
+
     return dflow
 
 def spoof_particle_data(hist,vx,vy,vz,x1,x2,y1,y2,z1,z2,Vframe_relative_to_sim,numparticles,verbose=True):
