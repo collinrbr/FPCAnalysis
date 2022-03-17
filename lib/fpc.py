@@ -982,6 +982,8 @@ def compute_correlation_over_x_from_dist(ddist,dfields, vmax, dx, vshock, xlim=N
     else:
         dfpckeys = ['Histvxvy','Histvxvz','Histvyvz','CExvxvy','CExvxvz','CExvyvz','CEyvxvy','CEyvxvz','CEyvyvz','CEzvxvy','CEzvxvz','CEzvyvz']
         dfpc = {}
+    for key in dfpckeys:
+        dfpc[key] = []
         CExvxvy_out = []
         CExvxvz_out = []
         CExvyvz_out = []
@@ -994,6 +996,8 @@ def compute_correlation_over_x_from_dist(ddist,dfields, vmax, dx, vshock, xlim=N
         Histvxvy_out = []
         Histvxvz_out = []
         Histvyvz_out = []
+
+
 
     if(dx < ddist['hist_xx'][1]-ddist['hist_xx'][0]):
         print("ERROR: dx is smaller than spacing between distribution functions")

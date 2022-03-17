@@ -133,7 +133,9 @@ def make_field_pmesh(ddict,fieldkey,planename,flnm = '',takeaxisaverage=False, x
 
 def make_super_pmeshplot(dfields,dflow,dden,zzindex = 0,flnm=''):
 
-    fig, axs = plt.subplots(8,figsize=(10,8*2))
+    fig, axs = plt.subplots(8,figsize=(10,8*2),sharex=True)
+
+    fig.subplots_adjust(hspace=.1)
 
     #Bx
     bx_im = axs[0].pcolormesh(dfields['bx_xx'], dfields['bx_yy'], dfields['bx'][zzindex,:,:], cmap="plasma", shading="gouraud")
@@ -152,7 +154,8 @@ def make_super_pmeshplot(dfields,dflow,dden,zzindex = 0,flnm=''):
         bi_im = bz_im
         bi_max = np.max(dfields['bz'][zzindex,:,:])
 
-    fig.colorbar(bi_im, ax=axs.ravel().tolist()[0:3])
+    fig.colorbar(bi_im,aspect=50,shrink=1, ax=axs.ravel().tolist()[0:3])
+
 
     #Btot
     btot = np.zeros(dfields['bx'].shape)
@@ -178,6 +181,18 @@ def make_super_pmeshplot(dfields,dflow,dden,zzindex = 0,flnm=''):
     #vz
     vz_im = axs[7].pcolormesh(dflow['uz_xx'],dflow['uz_yy'],dflow['uz'][zzindex,:,:], cmap="bwr", shading="gouraud")
     fig.colorbar(vz_im, ax=axs[7])
+
+    #print axes labels
+    axs[7].set_xlabel('$x$ ($d_i$)')
+    for _i in range(0,len(axs)):
+        axs[_i].set_ylabel('$y$ ($d_i$)')
+
+    #print labels of each plot
+    pltlabels = ['$B_x/B_{0,up}$','$B_y/B_{0,up}$','$B_z/B_{0,up}$','$|B|/B_{0,up}$','$n/n_{up}$','$v_x/v_{th,i}$','$v_y/v_{th,i}$','$v_z/v_{th,i}$']
+    _xtext = dfields['bx_xx'][int(len(dfields['bx_xx'])*.9)]
+    _ytext = dfields['bx_yy'][int(len(dfields['bx_yy'])*.9)]
+    for _i in range(0,len(axs)):
+        axs[_i].text(_xtext,_ytext,pltlabels[_i],color='white')
 
     if(flnm != ''):
         plt.savefig(flnm+'.png',format='png',dpi=300)
