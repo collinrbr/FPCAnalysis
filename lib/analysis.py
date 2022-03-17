@@ -1983,4 +1983,4 @@ def project_dist_to_vx(vx,vy,vz,hist):
     hist_vyvx = np.sum(hist,axis=0)
     hist_vx = np.sum(hist,axis=0)
 
-    return vx,hist
+    return hist

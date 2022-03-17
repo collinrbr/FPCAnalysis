@@ -306,7 +306,7 @@ def plot_dist(vx, vy, vmax, H,flnm = '',ttl=''):
         plt.show()
     plt.close()
 
-def dist_log_plot_3dir(vx, vy, vz, vmax, H_in, flnm = '',ttl='',xlbl=r"$v_x/v_{ti}$",ylbl=r"$v_y/v_{ti}$",zlbl=r"$v_z/v_{ti}$"):
+def dist_log_plot_3dir(vx, vy, vz, vmax, H_in, flnm = '',ttl='',xlbl=r"$v_x/v_{ti}$",ylbl=r"$v_y/v_{ti}$",zlbl=r"$v_z/v_{ti}$",plotSymLog=False):
     """
     Makes 3 panel plot of the distribution function in log space
 
@@ -329,6 +329,8 @@ def dist_log_plot_3dir(vx, vy, vz, vmax, H_in, flnm = '',ttl='',xlbl=r"$v_x/v_{t
         if set to default, plt.show() will be called instead
     ttl : str, optional
         title of plot
+    plotSymLog : bool, optional
+        if true, will plot 'negative and positive logarithmic' with linear scale near zero
     """
 
     plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
@@ -360,7 +362,10 @@ def dist_log_plot_3dir(vx, vy, vz, vmax, H_in, flnm = '',ttl='',xlbl=r"$v_x/v_{t
     cmap.set_under(bkgcolor) #this doesn't really work like it's supposed to, so we just change the background color to black
     #ax = plt.gca()
     axs[0].set_facecolor(bkgcolor)
-    pcm0 = axs[0].pcolormesh(vy_xy, vx_xy, H_xy, cmap=cmap, shading="gouraud",norm=LogNorm(vmin=minval, vmax=H.max()))
+    if(plotSymLog):
+        pcm0 = axs[0].pcolormesh(vy_xy, vx_xy, H_xy, cmap=cmap, shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-np.min(H_xy), vmax=np.max(H_xy)))
+    else:
+        pcm0 = axs[0].pcolormesh(vy_xy, vx_xy, H_xy, cmap=cmap, shading="gouraud",norm=LogNorm(vmin=minval, vmax=H.max()))
     axs[0].set_xlim(-vmax, vmax)
     axs[0].set_ylim(-vmax, vmax)
     axs[0].set_xticks(np.linspace(-vmax, vmax, numtks))
@@ -378,35 +383,38 @@ def dist_log_plot_3dir(vx, vy, vz, vmax, H_in, flnm = '',ttl='',xlbl=r"$v_x/v_{t
 
     #if data is 2V only, then there is only 1 point in vz, so it can't be plotted by pcolormesh
     #TODO: clean this up
-    try:
-        axs[1].set_facecolor(bkgcolor)
+    axs[1].set_facecolor(bkgcolor)
+    if(plotSymLog):
+        pcm1 = axs[1].pcolormesh(vz_xz, vx_xz, H_xz, cmap=cmap, shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-np.min(H_xz), vmax=np.max(H_xz)))
+    else:
         pcm1 = axs[1].pcolormesh(vz_xz,vx_xz,H_xz, cmap=cmap, shading="gouraud",norm=LogNorm(vmin=minval, vmax=H.max()))
-        axs[1].set_xlim(-vmax, vmax)
-        axs[1].set_ylim(-vmax, vmax)
-        axs[1].set_xticks(np.linspace(-vmax, vmax, numtks))
-        axs[1].set_yticks(np.linspace(-vmax, vmax, numtks))
-        axs[1].set_xlabel(xlbl)
-        axs[1].set_ylabel(zlbl)
-        axs[1].grid(color="grey", linestyle="--", linewidth=1.0, alpha=0.6)
-        axs[1].set_aspect('equal', 'box')
-        #axs[1].colorbar(cmap = cmap, extend='min')
+    axs[1].set_xlim(-vmax, vmax)
+    axs[1].set_ylim(-vmax, vmax)
+    axs[1].set_xticks(np.linspace(-vmax, vmax, numtks))
+    axs[1].set_yticks(np.linspace(-vmax, vmax, numtks))
+    axs[1].set_xlabel(xlbl)
+    axs[1].set_ylabel(zlbl)
+    axs[1].grid(color="grey", linestyle="--", linewidth=1.0, alpha=0.6)
+    axs[1].set_aspect('equal', 'box')
+    #axs[1].colorbar(cmap = cmap, extend='min')
 
-        axs[2].set_facecolor(bkgcolor)
+    axs[2].set_facecolor(bkgcolor)
+    if(plotSymLog):
+        pcm2 = axs[1].pcolormesh(vz_yz, vy_yz, H_yz, cmap=cmap, shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-np.min(H_yz), vmax=np.max(H_yz)))
+    else:
         pcm2 = axs[2].pcolormesh(vz_yz,vy_yz,H_yz, cmap=cmap, shading="gouraud",norm=LogNorm(vmin=minval, vmax=H.max()))
-        axs[2].set_xlim(-vmax, vmax)
-        axs[2].set_ylim(-vmax, vmax)
-        axs[2].set_xticks(np.linspace(-vmax, vmax, numtks))
-        axs[2].set_yticks(np.linspace(-vmax, vmax, numtks))
-        axs[2].set_xlabel(ylbl)
-        axs[2].set_ylabel(zlbl)
-        axs[2].grid(color="grey", linestyle="--", linewidth=1.0, alpha=0.6)
-        axs[2].set_aspect('equal', 'box')
-        #axs[2].colorbar(cmap = cmap, extend='min')
+    axs[2].set_xlim(-vmax, vmax)
+    axs[2].set_ylim(-vmax, vmax)
+    axs[2].set_xticks(np.linspace(-vmax, vmax, numtks))
+    axs[2].set_yticks(np.linspace(-vmax, vmax, numtks))
+    axs[2].set_xlabel(ylbl)
+    axs[2].set_ylabel(zlbl)
+    axs[2].grid(color="grey", linestyle="--", linewidth=1.0, alpha=0.6)
+    axs[2].set_aspect('equal', 'box')
+    #axs[2].colorbar(cmap = cmap, extend='min')
 
-        fig.colorbar(pcm1, ax=axs[1])
-        fig.colorbar(pcm2, ax=axs[2])
-    except:
-        pass
+    fig.colorbar(pcm1, ax=axs[1])
+    fig.colorbar(pcm2, ax=axs[2])
 
     fig.colorbar(pcm0, ax=axs[0])
 
