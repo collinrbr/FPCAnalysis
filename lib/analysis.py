@@ -1976,7 +1976,7 @@ def build_dist_and_remove_average_par_over_yz(dpar,vmax,dv,dx,x1,x2,y1,y2,z1,z2,
 
     delta_hist = sub_hist - full_hist
 
-    return vx,vy,vz,delta_hist
+    return vx,vy,vz,delta_hist,full_hist
 
 def project_dist_to_vx(vx,vy,vz,hist):
 
