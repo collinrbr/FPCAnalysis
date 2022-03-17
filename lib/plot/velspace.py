@@ -360,12 +360,13 @@ def dist_log_plot_3dir(vx, vy, vz, vmax, H_in, flnm = '',ttl='',xlbl=r"$v_x/v_{t
     cmap = matplotlib.cm.get_cmap('plasma')
     bkgcolor = 'black'
     numtks = 5
-    cmap.set_under(bkgcolor) #this doesn't really work like it's supposed to, so we just change the background color to black
-    #ax = plt.gca()
-    axs[0].set_facecolor(bkgcolor)
+    if(not(plotSymLog)):
+        cmap.set_under(bkgcolor) #this doesn't really work like it's supposed to, so we just change the background color to black
+
     if(plotSymLog):
         pcm0 = axs[0].pcolormesh(vy_xy, vx_xy, H_xy, cmap=cmap, shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-np.min(H_xy), vmax=np.max(H_xy)))
     else:
+        axs[0].set_facecolor(bkgcolor)
         pcm0 = axs[0].pcolormesh(vy_xy, vx_xy, H_xy, cmap=cmap, shading="gouraud",norm=LogNorm(vmin=minval, vmax=H.max()))
     axs[0].set_xlim(-vmax, vmax)
     axs[0].set_ylim(-vmax, vmax)
@@ -414,10 +415,9 @@ def dist_log_plot_3dir(vx, vy, vz, vmax, H_in, flnm = '',ttl='',xlbl=r"$v_x/v_{t
     axs[2].set_aspect('equal', 'box')
     #axs[2].colorbar(cmap = cmap, extend='min')
 
+    fig.colorbar(pcm0, ax=axs[0])
     fig.colorbar(pcm1, ax=axs[1])
     fig.colorbar(pcm2, ax=axs[2])
-
-    fig.colorbar(pcm0, ax=axs[0])
 
     plt.subplots_adjust(hspace=.5,wspace=.5)
 
