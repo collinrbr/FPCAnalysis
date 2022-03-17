@@ -1981,6 +1981,6 @@ def build_dist_and_remove_average_par_over_yz(dpar,vmax,dv,dx,x1,x2,y1,y2,z1,z2,
 def project_dist_to_vx(vx,vy,vz,hist):
 
     hist_vyvx = np.sum(hist,axis=0)
-    hist_vx = np.sum(hist,axis=0)
+    hist_vx = np.sum(hist_vyvx,axis=0)
 
-    return hist
+    return vx[0,0,:], hist_vx

@@ -404,7 +404,7 @@ def dist_log_plot_3dir(vx, vy, vz, vmax, H_in, flnm = '',ttl='',xlbl=r"$v_x/v_{t
 
     if(plotSymLog):
         _vmax = np.max([-1*np.min(H_yz),np.max(H_yz)])
-        pcm2 = axs[2].pcolormesh(vz_yz, vy_yz, H_yz, cmap=cmap, shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-1*_vmax, vmax=_vmax))
+        pcm2 = axs[2].pcolormesh(vz_yz, vy_yz, H_yz, cmap='PiYG', shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-1*_vmax, vmax=_vmax))
     else:
         axs[2].set_facecolor(bkgcolor)
         pcm2 = axs[2].pcolormesh(vz_yz,vy_yz,H_yz, cmap=cmap, shading="gouraud",norm=LogNorm(vmin=minval, vmax=H.max()))
@@ -845,3 +845,43 @@ def make_superplot_gif(vx, vy, vz, vmax, Hist, CEx, CEy, CEz, x, directory):
                                         CEz_xy,CEz_xz, CEz_yz,
                                         flnm = flnm, ttl = 'x(di): ' + str(x[i]))
         plt.close('all') #saves RAM
+
+def project_dist_1d(vx,vy,vz,hist,axis):
+    """
+
+    """
+    import matplotlib.ticker as mtick
+
+    if(axis == 'vx'):
+        plotx = vx[0,0,:]
+        hist_vyvx = np.sum(hist,axis=0)
+        hist_vx = np.sum(hist_vyvx,axis=0)
+        ploty = hist_vx
+
+    elif(axis == 'vy'):
+        plotx = vy[0,:,0]
+        hist_vyvx = np.sum(hist,axis=0)
+        hist_vy = np.sum(hist_vyvx,axis=1)
+        ploty = hist_vy
+
+    elif(axis == 'vz'):
+        plotx = vz[:,0,0]
+        hist_vzvy = np.sum(hist,axis=2)
+        hist_vz = np.sum(hist_vzvy,axis=1)
+        ploty = hist_vz
+
+    else:
+        print("Please uses axis = vx, vy, or vz...")
+        return
+
+    plotymax = 1.1*np.max([np.max(ploty),-1*np.min(ploty)])
+
+    plt.figure()
+    plt.ylim(-plotymax,plotymax)
+    plt.plot(plotx,ploty,color='black',linewidth=1.5)
+    plt.gca().set_aspect(1.0/plt.gca().get_data_ratio(), adjustable='box')
+    plt.gca().yaxis.set_major_formatter(mtick.FormatStrFormatter('%.2e'))
+    plt.xlabel(axis+'/vti')
+    plt.grid()
+    plt.ylabel('f('+axis+'/vti)')
+    plt.show()
