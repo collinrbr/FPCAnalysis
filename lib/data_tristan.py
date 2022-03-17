@@ -9,63 +9,88 @@ import os
 
 #See https://github.com/PrincetonUniversity/tristan-mp-v2/blob/master/inputs/input.full for details about input and output
 
-def load_fields(path_fields, num):
+def load_params(path,num):
     """
-    WIP
+    WARNING: num should be a string. TODO: rename to something else
     """
-    field_vars = 'ex ey ez bx by bz'.split()
+
+    params = {}
+
+    with h5py.File(path + 'param.' + num, 'r') as paramfl:
+
+        #TODO change keynames to match previously used keynames
+        params['comp'] = paramfl['c_omp'][0]
+        params['c'] = paramfl['c'][0]
+        params['sigma'] = paramfl['sigma'][0]
+        params['istep'] = paramfl['istep'][0]
+        params['massratio'] = paramfl['mi'][0]/paramfl['me'][0]
+        params['ppc'] = paramfl['ppc0'][0]
+        params['sizex'] = paramfl['sizex'][0]
+
+    return params
+
+def load_fields(path_fields, num, field_vars = 'ex ey ez bx by bz'):
+    """
+    This assumes 1D implies data in the 3rd axis only, 2D implies data in the 2nd and 3rd axis only.
+    """
+    field_vars = field_vars.split()
     field = {}
     field['Vframe_relative_to_sim_out'] = 0.
-    with h5py.File(path_fields.format(num),'r') as f:
+    #with h5py.File(path_fields.format(num),'r') as f:
+    is1D = False
+    is2D = False
+    is3D = False
+    with h5py.File(path_fields + 'flds.tot.' + num, 'r') as fieldfl:
         for k in field_vars:
-            field[k] = f[k][:]
+            if(fieldfl[k][:].shape[0] > 1 and fieldfl[k][:].shape[1]>1): #3D grid
+                is3D = True
+                field[k] = fieldfl[k][:]
+            elif(fieldfl[k][:].shape[1] > 1): #2D grid
+                is2D = True
+                _temp = fieldfl[k][0,:,:]
+                field[k] = np.zeros((2,fieldfl[k][:].shape[1],fieldfl[k][:].shape[2]))
+                field[k][0,:,:] = _temp
+                field[k][1,:,:] = _temp
+            else: #1D grid
+                is1D = True
+                _temp = fieldfl[k][0,0,:]
+                field[k][0,0,:] = _temp
+                field[k][1,0,:] = _temp
+                field[k][0,1,:] = _temp
+                field[k][1,1,:] = _temp
 
-    # mx probably relates to size of box. Can use to reproduce grid
-    #**** TODO: move tristan functions from data_h5 to here****
+    #Reconstruct grid
+    params = load_params(path_fields,num)
+
+    if(is1D):
+        dx = params['istep']
+        for key in field_vars:
+            field[key+'_xx'] = np.linspace(0., field[key].shape[0]*dx, field[key].shape[0])
+
+    elif(is2D):
+        dx = params['istep']
+        dy = dx
+        for key in field_vars:
+            field[key+'_xx'] = np.linspace(0., field[key].shape[2]*dx, field[key].shape[2])
+            field[key+'_yy'] = np.linspace(0., field[key].shape[1]*dy, field[key].shape[1])
+
+    field['Vframe_relative_to_sim'] = 0.
 
     return field
 
-def estimate_grid_setup(dfields, dparticles_ion):
-    """
-    Estimates the setup of the box using particle data.
-    Assumes there exists one particle near each boundary of the box and that the box is of integer size
+def load_flow(path, num):
 
-    (Original toy data was missing simulation box setup so we use this function to estimate it for now)
-    """
+    flow_vars = 'jx jy jz'
 
-    from copy import copy
+    return load_fields(path,num,field_vars=flow_vars)
 
-    x1, x2, y1, y2, z1, z2 = 0., 0., 0., 0., 0., 0.
+def load_den(path,num):
 
-    x1 = round(min(dparticles_ion['xi']))
-    x2 = round(max(dparticles_ion['xi']))
-    y1 = round(min(dparticles_ion['yi']))
-    y2 = round(max(dparticles_ion['yi']))
-    z1 = round(min(dparticles_ion['zi']))
-    z2 = round(max(dparticles_ion['zi']))
+    den_vars = 'dens densi'
 
-    nz,ny,nx = dfields['bz'].shape
+    return load_fields(path,num,field_vars=den_vars)
 
-    dx = (x2-x1)/(nx)
-    dy = (y2-y1)/(ny)
-    dz = (z2-z1)/(nz)
-
-    _xx = [dx*float(i)+dx/2. for i in range(0,nx)]
-    _yy = [dy*float(i)+dy/2. for i in range(0,ny)]
-    _zz = [dz*float(i)+dz/2. for i in range(0,nz)]
-
-    keys = ['ex','ey','ez','bx','by','bz']
-    for key in keys:
-        dfields[key+'_xx'] = copy(_xx)
-        dfields[key+'_xx'] = np.asarray(dfields[key+'_xx'])
-        dfields[key+'_yy'] = copy(_yy)
-        dfields[key+'_yy'] = np.asarray(dfields[key+'_yy'])
-        dfields[key+'_zz'] = copy(_zz)
-        dfields[key+'_zz'] = np.asarray(dfields[key+'_zz'])
-
-    return dfields
-
-def load_particles(path, num):
+def load_particles(path, num,  normalizeVelocity=True):
     """
     Loads TRISTAN particle data
 
@@ -84,35 +109,174 @@ def load_particles(path, num):
         dictionary containing ion particle data
     """
 
-    dens_vars_elc = 'ue ve we xe ye ze'.split()
-    dens_vars_ion = 'ui vi wi xi yi zi'.split()
+    dens_vars_elc = 'ue ve we xe ye ze gammae'.split()
+    dens_vars_ion = 'ui vi wi xi yi zi gammai'.split()
+
     pts_elc = {}
     pts_ion = {}
-    with h5py.File(path.format(num),'r') as f:
+    with h5py.File(path + 'prtl.tot.' + num, 'r') as f:
         for k in dens_vars_elc:
-            pts_elc[k] = f[k][:]
+            pts_elc[k] = f[k][:] #note: velocity is in units γV_i/c
         for l in dens_vars_ion:
             pts_ion[l] = f[l][:]
-    pts_elc['Vframe_relative_to_sim_out'] = 0. #tracks frame (along vx) relative to sim
-    pts_ion['Vframe_relative_to_sim_out'] = 0. #tracks frame (along vx) relative to sim
+    pts_elc['Vframe_relative_to_sim'] = 0. #tracks frame (along vx) relative to sim
+    pts_ion['Vframe_relative_to_sim'] = 0. #tracks frame (along vx) relative to sim
+
+    if(normalizeVelocity):
+        from lib.analysis import compute_vrms
+
+        print("Attempting to compute thermal velocity in the far upstream region to normalize velocity...")
+        print("Please see load_particles in data_tristan.py for assumptions...")
+
+        pts_elc = format_par_like_dHybridR(pts_elc)
+        pts_ion = format_par_like_dHybridR(pts_ion)
+
+        #comupte vti and vte in the far upstream region
+        vmax = 20.*np.mean(np.abs(pts_ion['p1'])) #note: we only consider particles with v_i <= vmax when computing v_rms
+        dv = vmax/50.
+        upperxbound = np.max(pts_ion['x1'])
+        lowerxbound = upperxbound*.95 #WARNING: assumes that the beam is undisturbed in this region
+        lowerybound = np.min(pts_ion['x2'])
+        upperybound = np.max(pts_ion['x2'])
+        lowerzbound = np.min(pts_ion['x3'])
+        upperzbound = np.max(pts_ion['x3'])
+        vti0 = compute_vrms(pts_ion,vmax,dv,lowerxbound,upperxbound,lowerybound,upperybound,lowerzbound,upperzbound)
+        vte0 = compute_vrms(pts_elc,vmax,dv,lowerxbound,upperxbound,lowerybound,upperybound,lowerzbound,upperzbound)
+        vti0 = np.sqrt(vti0)
+        vte0 = np.sqrt(vte0)
+        print("Computed vti0 of ", vti0, " and vte0 of ", vte0)
+
+        #normalize
+        elc_vkeys = 'ue ve we'.split()
+        ion_vkeys = 'ui vi wi'.split()
+        c = load_params(path,num)['c']
+        print('')
+        for k in elc_vkeys:
+            pts_elc[k] = pts_elc[k]*c/(vte0*pts_elc['gammae']) #note: velocity is in units γV_i/c in original output
+        for k in ion_vkeys:
+            pts_ion[k] = pts_ion[k]*c/(vti0*pts_ion['gammai']) #note: velocity is in units γV_i/c in original output
 
     return pts_elc, pts_ion
 
-def format_fields_like_dHybridR(dfields):
-    """
-    Adds keys (that are technically points so no memory is wasted) that makes the data indexable
-    with the same key names as dHybridR data
+def format_dict_like_dHybridR(ddict):
     """
 
-    keys = dfields.keys()
+    """
+    keys = ddict.keys()
+
+    if('jx' in keys):
+        ddict['ux'] = ddict['jx']
+    if('jy' in keys):
+        ddict['uy'] = ddict['jy']
+    if('jz' in keys):
+        ddict['uz'] = ddict['jz']
+    if('jx_xx' in keys):
+        ddict['ux_xx'] = ddict['jx_xx']
+    if('jx_yy' in keys):
+        ddict['ux_yy'] = ddict['jx_yy']
+    if('jx_zz' in keys):
+        ddict['ux_zz'] = ddict['jx_zz']
+    if('jy_xx' in keys):
+        ddict['uy_xx'] = ddict['jy_xx']
+    if('jy_yy' in keys):
+        ddict['uy_yy'] = ddict['jy_yy']
+    if('jy_zz' in keys):
+        ddict['uy_zz'] = ddict['jy_zz']
+    if('jz_xx' in keys):
+        ddict['uz_xx'] = ddict['jz_xx']
+    if('jz_yy' in keys):
+        ddict['uz_yy'] = ddict['jz_yy']
+    if('jz_zz' in keys):
+        ddict['uz_zz'] = ddict['jz_zz']
+
+    if('dens' in keys):
+        ddict['den'] = ddict['dens']
+    if('dens_xx' in keys):
+        ddict['den_xx'] = ddict['dens_xx']
+    if('dens_yy' in keys):
+        ddict['den_yy'] = ddict['dens_yy']
+    if('dens_zz' in keys):
+        ddict['den_zz'] = ddict['dens_zz']
+
+    return ddict
+
+def format_par_like_dHybridR(dpar):
+    """
+    Adds keys (more specifically 'pointers' so no memory is wasted) that makes the data indexable
+    with the same key names as dHybridR data
+
+    #TODO: double check that these are 'pointers'
+    """
+
+    keys = dpar.keys()
 
     if('xi' in keys):
-        dfields['x1'] = dfields['xi']
+        dpar['x1'] = dpar['xi']
+    if('yi' in keys):
+        dpar['x2'] = dpar['yi']
+    if('zi' in keys):
+        dpar['x3'] = dpar['xi']
+    if('ui' in keys):
+        dpar['p1'] = dpar['ui']
+    if('vi' in keys):
+        dpar['p2'] = dpar['vi']
+    if('wi' in keys):
+        dpar['p3'] = dpar['wi']
+
     if('xe' in keys):
-        dfields['x1'] = dfields['xi']
+        dpar['x1'] = dpar['xe']
+    if('ye' in keys):
+        dpar['x2'] = dpar['ye']
+    if('ze' in keys):
+        dpar['x3'] = dpar['xe']
+    if('ue' in keys):
+        dpar['p1'] = dpar['ue']
+    if('ve' in keys):
+        dpar['p2'] = dpar['ve']
+    if('we' in keys):
+        dpar['p3'] = dpar['we']
 
+    return dpar
 
-    return dfields
+# def estimate_grid_setup(dfields, dparticles_ion):
+#     """
+#     Estimates the setup of the box using particle data.
+#     Assumes there exists one particle near each boundary of the box and that the box is of integer size
+#
+#     (Original toy data was missing simulation box setup so we use this function to estimate it for now)
+#     """
+#
+#     from copy import copy
+#
+#     x1, x2, y1, y2, z1, z2 = 0., 0., 0., 0., 0., 0.
+#
+#     x1 = round(min(dparticles_ion['xi']))
+#     x2 = round(max(dparticles_ion['xi']))
+#     y1 = round(min(dparticles_ion['yi']))
+#     y2 = round(max(dparticles_ion['yi']))
+#     z1 = round(min(dparticles_ion['zi']))
+#     z2 = round(max(dparticles_ion['zi']))
+#
+#     nz,ny,nx = dfields['bz'].shape
+#
+#     dx = (x2-x1)/(nx)
+#     dy = (y2-y1)/(ny)
+#     dz = (z2-z1)/(nz)
+#
+#     _xx = [dx*float(i)+dx/2. for i in range(0,nx)]
+#     _yy = [dy*float(i)+dy/2. for i in range(0,ny)]
+#     _zz = [dz*float(i)+dz/2. for i in range(0,nz)]
+#
+#     keys = ['ex','ey','ez','bx','by','bz']
+#     for key in keys:
+#         dfields[key+'_xx'] = copy(_xx)
+#         dfields[key+'_xx'] = np.asarray(dfields[key+'_xx'])
+#         dfields[key+'_yy'] = copy(_yy)
+#         dfields[key+'_yy'] = np.asarray(dfields[key+'_yy'])
+#         dfields[key+'_zz'] = copy(_zz)
+#         dfields[key+'_zz'] = np.asarray(dfields[key+'_zz'])
+#
+#     return dfields
 
 
 #--------------------------------------------------------------------------------------------------------

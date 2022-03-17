@@ -310,7 +310,7 @@ def dist_log_plot_3dir(vx, vy, vz, vmax, H_in, flnm = '',ttl='',xlbl=r"$v_x/v_{t
     """
     Makes 3 panel plot of the distribution function in log space
 
-    WARNING: gourand shading seems to only work on the first figure (i.e. the colormesh for only axs[0] is smoothed)
+    WARNING: gouraud shading seems to only work on the first figure (i.e. the colormesh for only axs[0] is smoothed)
     This seems to possibly be a larger bug in matplotlib
 
     Paramters
@@ -377,9 +377,10 @@ def dist_log_plot_3dir(vx, vy, vz, vmax, H_in, flnm = '',ttl='',xlbl=r"$v_x/v_{t
     #axs[0].gcf().subplots_adjust(bottom=0.15)
 
     #if data is 2V only, then there is only 1 point in vz, so it can't be plotted by pcolormesh
+    #TODO: clean this up
     try:
         axs[1].set_facecolor(bkgcolor)
-        pcm1 = axs[1].pcolormesh(vz_xz,vx_xz,H_xz, cmap=cmap, shading="gourand",norm=LogNorm(vmin=minval, vmax=H.max()))
+        pcm1 = axs[1].pcolormesh(vz_xz,vx_xz,H_xz, cmap=cmap, shading="gouraud",norm=LogNorm(vmin=minval, vmax=H.max()))
         axs[1].set_xlim(-vmax, vmax)
         axs[1].set_ylim(-vmax, vmax)
         axs[1].set_xticks(np.linspace(-vmax, vmax, numtks))
@@ -391,7 +392,7 @@ def dist_log_plot_3dir(vx, vy, vz, vmax, H_in, flnm = '',ttl='',xlbl=r"$v_x/v_{t
         #axs[1].colorbar(cmap = cmap, extend='min')
 
         axs[2].set_facecolor(bkgcolor)
-        pcm2 = axs[2].pcolormesh(vz_yz,vy_yz,H_yz, cmap=cmap, shading="gourand",norm=LogNorm(vmin=minval, vmax=H.max()))
+        pcm2 = axs[2].pcolormesh(vz_yz,vy_yz,H_yz, cmap=cmap, shading="gouraud",norm=LogNorm(vmin=minval, vmax=H.max()))
         axs[2].set_xlim(-vmax, vmax)
         axs[2].set_ylim(-vmax, vmax)
         axs[2].set_xticks(np.linspace(-vmax, vmax, numtks))

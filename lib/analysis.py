@@ -1921,3 +1921,51 @@ def va_norm_to_vi_norm(dpar, v_w_anorm, vmax, x1, x2, y1, y2, z1, z2, vti = None
     v_w_tinorm = v_w_anorm / vti
 
     return v_w_tinorm
+
+def build_dist(dpar,vmax,dv,x1,x2,y1,y2,z1,z2):
+    """
+    """
+    gptsparticle = (x1 <= dpar['x1']) & (dpar['x1'] <= x2) & (y1 <= dpar['x2']) & (dpar['x2'] <= y2) & (z1 <= dpar['x3']) & (dpar['x3'] <= z2)
+
+    # bin into cprime(vx,vy,vz) #TODO: use function for this block (it's useful elsewhere to build distribution functions)
+    vxbins = np.arange(-vmax, vmax+dv, dv)
+    vx = (vxbins[1:] + vxbins[:-1])/2.
+    vybins = np.arange(-vmax, vmax+dv, dv)
+    vy = (vybins[1:] + vybins[:-1])/2.
+    vzbins = np.arange(-vmax, vmax+dv, dv)
+    vz = (vzbins[1:] + vzbins[:-1])/2.
+
+    hist,_ = np.histogramdd((dpar['p3'][gptsparticle][:], dpar['p2'][gptsparticle][:], dpar['p1'][gptsparticle][:]), bins=[vzbins, vybins, vxbins])
+
+    # make the bins 3d arrays TODO: use function (replace all instances of this with function)
+    _vx = np.zeros((len(vz), len(vy), len(vx)))
+    _vy = np.zeros((len(vz), len(vy), len(vx)))
+    _vz = np.zeros((len(vz), len(vy), len(vx)))
+    for i in range(0, len(vx)):
+        for j in range(0, len(vy)):
+            for k in range(0, len(vz)):
+                _vx[k][j][i] = vx[i]
+
+    for i in range(0, len(vx)):
+        for j in range(0, len(vy)):
+            for k in range(0, len(vz)):
+                _vy[k][j][i] = vy[j]
+
+    for i in range(0, len(vx)):
+        for j in range(0, len(vy)):
+            for k in range(0, len(vz)):
+                _vz[k][j][i] = vz[k]
+    vx = _vx
+    vy = _vy
+    vz = _vz
+
+    return vx,vy,vz,hist
+
+def build_dist_and_remove_average_par_over_yz(dpar,dfields,dx,x1,x2,y1,y2,z1,z2):
+    gptsparticle = (x1 <= dpar['x1']) & (dpar['x1'] <= x2) & (y1 <= dpar['x2']) & (dpar['x2'] <= y2) & (z1 <= dpar['x3']) & (dpar['x3'] <= z2)
+
+    full_hist = build_dist(dpar,x1,x2,y1,y2,z1,z2)
+    num_par = np.sum(full_hist)
+
+    sup_hists = []
+    #np.arrange
