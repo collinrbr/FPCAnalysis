@@ -1961,11 +1961,26 @@ def build_dist(dpar,vmax,dv,x1,x2,y1,y2,z1,z2):
 
     return vx,vy,vz,hist
 
-def build_dist_and_remove_average_par_over_yz(dpar,dfields,dx,x1,x2,y1,y2,z1,z2):
+def build_dist_and_remove_average_par_over_yz(dpar,vmax,dv,dx,x1,x2,y1,y2,z1,z2,ymax,zmax):
+    """
+
+    """
     gptsparticle = (x1 <= dpar['x1']) & (dpar['x1'] <= x2) & (y1 <= dpar['x2']) & (dpar['x2'] <= y2) & (z1 <= dpar['x3']) & (dpar['x3'] <= z2)
 
-    full_hist = build_dist(dpar,x1,x2,y1,y2,z1,z2)
-    num_par = np.sum(full_hist)
+    vx,vy,vz,full_hist = build_dist(dpar,vmax,dv,x1,x2,0,ymax,0,zmax)
+    vx,vy,vz,sub_hist = build_dist(dpar,vmax,dv,x1,x2,y1,y2,z1,z2)
 
-    sup_hists = []
-    #np.arrange
+    #normalize sub_hist
+    npar_sub = np.sum(sub_hist)
+    sub_hist = sub_hist*np.sum(full_hist)/npar_sub
+
+    delta_hist = sub_hist - full_hist
+
+    return vx,vy,vz,delta_hist
+
+def project_dist_to_vx(vx,vy,vz,hist):
+
+    hist_vyvx = np.sum(hist,axis=0)
+    hist_vx = np.sum(hist,axis=0)
+
+    return vx,hist

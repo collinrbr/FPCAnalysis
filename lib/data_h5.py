@@ -291,7 +291,7 @@ def field_loader(field_vars='all', components='all', num=None,
                                t = num)
             kc = k.lower()+c
             if verbose: print(ffn)
-            with h5py.File(ffn,'r') as f:
+            with h5py.File(ffn,'r+') as f:
                 d[kc] = np.asarray(f['DATA'],order='F')
                 d[kc] = np.ascontiguousarray(d[kc])
                 if(is2d3v):
