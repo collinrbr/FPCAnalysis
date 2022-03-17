@@ -823,15 +823,15 @@ def compute_cprime_hist(dparticles, dfields, fieldkey, vmax, dv):
         vvkey = 'p3'
 
 
-    # compute cprime for each particle
+    # compute cprime for each particle #TODO: make this block more efficient, it is the slowest part of the code
     cprimew = []
     for i in range(0, len(dparticles['x1'])):
         fieldval = weighted_field_average(dparticles['x1'][i], dparticles['x2'][i], dparticles['x3'][i], dfields, fieldkey)
-        q = 1.  # WARNING: might not always be correct value for q  TODO: automate grabbing q and fix this
+        q = 1.  # WARNING: might not always be correct value for q TODO: automate grabbing q and fix this
         cprimew.append(q*dparticles[vvkey][i]*fieldval)
     cprimew = np.asarray(cprimew)
 
-    # bin into cprime(vx,vy,vz)
+    # bin into cprime(vx,vy,vz) #TODO: use function for this block (it's useful elsewhere to build distribution functions)
     vxbins = np.arange(-vmax, vmax+dv, dv)
     vx = (vxbins[1:] + vxbins[:-1])/2.
     vybins = np.arange(-vmax, vmax+dv, dv)
