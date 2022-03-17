@@ -150,7 +150,7 @@ def array_3d_to_2d(arr3d, planename):
         return arr2d
 
     elif(planename == 'yz'):
-        arr2d = np.apply_along_axis(np.sum, 1, arr3d)
+        arr2d = np.apply_along_axis(np.sum, 2, arr3d)
         arr2d = np.swapaxes(arr2d, 0, 1) #rest of the code assumes this ordering
         return arr2d
     else:
