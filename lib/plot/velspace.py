@@ -338,6 +338,7 @@ def dist_log_plot_3dir(vx, vy, vz, vmax, H_in, flnm = '',ttl='',xlbl=r"$v_x/v_{t
     import matplotlib
     from matplotlib.colors import LogNorm
     from lib.array_ops import array_3d_to_2d
+    import matplotlib.colors as colors
 
     from copy import copy
     H = copy(H_in) #deep copy
