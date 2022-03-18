@@ -833,7 +833,7 @@ def compute_cprime_hist(dparticles, dfields, fieldkey, vmax, dv):
         q = 1.  # WARNING: might not always be correct value for q TODO: automate grabbing q and fix this
         cprimew.append(q*dparticles[vvkey][i]*fieldval)
     cprimew = np.asarray(cprimew)
-    end = time.time()
+    #end = time.time()
     # print(end - start)
     #TODO: improve performance of this block ^^^^---------------------------------------------------------------------------
 
