@@ -9,6 +9,8 @@ import os
 
 #See https://github.com/PrincetonUniversity/tristan-mp-v2/blob/master/inputs/input.full for details about input and output
 
+#TODO: normalize grid and particle position data to c_omp (from params)
+
 def load_params(path,num):
     """
     WARNING: num should be a string. TODO: rename to something else
@@ -32,6 +34,7 @@ def load_params(path,num):
 def load_fields(path_fields, num, field_vars = 'ex ey ez bx by bz'):
     """
     This assumes 1D implies data in the 3rd axis only, 2D implies data in the 2nd and 3rd axis only.
+
     """
     field_vars = field_vars.split()
     field = {}
@@ -65,7 +68,7 @@ def load_fields(path_fields, num, field_vars = 'ex ey ez bx by bz'):
     if(is1D):
         dx = params['istep']
         for key in field_vars:
-            field[key+'_xx'] = np.linspace(0., field[key].shape[0]*dx, field[key].shape[0])
+            field[key+'_xx'] = np.linspace(0., field[key].shape[2]*dx, field[key].shape[2])
 
     elif(is2D):
         dx = params['istep']
@@ -74,11 +77,46 @@ def load_fields(path_fields, num, field_vars = 'ex ey ez bx by bz'):
             field[key+'_xx'] = np.linspace(0., field[key].shape[2]*dx, field[key].shape[2])
             field[key+'_yy'] = np.linspace(0., field[key].shape[1]*dy, field[key].shape[1])
 
+    elif(is3D):
+        dx = params['istep']
+        dy = dx
+        for key in field_vars:
+            field[key+'_xx'] = np.linspace(0., field[key].shape[2]*dx, field[key].shape[2])
+            field[key+'_yy'] = np.linspace(0., field[key].shape[1]*dy, field[key].shape[1])
+            field[key+'_zz'] = np.linspace(0., field[key].shape[0]*dz, field[key].shape[0])
+
     field['Vframe_relative_to_sim'] = 0.
 
     return field
 
-def load_flow(path, num):
+# def bin_flow_data(dpar, dfields):
+#     """
+# 
+#     """
+#
+#     dfields = load_fields(path, num)
+#     dpar = load_particles(path, num, normalizeVelocity=normalizeVelocity)
+#
+#     is3D = False
+#     is2D = False
+#     is1D = False
+#     if('ex_zz' in in dfields.keys()):
+#         is3D = True
+#     elif('ex_yy' in dfields.keys()):
+#         is2D = True
+#     elif('ex_yy' in dfields.keys()):
+#         is1D = True
+#
+#     dpar = format_par_like_dHybridR(dpar)
+#
+#     dflow = {}
+#
+#     if(is1D):
+#         dflow['u1_xx'] = dfields[]
+#         for _i in range(0,len(dpar['p1'])):
+#             if()
+
+def load_current(path, num):
 
     flow_vars = 'jx jy jz'
 
@@ -90,7 +128,7 @@ def load_den(path,num):
 
     return load_fields(path,num,field_vars=den_vars)
 
-def load_particles(path, num,  normalizeVelocity=True):
+def load_particles(path, num, normalizeVelocity=False):
     """
     Loads TRISTAN particle data
 
