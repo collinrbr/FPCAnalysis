@@ -9,7 +9,7 @@ import base64
 import adios
 
 #TODO: polyorder is specified in the input file. Consider grabbing from input file rather than letting the user specify it
-def load_dist(flnm_prefix,num,species='ion',polyorder=2,interpLevel=3,xpos=None):
+def load_dist(flnm_prefix,num,species='ion',polyorder=2,interpLevel=3,xpos=None,normVel=True):
     """
 
     """
@@ -33,7 +33,10 @@ def load_dist(flnm_prefix,num,species='ion',polyorder=2,interpLevel=3,xpos=None)
     if(distf.shape[-1] != 1):
         raise TypeError("This function can only load data of a singular frame at a time (TODO: implement multiple frame loading)")
 
-    vti = get_input_params(flnm_prefix,num,species=species,verbose=False)['vti'] #TODO: rename this variable to vts
+    if(normVel):
+        vti = get_input_params(flnm_prefix,num,species=species,verbose=False)['vti'] #TODO: rename this variable to vts
+    else:
+        vti = 1.
 
     ddist = {}
     ddist['hist_xx'] = [(coords[0][i]+coords[0][i])/2 for i in range(0,len(coords[0])-1)]
@@ -227,8 +230,8 @@ def get_input_params(flnm_prefix,num,species='ion',verbose=True):
     """
     """
     if(verbose):
-        print("Getting input params from %s_%s_M1i_%d.bp" % (flnm_prefix,species,num))
-    fh = adios.file("%s_%s_M1i_%d.bp" % (flnm_prefix,species,num)) #get input file from field data
+        print("Getting input params from %s_%s_%d.bp" % (flnm_prefix,species,num))
+    fh = adios.file("%s_%s_%d.bp" % (flnm_prefix,species,num)) #get input file from species dist data
     inputFile = adios.attr(fh, 'inputfile').value.decode('UTF-8')
     fh.close()
     inputFile = base64.b64decode(inputFile).decode("utf-8")
@@ -236,40 +239,49 @@ def get_input_params(flnm_prefix,num,species='ion',verbose=True):
 
     params = {}
     for ln in inputFile:
+        #this block splits up text so that desired value is in ln[1]
         ln = ln.split('=')
         for eidx,elmnt in enumerate(ln):
             ln[eidx] = elmnt.strip()
-        if(ln[0] == 'u_shock'):
-            params['MachAlfven'] = float(ln[1].split('*')[0])
-            params["MachAlfvenNote"] = 'normalized to v_A TODO: compute mach alfven for this run (using inflow as place holder)'
-        if(ln[0] == 'beta_proton'):
-            params['betaion'] = float(ln[1])
-        if(ln[0] == 'beta_electron'):
-            params['betaelec'] = float(ln[1])
-        if(ln[0] == 'ionCharge'):
-            params["qi"] = float(ln[1])
-            params["qidesc"] = 'charge to mass ratio (TODO: double check for Gkeyll data that this is true)'
+        _ln = []
+        for _i in range(0,len(ln)): #sometimes if there is a space after the equals, this is needed
+            _ =  ln[_i].split()
+            for element in _:
+                _ln.append(element)
+        ln = _ln
 
-        #parameters used to compute vti
-        if(ln[0] == 'vte'):
-            ln[1] = ln[1].split()[0]
-            try:
-                params['vte'] = float(ln[1])
-                _vte = params['vte']
-            except: #sometimes fraction is passed here
-                _numerator,_denom = ln[1].split('/')[0],ln[1].split('/')[1]
-                params['vte'] = float(_numerator)/float(_denom)
-                _vte = params['vte']
-        if(ln[0] == 'ionMass'):
-            _ionMass = float(ln[1])
-        if(ln[0] == 'elcMass'):
-            _elcMass = float(ln[1])
+        if(len(ln) > 0):
+            if(ln[0] == 'u_shock'):
+                params['MachAlfven'] = float(ln[1].split('*')[0])
+                params["MachAlfvenNote"] = 'normalized to v_A TODO: compute mach alfven for this run (using inflow as place holder)'
+            if(ln[0] == 'beta_proton'):
+                params['betaion'] = float(ln[1])
+            if(ln[0] == 'beta_electron'):
+                params['betaelec'] = float(ln[1])
+            if(ln[0] == 'ionCharge'):
+                params["qi"] = float(ln[1])
+                params["qidesc"] = 'charge to mass ratio (TODO: double check for Gkeyll data that this is true)'
 
-        #parameters used to compute thetaBn
-        if(ln[0] == 'local Bz'):
-           if(ln[1] == 'B0'):
-               params['thetaBn'] = 90
-               params["thetaBndesc"] = 'units of degrees'
+            #parameters used to compute vti
+            if(ln[0] == 'vte'):
+                ln[1] = ln[1].split()[0]
+                try:
+                    params['vte'] = float(ln[1])
+                    _vte = params['vte']
+                except: #sometimes fraction is passed here
+                    _numerator,_denom = ln[1].split('/')[0],ln[1].split('/')[1]
+                    params['vte'] = float(_numerator)/float(_denom)
+                    _vte = params['vte']
+            if(ln[0] == 'ionMass'):
+                _ionMass = float(ln[1])
+            if(ln[0] == 'elcMass'):
+                _elcMass = float(ln[1])
+
+            #parameters used to compute thetaBn
+            if(ln[0] == 'local Bz'):
+               if(ln[1] == 'B0'):
+                   params['thetaBn'] = 90
+                   params["thetaBndesc"] = 'units of degrees'
 
 
     if(not('thetaBn') in params.keys()): #TODO: implement automatic calculation of B0
