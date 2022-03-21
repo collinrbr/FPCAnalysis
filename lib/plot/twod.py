@@ -137,19 +137,32 @@ def make_super_pmeshplot(dfields,dflow,dden,zzindex = 0,flnm=''):
 
     fig.subplots_adjust(hspace=.1)
 
+    #compute Btot
+    btot = np.zeros(dfields['bx'].shape)
+    for _i in range(0,len(btot)):
+        for _j in range(0,len(btot[_i])):
+            for _k in range(0,len(btot[_i][_j])):
+                btot[_i,_j,_k] = np.linalg.norm([dfields['bx'][_i,_j,_k],dfields['by'][_i,_j,_k],dfields['bz'][_i,_j,_k]])
+    btot0 = np.mean(btot[:,:,-1])
+
+    #set colorbar range of B_i plots. This is necessary if they are to share a colorbar
+    vmin = np.min([dfields['bx'][zzindex,:,:]/btot0,dfields['by'][zzindex,:,:]/btot0,dfields['bz'][zzindex,:,:]/btot0])
+    vmax = np.max([dfields['bx'][zzindex,:,:]/btot0,dfields['by'][zzindex,:,:]/btot0,dfields['bz'][zzindex,:,:]/btot0])
+    vmax = np.max([-vmin,vmax])
+
     #Bx
-    bx_im = axs[0].pcolormesh(dfields['bx_xx'], dfields['bx_yy'], dfields['bx'][zzindex,:,:], cmap="plasma", shading="gouraud")
+    bx_im = axs[0].pcolormesh(dfields['bx_xx'], dfields['bx_yy'], dfields['bx'][zzindex,:,:]/btot0, cmap="RdYlBu", shading="gouraud", vmin=-1*vmax,vmax=vmax)
     bi_im = bx_im #Mappable used when making color bar. Will use one with largest value
     bi_max = np.max(dfields['bx'][zzindex,:,:])
 
     #By
-    by_im = axs[1].pcolormesh(dfields['by_xx'], dfields['by_yy'], dfields['by'][zzindex,:,:], cmap="plasma", shading="gouraud")
+    by_im = axs[1].pcolormesh(dfields['by_xx'], dfields['by_yy'], dfields['by'][zzindex,:,:]/btot0, cmap="RdYlBu", shading="gouraud", vmin=-1*vmax,vmax=vmax)
     if(np.max(dfields['by'][zzindex,:,:]) > bi_max):
         bi_im = by_im
         bi_max = np.max(dfields['by'][zzindex,:,:])
 
     #Bz
-    bz_im = axs[2].pcolormesh(dfields['bz_xx'], dfields['bz_yy'], dfields['bz'][zzindex,:,:], cmap="plasma", shading="gouraud")
+    bz_im = axs[2].pcolormesh(dfields['bz_xx'], dfields['bz_yy'], dfields['bz'][zzindex,:,:]/btot0, cmap="RdYlBu", shading="gouraud", vmin=-1*vmax,vmax=vmax)
     if(np.max(dfields['bz'][zzindex,:,:]) > bi_max):
         bi_im = bz_im
         bi_max = np.max(dfields['bz'][zzindex,:,:])
@@ -158,12 +171,7 @@ def make_super_pmeshplot(dfields,dflow,dden,zzindex = 0,flnm=''):
 
 
     #Btot
-    btot = np.zeros(dfields['bx'].shape)
-    for _i in range(0,len(btot)):
-        for _j in range(0,len(btot[_i])):
-            for _k in range(0,len(btot[_i][_j])):
-                btot[_i,_j,_k] = np.linalg.norm([dfields['bx'][_i,_j,_k],dfields['by'][_i,_j,_k],dfields['bz'][_i,_j,_k]])
-    btot_im = axs[3].pcolormesh(dfields['bx_xx'], dfields['bx_yy'], btot[zzindex,:,:], cmap="magma", shading="gouraud")
+    btot_im = axs[3].pcolormesh(dfields['bx_xx'], dfields['bx_yy'], btot[zzindex,:,:]/btot0, cmap="magma", shading="gouraud")
     fig.colorbar(btot_im, ax=axs[3])
 
     #den
