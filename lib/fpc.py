@@ -50,7 +50,7 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
         name of direction you want to take the derivative with respect to
         x,y,or z
         *should match the direction of the fieldkey*
-    checkFrameandGrabSubset : bool(opt)
+    checkFrameandGrabSubset : bool(opt) TODO: RENAME THIS VAR
         check if all given particles are in box and in correct frame
         should typically be true unless trying to save RAM
 
@@ -139,6 +139,16 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
         del dparsubset
 
     else:
+        dparsubset = {
+          'p1': dpar['p1'][gptsparticle][:],
+          'p2': dpar['p2'][gptsparticle][:],
+          'p3': dpar['p3'][gptsparticle][:],
+          'x1': dpar['x1'][gptsparticle][:],
+          'x2': dpar['x2'][gptsparticle][:],
+          'x3': dpar['x3'][gptsparticle][:],
+          'Vframe_relative_to_sim': dpar['Vframe_relative_to_sim']
+        }
+
         totalPtcl = len(dpar['p1'][:])
         totalFieldpts = -1 # TODO just remove this varaible, doesn't make sense anymore
         #TODO: check frame!!!!!!
@@ -155,6 +165,8 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
 #2. compute Hist redundantly
 #2. a can improve CEx, CEy, CEz calc by not computing hist redundantly
 #3. dont compute subset each time for CEx, CEy, CEz
+
+#TODO: clean up sub routine of checkFrameandGrabSubset
 
 def _comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock, checkFrameandGrabSubset=True):
     """
