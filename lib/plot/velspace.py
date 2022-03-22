@@ -6,9 +6,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 
+#TODO: update/ remove this
 def plot_velsig(vx,vy,vmax,Ce,fieldkey,flnm = '',ttl=''):
     """
-    Plots correlation data from make2dHistandCex,make2dHistandCey,etc
+    # Plots correlation data from make2dHistandCex,make2dHistandCey,etc
 
     Parameters
     ----------
