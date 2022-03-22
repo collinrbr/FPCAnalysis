@@ -139,6 +139,7 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
         del dparsubset
 
     else:
+        gptsparticle = (x1 <= dpar['x1']) & (dpar['x1'] <= x2) & (y1 <= dpar['x2']) & (dpar['x2'] <= y2) & (z1 <= dpar['x3']) & (dpar['x3'] <= z2)
         dparsubset = {
           'p1': dpar['p1'][gptsparticle][:],
           'p2': dpar['p2'][gptsparticle][:],
