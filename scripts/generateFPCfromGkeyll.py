@@ -67,10 +67,10 @@ dfpc = fpc.compute_correlation_over_x_from_dist(ddist,dfields, vmax, dx, vshock,
 #dfpc = fpc.project_and_store(vx,vy,vz,x_out,CEx_out,CEy_out,CEz_out,Hist_out)
 
 #compute energization from correlations
-dv = dfpcfinal['vz'][1,0,0]-dfpcfinal['vz'][0,0,0]
-enerCEx = anl.compute_energization_over_x(dfpcfinal['CExvxvy'],dv)
-enerCEy = anl.compute_energization_over_x(dfpcfinal['CExvxvy'],dv)
-enerCEz = anl.compute_energization_over_x(dfpcfinal['CExvxvy'],dv)
+dv = dfpc['vz'][1,0,0]-dfpc['vz'][0,0,0]
+enerCEx = anl.compute_energization_over_x(dfpc['CExvxvy'],dv)
+enerCEy = anl.compute_energization_over_x(dfpc['CExvxvy'],dv)
+enerCEz = anl.compute_energization_over_x(dfpc['CExvxvy'],dv)
 
-dnc.save2Vdata(dfpc['Histvxvy'],dfpc['Histvxvz'],dfpc['Histvyvz'],dfpc['CExvxvy'],dfpc['CExvxvz'],dfpc['CExvyvz'],dfpc['CEyvxvy'],dfpc['CEyvxvz'],dfpc['CEyvyvz'],dfpc['CEzvxvy'],dfpc['CEzvxvz'],dfpc['CEzvyvz'], dfpc['vx'], dfpc['vy'], dfpc['vz'], dfpc['xx'], enerCEx, enerCEy, enerCEz, dfields['Vframe_relative_to_sim'], num_par = num_par_out, metadata = [], params = {}, filename = flnm_prefix+'_'+species+'_nometadata.nc' )
+dnc.save2Vdata(dfpc['Histvxvy'],dfpc['Histvxvz'],dfpc['Histvyvz'],dfpc['CExvxvy'],dfpc['CExvxvz'],dfpc['CExvyvz'],dfpc['CEyvxvy'],dfpc['CEyvxvz'],dfpc['CEyvyvz'],dfpc['CEzvxvy'],dfpc['CEzvxvz'],dfpc['CEzvyvz'], dfpc['vx'], dfpc['vy'], dfpc['vz'], dfpc['xx'], enerCEx, enerCEy, enerCEz, dfields['Vframe_relative_to_sim'], metadata = [], params = {}, filename = flnm_prefix+'_'+species+'_'+str(num)+'_nometadata.nc' )
 print("Done! Please use findShock.py and addMetadata to assign metadata...")
