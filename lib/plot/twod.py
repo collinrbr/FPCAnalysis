@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 
-def make_field_pmesh(ddict,fieldkey,planename,flnm = '',takeaxisaverage=False, xxindex=float('nan'), yyindex=float('nan'), zzindex=float('nan'), xlimmin=None,xlimmax=None):
+def make_field_pmesh(ddict,fieldkey,planename,flnm = '',takeaxisaverage=False, xxindex=float('nan'), yyindex=float('nan'), zzindex=float('nan'), xlimmin=None,xlimmax=None,colormap='inferno'):
     """
     Makes pmesh of given field
 
@@ -106,7 +106,12 @@ def make_field_pmesh(ddict,fieldkey,planename,flnm = '',takeaxisaverage=False, x
         plt.figure(figsize=(2*6.5,6))
     else:
         plt.figure(figsize=(6.5,6))
-    plt.pcolormesh(xplot, yplot, fieldpmesh, cmap="inferno", shading="gouraud")
+
+    if(colormap != 'inferno'):
+        vmax = np.max(np.abs(fieldpmesh))
+        plt.pcolormesh(xplot, yplot, fieldpmesh, cmap=colormap, shading="gouraud",vmin=-1*vmax,vmax=vmax)
+    else:
+        plt.pcolormesh(xplot, yplot, fieldpmesh, cmap=colormap, shading="gouraud")
     if(takeaxisaverage):
         plt.title(ttl,loc="right")
     elif(planename == 'xy'):
@@ -196,14 +201,17 @@ def make_super_pmeshplot(dfields,dflow,dden,zzindex = 0,flnm=''):
         axs[_i].set_ylabel('$y$ ($d_i$)')
 
     #print labels of each plot
+    import matplotlib.patheffects as PathEffects
     pltlabels = ['$B_x/B_{0,up}$','$B_y/B_{0,up}$','$B_z/B_{0,up}$','$|B|/B_{0,up}$','$n/n_{up}$','$v_x/v_{th,i}$','$v_y/v_{th,i}$','$v_z/v_{th,i}$']
-    _xtext = dfields['bx_xx'][int(len(dfields['bx_xx'])*.9)]
-    _ytext = dfields['bx_yy'][int(len(dfields['bx_yy'])*.9)]
+    _xtext = dfields['bx_xx'][int(len(dfields['bx_xx'])*.84)]
+    _ytext = dfields['bx_yy'][int(len(dfields['bx_yy'])*.8)]
     for _i in range(0,len(axs)):
-        axs[_i].text(_xtext,_ytext,pltlabels[_i],color='white')
+        _txt = axs[_i].text(_xtext,_ytext,pltlabels[_i],color='white')
+        _txt.set_path_effects([PathEffects.withStroke(linewidth=2, foreground='black')])
 
     if(flnm != ''):
         plt.savefig(flnm+'.png',format='png',dpi=300)
+        plt.close()
     else:
         plt.show()
         plt.close()
