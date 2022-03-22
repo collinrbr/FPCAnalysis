@@ -350,12 +350,58 @@ def dist_log_plot_3dir(vx, vy, vz, vmax, H_in, flnm = '',ttl='',xlbl=r"$v_x/v_{t
     # #set all zeros to small value
     # H[np.where(H == 0)] = 10**-100
 
-    vx_xy, vy_xy = mesh_3d_to_2d(vx,vy,vz,'xy')
     H_xy = array_3d_to_2d(H,'xy')
-    vx_xz, vz_xz = mesh_3d_to_2d(vx,vy,vz,'xz')
     H_xz = array_3d_to_2d(H,'xz')
-    vy_yz, vz_yz = mesh_3d_to_2d(vx,vy,vz,'yz')
     H_yz = array_3d_to_2d(H,'yz')
+
+    dist_log_plot_3dir_2v(vx, vy, vz, vmax, H_xy, H_xz, H_yz, flnm = flnm,ttl=ttl,xlbl=xlbl,ylbl=ylbl,zlbl=zlbl,plotSymLog=plotSymLog)
+
+def dist_log_plot_3dir_2v(vx, vy, vz, vmax, H_xy, H_xz, H_yz, flnm = '',ttl='',xlbl=r"$v_x/v_{ti}$",ylbl=r"$v_y/v_{ti}$",zlbl=r"$v_z/v_{ti}$",plotSymLog=False):
+    """
+    Makes 3 panel plot of the distribution function in log space if dist function has already been projected.
+
+    WARNING: gouraud shading seems to only work on the first figure (i.e. the colormesh for only axs[0] is smoothed)
+    This seems to possibly be a larger bug in matplotlib
+
+    Paramters
+    ---------
+    vx : 2d array
+        vx velocity grid
+    vy : 2d array
+        vy velocity grid
+    vmax : float
+        specifies signature domain in velocity space
+        (assumes square and centered about zero)
+    H_in : 2d array
+        distribution data
+    flnm : str, optional
+        specifies filename if plot is to be saved as png.
+        if set to default, plt.show() will be called instead
+    ttl : str, optional
+        title of plot
+    plotSymLog : bool, optional
+        if true, will plot 'negative and positive logarithmic' with linear scale near zero
+    """
+
+    plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
+    from lib.array_ops import mesh_3d_to_2d
+    import matplotlib
+    from matplotlib.colors import LogNorm
+    from lib.array_ops import array_3d_to_2d
+    import matplotlib.colors as colors
+
+    from copy import copy
+    H = copy(H_in) #deep copy
+
+    #get lowest nonzero number
+    minval = np.min(H[np.nonzero(H)])
+
+    # #set all zeros to small value
+    # H[np.where(H == 0)] = 10**-100
+
+    vx_xy, vy_xy = mesh_3d_to_2d(vx,vy,vz,'xy')
+    vx_xz, vz_xz = mesh_3d_to_2d(vx,vy,vz,'xz')
+    vy_yz, vz_yz = mesh_3d_to_2d(vx,vy,vz,'yz')
 
     fig, axs = plt.subplots(1,3,figsize=(3*5,1*5))
     cmap = matplotlib.cm.get_cmap('plasma')
