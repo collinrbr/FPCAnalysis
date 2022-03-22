@@ -6,8 +6,58 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 
+def plot_velsig(vx,vy,vz,dv,vmax,CEiproj,fieldkey,planename,ttl=r'$C_{E_i}(v_i,v_j)$; ',flnm='',xlabel=r"$v_i/v_{ti}$",ylabel=r"$v_j/v_{ti}$",plotLog=False,computeJdotE=True):
+
+    from lib.array_ops import mesh_3d_to_2d
+    import matplotlib
+    from matplotlib.colors import LogNorm
+    from lib.array_ops import array_3d_to_2d
+    import matplotlib.colors as colors
+    from lib.analysis import compute_energization
+
+
+    CEiplot = CEiproj
+    yplot, xplot = mesh_3d_to_2d(vx,vy,vz,planename)
+
+    plt.style.use('postgkyl.mplstyle')
+
+    maxCe = max(np.max(CEiplot),abs(np.max(CEiplot)))
+
+    plt.figure(figsize=(6.5,6))
+    if(plotLog):
+        im = plt.pcolormesh(xplot,yplot,CEiplot,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
+    else:
+        im = plt.pcolormesh(xplot,yplot,CEiplot,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.gca().set_aspect('equal', 'box')
+    plt.grid()
+    if(computeJdotE):
+        JdotE = compute_energization(CEiplot,dv)
+        if(fieldkey == 'ex'):
+            plt.gca().set_title(ttl+'$J \cdot E_x$ = ' + "{:.2e}".format(JdotE),loc='left')
+        if(fieldkey == 'ey'):
+            plt.gca().set_title(ttl+'$J \cdot E_y$ = ' + "{:.2e}".format(JdotE),loc='left')
+        if(fieldkey == 'ez'):
+            plt.gca().set_title(ttl+'$J \cdot E_z$ = ' + "{:.2e}".format(JdotE),loc='left')
+    
+    clrbar = plt.colorbar(im, ax=plt.gca())#,format='%.1e')
+    if(not(plotLog)):
+        clrbar.formatter.set_powerlimits((0, 0))
+
+    plt.xlim(-vmax,vmax)
+    plt.ylim(-vmax,vmax)
+
+    if(flnm != ''):
+        plt.savefig(flnm+'.png',format='png')
+        plt.close('all')#saves RAM
+    else:
+        plt.show()
+    plt.close()
+
+
 #TODO: update/ remove this
-def plot_velsig(vx,vy,vmax,Ce,fieldkey,flnm = '',ttl=''):
+def plot_velsig_old(vx,vy,vmax,Ce,fieldkey,flnm = '',ttl=''):
     """
     # Plots correlation data from make2dHistandCex,make2dHistandCey,etc
 
@@ -440,7 +490,7 @@ def dist_log_plot_3dir_2v(vx, vy, vz, vmax, H_xy, H_xz, H_yz, flnm = '',ttl='',x
         axs[1].set_facecolor(bkgcolor)
         pcm1 = axs[1].pcolormesh(vz_xz,vx_xz,H_xz, cmap=cmap, shading="gouraud",norm=LogNorm(vmin=minval, vmax=H.max()))
     axs[1].set_xlim(-vmax, vmax)
-    axs[1].set_ylim(-vmax, vmax)
+    axs[1].set_ylim(-vmax, vmax)   
     axs[1].set_xticks(np.linspace(-vmax, vmax, numtks))
     axs[1].set_yticks(np.linspace(-vmax, vmax, numtks))
     axs[1].set_xlabel(xlbl)
@@ -608,7 +658,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         axs[1,0].text(-vmax*2.6,0, '$\Theta_{Bn} = $ ' + str(params['thetaBn']), ha='center', rotation=90, wrap=False)
     if(computeJdotE):
         JdotE = compute_energization(CEx_xy,dv)
-        axs[1,0].title.set_text('$C_{Ex}(v_x,v_y)$; $J \cdot E_x$ = ' + "{:.2e}".format(JdotE))
+        axs[1,0].set_title('$J \cdot E_x$ = ' + "{:.2e}".format(JdotE),loc='left')
     clrbar10 = plt.colorbar(im10, ax=axs[1,0])#,format='%.1e')
     if(not(plotLog)):
         clrbar10.formatter.set_powerlimits((0, 0))
@@ -625,7 +675,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     axs[1,1].grid()
     if(computeJdotE):
         JdotE = compute_energization(CEx_xz,dv)
-        axs[1,1].title.set_text('$C_{Ex}(v_x,v_y)$; $J \cdot E_x$ = ' + "{:.2e}".format(JdotE))
+        axs[1,1].set_title('$J \cdot E_x$ = ' + "{:.2e}".format(JdotE),loc='left')
     clrbar11 = plt.colorbar(im11, ax=axs[1,1])#,format='%.1e')
     if(not(plotLog)):
         clrbar11.formatter.set_powerlimits((0, 0))
@@ -642,7 +692,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     axs[1,2].grid()
     if(computeJdotE):
         JdotE = compute_energization(CEx_yz.T,dv)
-        axs[1,2].title.set_text('$C_{Ex}(v_y,v_z)$; $J \cdot E_x$ = ' + "{:.2e}".format(JdotE))
+        axs[1,2].set_title('$J \cdot E_x$ = ' + "{:.2e}".format(JdotE),loc='left')
     clrbar12 = plt.colorbar(im12, ax=axs[1,2])#,format='%.1e')
     if(not(plotLog)):
         clrbar12.formatter.set_powerlimits((0, 0))
@@ -662,7 +712,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         axs[2,0].text(-vmax*2.6,0,'$x/d_i = $' + str(xpos), ha='center', rotation=90, wrap=False)
     if(computeJdotE):
         JdotE = compute_energization(CEy_xy,dv)
-        axs[2,0].title.set_text('$C_{Ey}(v_x,v_y)$; $J \cdot E_y$ = ' + "{:.2e}".format(JdotE))
+        axs[2,0].set_title('$J \cdot E_y$ = ' + "{:.2e}".format(JdotE),loc='left')
     clrbar20 = plt.colorbar(im20, ax=axs[2,0])#,format='%.1e')
     if(not(plotLog)):
         clrbar20.formatter.set_powerlimits((0, 0))
@@ -679,7 +729,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     axs[2,1].grid()
     if(computeJdotE):
         JdotE = compute_energization(CEy_xz,dv)
-        axs[2,1].title.set_text('$C_{Ey}(v_x,v_z)$; $J \cdot E_y$ = ' + "{:.2e}".format(JdotE))
+        axs[2,1].set_title('$J \cdot E_y$ = ' + "{:.2e}".format(JdotE),loc='left')
     clrbar21 = plt.colorbar(im21, ax=axs[2,1])#,format='%.1e')
     if(not(plotLog)):
         clrbar21.formatter.set_powerlimits((0, 0))
@@ -696,7 +746,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     axs[2,2].grid()
     if(computeJdotE):
         JdotE = compute_energization(CEy_yz.T,dv)
-        axs[2,2].title.set_text('$C_{Ey}(v_y,v_z)$; $J \cdot E_y$ = ' + "{:.2e}".format(JdotE))
+        axs[2,2].set_title('$J \cdot E_y$ = ' + "{:.2e}".format(JdotE),loc='left')
     clrbar22 = plt.colorbar(im22, ax=axs[2,2])#,format='%.1e')
     if(not(plotLog)):
         clrbar22.formatter.set_powerlimits((0, 0))
@@ -717,7 +767,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         axs[3,0].text(-vmax*2.6,0, metadata, ha='center', rotation=90, wrap=False)
     if(computeJdotE):
         JdotE = compute_energization(CEz_xy,dv)
-        axs[3,0].title.set_text('$C_{Ez}(v_x,v_y)$; $J \cdot E_z$ = ' + "{:.2e}".format(JdotE))
+        axs[3,0].set_title('$J \cdot E_z$ = ' + "{:.2e}".format(JdotE),loc='left')
     clrbar30 = plt.colorbar(im30, ax=axs[3,0])#,format='%.1e')
     if(not(plotLog)):
         clrbar30.formatter.set_powerlimits((0, 0))
@@ -735,7 +785,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     axs[3,1].grid()
     if(computeJdotE):
         JdotE = compute_energization(CEz_xz,dv)
-        axs[3,1].title.set_text('$C_{Ez}(v_x,v_z)$; $J \cdot E_z$ = ' + "{:.2e}".format(JdotE))
+        axs[3,1].set_title('$J \cdot E_z$ = ' + "{:.2e}".format(JdotE),loc='left')
     clrbar31 = plt.colorbar(im31, ax=axs[3,1])#,format='%.1e')
     if(not(plotLog)):
         clrbar31.formatter.set_powerlimits((0, 0))
@@ -753,10 +803,15 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     axs[3,2].grid()
     if(computeJdotE):
         JdotE = compute_energization(CEz_yz.T,dv)
-        axs[3,2].title.set_text('$C_{Ez}(v_y,v_z)$; $J \cdot E_z$ = ' + "{:.2e}".format(JdotE))
+        axs[3,2].set_title('$J \cdot E_z$ = ' + "{:.2e}".format(JdotE),loc='left')
     clrbar32 = plt.colorbar(im32, ax=axs[3,2])#,format='%.1e')
     if(not(plotLog)):
         clrbar32.formatter.set_powerlimits((0, 0))
+
+    for _i in range(0,4):
+        for _j in range(0,3):
+            axs[_i,_j].set_xlim(-vmax,vmax)
+            axs[_i,_j].set_ylim(-vmax,vmax)
 
     #set ticks
     intvl = 10.
