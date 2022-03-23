@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 
-def make_field_pmesh(ddict,fieldkey,planename,flnm = '',takeaxisaverage=False, xxindex=float('nan'), yyindex=float('nan'), zzindex=float('nan'), xlimmin=None,xlimmax=None,colormap='inferno'):
+def make_field_pmesh(ddict,fieldkey,planename,flnm = '',takeaxisaverage=False, xxindex=float('nan'), yyindex=float('nan'), zzindex=float('nan'), xlimmin=None,xlimmax=None,colormap='inferno',rectangles=None):
     """
     Makes pmesh of given field
 
@@ -15,7 +15,8 @@ def make_field_pmesh(ddict,fieldkey,planename,flnm = '',takeaxisaverage=False, x
     ddict : dict
         field or flow data dictionary
     fieldkey : str
-        name of field you want to plot (ex, ey, ez, bx, by, bz, ux, uy, uz)
+        name of field you want to plot (ex, ey, ez, bx, by, bz, btot, ux, uy, uz)
+        btot is a custom routine for this function only
     planename : str
         name of plane you want to plot (xy, xz, yz)
     flnm : str
@@ -32,6 +33,10 @@ def make_field_pmesh(ddict,fieldkey,planename,flnm = '',takeaxisaverage=False, x
         minimum plotted x value (ignored if xx is not in plane)
     xlimmax : float
         maximum plotted x value (ignored if xx is not in plane)
+    colormap : string
+        name of matplotlib colormap to use
+    rectangles : [[x1,x2,y1,y2],[x1,x2,y1,y2],....]
+        array of 4 coordinates describing retanglular boxes to be put onto figure
     """
 
     fieldttl = ''
@@ -53,6 +58,11 @@ def make_field_pmesh(ddict,fieldkey,planename,flnm = '',takeaxisaverage=False, x
         fieldttl = '$U_y'
     elif(fieldkey == 'uz'):
         fieldttl = '$U_z'
+    elif(fieldkey == 'btot'):
+        fieldttl = '$|B|'
+        ddict['btot_xx']=ddict['bx_xx']
+        ddict['btot_yy']=ddict['bx_yy']
+        ddict['btot_zz']=ddict['bx_zz']
 
     if(planename=='xy'):
         ttl = fieldttl+'(x,y)$ at '
@@ -81,14 +91,34 @@ def make_field_pmesh(ddict,fieldkey,planename,flnm = '',takeaxisaverage=False, x
         axisidx = 2 #used to take average along x if no index is specified
         axis = '_xx'
 
-    if(takeaxisaverage):
-        fieldpmesh = np.mean(ddict[fieldkey],axis=axisidx)
-    elif(planename == 'xy'):
-        fieldpmesh = np.asarray(ddict[fieldkey])[zzindex,:,:]
-    elif(planename == 'xz'):
-        fieldpmesh = np.asarray(ddict[fieldkey])[:,yyindex,:]
-    elif(planename == 'yz'):
-        fieldpmesh = np.asarray(ddict[fieldkey])[:,:,xxindex]
+    if(fieldkey != 'btot'):
+        if(takeaxisaverage):
+            fieldpmesh = np.mean(ddict[fieldkey],axis=axisidx)
+        elif(planename == 'xy'):
+            fieldpmesh = np.asarray(ddict[fieldkey])[zzindex,:,:]
+        elif(planename == 'xz'):
+            fieldpmesh = np.asarray(ddict[fieldkey])[:,yyindex,:]
+        elif(planename == 'yz'):
+            fieldpmesh = np.asarray(ddict[fieldkey])[:,:,xxindex]
+
+    #custom routine
+    if(fieldkey == 'btot'):
+        if(planename == 'xy'):
+            fieldpmeshbx = np.asarray(ddict['bx'])[zzindex,:,:]
+            fieldpmeshby = np.asarray(ddict['by'])[zzindex,:,:]
+            fieldpmeshbz = np.asarray(ddict['bz'])[zzindex,:,:]
+            fieldpmesh = np.sqrt((fieldpmeshbx**2+fieldpmeshby**2+fieldpmeshbz**2))
+
+        elif(planename == 'xz'):
+            fieldpmeshbx = np.asarray(ddict['bx'])[:,yyindex,:]
+            fieldpmeshby = np.asarray(ddict['by'])[:,yyindex,:]
+            fieldpmeshbz = np.asarray(ddict['bz'])[:,yyindex,:]
+            fieldpmesh = np.sqrt((fieldpmeshbx**2+fieldpmeshby**2+fieldpmeshbz**2))
+        elif(planename == 'yz'):
+            fieldpmeshbx = np.asarray(ddict['bx'])[:,:,xxindex]
+            fieldpmeshby = np.asarray(ddict['by'])[:,:,xxindex]
+            fieldpmeshbz = np.asarray(ddict['bz'])[:,:,xxindex]
+            fieldpmesh = np.sqrt((fieldpmeshbx**2+fieldpmeshby**2+fieldpmeshbz**2))
 
     #make 2d arrays for more explicit plotting
     xplot = np.zeros((len(yplot1d),len(xplot1d)))
@@ -123,6 +153,19 @@ def make_field_pmesh(ddict,fieldkey,planename,flnm = '',takeaxisaverage=False, x
     plt.xlabel(xlbl)
     plt.ylabel(ylbl)
     plt.grid(color="k", linestyle="-", linewidth=1.0, alpha=0.6)
+
+    if(rectangles != None):
+        import matplotlib.patches as patches
+        print("Debug: plotting rectangles! without facecolor")
+        for rect in rectangles:
+            print(rect)
+            x1r = rect[0]
+            y1r = rect[2]
+            widthr = rect[1]-rect[0]
+            heightr = rect[3]-rect[2]
+            rectim = patches.Rectangle((x1r,y1r),widthr,heightr,ls='--',linewidth=1,edgecolor='red',facecolor='none',zorder=5)
+            plt.gca().add_patch(rectim)
+
     #clb = plt.colorbar(format="%.1f", ticks=np.linspace(-maxCe, maxCe, 8), fraction=0.046, pad=0.04) #TODO: make static colorbar based on max range of C
     plt.colorbar()
     #plt.setp(plt.gca(), aspect=1.0)
