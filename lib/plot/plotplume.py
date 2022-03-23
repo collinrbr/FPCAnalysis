@@ -226,6 +226,7 @@ def plot_wavemodes_and_compare_to_sweeps_kperp(kpars,beta_i,tau,wavemodes_matchi
         plt.xlim(xlim[0],xlim[1])
     if(flnm != ''):
         plt.savefig(flnm+'.png',format='png',dpi=600,bbox_inches="tight")
+        plt.close()
     else:
         plt.show()
 
@@ -346,5 +347,6 @@ def plot_wavemodes_and_compare_to_sweeps_kpar(kperps,beta_i,tau,wavemodes_matchi
         plt.xlim(xlim[0],xlim[1])
     if(flnm != ''):
         plt.savefig(flnm+'.png',format='png',dpi=600,bbox_inches="tight")
+        plt.close()
     else:
         plt.show()

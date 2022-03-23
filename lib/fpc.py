@@ -154,7 +154,7 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
         totalFieldpts = -1 # TODO just remove this varaible, doesn't make sense anymore
         #TODO: check frame!!!!!!
         dpar['p1'] -= vshock #TODO: clean this up
-        cprimebinned, hist, vx, vy, vz = compute_cprime_hist(dpar, dfields, fieldkey, vmax, dv)
+        cprimebinned, hist, vx, vy, vz = compute_cprime_hist(dparsubset, dfields, fieldkey, vmax, dv)
 
     cor = compute_cor_from_cprime(cprimebinned, vx, vy, vz, dv, directionkey)
     del cprimebinned
@@ -835,6 +835,8 @@ def compute_cprime_hist(dparticles, dfields, fieldkey, vmax, dv):
     elif(fieldkey == 'ez' or fieldkey == 'bz'):
         vvkey = 'p3'
 
+
+    #print('Debug: x1,',np.min(dparticles['x1']),' x2,',np.max(dparticles['x1']),' y1,',np.min(dparticles['x2']),' y2,',np.max(dparticles['x2']),' z1,',np.min(dparticles['x3']),' z2,',np.max(dparticles['x3']))
 
     # compute cprime for each particle #TODO: make this block more efficient, it is the slowest part of the code
     # import time
