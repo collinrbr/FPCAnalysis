@@ -49,6 +49,12 @@ ddist = dgkl.load_dist(flnm_prefix,num,species=species)
 dfields = dgkl.load_fields(flnm_prefix,num,species=species)
 dflow = dgkl.load_flow(flnm_prefix,num,species=species)
 
+#assign metadata that might not be there
+if(not('thetaBn' in params.keys())):
+    params['thetaBn'] = 90
+if(not('MachAlfven' in params.keys())):
+    print("Error, MachAlfven (of inflow) was not computed for this shock...")
+
 #-------------------------------------------------------------------------------
 # Compute Shock Velocity and Transform Frame
 #-------------------------------------------------------------------------------
