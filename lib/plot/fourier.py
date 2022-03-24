@@ -295,7 +295,7 @@ def plot_wlt(xx, kx, wlt, ky0 = None, kz0 = None, flnm = '', plotstrongestkx = F
     from lib.array_ops import find_nearest
 
     plt.figure(figsize=(10,5))
-    plt.pcolormesh(xx,kx,np.abs(wlt),cmap='coolwarm', shading='gouraud')
+    plt.pcolormesh(xx,kx,np.abs(wlt),cmap='Spectral', shading='gouraud')
     cbar = plt.colorbar()
     if(clrbarlbl != None):
         cbar.set_label(clrbarlbl,labelpad=25, rotation=270)
@@ -337,7 +337,7 @@ def plot_power_spectrum(dwavemodes,flnm='',key='normB',gridsize1=75,gridsize2=75
         _ytemp.append(wvmd['kpar'])
         _ztemp.append(wvmd[key])
         
-    fig, axs = plt.subplots(1, 3, figsize=(3*5,15*5+3))
+    fig, axs = plt.subplots(1, 3, figsize=(15,5))
    
     hxbin0 = axs[0].hexbin(_x1temp, _x2temp, cmap='Spectral', C=_ztemp,gridsize=gridsize1,reduce_C_function=np.sum)
     axs[0].set_xlabel('$k_{\perp,1}$')

@@ -49,7 +49,7 @@ def plot_velsig(vx,vy,vz,dv,vmax,CEiproj,fieldkey,planename,ttl=r'$C_{E_i}(v_i,v
     plt.ylim(-vmax,vmax)
 
     if(flnm != ''):
-        plt.savefig(flnm+'.png',format='png')
+        plt.savefig(flnm+'.png',format='png',dpi=300)
         plt.close('all')#saves RAM
     else:
         plt.show()
