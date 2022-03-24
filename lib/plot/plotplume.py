@@ -104,6 +104,52 @@ def plot_sweep(plume_sweeps,xaxiskey,yaxiskey,wavemodes=[''],xlbl='',ylbl='',lbl
         plt.savefig(flnm+'.png',format='png',dpi=600,bbox_inches="tight")
     else:
         plt.show()
+    plt.close()
+
+def plot_sweep_B_field(plume_sweep,xaxiskey,xlbl='',xlim=None,ylim=None,flnm=''):
+    """
+    WARNING: does NOT check if plume sweeps are different solutions to the same dispersion relation. Assumes they all are.
+    """
+
+    from lib.plot.resultsmanager import plume_keyname_to_plotname
+
+    plt.figure()
+    B_field_keys = ['bxr','bxi','byr','byi','bzr','bzi']
+    lbls = [r'$\hat{B}_{x,r}$',r'$\hat{B}_{x,i}$',r'$\hat{B}_{y,r}$',r'$\hat{B}_{y,i}$',r'$\hat{B}_{z,r}$',r'$\hat{B}_{z,i}$']
+    for yaxiskey in B_field_keys:
+        if(lbls != ['']):
+            plt.semilogx(plume_sweep[xaxiskey],plume_sweep[yaxiskey],label=lbls[idx])
+        else:
+            plt.semilogx(plume_sweep[xaxiskey],plume_sweep[yaxiskey])
+
+    if(xlbl == ''):
+        xlbl = plume_keyname_to_plotname(xaxiskey)
+        if(xlbl != ''):
+            plt.xlabel(xlbl)
+        else:
+            plt.xlabel(xaxiskey)
+    else:
+        plt.xlabel(xlbl)
+
+    if(ylbl == ''):
+        ylbl = plume_keyname_to_plotname(yaxiskey)
+        if(ylbl != ''):
+            plt.ylabel(ylbl)
+        else:
+            plt.ylabel(yaxiskey)
+    else:
+        plt.ylabel(ylbl)
+
+    plt.legend(prop={'size': 9})
+    if(xlim != None):
+        plt.xlim(xlim[0], xlim[1])
+    if(ylim != None):
+        plt.ylim(ylim[0], ylim[1])
+    if(flnm != ''):
+        plt.savefig(flnm+'.png',format='png',dpi=600,bbox_inches="tight")
+    else:
+        plt.show()
+    plt.close()
 
 #todo: make sure given wavemodes are close to give kpars
 def plot_wavemodes_and_compare_to_sweeps_kperp(kpars,beta_i,tau,wavemodes_matching_kpar,kperplim = [.1,10], flnm = '',delta_beta_i = 0, delta_tau = 0,xlim=[],ylim=[]):
