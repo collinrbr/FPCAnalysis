@@ -440,11 +440,12 @@ def dist_log_plot_3dir_2v(vx, vy, vz, vmax, H_xy, H_xz, H_yz, flnm = '',ttl='',x
     from lib.array_ops import array_3d_to_2d
     import matplotlib.colors as colors
 
-    from copy import copy
-    H = copy(H_in) #deep copy
+    #from copy import copy
+    #H = copy(H_in) #deep copy
 
     #get lowest nonzero number
-    minval = np.min(H[np.nonzero(H)])
+    minval = np.min([np.min(H_xy[np.nonzero(H_xy)]),np.min(H_xz[np.nonzero(H_xz)]),np.min(H_yz[np.nonzero(H_yz)])])
+    maxval = np.max([H_xy, H_xz, H_yz])
 
     # #set all zeros to small value
     # H[np.where(H == 0)] = 10**-100
@@ -465,7 +466,7 @@ def dist_log_plot_3dir_2v(vx, vy, vz, vmax, H_xy, H_xz, H_yz, flnm = '',ttl='',x
         pcm0 = axs[0].pcolormesh(vy_xy, vx_xy, H_xy, cmap='PiYG', shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-1*_vmax, vmax=_vmax))
     else:
         axs[0].set_facecolor(bkgcolor)
-        pcm0 = axs[0].pcolormesh(vy_xy, vx_xy, H_xy, cmap=cmap, shading="gouraud",norm=LogNorm(vmin=minval, vmax=H.max()))
+        pcm0 = axs[0].pcolormesh(vy_xy, vx_xy, H_xy, cmap=cmap, shading="gouraud",norm=LogNorm(vmin=minval, vmax=maxval))
     axs[0].set_xlim(-vmax, vmax)
     axs[0].set_ylim(-vmax, vmax)
     axs[0].set_xticks(np.linspace(-vmax, vmax, numtks))
@@ -488,7 +489,7 @@ def dist_log_plot_3dir_2v(vx, vy, vz, vmax, H_xy, H_xz, H_yz, flnm = '',ttl='',x
         pcm1 = axs[1].pcolormesh(vz_xz, vx_xz, H_xz, cmap='PiYG', shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-1*_vmax, vmax=_vmax))
     else:
         axs[1].set_facecolor(bkgcolor)
-        pcm1 = axs[1].pcolormesh(vz_xz,vx_xz,H_xz, cmap=cmap, shading="gouraud",norm=LogNorm(vmin=minval, vmax=H.max()))
+        pcm1 = axs[1].pcolormesh(vz_xz,vx_xz,H_xz, cmap=cmap, shading="gouraud",norm=LogNorm(vmin=minval, vmax=maxval))
     axs[1].set_xlim(-vmax, vmax)
     axs[1].set_ylim(-vmax, vmax)   
     axs[1].set_xticks(np.linspace(-vmax, vmax, numtks))
@@ -504,7 +505,7 @@ def dist_log_plot_3dir_2v(vx, vy, vz, vmax, H_xy, H_xz, H_yz, flnm = '',ttl='',x
         pcm2 = axs[2].pcolormesh(vz_yz, vy_yz, H_yz, cmap='PiYG', shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-1*_vmax, vmax=_vmax))
     else:
         axs[2].set_facecolor(bkgcolor)
-        pcm2 = axs[2].pcolormesh(vz_yz,vy_yz,H_yz, cmap=cmap, shading="gouraud",norm=LogNorm(vmin=minval, vmax=H.max()))
+        pcm2 = axs[2].pcolormesh(vz_yz,vy_yz,H_yz, cmap=cmap, shading="gouraud",norm=LogNorm(vmin=minval, vmax=maxval))
     axs[2].set_xlim(-vmax, vmax)
     axs[2].set_ylim(-vmax, vmax)
     axs[2].set_xticks(np.linspace(-vmax, vmax, numtks))

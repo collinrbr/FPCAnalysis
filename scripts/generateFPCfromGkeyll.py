@@ -49,6 +49,12 @@ ddist = dgkl.load_dist(flnm_prefix,num,species=species)
 dfields = dgkl.load_fields(flnm_prefix,num,species=species)
 dflow = dgkl.load_flow(flnm_prefix,num,species=species)
 
+#assign metadata that might not be there
+if(not('thetaBn' in params.keys())):
+    params['thetaBn'] = 90
+if(not('MachAlfven' in params.keys())):
+    print("Error, MachAlfven (of inflow) was not computed for this shock...")
+
 #-------------------------------------------------------------------------------
 # Compute Shock Velocity and Transform Frame
 #-------------------------------------------------------------------------------
@@ -72,5 +78,5 @@ enerCEx = anl.compute_energization_over_x(dfpc['CExvxvy'],dv)
 enerCEy = anl.compute_energization_over_x(dfpc['CExvxvy'],dv)
 enerCEz = anl.compute_energization_over_x(dfpc['CExvxvy'],dv)
 
-dnc.save2Vdata(dfpc['Histvxvy'],dfpc['Histvxvz'],dfpc['Histvyvz'],dfpc['CExvxvy'],dfpc['CExvxvz'],dfpc['CExvyvz'],dfpc['CEyvxvy'],dfpc['CEyvxvz'],dfpc['CEyvyvz'],dfpc['CEzvxvy'],dfpc['CEzvxvz'],dfpc['CEzvyvz'], dfpc['vx'], dfpc['vy'], dfpc['vz'], dfpc['xx'], enerCEx, enerCEy, enerCEz, dfields['Vframe_relative_to_sim'], metadata = [], params = {}, filename = flnm_prefix+'_'+species+'_'+str(num)+'_nometadata.nc' )
+dnc.save2Vdata(dfpc['Histvxvy'],dfpc['Histvxvz'],dfpc['Histvyvz'],dfpc['CExvxvy'],dfpc['CExvxvz'],dfpc['CExvyvz'],dfpc['CEyvxvy'],dfpc['CEyvxvz'],dfpc['CEyvyvz'],dfpc['CEzvxvy'],dfpc['CEzvxvz'],dfpc['CEzvyvz'], dfpc['vx'], dfpc['vy'], dfpc['vz'], dfpc['xx'], enerCEx, enerCEy, enerCEz, dfields['Vframe_relative_to_sim'], metadata = [], params = params, filename = flnm_prefix+'_'+species+'_'+str(num)+'_nometadata.nc' )
 print("Done! Please use findShock.py and addMetadata to assign metadata...")
