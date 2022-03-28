@@ -106,45 +106,146 @@ def plot_sweep(plume_sweeps,xaxiskey,yaxiskey,wavemodes=[''],xlbl='',ylbl='',lbl
         plt.show()
     plt.close()
 
-def plot_sweep_B_field(plume_sweep,xaxiskey,xlbl='',xlim=None,ylim=None,flnm=''):
+def plot_sweep_norms(plume_sweep,xaxiskey,xlbl='',xlim=None,ylim=None,flnm='',axvlinex=None):
     """
     WARNING: does NOT check if plume sweeps are different solutions to the same dispersion relation. Assumes they all are.
     """
 
     from lib.plot.resultsmanager import plume_keyname_to_plotname
 
-    plt.figure()
-    B_field_keys = ['bxr','bxi','byr','byi','bzr','bzi']
-    lbls = [r'$\hat{B}_{x,r}$',r'$\hat{B}_{x,i}$',r'$\hat{B}_{y,r}$',r'$\hat{B}_{y,i}$',r'$\hat{B}_{z,r}$',r'$\hat{B}_{z,i}$']
-    for yaxiskey in B_field_keys:
-        if(lbls != ['']):
-            plt.semilogx(plume_sweep[xaxiskey],plume_sweep[yaxiskey],label=lbls[idx])
-        else:
-            plt.semilogx(plume_sweep[xaxiskey],plume_sweep[yaxiskey])
+    fig,ax = plt.subplots(2,1,figsize=(16,8),sharex=True)
+    field_keys = ['bxr','bxi','byr','byi','bzr','bzi','exr','exi','eyr','eyi','ezr','ezi']
+    lbls = [r'$\hat{B}_{\perp,2}$',r'$\hat{B}_{\perp,2}$',r'$\hat{B}_{\perp,1}$',r'$\hat{B}_{\perp,1}$',r'$\hat{B}_{||}$',r'$\hat{B}_{||}$',r'$\hat{E}_{\perp,2}$',r'$\hat{E}_{\perp,2}$',r'$\hat{E}_{\perp,1}$',r'$\hat{E}_{\perp,1}$',r'$\hat{E}_{||}$',r'$\hat{E}_{||}$']
+   
+    for _idx in range(0,len(lbls)):
+        lbls[_idx] += r'$/\hat{E}_{\perp,2}$'
+        lbls[_idx] = r'$|$'+lbls[_idx] + r'$|$'
+
+    colors = ['black','red','blue','yellow','gray','orange']
+    lstyles = ['-','--','-.','..','--','-.']
+    
+    plot_arrs = []
+    plot_lbls = []
+    for _idx in range(0,len(field_keys),2):
+        plot_arrs.append([np.linalg.norm([plume_sweep[field_keys[_idx]][_j],plume_sweep[field_keys[_idx+1]][_j]]) for _j in range(0,len(plume_sweep[field_keys[_idx]]))])
+        plot_lbls.append(lbls[_idx])
+
+    for _idx in range(0,3):
+        ax[0].semilogx(plume_sweep[xaxiskey],plot_arrs[_idx],label=plot_lbls[_idx],linewidth=2.5,linestyle=lstyles[_idx],color=colors[_idx])
+    for _idx in range(4,6):
+        ax[1].semilogx(plume_sweep[xaxiskey],plot_arrs[_idx],label=plot_lbls[_idx],linewidth=2.5,linestyle=lstyles[_idx],color=colors[_idx])
+
+
+#    for idx,yaxiskey in enumerate(field_keys):
+#        if(yaxiskey[2] == 'r'):
+#            ax[0].semilogx(plume_sweep[xaxiskey],plume_sweep[yaxiskey],label=lbls[idx],linewidth=2.5,linestyle=lstyles[idx],color=colors[idx])
+#        else:
+#            ax[1].semilogx(plume_sweep[xaxiskey],plume_sweep[yaxiskey],label=lbls[idx],linewidth=2.5,linestyle=lstyles[idx],color=colors[idx])
 
     if(xlbl == ''):
         xlbl = plume_keyname_to_plotname(xaxiskey)
         if(xlbl != ''):
-            plt.xlabel(xlbl)
+            ax[1].set_xlabel(xlbl)
         else:
-            plt.xlabel(xaxiskey)
+            ax[1].set_xlabel(xaxiskey)
     else:
-        plt.xlabel(xlbl)
+        ax[1].set_xlabel(xlbl)
 
-    if(ylbl == ''):
-        ylbl = plume_keyname_to_plotname(yaxiskey)
-        if(ylbl != ''):
-            plt.ylabel(ylbl)
-        else:
-            plt.ylabel(yaxiskey)
-    else:
-        plt.ylabel(ylbl)
+    #if(ylbl == ''):
+    #    ylbl = plume_keyname_to_plotname(yaxiskey)
+    #    if(ylbl != ''):
+    #        plt.ylabel(ylbl)
+    #    else:
+    #        plt.ylabel(yaxiskey)
+    #else:
+    #    plt.ylabel(ylbl)
 
-    plt.legend(prop={'size': 9})
+    if(axvlinex != None):
+        ax[0].axvline(axvlinex,linewidth=.5,color='black')
+        ax[1].axvline(axvlinex,linewidth=.5,color='black')
+
+    ax[0].legend(prop={'size': 12})
+    ax[1].legend(prop={'size': 12})
     if(xlim != None):
-        plt.xlim(xlim[0], xlim[1])
+        ax[0].set_xlim(xlim[0], xlim[1])
+        ax[1].set_xlim(xlim[0], xlim[1])
     if(ylim != None):
-        plt.ylim(ylim[0], ylim[1])
+        ax[0].set_ylim(ylim[0], ylim[1])
+        ax[1].set_ylim(ylim[0], ylim[1])
+    fig.subplots_adjust(hspace=0)
+    plt.setp(ax[0].get_xticklabels(), visible=True)
+    ax[1].tick_params(axis='x',top=True,direction='inout',length=10,which='both')
+    ax[0].grid()
+    ax[1].grid()
+    #ax[0].set_ylabel(r'$|\{\hat{B}_i\}|$')
+    #ax[1].set_ylabel(r'$|\{\hat{E}_i\}|$')
+    if(flnm != ''):
+        plt.savefig(flnm+'.png',format='png',dpi=600,bbox_inches="tight")
+    else:
+        plt.show()
+    plt.close()
+
+def plot_sweep_field(plume_sweep,xaxiskey,xlbl='',xlim=None,ylim=None,flnm='',plotE=False,axvlinex=None):
+    """
+    WARNING: does NOT check if plume sweeps are different solutions to the same dispersion relation. Assumes they all are.
+    """
+
+    from lib.plot.resultsmanager import plume_keyname_to_plotname
+
+    fig,ax = plt.subplots(2,1,figsize=(16,8),sharex=True)
+    if(plotE == False):
+        field_keys = ['bxr','bxi','byr','byi','bzr','bzi']
+        lbls = [r'$\hat{B}_{x}$',r'$\hat{B}_{x}$',r'$\hat{B}_{y}$',r'$\hat{B}_{y}$',r'$\hat{B}_{z}$',r'$\hat{B}_{z}$']
+    else:
+        field_keys = ['exr','exi','eyr','eyi','ezr','ezi']
+        lbls = [r'$\hat{E}_{x}$',r'$\hat{E}_{x}$',r'$\hat{E}_{y}$',r'$\hat{E}_{y}$',r'$\hat{E}_{z}$',r'$\hat{E}_{z}$']
+    colors = ['black','black','red','red','blue','blue']
+    lstyles = ['-','-','--','--','-.','-.']
+    for idx,yaxiskey in enumerate(field_keys):
+        if(yaxiskey[2] == 'r'):
+            ax[0].semilogx(plume_sweep[xaxiskey],plume_sweep[yaxiskey],label=lbls[idx],linewidth=2.5,linestyle=lstyles[idx],color=colors[idx])
+        else:
+            ax[1].semilogx(plume_sweep[xaxiskey],plume_sweep[yaxiskey],label=lbls[idx],linewidth=2.5,linestyle=lstyles[idx],color=colors[idx])
+
+    if(xlbl == ''):
+        xlbl = plume_keyname_to_plotname(xaxiskey)
+        if(xlbl != ''):
+            ax[1].set_xlabel(xlbl)
+        else:
+            ax[1].set_xlabel(xaxiskey)
+    else:
+        ax[1].set_xlabel(xlbl)
+
+    #if(ylbl == ''):
+    #    ylbl = plume_keyname_to_plotname(yaxiskey)
+    #    if(ylbl != ''):
+    #        plt.ylabel(ylbl)
+    #    else:
+    #        plt.ylabel(yaxiskey)
+    #else:
+    #    plt.ylabel(ylbl)
+
+    if(axvlinex != None):
+        ax[0].axvline(axvlinex,linewidth=.5,color='black')
+        ax[1].axvline(axvlinex,linewidth=.5,color='black')
+
+    ax[0].legend(prop={'size': 9})
+    if(xlim != None):
+        ax[0].set_xlim(xlim[0], xlim[1])
+        ax[1].set_xlim(xlim[0], xlim[1])
+    if(ylim != None):
+        ax[0].set_ylim(ylim[0], ylim[1])
+    fig.subplots_adjust(hspace=0)
+    plt.setp(ax[0].get_xticklabels(), visible=True)
+    ax[1].tick_params(axis='x',top=True,direction='inout',length=10,which='both')
+    ax[0].grid()
+    ax[1].grid()
+    if(plotE == False):
+        ax[0].set_ylabel(r'Re$\{\hat{B}_i\}$')
+        ax[1].set_ylabel(r'Im$\{\hat{B}_i\}$')
+    else:
+        ax[0].set_ylabel(r'Re$\{\hat{E}_i\}$')
+        ax[1].set_ylabel(r'Im$\{\hat{E}_i\}$')
     if(flnm != ''):
         plt.savefig(flnm+'.png',format='png',dpi=600,bbox_inches="tight")
     else:
