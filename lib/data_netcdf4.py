@@ -49,13 +49,13 @@ def save3Vdata(Hist_out, CEx_out, CEy_out, CEz_out, vx_out, vy_out, vz_out, x_ou
     from netCDF4 import Dataset
     from datetime import datetime
 
-    #normalize CEx, CEy to 1-------------------------------------------------------
-    #Here we normalize to the maximum value in either CEx, CEy, CEz
-    maxCval = max(np.amax(np.abs(CEx_out)),np.amax(np.abs(CEy_out)))
-    maxCval = max(maxCval,np.amax(np.abs(CEz_out)))
-    CEx_out /= maxCval
-    CEy_out /= maxCval
-    CEz_out /= maxCval
+    # #normalize CEx, CEy to 1-------------------------------------------------------
+    # #Here we normalize to the maximum value in either CEx, CEy, CEz
+    # maxCval = max(np.amax(np.abs(CEx_out)),np.amax(np.abs(CEy_out)))
+    # maxCval = max(maxCval,np.amax(np.abs(CEz_out)))
+    # CEx_out /= maxCval
+    # CEy_out /= maxCval
+    # CEz_out /= maxCval
 
     #save data in netcdf file-------------------------------------------------------
     # open a netCDF file to write

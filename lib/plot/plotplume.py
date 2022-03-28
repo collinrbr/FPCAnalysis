@@ -69,7 +69,7 @@ def plot_sweep(plume_sweeps,xaxiskey,yaxiskey,wavemodes=[''],xlbl='',ylbl='',lbl
             if(yaxiskey == 'ezi'):
                 plt.scatter([wm['kpar']],[wm['Epar'].imag])
 
-            if(yaxiskey == 'bxr'):
+            if(yaxiskey == 'bxr'): #TODO: check normalization. Migth be b_i is normalizated to e_i. that is we should plot b_i/e_i
                 bxr = wm['Bperp1'].real/wm['vth']
                 plt.scatter([wm['kpar']],[bxr])
             if(yaxiskey == 'bxi'):
