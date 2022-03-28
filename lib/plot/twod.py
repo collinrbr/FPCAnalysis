@@ -63,6 +63,10 @@ def make_field_pmesh(ddict,fieldkey,planename,flnm = '',takeaxisaverage=False, x
         ddict['btot_xx']=ddict['bx_xx']
         ddict['btot_yy']=ddict['bx_yy']
         ddict['btot_zz']=ddict['bx_zz']
+    elif(fieldkey == 'den'):
+        fieldttl = '$n'
+    else:
+        fieldttl = fieldkey+'$'
 
     if(planename=='xy'):
         ttl = fieldttl+'(x,y)$ at '
@@ -137,7 +141,7 @@ def make_field_pmesh(ddict,fieldkey,planename,flnm = '',takeaxisaverage=False, x
     else:
         plt.figure(figsize=(6.5,6))
 
-    if(colormap != 'inferno'):
+    if(colormap != 'inferno' and colormap != 'Greens'):
         vmax = np.max(np.abs(fieldpmesh))
         plt.pcolormesh(xplot, yplot, fieldpmesh, cmap=colormap, shading="gouraud",vmin=-1*vmax,vmax=vmax)
     else:
@@ -156,7 +160,7 @@ def make_field_pmesh(ddict,fieldkey,planename,flnm = '',takeaxisaverage=False, x
 
     if(rectangles != None):
         import matplotlib.patches as patches
-        print("Debug: plotting rectangles! without facecolor")
+        #print("Debug: plotting rectangles! without facecolor")
         for rect in rectangles:
             print(rect)
             x1r = rect[0]
@@ -223,19 +227,22 @@ def make_super_pmeshplot(dfields,dflow,dden,zzindex = 0,flnm=''):
     fig.colorbar(btot_im, ax=axs[3])
 
     #den
-    den_im = axs[4].pcolormesh(dden['den_xx'],dden['den_yy'],dden['den'][zzindex,:,:], cmap="Spectral", shading="gouraud")
+    den_im = axs[4].pcolormesh(dden['den_xx'],dden['den_yy'],dden['den'][zzindex,:,:], cmap="Greens", shading="gouraud")
     fig.colorbar(den_im, ax=axs[4])
 
     #vx
-    vx_im = axs[5].pcolormesh(dflow['ux_xx'],dflow['ux_yy'],dflow['ux'][zzindex,:,:], cmap="bwr", shading="gouraud")
+    vmax = np.max(np.abs(dflow['ux'][zzindex,:,:]))
+    vx_im = axs[5].pcolormesh(dflow['ux_xx'],dflow['ux_yy'],dflow['ux'][zzindex,:,:], vmin=-1*vmax, vmax=vmax, cmap="bwr", shading="gouraud")
     fig.colorbar(vx_im, ax=axs[5])
 
     #vy
-    vy_im = axs[6].pcolormesh(dflow['uy_xx'],dflow['uy_yy'],dflow['uy'][zzindex,:,:], cmap="bwr", shading="gouraud")
+    vmax = np.max(np.abs(dflow['uy'][zzindex,:,:]))
+    vy_im = axs[6].pcolormesh(dflow['uy_xx'],dflow['uy_yy'],dflow['uy'][zzindex,:,:], vmin=-1*vmax, vmax=vmax, cmap="bwr", shading="gouraud")
     fig.colorbar(vy_im, ax=axs[6])
 
     #vz
-    vz_im = axs[7].pcolormesh(dflow['uz_xx'],dflow['uz_yy'],dflow['uz'][zzindex,:,:], cmap="bwr", shading="gouraud")
+    vmax = np.max(np.abs(dflow['uz'][zzindex,:,:]))
+    vz_im = axs[7].pcolormesh(dflow['uz_xx'],dflow['uz_yy'],dflow['uz'][zzindex,:,:], vmin=-1*vmax, vmax=vmax, cmap="bwr", shading="gouraud")
     fig.colorbar(vz_im, ax=axs[7])
 
     #print axes labels
@@ -246,10 +253,10 @@ def make_super_pmeshplot(dfields,dflow,dden,zzindex = 0,flnm=''):
     #print labels of each plot
     import matplotlib.patheffects as PathEffects
     pltlabels = ['$B_x/B_{0,up}$','$B_y/B_{0,up}$','$B_z/B_{0,up}$','$|B|/B_{0,up}$','$n/n_{up}$','$v_x/v_{th,i}$','$v_y/v_{th,i}$','$v_z/v_{th,i}$']
-    _xtext = dfields['bx_xx'][int(len(dfields['bx_xx'])*.84)]
-    _ytext = dfields['bx_yy'][int(len(dfields['bx_yy'])*.8)]
+    _xtext = dfields['bx_xx'][int(len(dfields['bx_xx'])*.75)]
+    _ytext = dfields['bx_yy'][int(len(dfields['bx_yy'])*.6)]
     for _i in range(0,len(axs)):
-        _txt = axs[_i].text(_xtext,_ytext,pltlabels[_i],color='white')
+        _txt = axs[_i].text(_xtext,_ytext,pltlabels[_i],color='white',fontsize=24)
         _txt.set_path_effects([PathEffects.withStroke(linewidth=2, foreground='black')])
 
     if(flnm != ''):

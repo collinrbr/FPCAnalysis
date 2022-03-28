@@ -241,7 +241,7 @@ def plot_wavemodes_and_compare_to_sweeps_kperp(kpars,beta_i,tau,wavemodes_matchi
     linestyle = ['-',':','--','-.','.',',','-',':','--','-.','.',',','-',':','--','-.','.',',','-',':','--','-.','.',',']
     lnwidth = 1.75
 
-    plt.figure(figsize=(10,10))
+    plt.figure(figsize=(8,8))
     for i in range(0,len(kawcrvs)):
         plt.errorbar(plotkperps[i],np.real(omegas[i]), xerr = plotkperp_errors[i], yerr=omega_errors[i], fmt="o",color='C0')
         plt.errorbar(plotkperps[i],np.real(omegas0[i]), xerr = plotkperp_errors[i], yerr=omega0_errors[i], fmt="s",color='C1')
@@ -362,7 +362,7 @@ def plot_wavemodes_and_compare_to_sweeps_kpar(kperps,beta_i,tau,wavemodes_matchi
     linestyle = ['-',':','--','-.','.',',','-',':','--','-.','.',',','-',':','--','-.','.',',','-',':','--','-.','.',',']
     lnwidth = 1.75
 
-    plt.figure(figsize=(10,10))
+    plt.figure(figsize=(8,8))
     for i in range(0,len(kawcrvs)):
         plt.errorbar(plotkpars[i],np.real(omegas[i]), xerr = plotkpar_errors[i], yerr=omega_errors[i], fmt="o",color='C0')
         plt.errorbar(plotkpars[i],np.real(omegas0[i]), xerr = plotkpar_errors[i], yerr=omega0_errors[i], fmt="s",color='C1')
