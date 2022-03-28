@@ -152,8 +152,10 @@ def get_compression_ratio(dfields,upstreambound,downstreambound):
     ----------
     dfields : dict
         field data dictionary from field_loader
-    xShock : float
-        x position of shock
+    upstreambound : float
+        x position of shock end of upstream
+    downstreambound : float
+        x position of shock end of upstream
 
     Returns
     -------
@@ -179,8 +181,8 @@ def get_compression_ratio(dfields,upstreambound,downstreambound):
                     bzsumdownstrm += dfields['bz'][i][j][k]
                     numdownstream += 1.
 
-    bzupstrm = bzsumdownstrm/numupstream
-    bzdownstrm = bzsumupstrm/numdownstream
+    bzdownstrm = bzsumdownstrm/numupstream
+    bzupstrm = bzsumupstrm/numdownstream
 
     ratio = bzdownstrm/bzupstrm
 
