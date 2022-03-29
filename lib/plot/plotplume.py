@@ -115,10 +115,10 @@ def plot_sweep_norms(plume_sweep,xaxiskey,xlbl='',xlim=None,ylim=None,flnm='',ax
 
     fig,ax = plt.subplots(2,1,figsize=(16,8),sharex=True)
     field_keys = ['bxr','bxi','byr','byi','bzr','bzi','exr','exi','eyr','eyi','ezr','ezi']
-    lbls = [r'$\hat{B}_{\perp,2}$',r'$\hat{B}_{\perp,2}$',r'$\hat{B}_{\perp,1}$',r'$\hat{B}_{\perp,1}$',r'$\hat{B}_{||}$',r'$\hat{B}_{||}$',r'$\hat{E}_{\perp,2}$',r'$\hat{E}_{\perp,2}$',r'$\hat{E}_{\perp,1}$',r'$\hat{E}_{\perp,1}$',r'$\hat{E}_{||}$',r'$\hat{E}_{||}$']
+    lbls = [r'$\hat{B}_{\perp,1}$',r'$\hat{B}_{\perp,1}$',r'$\hat{B}_{\perp,2}$',r'$\hat{B}_{\perp,2}$',r'$\hat{B}_{||}$',r'$\hat{B}_{||}$',r'$\hat{E}_{\perp,1}$',r'$\hat{E}_{\perp,1}$',r'$\hat{E}_{\perp,2}$',r'$\hat{E}_{\perp,2}$',r'$\hat{E}_{||}$',r'$\hat{E}_{||}$']
    
     for _idx in range(0,len(lbls)):
-        lbls[_idx] += r'$/\hat{E}_{\perp,2}$'
+        lbls[_idx] += r'$/\hat{E}_{\perp,1}$'
         lbls[_idx] = r'$|$'+lbls[_idx] + r'$|$'
 
     colors = ['black','red','blue','yellow','gray','orange']
