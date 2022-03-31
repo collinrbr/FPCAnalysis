@@ -140,15 +140,41 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
 
     else:
         gptsparticle = (x1 <= dpar['x1']) & (dpar['x1'] <= x2) & (y1 <= dpar['x2']) & (dpar['x2'] <= y2) & (z1 <= dpar['x3']) & (dpar['x3'] <= z2)
-        dparsubset = {
-          'p1': dpar['p1'][gptsparticle][:],
-          'p2': dpar['p2'][gptsparticle][:],
-          'p3': dpar['p3'][gptsparticle][:],
-          'x1': dpar['x1'][gptsparticle][:],
-          'x2': dpar['x2'][gptsparticle][:],
-          'x3': dpar['x3'][gptsparticle][:],
-          'Vframe_relative_to_sim': dpar['Vframe_relative_to_sim']
-        }
+        try: #This is hacky TODO: clean this up by simply returning hist and cor arrays full of zeros
+            dparsubset = {
+              'p1': dpar['p1'][gptsparticle][:],
+              'p2': dpar['p2'][gptsparticle][:],
+              'p3': dpar['p3'][gptsparticle][:],
+              'x1': dpar['x1'][gptsparticle][:],
+              'x2': dpar['x2'][gptsparticle][:],
+              'x3': dpar['x3'][gptsparticle][:],
+              'Vframe_relative_to_sim': dpar['Vframe_relative_to_sim']
+            }
+        except:
+            dparsubset = {
+              'p1': np.asarray([0.]),
+              'p2': np.asarray([0.]),
+              'p3': np.asarray([0.]),
+              'x1': np.asarray([0.]),
+              'x2': np.asarray([0.]),
+              'x3': np.asarray([0.]),
+              'Vframe_relative_to_sim': dpar['Vframe_relative_to_sim']
+            }
+
+            totalPtcl = len(dpar['p1'][:])
+            totalFieldpts = -1 # TODO just remove this varaible, doesn't make sense anymore
+            cprimebinned, hist, vx, vy, vz = compute_cprime_hist(dparsubset, dfields, fieldkey, vmax, dv)
+
+            cor = compute_cor_from_cprime(cprimebinned, vx, vy, vz, dv, directionkey)
+            del cprimebinned
+
+            #make data empty
+            totalPtcl = 0.
+            totalFieldpts = -1
+            hist = np.zeros(hist.shape)
+            cor = np.zeros(hist.shape)
+
+            return vx, vy, vz, totalPtcl, totalFieldpts, hist, cor
 
         totalPtcl = len(dpar['p1'][:])
         totalFieldpts = -1 # TODO just remove this varaible, doesn't make sense anymore
