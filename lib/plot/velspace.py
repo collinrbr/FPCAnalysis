@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 
-def plot_velsig(vx,vy,vz,dv,vmax,CEiproj,fieldkey,planename,ttl=r'$C_{E_i}(v_i,v_j)$; ',flnm='',xlabel=r"$v_i/v_{ti}$",ylabel=r"$v_j/v_{ti}$",plotLog=False,computeJdotE=True):
+def plot_velsig(vx,vy,vz,dv,vmax,CEiproj,fieldkey,planename,ttl=r'$C_{E_i}(v_i,v_j)$; ',flnm='',xlabel=r"$v_i/v_{ti}$",ylabel=r"$v_j/v_{ti}$",plotLog=False,computeJdotE=True,axvlinex = None, maxCe = None):
 
     from lib.array_ops import mesh_3d_to_2d
     import matplotlib
@@ -21,7 +21,8 @@ def plot_velsig(vx,vy,vz,dv,vmax,CEiproj,fieldkey,planename,ttl=r'$C_{E_i}(v_i,v
 
     plt.style.use('postgkyl.mplstyle')
 
-    maxCe = max(np.max(CEiplot),abs(np.max(CEiplot)))
+    if(maxCe == None):
+        maxCe = max(np.max(CEiplot),abs(np.max(CEiplot)))
 
     plt.figure(figsize=(6.5,6))
     if(plotLog):
@@ -40,13 +41,16 @@ def plot_velsig(vx,vy,vz,dv,vmax,CEiproj,fieldkey,planename,ttl=r'$C_{E_i}(v_i,v
             plt.gca().set_title(ttl+'$J \cdot E_y$ = ' + "{:.2e}".format(JdotE),loc='left')
         if(fieldkey == 'ez'):
             plt.gca().set_title(ttl+'$J \cdot E_z$ = ' + "{:.2e}".format(JdotE),loc='left')
-    
+
     clrbar = plt.colorbar(im, ax=plt.gca())#,format='%.1e')
     if(not(plotLog)):
         clrbar.formatter.set_powerlimits((0, 0))
 
     plt.xlim(-vmax,vmax)
     plt.ylim(-vmax,vmax)
+
+    if(axvlinex != None):
+        plt.axvline(axvlinex)
 
     if(flnm != ''):
         plt.savefig(flnm+'.png',format='png',dpi=300)
@@ -491,7 +495,7 @@ def dist_log_plot_3dir_2v(vx, vy, vz, vmax, H_xy, H_xz, H_yz, flnm = '',ttl='',x
         axs[1].set_facecolor(bkgcolor)
         pcm1 = axs[1].pcolormesh(vz_xz,vx_xz,H_xz, cmap=cmap, shading="gouraud",norm=LogNorm(vmin=minval, vmax=maxval))
     axs[1].set_xlim(-vmax, vmax)
-    axs[1].set_ylim(-vmax, vmax)   
+    axs[1].set_ylim(-vmax, vmax)
     axs[1].set_xticks(np.linspace(-vmax, vmax, numtks))
     axs[1].set_yticks(np.linspace(-vmax, vmax, numtks))
     axs[1].set_xlabel(xlbl)
