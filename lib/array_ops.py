@@ -93,7 +93,7 @@ def mesh_3d_to_2d(meshx, meshy, meshz, planename):
         2d meshz grid
     """
     nz,ny,nx = meshx.shape
-    if(planename == 'xy'):
+    if(planename == 'xy' or planename == 'perp2perp1'):
         meshx2d = np.zeros((ny, nx))
         meshy2d = np.zeros((ny, nx))
 
@@ -102,7 +102,7 @@ def mesh_3d_to_2d(meshx, meshy, meshz, planename):
 
         return meshx2d, meshy2d
 
-    elif(planename == 'xz'):
+    elif(planename == 'xz' or planename == 'perp2par'):
         meshx2d = np.zeros((nz, nx))
         meshz2d = np.zeros((nz, nx))
 
@@ -111,7 +111,7 @@ def mesh_3d_to_2d(meshx, meshy, meshz, planename):
 
         return meshx2d, meshz2d
 
-    elif(planename == 'yz'):
+    elif(planename == 'yz' or planename == 'perp1par'):
         meshy2d = np.zeros((nz, ny))
         meshz2d = np.zeros((nz, ny))
 

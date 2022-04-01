@@ -85,13 +85,23 @@ def load_fields(path_fields, num, field_vars = 'ex ey ez bx by bz'):
             field[key+'_yy'] = np.linspace(0., field[key].shape[1]*dy, field[key].shape[1])
             field[key+'_zz'] = np.linspace(0., field[key].shape[0]*dz, field[key].shape[0])
 
-    field['Vframe_relative_to_sim'] = 0.
+    #normalize to d_i / d_e
+    comp = load_params(path_fields,num)['comp']
+    for key in field_vars:
+        if(key+'_xx' in field.keys()):
+            field[key+'_xx'] /= comp
+        if(key+'_yy' in field.keys()):
+            field[key+'_yy'] /= comp
+        if(key+'_zz' in field.keys()):
+            field[key+'_zz'] /= comp
+
+    field['Vframe_relative_to_sim'] = 0. #TODO: fix this, it is incorrect at least some of the time as data is reported in the upstream frame (frame where v_x,up = 0) at least some of the time
 
     return field
 
 # def bin_flow_data(dpar, dfields):
 #     """
-# 
+#
 #     """
 #
 #     dfields = load_fields(path, num)
@@ -160,6 +170,9 @@ def load_particles(path, num, normalizeVelocity=False):
     pts_elc['Vframe_relative_to_sim'] = 0. #tracks frame (along vx) relative to sim
     pts_ion['Vframe_relative_to_sim'] = 0. #tracks frame (along vx) relative to sim
 
+    pts_elc['q'] = -1. #tracks frame (along vx) relative to sim
+    pts_ion['q'] = 1. #tracks frame (along vx) relative to sim
+
     if(normalizeVelocity):
         from lib.analysis import compute_vrms
 
@@ -168,6 +181,19 @@ def load_particles(path, num, normalizeVelocity=False):
 
         pts_elc = format_par_like_dHybridR(pts_elc)
         pts_ion = format_par_like_dHybridR(pts_ion)
+
+        #normalize
+        elc_vkeys = 'ue ve we'.split()
+        ion_vkeys = 'ui vi wi'.split()
+        elc_poskeys = 'xe ye ze'.split()
+        ion_poskeys = 'xi yi zi'.split()
+        c = load_params(path,num)['c']
+        comp = load_params(path,num)['comp']
+        for k in elc_vkeys:
+            pts_elc[k] = pts_elc[k]*c/(pts_elc['gammae']*comp**2) #note: velocity is in units γV_i/c in original output
+        for k in ion_vkeys:
+            pts_ion[k] = pts_ion[k]*c/(pts_ion['gammai']*comp**2) #note: velocity is in units γV_i/c in original output
+
 
         #comupte vti and vte in the far upstream region
         vmax = 20.*np.mean(np.abs(pts_ion['p1'])) #note: we only consider particles with v_i <= vmax when computing v_rms
@@ -182,17 +208,16 @@ def load_particles(path, num, normalizeVelocity=False):
         vte0 = compute_vrms(pts_elc,vmax,dv,lowerxbound,upperxbound,lowerybound,upperybound,lowerzbound,upperzbound)
         vti0 = np.sqrt(vti0)
         vte0 = np.sqrt(vte0)
-        print("Computed vti0 of ", vti0, " and vte0 of ", vte0)
+        #print("Computed vti0 of ", vti0, " and vte0 of ", vte0)
 
-        #normalize
-        elc_vkeys = 'ue ve we'.split()
-        ion_vkeys = 'ui vi wi'.split()
-        c = load_params(path,num)['c']
-        print('')
         for k in elc_vkeys:
-            pts_elc[k] = pts_elc[k]*c/(vte0*pts_elc['gammae']) #note: velocity is in units γV_i/c in original output
+            pts_elc[k] /= vte0
         for k in ion_vkeys:
-            pts_ion[k] = pts_ion[k]*c/(vti0*pts_ion['gammai']) #note: velocity is in units γV_i/c in original output
+            pts_ion[k] /= vti0
+        for k in elc_poskeys:
+            pts_elc[k] /= comp
+        for k in ion_poskeys:
+            pts_ion[k] /= comp
 
     return pts_elc, pts_ion
 
@@ -253,7 +278,7 @@ def format_par_like_dHybridR(dpar):
     if('yi' in keys):
         dpar['x2'] = dpar['yi']
     if('zi' in keys):
-        dpar['x3'] = dpar['xi']
+        dpar['x3'] = dpar['zi']
     if('ui' in keys):
         dpar['p1'] = dpar['ui']
     if('vi' in keys):
@@ -266,7 +291,7 @@ def format_par_like_dHybridR(dpar):
     if('ye' in keys):
         dpar['x2'] = dpar['ye']
     if('ze' in keys):
-        dpar['x3'] = dpar['xe']
+        dpar['x3'] = dpar['ze']
     if('ue' in keys):
         dpar['p1'] = dpar['ue']
     if('ve' in keys):
