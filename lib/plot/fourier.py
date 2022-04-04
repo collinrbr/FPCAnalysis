@@ -295,7 +295,7 @@ def plot_wlt(xx, kx, wlt, ky0 = None, kz0 = None, flnm = '', plotstrongestkx = F
     from lib.array_ops import find_nearest
 
     plt.figure(figsize=(10,5))
-    plt.pcolormesh(xx,kx,np.abs(wlt),cmap='coolwarm', shading='gouraud')
+    plt.pcolormesh(xx,kx,np.abs(wlt),cmap='Spectral', shading='gouraud')
     cbar = plt.colorbar()
     if(clrbarlbl != None):
         cbar.set_label(clrbarlbl,labelpad=25, rotation=270)
@@ -325,3 +325,53 @@ def plot_wlt(xx, kx, wlt, ky0 = None, kz0 = None, flnm = '', plotstrongestkx = F
         plt.savefig(flnm,format='png',dpi=250)
         plt.close('all')#saves RAM
     plt.close()
+
+def plot_power_spectrum(dwavemodes,flnm='',key='normB',gridsize1=75,gridsize2=75,gridsize3=75,kperp1lim=None,kperp2lim=None,kparlim=None):
+    _x1temp = []
+    _x2temp = []
+    _ytemp = []
+    _ztemp = []
+    for wvmd in dwavemodes['wavemodes']:
+        _x1temp.append(wvmd['kperp1'])
+        _x2temp.append(wvmd['kperp2'])
+        _ytemp.append(wvmd['kpar'])
+        _ztemp.append(wvmd[key])
+        
+    fig, axs = plt.subplots(1, 3, figsize=(15,5))
+   
+    hxbin0 = axs[0].hexbin(_x1temp, _x2temp, cmap='Spectral', C=_ztemp,gridsize=gridsize1,reduce_C_function=np.sum)
+    axs[0].set_xlabel('$k_{\perp,1}$')
+    axs[0].set_ylabel('$k_{\perp_2}$')
+    if(kperp1lim != None):
+        axs[0].set_xlim(-kperp1lim,kperp1lim)
+        axs[0].set_ylim(-kperp2lim,kperp2lim)
+    axs[0].set_aspect('equal')
+    plt.colorbar(hxbin0,ax=axs[0],fraction=.05)
+    
+    hxbin1 = axs[1].hexbin(_x1temp, _ytemp, cmap='Spectral', C=_ztemp,gridsize=gridsize1,reduce_C_function=np.sum)
+    axs[1].set_xlabel('$k_{\perp,1}$')
+    axs[1].set_ylabel('$k_{||}$')
+    if(kperp1lim != None):
+        axs[1].set_xlim(-kperp1lim,kperp1lim)
+        axs[1].set_ylim(-kparlim,kparlim)
+    axs[1].set_aspect('equal')
+    plt.colorbar(hxbin1,ax=axs[1],fraction=.05)
+    
+    hxbin2 = axs[2].hexbin(_x2temp, _ytemp, cmap='Spectral', C=_ztemp,gridsize=gridsize1,reduce_C_function=np.sum)
+    axs[2].set_xlabel('$k_{\perp,2}$')
+    axs[2].set_ylabel('$k_{||}$')
+    if(kperp1lim != None):
+        axs[2].set_xlim(-kperp2lim,kperp2lim)
+        axs[2].set_ylim(-kparlim,kparlim)
+    axs[2].set_aspect('equal')
+    plt.colorbar(hxbin2,ax=axs[2],fraction=.05)
+    
+    plt.subplots_adjust(wspace=.5)
+    
+    if(flnm != ''):
+        plt.savefig(flnm,format='png')
+    else:
+        plt.show()
+    plt.close()
+    
+    return hxbin0, hxbin1, hxbin2

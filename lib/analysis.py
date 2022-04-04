@@ -152,8 +152,10 @@ def get_compression_ratio(dfields,upstreambound,downstreambound):
     ----------
     dfields : dict
         field data dictionary from field_loader
-    xShock : float
-        x position of shock
+    upstreambound : float
+        x position of shock end of upstream
+    downstreambound : float
+        x position of shock end of upstream
 
     Returns
     -------
@@ -179,8 +181,8 @@ def get_compression_ratio(dfields,upstreambound,downstreambound):
                     bzsumdownstrm += dfields['bz'][i][j][k]
                     numdownstream += 1.
 
-    bzupstrm = bzsumdownstrm/numupstream
-    bzdownstrm = bzsumupstrm/numdownstream
+    bzdownstrm = bzsumdownstrm/numupstream
+    bzupstrm = bzsumupstrm/numdownstream
 
     ratio = bzdownstrm/bzupstrm
 
@@ -1435,8 +1437,8 @@ def compute_field_aligned_coord(dfields,xlim,ylim,zlim):
     from lib.array_ops import find_nearest
     from copy import deepcopy
 
-    if(np.abs(xlim[1]-xlim[0]) > 2.):
-        print("Warning, when computing field aligned coordinates, we found that xlim[1]-xlim[0] is large, are you sure you want to find ")
+    if(np.abs(xlim[1]-xlim[0]) > 4.):
+        print("Warning, when computing field aligned coordinates, we found that xlim[1]-xlim[0] is large. Consider reducing size...")
 
     #TODO: rename vpar,vperp to epar, eperp...
     xavg = (xlim[1]+xlim[0])/2.
@@ -1450,8 +1452,10 @@ def compute_field_aligned_coord(dfields,xlim,ylim,zlim):
     vperp2basis = np.cross([1.,0,0],B0) #x hat cross B0
     tol = 0.005
     _B0 = B0 / np.linalg.norm(B0)
-    if(np.abs(np.dot([_B0[0],_B0[1],_B0[2]],[1.,0.,0.])) < tol): #assumes B0 != [-1,0,0]
-        print("Warning, B0 is parallel to x (typically the shock normal)...")
+    if(np.abs(np.linalg.norm(np.cross([_B0[0],_B0[1],_B0[2]],[1.,0.,0.]))) < tol):
+        print("Warning, it seems B0 is parallel to xhat (typically the shock normal)...")
+        print("(Bx,By,Bz): ", _B0[0],_B0[1],_B0[2])
+        print("xhat: 1,0,0")
         print("Already in field aligned coordinates. Returning standard basis...")
         return np.asarray([1.,0,0]),np.asarray([0,1.,0]),np.asarray([0,0,1.])
     vperp2basis /= np.linalg.norm(vperp2basis)
@@ -1477,6 +1481,8 @@ def change_velocity_basis(dfields,dpar,xlim,ylim,zlim,debug=False):
         yy bounds of each integration box
     zlim : array
         zz bounds of each integration box
+    debug : bool, opt
+        print debug statements if energy is not conserved
 
     Returns
     -------
@@ -1504,9 +1510,9 @@ def change_velocity_basis(dfields,dpar,xlim,ylim,zlim,debug=False):
     #change basis
     dparnewbasis = {}
     dparnewbasis['ppar'],dparnewbasis['pperp1'],dparnewbasis['pperp2'] = np.matmul(changebasismatrix,[dpar['p1'][gptsparticle][:],dpar['p2'][gptsparticle][:],dpar['p3'][gptsparticle][:]])
-    # dparnewbasis['x1'] = deepcopy(dpar['x1'][:])
-    # dparnewbasis['x2'] = deepcopy(dpar['x2'][:])
-    # dparnewbasis['x3'] = deepcopy(dpar['x3'][:])
+    dparnewbasis['x1'] = deepcopy(dpar['x1'][:])
+    dparnewbasis['x2'] = deepcopy(dpar['x2'][:])
+    dparnewbasis['x3'] = deepcopy(dpar['x3'][:])
 
     #check v^2 for both basis to make sure everything matches
     if(debug):
@@ -1921,3 +1927,67 @@ def va_norm_to_vi_norm(dpar, v_w_anorm, vmax, x1, x2, y1, y2, z1, z2, vti = None
     v_w_tinorm = v_w_anorm / vti
 
     return v_w_tinorm
+
+def build_dist(dpar,vmax,dv,x1,x2,y1,y2,z1,z2):
+    """
+    """
+    gptsparticle = (x1 <= dpar['x1']) & (dpar['x1'] <= x2) & (y1 <= dpar['x2']) & (dpar['x2'] <= y2) & (z1 <= dpar['x3']) & (dpar['x3'] <= z2)
+
+    # bin into cprime(vx,vy,vz) #TODO: use function for this block (it's useful elsewhere to build distribution functions)
+    vxbins = np.arange(-vmax, vmax+dv, dv)
+    vx = (vxbins[1:] + vxbins[:-1])/2.
+    vybins = np.arange(-vmax, vmax+dv, dv)
+    vy = (vybins[1:] + vybins[:-1])/2.
+    vzbins = np.arange(-vmax, vmax+dv, dv)
+    vz = (vzbins[1:] + vzbins[:-1])/2.
+
+    hist,_ = np.histogramdd((dpar['p3'][gptsparticle][:], dpar['p2'][gptsparticle][:], dpar['p1'][gptsparticle][:]), bins=[vzbins, vybins, vxbins])
+
+    # make the bins 3d arrays TODO: use function (replace all instances of this with function)
+    _vx = np.zeros((len(vz), len(vy), len(vx)))
+    _vy = np.zeros((len(vz), len(vy), len(vx)))
+    _vz = np.zeros((len(vz), len(vy), len(vx)))
+    for i in range(0, len(vx)):
+        for j in range(0, len(vy)):
+            for k in range(0, len(vz)):
+                _vx[k][j][i] = vx[i]
+
+    for i in range(0, len(vx)):
+        for j in range(0, len(vy)):
+            for k in range(0, len(vz)):
+                _vy[k][j][i] = vy[j]
+
+    for i in range(0, len(vx)):
+        for j in range(0, len(vy)):
+            for k in range(0, len(vz)):
+                _vz[k][j][i] = vz[k]
+    vx = _vx
+    vy = _vy
+    vz = _vz
+
+    return vx,vy,vz,hist
+
+def build_dist_and_remove_average_par_over_yz(dpar,vmax,dv,dx,x1,x2,y1,y2,z1,z2,ymax,zmax):
+    """
+
+    """
+    gptsparticle = (x1 <= dpar['x1']) & (dpar['x1'] <= x2) & (y1 <= dpar['x2']) & (dpar['x2'] <= y2) & (z1 <= dpar['x3']) & (dpar['x3'] <= z2)
+
+    vx,vy,vz,full_hist = build_dist(dpar,vmax,dv,x1,x2,0,ymax,0,zmax)
+    vx,vy,vz,sub_hist = build_dist(dpar,vmax,dv,x1,x2,y1,y2,z1,z2)
+
+    #normalize sub_hist
+    npar_sub = np.sum(sub_hist)
+    sub_hist = sub_hist*np.sum(full_hist)/npar_sub
+
+    delta_hist = sub_hist - full_hist
+
+    return vx,vy,vz,delta_hist,full_hist
+
+#TODO: not used much, consider removing
+def project_dist_to_vx(vx,vy,vz,hist):
+
+    hist_vyvx = np.sum(hist,axis=0)
+    hist_vx = np.sum(hist_vyvx,axis=0)
+
+    return vx[0,0,:], hist_vx

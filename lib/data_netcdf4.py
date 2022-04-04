@@ -49,13 +49,13 @@ def save3Vdata(Hist_out, CEx_out, CEy_out, CEz_out, vx_out, vy_out, vz_out, x_ou
     from netCDF4 import Dataset
     from datetime import datetime
 
-    #normalize CEx, CEy to 1-------------------------------------------------------
-    #Here we normalize to the maximum value in either CEx, CEy, CEz
-    maxCval = max(np.amax(np.abs(CEx_out)),np.amax(np.abs(CEy_out)))
-    maxCval = max(maxCval,np.amax(np.abs(CEz_out)))
-    CEx_out /= maxCval
-    CEy_out /= maxCval
-    CEz_out /= maxCval
+    # #normalize CEx, CEy to 1-------------------------------------------------------
+    # #Here we normalize to the maximum value in either CEx, CEy, CEz
+    # maxCval = max(np.amax(np.abs(CEx_out)),np.amax(np.abs(CEy_out)))
+    # maxCval = max(maxCval,np.amax(np.abs(CEz_out)))
+    # CEx_out /= maxCval
+    # CEy_out /= maxCval
+    # CEz_out /= maxCval
 
     #save data in netcdf file-------------------------------------------------------
     # open a netCDF file to write
@@ -68,7 +68,7 @@ def save3Vdata(Hist_out, CEx_out, CEy_out, CEz_out, vx_out, vy_out, vz_out, x_ou
             _ = ncout.createVariable(key,None)
             _[:] = params[key]
 
-    ncout.description = 'dHybridR MLA data'
+    ncout.description = 'FPC data'
     ncout.generationtime = str(datetime.now())
     ncout.version = get_git_head()
 
@@ -541,6 +541,7 @@ def load2vdata(filename):
 #TODO: parse_input_file and read_input tries to do the same thing. However,
 # both functions have different potential flaws. Need to make parse function
 # that does not have flaws
+#TODO: create move to data_dhybridr (which should be data_h5 renamed)
 def parse_input_file(path):
     """
     Puts dHybridR input file into dictionary.
@@ -725,7 +726,7 @@ def build_params(inputdict, numframe):
     #define attributes/ simulation parameters
     params = {}
     params["MachAlfven"] = inputdict['plasma_injector_1_vdrift(1:3)'][0]
-    params["MachAlfvenNote"] = 'TODO: compute mach alfven for this run'
+    params["MachAlfvenNote"] = 'TODO: compute mach alfven for this run (using inflow as place holder)'
     params["thetaBn"] = shocknormalangle
     params["thetaBndesc"] = 'units of degrees'
     params["betaelec"] = betaelec
@@ -753,7 +754,8 @@ def _auto_cast(k):
 
     Returns
     -------
-
+    str(k) or True/False : str
+        Value associated with the cast of k
     """
     k = k.replace('"','').replace("'",'')
     for try_type in [int, float]:

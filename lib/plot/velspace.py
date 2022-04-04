@@ -6,9 +6,68 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 
-def plot_velsig(vx,vy,vmax,Ce,fieldkey,flnm = '',ttl=''):
+def plot_velsig(vx,vy,vz,dv,vmax,CEiproj,fieldkey,planename,ttl=r'$C_{E_i}(v_i,v_j)$; ',flnm='',xlabel=r"$v_i/v_{ti}$",ylabel=r"$v_j/v_{ti}$",plotLog=False,computeJdotE=True,axvlinex = None, maxCe = None):
+
+    from lib.array_ops import mesh_3d_to_2d
+    import matplotlib
+    from matplotlib.colors import LogNorm
+    from lib.array_ops import array_3d_to_2d
+    import matplotlib.colors as colors
+    from lib.analysis import compute_energization
+
+
+    CEiplot = CEiproj
+    yplot, xplot = mesh_3d_to_2d(vx,vy,vz,planename)
+
+    plt.style.use('postgkyl.mplstyle')
+
+    if(maxCe == None):
+        maxCe = max(np.max(CEiplot),abs(np.max(CEiplot)))
+
+    plt.figure(figsize=(6.5,6))
+    if(plotLog):
+        im = plt.pcolormesh(xplot,yplot,CEiplot,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
+    else:
+        im = plt.pcolormesh(xplot,yplot,CEiplot,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.gca().set_aspect('equal', 'box')
+    plt.grid()
+    if(computeJdotE):
+        JdotE = compute_energization(CEiplot,dv)
+        if(fieldkey == 'ex'):
+            plt.gca().set_title(ttl+'$J \cdot E_x$ = ' + "{:.2e}".format(JdotE),loc='left')
+        elif(fieldkey == 'ey'):
+            plt.gca().set_title(ttl+'$J \cdot E_y$ = ' + "{:.2e}".format(JdotE),loc='left')
+        elif(fieldkey == 'ez'):
+            plt.gca().set_title(ttl+'$J \cdot E_z$ = ' + "{:.2e}".format(JdotE),loc='left')
+        else:
+            plt.gca().set_title(ttl+'$J \cdot E_i$ = ' + "{:.2e}".format(JdotE),loc='left')
+    else:
+        plt.gca().set_title(ttl,loc='left')
+
+    clrbar = plt.colorbar(im, ax=plt.gca())#,format='%.1e')
+    if(not(plotLog)):
+        clrbar.formatter.set_powerlimits((0, 0))
+
+    plt.xlim(-vmax,vmax)
+    plt.ylim(-vmax,vmax)
+
+    if(axvlinex != None):
+        plt.axvline(axvlinex)
+
+    if(flnm != ''):
+        plt.savefig(flnm+'.png',format='png',dpi=300)
+        plt.close('all')#saves RAM
+    else:
+        plt.show()
+    plt.close()
+
+
+#TODO: update/ remove this
+def plot_velsig_old(vx,vy,vmax,Ce,fieldkey,flnm = '',ttl=''):
     """
-    Plots correlation data from make2dHistandCex,make2dHistandCey,etc
+    # Plots correlation data from make2dHistandCex,make2dHistandCey,etc
 
     Parameters
     ----------
@@ -306,11 +365,11 @@ def plot_dist(vx, vy, vmax, H,flnm = '',ttl=''):
         plt.show()
     plt.close()
 
-def dist_log_plot_3dir(vx, vy, vz, vmax, H_in, flnm = '',ttl='',xlbl=r"$v_x/v_{ti}$",ylbl=r"$v_y/v_{ti}$",zlbl=r"$v_z/v_{ti}$"):
+def dist_log_plot_3dir(vx, vy, vz, vmax, H_in, flnm = '',ttl='',xlbl=r"$v_x/v_{ti}$",ylbl=r"$v_y/v_{ti}$",zlbl=r"$v_z/v_{ti}$",plotSymLog=False):
     """
     Makes 3 panel plot of the distribution function in log space
 
-    WARNING: gourand shading seems to only work on the first figure (i.e. the colormesh for only axs[0] is smoothed)
+    WARNING: gouraud shading seems to only work on the first figure (i.e. the colormesh for only axs[0] is smoothed)
     This seems to possibly be a larger bug in matplotlib
 
     Paramters
@@ -329,6 +388,8 @@ def dist_log_plot_3dir(vx, vy, vz, vmax, H_in, flnm = '',ttl='',xlbl=r"$v_x/v_{t
         if set to default, plt.show() will be called instead
     ttl : str, optional
         title of plot
+    plotSymLog : bool, optional
+        if true, will plot 'negative and positive logarithmic' with linear scale near zero
     """
 
     plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
@@ -336,6 +397,7 @@ def dist_log_plot_3dir(vx, vy, vz, vmax, H_in, flnm = '',ttl='',xlbl=r"$v_x/v_{t
     import matplotlib
     from matplotlib.colors import LogNorm
     from lib.array_ops import array_3d_to_2d
+    import matplotlib.colors as colors
 
     from copy import copy
     H = copy(H_in) #deep copy
@@ -346,21 +408,73 @@ def dist_log_plot_3dir(vx, vy, vz, vmax, H_in, flnm = '',ttl='',xlbl=r"$v_x/v_{t
     # #set all zeros to small value
     # H[np.where(H == 0)] = 10**-100
 
-    vx_xy, vy_xy = mesh_3d_to_2d(vx,vy,vz,'xy')
     H_xy = array_3d_to_2d(H,'xy')
-    vx_xz, vz_xz = mesh_3d_to_2d(vx,vy,vz,'xz')
     H_xz = array_3d_to_2d(H,'xz')
-    vy_yz, vz_yz = mesh_3d_to_2d(vx,vy,vz,'yz')
     H_yz = array_3d_to_2d(H,'yz')
+
+    dist_log_plot_3dir_2v(vx, vy, vz, vmax, H_xy, H_xz, H_yz, flnm = flnm,ttl=ttl,xlbl=xlbl,ylbl=ylbl,zlbl=zlbl,plotSymLog=plotSymLog)
+
+def dist_log_plot_3dir_2v(vx, vy, vz, vmax, H_xy, H_xz, H_yz, flnm = '',ttl='',xlbl=r"$v_x/v_{ti}$",ylbl=r"$v_y/v_{ti}$",zlbl=r"$v_z/v_{ti}$",plotSymLog=False):
+    """
+    Makes 3 panel plot of the distribution function in log space if dist function has already been projected.
+
+    WARNING: gouraud shading seems to only work on the first figure (i.e. the colormesh for only axs[0] is smoothed)
+    This seems to possibly be a larger bug in matplotlib
+
+    Paramters
+    ---------
+    vx : 2d array
+        vx velocity grid
+    vy : 2d array
+        vy velocity grid
+    vmax : float
+        specifies signature domain in velocity space
+        (assumes square and centered about zero)
+    H_in : 2d array
+        distribution data
+    flnm : str, optional
+        specifies filename if plot is to be saved as png.
+        if set to default, plt.show() will be called instead
+    ttl : str, optional
+        title of plot
+    plotSymLog : bool, optional
+        if true, will plot 'negative and positive logarithmic' with linear scale near zero
+    """
+
+    plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
+    from lib.array_ops import mesh_3d_to_2d
+    import matplotlib
+    from matplotlib.colors import LogNorm
+    from lib.array_ops import array_3d_to_2d
+    import matplotlib.colors as colors
+
+    #from copy import copy
+    #H = copy(H_in) #deep copy
+
+    #get lowest nonzero number
+    minval = np.min([np.min(H_xy[np.nonzero(H_xy)]),np.min(H_xz[np.nonzero(H_xz)]),np.min(H_yz[np.nonzero(H_yz)])])
+    maxval = np.max([H_xy, H_xz, H_yz])
+
+    # #set all zeros to small value
+    # H[np.where(H == 0)] = 10**-100
+
+    vx_xy, vy_xy = mesh_3d_to_2d(vx,vy,vz,'xy')
+    vx_xz, vz_xz = mesh_3d_to_2d(vx,vy,vz,'xz')
+    vy_yz, vz_yz = mesh_3d_to_2d(vx,vy,vz,'yz')
 
     fig, axs = plt.subplots(1,3,figsize=(3*5,1*5))
     cmap = matplotlib.cm.get_cmap('plasma')
     bkgcolor = 'black'
     numtks = 5
-    cmap.set_under(bkgcolor) #this doesn't really work like it's supposed to, so we just change the background color to black
-    #ax = plt.gca()
-    axs[0].set_facecolor(bkgcolor)
-    pcm0 = axs[0].pcolormesh(vy_xy, vx_xy, H_xy, cmap=cmap, shading="gouraud",norm=LogNorm(vmin=minval, vmax=H.max()))
+    if(not(plotSymLog)):
+        cmap.set_under(bkgcolor) #this doesn't really work like it's supposed to, so we just change the background color to black
+
+    if(plotSymLog):
+        _vmax = np.max([-1*np.min(H_xy),np.max(H_xy)])
+        pcm0 = axs[0].pcolormesh(vy_xy, vx_xy, H_xy, cmap='PiYG', shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-1*_vmax, vmax=_vmax))
+    else:
+        axs[0].set_facecolor(bkgcolor)
+        pcm0 = axs[0].pcolormesh(vy_xy, vx_xy, H_xy, cmap=cmap, shading="gouraud",norm=LogNorm(vmin=minval, vmax=maxval))
     axs[0].set_xlim(-vmax, vmax)
     axs[0].set_ylim(-vmax, vmax)
     axs[0].set_xticks(np.linspace(-vmax, vmax, numtks))
@@ -376,8 +490,14 @@ def dist_log_plot_3dir(vx, vy, vz, vmax, H_in, flnm = '',ttl='',xlbl=r"$v_x/v_{t
     #axs[0].colorbar(cmap = cmap, extend='min')
     #axs[0].gcf().subplots_adjust(bottom=0.15)
 
-    axs[1].set_facecolor(bkgcolor)
-    pcm1 = axs[1].pcolormesh(vz_xz,vx_xz,H_xz, cmap=cmap, shading="gourand",norm=LogNorm(vmin=minval, vmax=H.max()))
+    #if data is 2V only, then there is only 1 point in vz, so it can't be plotted by pcolormesh
+    #TODO: clean this up
+    if(plotSymLog):
+        _vmax = np.max([-1*np.min(H_xz),np.max(H_xz)])
+        pcm1 = axs[1].pcolormesh(vz_xz, vx_xz, H_xz, cmap='PiYG', shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-1*_vmax, vmax=_vmax))
+    else:
+        axs[1].set_facecolor(bkgcolor)
+        pcm1 = axs[1].pcolormesh(vz_xz,vx_xz,H_xz, cmap=cmap, shading="gouraud",norm=LogNorm(vmin=minval, vmax=maxval))
     axs[1].set_xlim(-vmax, vmax)
     axs[1].set_ylim(-vmax, vmax)
     axs[1].set_xticks(np.linspace(-vmax, vmax, numtks))
@@ -388,8 +508,12 @@ def dist_log_plot_3dir(vx, vy, vz, vmax, H_in, flnm = '',ttl='',xlbl=r"$v_x/v_{t
     axs[1].set_aspect('equal', 'box')
     #axs[1].colorbar(cmap = cmap, extend='min')
 
-    axs[2].set_facecolor(bkgcolor)
-    pcm2 = axs[2].pcolormesh(vz_yz,vy_yz,H_yz, cmap=cmap, shading="gourand",norm=LogNorm(vmin=minval, vmax=H.max()))
+    if(plotSymLog):
+        _vmax = np.max([-1*np.min(H_yz),np.max(H_yz)])
+        pcm2 = axs[2].pcolormesh(vz_yz, vy_yz, H_yz, cmap='PiYG', shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-1*_vmax, vmax=_vmax))
+    else:
+        axs[2].set_facecolor(bkgcolor)
+        pcm2 = axs[2].pcolormesh(vz_yz,vy_yz,H_yz, cmap=cmap, shading="gouraud",norm=LogNorm(vmin=minval, vmax=maxval))
     axs[2].set_xlim(-vmax, vmax)
     axs[2].set_ylim(-vmax, vmax)
     axs[2].set_xticks(np.linspace(-vmax, vmax, numtks))
@@ -543,7 +667,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         axs[1,0].text(-vmax*2.6,0, '$\Theta_{Bn} = $ ' + str(params['thetaBn']), ha='center', rotation=90, wrap=False)
     if(computeJdotE):
         JdotE = compute_energization(CEx_xy,dv)
-        axs[1,0].title.set_text('$C_{Ex}(v_x,v_y)$; $J \cdot E_x$ = ' + "{:.2e}".format(JdotE))
+        axs[1,0].set_title('$J \cdot E_x$ = ' + "{:.2e}".format(JdotE),loc='left')
     clrbar10 = plt.colorbar(im10, ax=axs[1,0])#,format='%.1e')
     if(not(plotLog)):
         clrbar10.formatter.set_powerlimits((0, 0))
@@ -560,7 +684,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     axs[1,1].grid()
     if(computeJdotE):
         JdotE = compute_energization(CEx_xz,dv)
-        axs[1,1].title.set_text('$C_{Ex}(v_x,v_y)$; $J \cdot E_x$ = ' + "{:.2e}".format(JdotE))
+        axs[1,1].set_title('$J \cdot E_x$ = ' + "{:.2e}".format(JdotE),loc='left')
     clrbar11 = plt.colorbar(im11, ax=axs[1,1])#,format='%.1e')
     if(not(plotLog)):
         clrbar11.formatter.set_powerlimits((0, 0))
@@ -577,7 +701,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     axs[1,2].grid()
     if(computeJdotE):
         JdotE = compute_energization(CEx_yz.T,dv)
-        axs[1,2].title.set_text('$C_{Ex}(v_y,v_z)$; $J \cdot E_x$ = ' + "{:.2e}".format(JdotE))
+        axs[1,2].set_title('$J \cdot E_x$ = ' + "{:.2e}".format(JdotE),loc='left')
     clrbar12 = plt.colorbar(im12, ax=axs[1,2])#,format='%.1e')
     if(not(plotLog)):
         clrbar12.formatter.set_powerlimits((0, 0))
@@ -597,7 +721,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         axs[2,0].text(-vmax*2.6,0,'$x/d_i = $' + str(xpos), ha='center', rotation=90, wrap=False)
     if(computeJdotE):
         JdotE = compute_energization(CEy_xy,dv)
-        axs[2,0].title.set_text('$C_{Ey}(v_x,v_y)$; $J \cdot E_y$ = ' + "{:.2e}".format(JdotE))
+        axs[2,0].set_title('$J \cdot E_y$ = ' + "{:.2e}".format(JdotE),loc='left')
     clrbar20 = plt.colorbar(im20, ax=axs[2,0])#,format='%.1e')
     if(not(plotLog)):
         clrbar20.formatter.set_powerlimits((0, 0))
@@ -614,7 +738,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     axs[2,1].grid()
     if(computeJdotE):
         JdotE = compute_energization(CEy_xz,dv)
-        axs[2,1].title.set_text('$C_{Ey}(v_x,v_z)$; $J \cdot E_y$ = ' + "{:.2e}".format(JdotE))
+        axs[2,1].set_title('$J \cdot E_y$ = ' + "{:.2e}".format(JdotE),loc='left')
     clrbar21 = plt.colorbar(im21, ax=axs[2,1])#,format='%.1e')
     if(not(plotLog)):
         clrbar21.formatter.set_powerlimits((0, 0))
@@ -631,7 +755,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     axs[2,2].grid()
     if(computeJdotE):
         JdotE = compute_energization(CEy_yz.T,dv)
-        axs[2,2].title.set_text('$C_{Ey}(v_y,v_z)$; $J \cdot E_y$ = ' + "{:.2e}".format(JdotE))
+        axs[2,2].set_title('$J \cdot E_y$ = ' + "{:.2e}".format(JdotE),loc='left')
     clrbar22 = plt.colorbar(im22, ax=axs[2,2])#,format='%.1e')
     if(not(plotLog)):
         clrbar22.formatter.set_powerlimits((0, 0))
@@ -652,7 +776,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         axs[3,0].text(-vmax*2.6,0, metadata, ha='center', rotation=90, wrap=False)
     if(computeJdotE):
         JdotE = compute_energization(CEz_xy,dv)
-        axs[3,0].title.set_text('$C_{Ez}(v_x,v_y)$; $J \cdot E_z$ = ' + "{:.2e}".format(JdotE))
+        axs[3,0].set_title('$J \cdot E_z$ = ' + "{:.2e}".format(JdotE),loc='left')
     clrbar30 = plt.colorbar(im30, ax=axs[3,0])#,format='%.1e')
     if(not(plotLog)):
         clrbar30.formatter.set_powerlimits((0, 0))
@@ -670,7 +794,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     axs[3,1].grid()
     if(computeJdotE):
         JdotE = compute_energization(CEz_xz,dv)
-        axs[3,1].title.set_text('$C_{Ez}(v_x,v_z)$; $J \cdot E_z$ = ' + "{:.2e}".format(JdotE))
+        axs[3,1].set_title('$J \cdot E_z$ = ' + "{:.2e}".format(JdotE),loc='left')
     clrbar31 = plt.colorbar(im31, ax=axs[3,1])#,format='%.1e')
     if(not(plotLog)):
         clrbar31.formatter.set_powerlimits((0, 0))
@@ -688,10 +812,15 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     axs[3,2].grid()
     if(computeJdotE):
         JdotE = compute_energization(CEz_yz.T,dv)
-        axs[3,2].title.set_text('$C_{Ez}(v_y,v_z)$; $J \cdot E_z$ = ' + "{:.2e}".format(JdotE))
+        axs[3,2].set_title('$J \cdot E_z$ = ' + "{:.2e}".format(JdotE),loc='left')
     clrbar32 = plt.colorbar(im32, ax=axs[3,2])#,format='%.1e')
     if(not(plotLog)):
         clrbar32.formatter.set_powerlimits((0, 0))
+
+    for _i in range(0,4):
+        for _j in range(0,3):
+            axs[_i,_j].set_xlim(-vmax,vmax)
+            axs[_i,_j].set_ylim(-vmax,vmax)
 
     #set ticks
     intvl = 10.
@@ -827,3 +956,43 @@ def make_superplot_gif(vx, vy, vz, vmax, Hist, CEx, CEy, CEz, x, directory):
                                         CEz_xy,CEz_xz, CEz_yz,
                                         flnm = flnm, ttl = 'x(di): ' + str(x[i]))
         plt.close('all') #saves RAM
+
+def project_dist_1d(vx,vy,vz,hist,axis):
+    """
+
+    """
+    import matplotlib.ticker as mtick
+
+    if(axis == 'vx'):
+        plotx = vx[0,0,:]
+        hist_vyvx = np.sum(hist,axis=0)
+        hist_vx = np.sum(hist_vyvx,axis=0)
+        ploty = hist_vx
+
+    elif(axis == 'vy'):
+        plotx = vy[0,:,0]
+        hist_vyvx = np.sum(hist,axis=0)
+        hist_vy = np.sum(hist_vyvx,axis=1)
+        ploty = hist_vy
+
+    elif(axis == 'vz'):
+        plotx = vz[:,0,0]
+        hist_vzvy = np.sum(hist,axis=2)
+        hist_vz = np.sum(hist_vzvy,axis=1)
+        ploty = hist_vz
+
+    else:
+        print("Please uses axis = vx, vy, or vz...")
+        return
+
+    plotymax = 1.1*np.max([np.max(ploty),-1*np.min(ploty)])
+
+    plt.figure()
+    plt.ylim(-plotymax,plotymax)
+    plt.plot(plotx,ploty,color='black',linewidth=1.5)
+    plt.gca().set_aspect(1.0/plt.gca().get_data_ratio(), adjustable='box')
+    plt.gca().yaxis.set_major_formatter(mtick.FormatStrFormatter('%.2e'))
+    plt.xlabel(axis+'/vti')
+    plt.grid()
+    plt.ylabel('f('+axis+'/vti)')
+    plt.show()

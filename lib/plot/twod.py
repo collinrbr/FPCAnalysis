@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 
-def make_field_pmesh(ddict,fieldkey,planename,flnm = '',takeaxisaverage=False, xxindex=float('nan'), yyindex=float('nan'), zzindex=float('nan'), xlimmin=None,xlimmax=None):
+def make_field_pmesh(ddict,fieldkey,planename,flnm = '',takeaxisaverage=False, xxindex=float('nan'), yyindex=float('nan'), zzindex=float('nan'), xlimmin=None,xlimmax=None,colormap='inferno',rectangles=None):
     """
     Makes pmesh of given field
 
@@ -15,7 +15,8 @@ def make_field_pmesh(ddict,fieldkey,planename,flnm = '',takeaxisaverage=False, x
     ddict : dict
         field or flow data dictionary
     fieldkey : str
-        name of field you want to plot (ex, ey, ez, bx, by, bz, ux, uy, uz)
+        name of field you want to plot (ex, ey, ez, bx, by, bz, btot, ux, uy, uz)
+        btot is a custom routine for this function only
     planename : str
         name of plane you want to plot (xy, xz, yz)
     flnm : str
@@ -32,6 +33,10 @@ def make_field_pmesh(ddict,fieldkey,planename,flnm = '',takeaxisaverage=False, x
         minimum plotted x value (ignored if xx is not in plane)
     xlimmax : float
         maximum plotted x value (ignored if xx is not in plane)
+    colormap : string
+        name of matplotlib colormap to use
+    rectangles : [[x1,x2,y1,y2],[x1,x2,y1,y2],....]
+        array of 4 coordinates describing retanglular boxes to be put onto figure
     """
 
     fieldttl = ''
@@ -53,6 +58,15 @@ def make_field_pmesh(ddict,fieldkey,planename,flnm = '',takeaxisaverage=False, x
         fieldttl = '$U_y'
     elif(fieldkey == 'uz'):
         fieldttl = '$U_z'
+    elif(fieldkey == 'btot'):
+        fieldttl = '$|B|'
+        ddict['btot_xx']=ddict['bx_xx']
+        ddict['btot_yy']=ddict['bx_yy']
+        ddict['btot_zz']=ddict['bx_zz']
+    elif(fieldkey == 'den'):
+        fieldttl = '$n'
+    else:
+        fieldttl = fieldkey+'$'
 
     if(planename=='xy'):
         ttl = fieldttl+'(x,y)$ at '
@@ -81,14 +95,34 @@ def make_field_pmesh(ddict,fieldkey,planename,flnm = '',takeaxisaverage=False, x
         axisidx = 2 #used to take average along x if no index is specified
         axis = '_xx'
 
-    if(takeaxisaverage):
-        fieldpmesh = np.mean(ddict[fieldkey],axis=axisidx)
-    elif(planename == 'xy'):
-        fieldpmesh = np.asarray(ddict[fieldkey])[zzindex,:,:]
-    elif(planename == 'xz'):
-        fieldpmesh = np.asarray(ddict[fieldkey])[:,yyindex,:]
-    elif(planename == 'yz'):
-        fieldpmesh = np.asarray(ddict[fieldkey])[:,:,xxindex]
+    if(fieldkey != 'btot'):
+        if(takeaxisaverage):
+            fieldpmesh = np.mean(ddict[fieldkey],axis=axisidx)
+        elif(planename == 'xy'):
+            fieldpmesh = np.asarray(ddict[fieldkey])[zzindex,:,:]
+        elif(planename == 'xz'):
+            fieldpmesh = np.asarray(ddict[fieldkey])[:,yyindex,:]
+        elif(planename == 'yz'):
+            fieldpmesh = np.asarray(ddict[fieldkey])[:,:,xxindex]
+
+    #custom routine
+    if(fieldkey == 'btot'):
+        if(planename == 'xy'):
+            fieldpmeshbx = np.asarray(ddict['bx'])[zzindex,:,:]
+            fieldpmeshby = np.asarray(ddict['by'])[zzindex,:,:]
+            fieldpmeshbz = np.asarray(ddict['bz'])[zzindex,:,:]
+            fieldpmesh = np.sqrt((fieldpmeshbx**2+fieldpmeshby**2+fieldpmeshbz**2))
+
+        elif(planename == 'xz'):
+            fieldpmeshbx = np.asarray(ddict['bx'])[:,yyindex,:]
+            fieldpmeshby = np.asarray(ddict['by'])[:,yyindex,:]
+            fieldpmeshbz = np.asarray(ddict['bz'])[:,yyindex,:]
+            fieldpmesh = np.sqrt((fieldpmeshbx**2+fieldpmeshby**2+fieldpmeshbz**2))
+        elif(planename == 'yz'):
+            fieldpmeshbx = np.asarray(ddict['bx'])[:,:,xxindex]
+            fieldpmeshby = np.asarray(ddict['by'])[:,:,xxindex]
+            fieldpmeshbz = np.asarray(ddict['bz'])[:,:,xxindex]
+            fieldpmesh = np.sqrt((fieldpmeshbx**2+fieldpmeshby**2+fieldpmeshbz**2))
 
     #make 2d arrays for more explicit plotting
     xplot = np.zeros((len(yplot1d),len(xplot1d)))
@@ -106,7 +140,12 @@ def make_field_pmesh(ddict,fieldkey,planename,flnm = '',takeaxisaverage=False, x
         plt.figure(figsize=(2*6.5,6))
     else:
         plt.figure(figsize=(6.5,6))
-    plt.pcolormesh(xplot, yplot, fieldpmesh, cmap="inferno", shading="gouraud")
+
+    if(colormap != 'inferno' and colormap != 'Greens'):
+        vmax = np.max(np.abs(fieldpmesh))
+        plt.pcolormesh(xplot, yplot, fieldpmesh, cmap=colormap, shading="gouraud",vmin=-1*vmax,vmax=vmax)
+    else:
+        plt.pcolormesh(xplot, yplot, fieldpmesh, cmap=colormap, shading="gouraud")
     if(takeaxisaverage):
         plt.title(ttl,loc="right")
     elif(planename == 'xy'):
@@ -118,6 +157,19 @@ def make_field_pmesh(ddict,fieldkey,planename,flnm = '',takeaxisaverage=False, x
     plt.xlabel(xlbl)
     plt.ylabel(ylbl)
     plt.grid(color="k", linestyle="-", linewidth=1.0, alpha=0.6)
+
+    if(rectangles != None):
+        import matplotlib.patches as patches
+        #print("Debug: plotting rectangles! without facecolor")
+        for rect in rectangles:
+            print(rect)
+            x1r = rect[0]
+            y1r = rect[2]
+            widthr = rect[1]-rect[0]
+            heightr = rect[3]-rect[2]
+            rectim = patches.Rectangle((x1r,y1r),widthr,heightr,ls='--',linewidth=1,edgecolor='red',facecolor='none',zorder=5)
+            plt.gca().add_patch(rectim)
+
     #clb = plt.colorbar(format="%.1f", ticks=np.linspace(-maxCe, maxCe, 8), fraction=0.046, pad=0.04) #TODO: make static colorbar based on max range of C
     plt.colorbar()
     #plt.setp(plt.gca(), aspect=1.0)
@@ -127,6 +179,89 @@ def make_field_pmesh(ddict,fieldkey,planename,flnm = '',takeaxisaverage=False, x
     if(flnm != ''):
         plt.savefig(flnm+'.png',format='png',dpi=300)
         plt.close('all')#saves RAM
+    else:
+        plt.show()
+        plt.close()
+
+def make_super_pmeshplot(dfields,dflow,dden,zzindex = 0,flnm=''):
+
+    fig, axs = plt.subplots(8,figsize=(10,8*2),sharex=True)
+
+    fig.subplots_adjust(hspace=.1)
+
+    #compute Btot
+    btot = np.zeros(dfields['bx'].shape)
+    for _i in range(0,len(btot)):
+        for _j in range(0,len(btot[_i])):
+            for _k in range(0,len(btot[_i][_j])):
+                btot[_i,_j,_k] = np.linalg.norm([dfields['bx'][_i,_j,_k],dfields['by'][_i,_j,_k],dfields['bz'][_i,_j,_k]])
+    btot0 = np.mean(btot[:,:,-1])
+
+    #set colorbar range of B_i plots. This is necessary if they are to share a colorbar
+    vmin = np.min([dfields['bx'][zzindex,:,:]/btot0,dfields['by'][zzindex,:,:]/btot0,dfields['bz'][zzindex,:,:]/btot0])
+    vmax = np.max([dfields['bx'][zzindex,:,:]/btot0,dfields['by'][zzindex,:,:]/btot0,dfields['bz'][zzindex,:,:]/btot0])
+    vmax = np.max([-vmin,vmax])
+
+    #Bx
+    bx_im = axs[0].pcolormesh(dfields['bx_xx'], dfields['bx_yy'], dfields['bx'][zzindex,:,:]/btot0, cmap="RdYlBu", shading="gouraud", vmin=-1*vmax,vmax=vmax)
+    bi_im = bx_im #Mappable used when making color bar. Will use one with largest value
+    bi_max = np.max(dfields['bx'][zzindex,:,:])
+
+    #By
+    by_im = axs[1].pcolormesh(dfields['by_xx'], dfields['by_yy'], dfields['by'][zzindex,:,:]/btot0, cmap="RdYlBu", shading="gouraud", vmin=-1*vmax,vmax=vmax)
+    if(np.max(dfields['by'][zzindex,:,:]) > bi_max):
+        bi_im = by_im
+        bi_max = np.max(dfields['by'][zzindex,:,:])
+
+    #Bz
+    bz_im = axs[2].pcolormesh(dfields['bz_xx'], dfields['bz_yy'], dfields['bz'][zzindex,:,:]/btot0, cmap="RdYlBu", shading="gouraud", vmin=-1*vmax,vmax=vmax)
+    if(np.max(dfields['bz'][zzindex,:,:]) > bi_max):
+        bi_im = bz_im
+        bi_max = np.max(dfields['bz'][zzindex,:,:])
+
+    fig.colorbar(bi_im,aspect=50,shrink=1, ax=axs.ravel().tolist()[0:3])
+
+
+    #Btot
+    btot_im = axs[3].pcolormesh(dfields['bx_xx'], dfields['bx_yy'], btot[zzindex,:,:]/btot0, cmap="magma", shading="gouraud")
+    fig.colorbar(btot_im, ax=axs[3])
+
+    #den
+    den_im = axs[4].pcolormesh(dden['den_xx'],dden['den_yy'],dden['den'][zzindex,:,:], cmap="Greens", shading="gouraud")
+    fig.colorbar(den_im, ax=axs[4])
+
+    #vx
+    vmax = np.max(np.abs(dflow['ux'][zzindex,:,:]))
+    vx_im = axs[5].pcolormesh(dflow['ux_xx'],dflow['ux_yy'],dflow['ux'][zzindex,:,:], vmin=-1*vmax, vmax=vmax, cmap="bwr", shading="gouraud")
+    fig.colorbar(vx_im, ax=axs[5])
+
+    #vy
+    vmax = np.max(np.abs(dflow['uy'][zzindex,:,:]))
+    vy_im = axs[6].pcolormesh(dflow['uy_xx'],dflow['uy_yy'],dflow['uy'][zzindex,:,:], vmin=-1*vmax, vmax=vmax, cmap="bwr", shading="gouraud")
+    fig.colorbar(vy_im, ax=axs[6])
+
+    #vz
+    vmax = np.max(np.abs(dflow['uz'][zzindex,:,:]))
+    vz_im = axs[7].pcolormesh(dflow['uz_xx'],dflow['uz_yy'],dflow['uz'][zzindex,:,:], vmin=-1*vmax, vmax=vmax, cmap="bwr", shading="gouraud")
+    fig.colorbar(vz_im, ax=axs[7])
+
+    #print axes labels
+    axs[7].set_xlabel('$x$ ($d_i$)')
+    for _i in range(0,len(axs)):
+        axs[_i].set_ylabel('$y$ ($d_i$)')
+
+    #print labels of each plot
+    import matplotlib.patheffects as PathEffects
+    pltlabels = ['$B_x/B_{0,up}$','$B_y/B_{0,up}$','$B_z/B_{0,up}$','$|B|/B_{0,up}$','$n/n_{up}$','$v_x/v_{th,i}$','$v_y/v_{th,i}$','$v_z/v_{th,i}$']
+    _xtext = dfields['bx_xx'][int(len(dfields['bx_xx'])*.75)]
+    _ytext = dfields['bx_yy'][int(len(dfields['bx_yy'])*.6)]
+    for _i in range(0,len(axs)):
+        _txt = axs[_i].text(_xtext,_ytext,pltlabels[_i],color='white',fontsize=24)
+        _txt.set_path_effects([PathEffects.withStroke(linewidth=2, foreground='black')])
+
+    if(flnm != ''):
+        plt.savefig(flnm+'.png',format='png',dpi=300)
+        plt.close()
     else:
         plt.show()
         plt.close()

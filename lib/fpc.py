@@ -50,7 +50,7 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
         name of direction you want to take the derivative with respect to
         x,y,or z
         *should match the direction of the fieldkey*
-    checkFrameandGrabSubset : bool(opt)
+    checkFrameandGrabSubset : bool(opt) TODO: RENAME THIS VAR
         check if all given particles are in box and in correct frame
         should typically be true unless trying to save RAM
 
@@ -82,17 +82,17 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
         if(directionkey != 'z'):
             print("Warning, direction of derivative does not match field direction")
 
-    # find average E field based on provided bounds #TODO: remove this
-    gfieldptsx = (x1 <= dfields[fieldkey+'_xx']) & (dfields[fieldkey+'_xx'] <= x2)
-    gfieldptsy = (y1 <= dfields[fieldkey+'_yy']) & (dfields[fieldkey+'_yy'] <= y2)
-    gfieldptsz = (z1 <= dfields[fieldkey+'_zz']) & (dfields[fieldkey+'_zz'] <= z2)
-
-    goodfieldpts = []
-    for i in range(0, len(dfields['ex_xx'])):
-        for j in range(0, len(dfields['ex_yy'])):
-            for k in range(0, len(dfields['ex_zz'])):
-                if(gfieldptsx[i] and gfieldptsy[j] and gfieldptsz[k]):
-                    goodfieldpts.append(dfields[fieldkey][k][j][i])
+    # # find average E field based on provided bounds #TODO: remove this
+    # gfieldptsx = (x1 <= dfields[fieldkey+'_xx']) & (dfields[fieldkey+'_xx'] <= x2)
+    # gfieldptsy = (y1 <= dfields[fieldkey+'_yy']) & (dfields[fieldkey+'_yy'] <= y2)
+    # gfieldptsz = (z1 <= dfields[fieldkey+'_zz']) & (dfields[fieldkey+'_zz'] <= z2)
+    #
+    # goodfieldpts = []
+    # for i in range(0, len(dfields['ex_xx'])):
+    #     for j in range(0, len(dfields['ex_yy'])):
+    #         for k in range(0, len(dfields['ex_zz'])):
+    #             if(gfieldptsx[i] and gfieldptsy[j] and gfieldptsz[k]):
+    #                 goodfieldpts.append(dfields[fieldkey][k][j][i])
 
     # define mask that includes particles within range
     #print('debug: ', x1,x2,y1,y2,z1,z2,'more debug: ',type(dpar['x1']),len(dpar['x1']),type(dpar['x2']),len(dpar['x2']),type(dpar['x3']),len(dpar['x3']))
@@ -117,8 +117,8 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
 
         totalPtcl = np.sum(gptsparticle)
 
-        # avgfield = np.average(goodfieldpts)
-        totalFieldpts = np.sum(goodfieldpts)
+        # # avgfield = np.average(goodfieldpts)
+        # totalFieldpts = np.sum(goodfieldpts)
 
         if(dfields['Vframe_relative_to_sim'] != vshock):
             "WARNING: dfields is not in the same frame as the provided vshock"
@@ -139,15 +139,53 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
         del dparsubset
 
     else:
+        gptsparticle = (x1 <= dpar['x1']) & (dpar['x1'] <= x2) & (y1 <= dpar['x2']) & (dpar['x2'] <= y2) & (z1 <= dpar['x3']) & (dpar['x3'] <= z2)
+        try: #This is hacky TODO: clean this up by simply returning hist and cor arrays full of zeros
+            dparsubset = {
+              'p1': dpar['p1'][gptsparticle][:],
+              'p2': dpar['p2'][gptsparticle][:],
+              'p3': dpar['p3'][gptsparticle][:],
+              'x1': dpar['x1'][gptsparticle][:],
+              'x2': dpar['x2'][gptsparticle][:],
+              'x3': dpar['x3'][gptsparticle][:],
+              'Vframe_relative_to_sim': dpar['Vframe_relative_to_sim']
+            }
+        except:
+            dparsubset = {
+              'p1': np.asarray([0.]),
+              'p2': np.asarray([0.]),
+              'p3': np.asarray([0.]),
+              'x1': np.asarray([0.]),
+              'x2': np.asarray([0.]),
+              'x3': np.asarray([0.]),
+              'Vframe_relative_to_sim': dpar['Vframe_relative_to_sim']
+            }
+
+            totalPtcl = len(dpar['p1'][:])
+            totalFieldpts = -1 # TODO just remove this varaible, doesn't make sense anymore
+            cprimebinned, hist, vx, vy, vz = compute_cprime_hist(dparsubset, dfields, fieldkey, vmax, dv)
+
+            cor = compute_cor_from_cprime(cprimebinned, vx, vy, vz, dv, directionkey)
+            del cprimebinned
+
+            #make data empty
+            totalPtcl = 0.
+            totalFieldpts = -1
+            hist = np.zeros(hist.shape)
+            cor = np.zeros(hist.shape)
+
+            return vx, vy, vz, totalPtcl, totalFieldpts, hist, cor
+
         totalPtcl = len(dpar['p1'][:])
         totalFieldpts = -1 # TODO just remove this varaible, doesn't make sense anymore
         #TODO: check frame!!!!!!
         dpar['p1'] -= vshock #TODO: clean this up
-        cprimebinned, hist, vx, vy, vz = compute_cprime_hist(dpar, dfields, fieldkey, vmax, dv)
+        cprimebinned, hist, vx, vy, vz = compute_cprime_hist(dparsubset, dfields, fieldkey, vmax, dv)
 
     cor = compute_cor_from_cprime(cprimebinned, vx, vy, vz, dv, directionkey)
     del cprimebinned
 
+    totalFieldpts = -1
     return vx, vy, vz, totalPtcl, totalFieldpts, hist, cor
 
 #TODO: lot of redundancy is this library. FIX THIS
@@ -155,6 +193,8 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
 #2. compute Hist redundantly
 #2. a can improve CEx, CEy, CEz calc by not computing hist redundantly
 #3. dont compute subset each time for CEx, CEy, CEz
+
+#TODO: clean up sub routine of checkFrameandGrabSubset
 
 def _comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock, checkFrameandGrabSubset=True):
     """
@@ -653,6 +693,102 @@ def compute_correlation_over_x(dfields, dparticles, vmax, dv, dx, vshock, xlim=N
 
     return CEx_out, CEy_out, CEz_out, x_out, Hist_out, vx, vy, vz, num_par_out
 
+def compute_correlation_over_x_field_aligned(dfields, dparticles, vmax, dv, dx, vshock, xlim=None, ylim=None, zlim=None):
+    """
+    Computes f(x; vy, vx), CEx(x; vy, vx), and CEx(x; vy, vx) along different slices (i.e. thin analysis boxes) of x
+
+    Parameters
+    ----------
+    dfields : dict
+        field data dictionary from field_loader
+    dparticles : dict
+        xx vx yy vy data dictionary from readParticlesPosandVelocityOnly
+    vmax : float
+        specifies signature domain in velocity space
+        (assumes square and centered about zero)
+    dv : float
+        spacing between points we sample in velocity space. (Square in vx, vy)
+    dx : float
+        width of x slice
+    vshock : float
+        velocity of shock in x direction
+    xlim : array
+        array of limits in x, defaults to None
+    ylim : array
+        array of limits in y, defaults to None
+    zlim : array
+        array of limits in z, defaults to None
+
+    Returns
+    -------
+    CEperp2_out : 4d array
+        CEperp2(x; vz, vy, vx) data
+    CEperp1_out : 4d array
+        CEperp1(x; vz, vy, vx) data
+    CEpar_out : 4d array
+        CEpar(x; vz, vy, vx) data
+    x_out : 1d array
+        average x position of each slice
+    Hist_out : 4d array
+        f(x; vz, vy, vx) data
+    vperp2 : 3d array
+        vx velocity grid
+    vperp1 : 3d array
+        vy velocity grid
+    vpar : 3d array
+        vz velocity grid
+    num_par_out : 1d array
+        number of particles in box
+    """
+
+    CEperp2_out = []
+    CEperp1_out = []
+    CEpar_out = []
+    x_out = []
+    Hist_out = []
+    num_par_out = []
+
+    if xlim is not None:
+        x1 = xlim[0]
+        x2 = x1+dx
+        xEnd = xlim[1]
+    # If xlim is None, use lower x edge to upper x edge extents
+    else:
+        x1 = dfields['ex_xx'][0]
+        x2 = x1 + dx
+        xEnd = dfields['ex_xx'][-1]
+    if ylim is not None:
+        y1 = ylim[0]
+        y2 = ylim[1]
+    # If ylim is None, use lower y edge to lower y edge + dx extents
+    else:
+        y1 = dfields['ex_yy'][0]
+        y2 = y1 + dx
+    if zlim is not None:
+        z1 = zlim[0]
+        z2 = zlim[1]
+    # If zlim is None, use lower z edge to lower z edge + dx extents
+    else:
+        z1 = dfields['ex_zz'][0]
+        z2 = z1 + dx
+
+    while(x2 <= xEnd):
+        print('scan pos-> x1: ',x1,' x2: ',x2,' y1: ',y1,' y2: ',y2,' z1: ', z1,' z2: ',z2)
+        vperp2, vperp1, vpar, totalPtcl, totalFieldpts, Hist, CEperp2 = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock, 'eperp2', 'eperp2') #TODO: distinguish eperp2 the field and eperp2 the basis key using different names here(repeat for eperp1 and epar)
+        vperp2, vperp1, vpar, totalFieldpts, Hist, CEperp1 = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock, 'eperp1', 'eperp1')
+        vperp2, vperp1, vpar, totalFieldpts, Hist, CEpar = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock, 'epar', 'epar')
+        print('num particles in box: ', totalPtcl)
+        x_out.append(np.mean([x1,x2]))
+        CEperp2_out.append(CEperp2)
+        CEperp1_out.append(CEperp1)
+        CEpar_out.append(CEpar)
+        Hist_out.append(Hist)
+        num_par_out.append(totalPtcl)
+        x1 += dx
+        x2 += dx
+
+    return CEperp2_out, CEperp1_out, CEpar_out, x_out, Hist_out, vperp2, vperp1, vpar, num_par_out
+
 
 def get_3d_weights(xx, yy, zz, idxxx1, idxxx2, idxyy1, idxyy2, idxzz1, idxzz2, dfields, fieldkey):
     """
@@ -726,8 +862,71 @@ def get_3d_weights(xx, yy, zz, idxxx1, idxxx2, idxyy1, idxyy2, idxzz1, idxzz2, d
 
     return w1, w2, w3, w4, w5, w6, w7, w8
 
+def weighted_field_average(xx, yy, zz, dfields, fieldkey, changebasismatrix = None):
+    """
+    Wrapper function for _weighted_field_average.
 
-def weighted_field_average(xx, yy, zz, dfields, fieldkey):
+    Used to correlate to fields in field aligned coordinates when relevant
+
+    See _weighted_field_average documentation
+    """
+
+    fieldaligned_keys = ['epar','eperp1','eperp2','bpar','bperp1','bperp2']
+    if(fieldkey in fieldaligned_keys):
+        #from lib.analysis import compute_field_aligned_coord
+        #from lib.array_ops import find_nearest
+        # _xxidx = find_nearest(dfields['ex_xx'],xx) #TODO: make a function that gets cell edge and call it here
+        # _x1 = dfields['ex_xx'][_xxidx]#get xx cell edge 1
+        # if(dfields['ex_xx'][_xxidx] - _x1 < 0):#get xx cell edge 2
+        #     _x2 = _x1
+        #     _x1 = dfields['ex_xx'][_xxidx-1]
+        # else:
+        #     _x2 = dfields['ex_xx'][_xxidx+1]
+        # vparbasis, vperp1basis, vperp2basis = compute_field_aligned_coord(dfields,[_x1,_x2],[dfields['ex_yy'][0],dfields['ex_yy'][-1]],[dfields['ex_zz'][0],dfields['ex_zz'][-1]]) #WARNING: we also assume that field aligned is defined using the whole yz domain in compute cprime function as well!!!
+        # _ = np.asarray([vparbasis,vperp1basis,vperp2basis]).T
+        # changebasismatrix = np.linalg.inv(_)
+
+        if(fieldkey[0] == 'e'):
+            #grab vals in standard coordinates
+            exval = _weighted_field_average(xx, yy, zz, dfields, 'ex')
+            eyval = _weighted_field_average(xx, yy, zz, dfields, 'ey')
+            ezval = _weighted_field_average(xx, yy, zz, dfields, 'ez')
+
+            #convert to field aligned
+            epar,eperp1,eperp2 = np.matmul(changebasismatrix,[exval,eyval,ezval])
+
+            #return correct key
+            #TODO: this code is kinda redundant, as we compute field aligned in all directions, we should consider optimizing this, but it would be difficult
+            if(fieldkey == 'epar'):
+                return epar
+            elif(fieldkey == 'eperp1'):
+                return eperp1
+            if(fieldkey == 'eperp2'):
+                return eperp2
+
+        elif(fieldkey[0] == 'b'):
+            #grab vals in standard coordinates
+            bxval = _weighted_field_average(xx, yy, zz, dfields, 'bx')
+            byval = _weighted_field_average(xx, yy, zz, dfields, 'by')
+            bzval = _weighted_field_average(xx, yy, zz, dfields, 'bz')
+
+            #convert to field aligned
+            bpar,bperp1,bperp2 = np.matmul(changebasismatrix,[bxval,byval,bzval])
+
+            #return correct key
+            #TODO: this code is kinda redundant, as we compute field aligned in all directions, we should consider optimizing this, but it would be difficult
+            if(fieldkey == 'bpar'):
+                return bpar
+            elif(fieldkey == 'bperp1'):
+                return bperp1
+            if(fieldkey == 'bperp2'):
+                return bperp2
+
+    else:
+        return _weighted_field_average(xx, yy, zz, dfields, fieldkey)
+
+
+def _weighted_field_average(xx, yy, zz, dfields, fieldkey):
     """
     Uses trilinear interpolation to estimate field value at given test location
 
@@ -821,17 +1020,60 @@ def compute_cprime_hist(dparticles, dfields, fieldkey, vmax, dv):
         vvkey = 'p2'
     elif(fieldkey == 'ez' or fieldkey == 'bz'):
         vvkey = 'p3'
+    elif(fieldkey == 'epar' or fieldkey == 'bpar'):
+        vvkey = 'ppar'
+    elif(fieldkey == 'eperp1' or fieldkey == 'eperp1'):
+        vvkey = 'pperp1'
+    elif(fieldkey == 'eperp2' or fieldkey == 'eperp2'):
+        vvkey = 'pperp2'
+
+    #check if particle data is in correct coordinates
+    if(not(vvkey in dparticles.keys())):
+        #we assume particle data is passed in standard basis and would need to be converted to field aligned
+        from lib.analysis import change_velocity_basis
+        from lib.array_ops import find_nearest
+        from lib.analysis import compute_field_aligned_coord
+
+        xx = np.min(dparticles['x1'][:])
+        _xxidx = find_nearest(dfields['ex_xx'],xx) #TODO: make a function that gets cell edge and call it here
+        _x1 = dfields['ex_xx'][_xxidx]#get xx cell edge 1
+        if(dfields['ex_xx'][_xxidx] > xx):
+            _x1 = dfields['ex_xx'][_xxidx-1]
+        xx = np.max(dparticles['x1'][:])
+        _xxidx = find_nearest(dfields['ex_xx'],xx)
+        _x2 = dfields['ex_xx'][_xxidx]#get xx cell edge 2
+        if(dfields['ex_xx'][_xxidx] < xx):
+            _x2 = dfields['ex_xx'][_xxidx+1]
+
+        dparticles = change_velocity_basis(dfields,dparticles,[_x1,_x2],[dfields['ex_yy'][0],dfields['ex_yy'][-1]],[dfields['ex_zz'][0],dfields['ex_zz'][-1]]) #WARNING: we also assume field aligned coordinates uses full yz domain in weighted field average!!!
+        vparbasis, vperp1basis, vperp2basis = compute_field_aligned_coord(dfields,[_x1,_x2],[dfields['ex_yy'][0],dfields['ex_yy'][-1]],[dfields['ex_zz'][0],dfields['ex_zz'][-1]]) #WARNING: we also assume that field aligned is defined using the whole yz domain in compute cprime function as well!!!
+        _ = np.asarray([vparbasis,vperp1basis,vperp2basis]).T
+        changebasismatrix = np.linalg.inv(_)
+    else:
+        changebasismatrix = None
 
 
-    # compute cprime for each particle
-    cprimew = []
+    #print('Debug: x1,',np.min(dparticles['x1']),' x2,',np.max(dparticles['x1']),' y1,',np.min(dparticles['x2']),' y2,',np.max(dparticles['x2']),' z1,',np.min(dparticles['x3']),' z2,',np.max(dparticles['x3']))
+
+    # compute cprime for each particle #TODO: make this block more efficient, it is the slowest part of the code
+    # import time
+    # start = time.time()
+    #TODO: improve performance of this block vvvv---------------------------------------------------------------------------
+    cprimew = np.zeros(len(dparticles['x1']))
+    if('q' in dparticles.keys()):
+        q = dparticles['q']  #TODO: assign q to gkeyll and dHybridR data
+    else:
+        q = 1.
     for i in range(0, len(dparticles['x1'])):
-        fieldval = weighted_field_average(dparticles['x1'][i], dparticles['x2'][i], dparticles['x3'][i], dfields, fieldkey)
-        q = 1.  # WARNING: might not always be correct value for q  TODO: automate grabbing q and fix this
-        cprimew.append(q*dparticles[vvkey][i]*fieldval)
+        fieldval = weighted_field_average(dparticles['x1'][i], dparticles['x2'][i], dparticles['x3'][i], dfields, fieldkey,changebasismatrix = changebasismatrix)
+        cprimew[i] = q*dparticles[vvkey][i]*fieldval
     cprimew = np.asarray(cprimew)
+    #end = time.time()
+    # print(end - start)
+    #TODO: improve performance of this block ^^^^---------------------------------------------------------------------------
 
-    # bin into cprime(vx,vy,vz)
+    #TODO: rename a lot of this, as it doesn't make sense in field aligned coordinates
+    # bin into cprime(vx,vy,vz) #TODO: use function for this block (it's useful elsewhere to build distribution functions)
     vxbins = np.arange(-vmax, vmax+dv, dv)
     vx = (vxbins[1:] + vxbins[:-1])/2.
     vybins = np.arange(-vmax, vmax+dv, dv)
@@ -839,8 +1081,12 @@ def compute_cprime_hist(dparticles, dfields, fieldkey, vmax, dv):
     vzbins = np.arange(-vmax, vmax+dv, dv)
     vz = (vzbins[1:] + vzbins[:-1])/2.
 
-    hist,_ = np.histogramdd((dparticles['p3'], dparticles['p2'], dparticles['p1']), bins=[vzbins, vybins, vxbins])
-    cprimebinned,_ = np.histogramdd((dparticles['p3'], dparticles['p2'], dparticles['p1']), bins=[vzbins, vybins, vxbins], weights=cprimew)
+    if(vvkey in ['p1','p2','p3']):
+        hist,_ = np.histogramdd((dparticles['p3'], dparticles['p2'], dparticles['p1']), bins=[vzbins, vybins, vxbins])
+        cprimebinned,_ = np.histogramdd((dparticles['p3'], dparticles['p2'], dparticles['p1']), bins=[vzbins, vybins, vxbins], weights=cprimew)
+    else:
+        hist,_ = np.histogramdd((dparticles['pperp2'], dparticles['pperp1'], dparticles['ppar']), bins=[vzbins, vybins, vxbins])
+        cprimebinned,_ = np.histogramdd((dparticles['pperp2'], dparticles['pperp1'], dparticles['ppar']), bins=[vzbins, vybins, vxbins], weights=cprimew)
     del cprimew
 
     # make the bins 3d arrays
@@ -868,7 +1114,8 @@ def compute_cprime_hist(dparticles, dfields, fieldkey, vmax, dv):
 
     return cprimebinned, hist, vx, vy, vz
 
-
+#TODO: add and track charge!!!
+#TODO: rename vx, vy, vz to make sense irregardless of if data is in standard basis or field aligned basis
 def compute_cor_from_cprime(cprimebinned, vx, vy, vz, dv, directionkey):
     """
     Computes correlation from cprime
@@ -889,8 +1136,12 @@ def compute_cor_from_cprime(cprimebinned, vx, vy, vz, dv, directionkey):
         (assumes square)
     directionkey : str
         direction we are taking the derivative w.r.t. (x,y,z)
-    """
 
+    Returns
+    -------
+    cor : 3d array
+        FPC data
+    """
     if(directionkey == 'x'):
         axis = 2
         vv = vx
@@ -900,6 +1151,188 @@ def compute_cor_from_cprime(cprimebinned, vx, vy, vz, dv, directionkey):
     elif(directionkey == 'z'):
         axis = 0
         vv = vz
+    elif(directionkey == 'epar'):
+        axis = 2
+        vv = vx
+    elif(directionkey == 'eperp1'):
+        axis = 1
+        vv = vy
+    elif(directionkey == 'eperp2'):
+        axis = 0
+        vv = vz
 
     cor = -vv/2.*np.gradient(cprimebinned, dv, edge_order=2, axis=axis) + cprimebinned / 2.
     return cor
+
+#-----------------------------------------------------------------------------------------------------------------------
+# Functions related to computing FPC if hist function is already computed
+#-----------------------------------------------------------------------------------------------------------------------
+def compute_fpc_from_dist(fieldval,hist,vx,vy,vz,vshock,directionkey,q=1.):
+    """
+    hist is 3d array (vz,vy,vx as axes)
+    fieldval is avg field value
+    """
+    if(directionkey == 'x'):
+        axis = 2
+        vv = vx-vshock
+        dv = vx[0,0,1]-vx[0,0,0]
+    elif(directionkey == 'y'):
+        axis = 1
+        vv = vy
+        dv = vy[0,1,0]-vy[0,0,0]
+    elif(directionkey == 'z'):
+        axis = 0
+        vv = vz
+        dv = vz[1,0,0]-vz[0,0,0]
+
+    cor = -q*(vv**2./2)*np.gradient(hist, dv, edge_order=2, axis=axis)*fieldval
+
+    totalPtcl = np.sum(hist)
+
+    return vx, vy, vz, totalPtcl, hist, cor
+
+def _comp_all_CEi_from_dist(x1, x2, y1, y2, z1, z2, ddist, dfields, vshock):
+    #TODO: make 2D and 3D compatable
+
+    #bin histograms and take field average
+    _hist = []
+    fieldkeys = ['ex','ey','ez','bx','by','bz']
+    for fkey in fieldkeys:
+        locals()[fkey+'avg'] = 0.
+    num_field_points = 0
+    for xxidx, x0 in enumerate(ddist['hist_xx']):
+        if(x0 >= x1 and x0 <= x2):
+            if(_hist == []):
+                _hist = ddist['hist'][xxidx]
+            else:
+                _hist += ddist['hist'][xxidx]
+
+            for fkey in fieldkeys:
+                locals()[fkey+'avg'] += dfields[fkey][0,0,xxidx] #not 3d or 2d compatable
+
+            num_field_points += 1
+
+    for key in fieldkeys:
+        locals()[key+'avg'] /= num_field_points #not 3d or 2d compatable
+
+    vx = ddist['vx']
+    vy = ddist['vy']
+    vz = ddist['vz']
+    for fkey in fieldkeys:
+        dkey = fkey[-1]
+        vx,vy,vz,totalPtcl,hist,locals()['C'+fkey] = compute_fpc_from_dist(locals()[fkey+'avg'],_hist,vx,vy,vz,vshock,dkey)
+
+    return totalPtcl, _hist, locals()['Cex'], locals()['Cey'], locals()['Cez']
+
+def compute_correlation_over_x_from_dist(ddist,dfields, vmax, dx, vshock, xlim=None, ylim=None, zlim=None, project=False):
+
+
+    x_out = []
+    num_par_out = []
+    if(project == False):
+        CEx_out = []
+        CEy_out = []
+        CEz_out = []
+        Hist_out = []
+    else:
+        dfpckeys = ['Histvxvy','Histvxvz','Histvyvz','CExvxvy','CExvxvz','CExvyvz','CEyvxvy','CEyvxvz','CEyvyvz','CEzvxvy','CEzvxvz','CEzvyvz']
+        dfpc = {}
+    for key in dfpckeys:
+        dfpc[key] = []
+        CExvxvy_out = []
+        CExvxvz_out = []
+        CExvyvz_out = []
+        CEyvxvy_out = []
+        CEyvxvz_out = []
+        CEyvyvz_out = []
+        CEzvxvy_out = []
+        CEzvxvz_out = []
+        CEzvyvz_out = []
+        Histvxvy_out = []
+        Histvxvz_out = []
+        Histvyvz_out = []
+
+
+
+    if(dx < ddist['hist_xx'][1]-ddist['hist_xx'][0]):
+        print("ERROR: dx is smaller than spacing between distribution functions")
+        return #TODO raise error here
+
+    if xlim is not None:
+        x1 = xlim[0]
+        x2 = x1+dx
+        xEnd = xlim[1]
+    # If xlim is None, use lower x edge to upper x edge extents
+    else:
+        x1 = ddist['hist_xx'][0]
+        x2 = x1 + dx
+        xEnd = ddist['hist_xx'][-1]
+    if ylim is not None:
+        y1 = ylim[0]
+        y2 = ylim[1]
+    # If ylim is None, use lower y edge to lower y edge + dx extents
+    else:
+        y1 = dfields['ex_yy'][0]
+        y2 = y1 + dx
+    if zlim is not None:
+        z1 = zlim[0]
+        z2 = zlim[1]
+    # If zlim is None, use lower z edge to lower z edge + dx extents
+    else:
+        z1 = dfields['ex_zz'][0]
+        z2 = z1 + dx
+
+    while(x2 <= xEnd):
+        print('scan pos-> x1: ',x1,' x2: ',x2,' y1: ',y1,' y2: ',y2,' z1: ', z1,' z2: ',z2)
+        totalPtcl, hist, CEx, CEy, CEz = _comp_all_CEi_from_dist(x1, x2, y1, y2, z1, z2, ddist, dfields, vshock)
+        print('num particles in box: ', totalPtcl)
+        x_out.append(np.mean([x1,x2]))
+        if(project == False):
+            CEx_out.append(CEx)
+            CEy_out.append(CEy)
+            CEz_out.append(CEz)
+            Hist_out.append(hist)
+        else:
+            Histvxvy,Histvxvz,Histvyvz,CExvxvy,CExvxvz,CExvyvz,CEyvxvy,CEyvxvz,CEyvyvz,CEzvxvy,CEzvxvz,CEzvyvz = project_CEi_hist(hist, CEx, CEy, CEz)
+            for key in dfpckeys:
+                dfpc[key].append(locals()[key])
+        num_par_out.append(totalPtcl)
+        x1 += dx
+        x2 += dx
+
+    vx = ddist['vx']
+    vy = ddist['vy']
+    vz = ddist['vz']
+
+    if(project == False):
+        return CEx_out, CEy_out, CEz_out, x_out, Hist_out, vx, vy, vz, num_par_out
+    else:
+        dfpc['num_par'] = num_par_out
+        dfpc['xx'] = x_out
+        dfpc['vx'] = ddist['vx']
+        dfpc['vy'] = ddist['vy']
+        dfpc['vz'] = ddist['vz']
+
+        return dfpc
+
+def project_and_store(vx,vy,vz,xx,CEx,CEy,CEz,Hist):
+    """
+    projects 4d data
+    """
+
+    dfpckeys = ['Histvxvy','Histvxvz','Histvyvz','CExvxvy','CExvxvz','CExvyvz','CEyvxvy','CEyvxvz','CEyvyvz','CEzvxvy','CEzvxvz','CEzvyvz']
+    dfpc = {}
+    for key in dfpckeys:
+        dfpc[key] = []
+    dfpc['xx'] = xx
+    dfpc['vx'] = vx
+    dfpc['vy'] = vy
+    dfpc['vz'] = vz
+
+    for xxidx, x0 in enumerate(xx):
+        print("Projecting ",x0,' of ',xx[-1])
+        Histvxvy,Histvxvz,Histvyvz,CExvxvy,CExvxvz,CExvyvz,CEyvxvy,CEyvxvz,CEyvyvz,CEzvxvy,CEzvxvz,CEzvyvz = project_CEi_hist(Hist[xxidx], CEx[xxidx], CEy[xxidx], CEz[xxidx])
+        for key in dfpckeys:
+            dfpc[key].append(locals()[key])
+
+    return dfpc
