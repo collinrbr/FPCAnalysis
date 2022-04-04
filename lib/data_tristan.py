@@ -26,16 +26,20 @@ def load_params(path,num):
         params['sigma'] = paramfl['sigma'][0]
         params['istep'] = paramfl['istep'][0]
         params['massratio'] = paramfl['mi'][0]/paramfl['me'][0]
+        params['mi'] = paramfl['mi'][0]
+        params['me'] = paramfl['me'][0]
         params['ppc'] = paramfl['ppc0'][0]
         params['sizex'] = paramfl['sizex'][0]
 
     return params
 
-def load_fields(path_fields, num, field_vars = 'ex ey ez bx by bz'):
+def load_fields(path_fields, num, field_vars = 'ex ey ez bx by bz', normalizeFields=False):
     """
     This assumes 1D implies data in the 3rd axis only, 2D implies data in the 2nd and 3rd axis only.
 
     """
+    if(normalizeFields):
+        field_vars += ' dens'
     field_vars = field_vars.split()
     field = {}
     field['Vframe_relative_to_sim_out'] = 0.
@@ -85,15 +89,42 @@ def load_fields(path_fields, num, field_vars = 'ex ey ez bx by bz'):
             field[key+'_yy'] = np.linspace(0., field[key].shape[1]*dy, field[key].shape[1])
             field[key+'_zz'] = np.linspace(0., field[key].shape[0]*dz, field[key].shape[0])
 
-    #normalize to d_i / d_e
-    comp = load_params(path_fields,num)['comp']
-    for key in field_vars:
-        if(key+'_xx' in field.keys()):
-            field[key+'_xx'] /= comp
-        if(key+'_yy' in field.keys()):
-            field[key+'_yy'] /= comp
-        if(key+'_zz' in field.keys()):
-            field[key+'_zz'] /= comp
+    if(normalizeFields):
+        #normalize to d_i
+        comp = load_params(path_fields,num)['comp']
+        for key in field_vars:
+            if(key+'_xx' in field.keys()):
+                field[key+'_xx'] /= comp
+            if(key+'_yy' in field.keys()):
+                field[key+'_yy'] /= comp
+            if(key+'_zz' in field.keys()):
+                field[key+'_zz'] /= comp
+
+        #normalize to correct units
+        for key in field_vars:
+            bnorm = np.mean((field['bx'][:,:,-10:]**2+field['by'][:,:,-10:]**2+field['bz'][:,:,-10:]**2)**0.5)
+            enorm = np.mean((field['ex'][:,:,-10:]**2+field['ey'][:,:,-10:]**2+field['ez'][:,:,-10:]**2)**0.5)
+            if(key[0] == 'b'):
+                field[key] /= bnorm
+            elif(key[0] == 'e'):
+                #TODO: get this in the correct normalization!!!!
+                field[key] /= enorm
+
+                # #should normalize to v_{a,0} B0/ c-----------------------------------
+                # #see Haggerty 2019
+                # #we either assume vti = v_a (i.e. beta of 1) and compute vti
+                # #or attempt to compute vti
+                #
+                # bnorm = np.mean((field['bx'][:,:,-1]**2+field['by'][:,:,-1]**2+field['bz'][:,:,-1]**2)**0.5)
+                # #vti0, vte0 = load_particles(path_fields, num, normalizeVelocity=False, _getvti=True)
+                # #v0norm = vti0 #assumes plasma beta of 1 !!!!
+                #
+                # dennorm = field['dens'][0,0,:][np.nonzero(field['dens'][0,0,:])][-10]#den array is weird. Its zero towards the end and its first couple of nonzero vals towards the end is small
+                # v0norm = bnorm/np.sqrt(4.*np.pi*dennorm*params['mi'])
+                # cnorm = params['c']
+                # print('norm')
+                # print(bnorm,v0norm,cnorm,bnorm*v0norm/cnorm)
+                # field[key] /= bnorm*v0norm/cnorm
 
     field['Vframe_relative_to_sim'] = 0. #TODO: fix this, it is incorrect at least some of the time as data is reported in the upstream frame (frame where v_x,up = 0) at least some of the time
 
@@ -138,7 +169,7 @@ def load_den(path,num):
 
     return load_fields(path,num,field_vars=den_vars)
 
-def load_particles(path, num, normalizeVelocity=False):
+def load_particles(path, num, normalizeVelocity=False, _getvti=False):
     """
     Loads TRISTAN particle data
 
@@ -173,11 +204,11 @@ def load_particles(path, num, normalizeVelocity=False):
     pts_elc['q'] = -1. #tracks frame (along vx) relative to sim
     pts_ion['q'] = 1. #tracks frame (along vx) relative to sim
 
-    if(normalizeVelocity):
+    if(normalizeVelocity or _getvti):
         from lib.analysis import compute_vrms
 
-        print("Attempting to compute thermal velocity in the far upstream region to normalize velocity...")
-        print("Please see load_particles in data_tristan.py for assumptions...")
+        #print("Attempting to compute thermal velocity in the far upstream region to normalize velocity...")
+        #print("Please see load_particles in data_tristan.py for assumptions...")
 
         pts_elc = format_par_like_dHybridR(pts_elc)
         pts_ion = format_par_like_dHybridR(pts_ion)
@@ -208,6 +239,10 @@ def load_particles(path, num, normalizeVelocity=False):
         vte0 = compute_vrms(pts_elc,vmax,dv,lowerxbound,upperxbound,lowerybound,upperybound,lowerzbound,upperzbound)
         vti0 = np.sqrt(vti0)
         vte0 = np.sqrt(vte0)
+
+        if(_getvti):#TODO: this isnt the cleanest way of doing this, clean this up and find a differnt way to do this
+            return vti0, vte0
+
         #print("Computed vti0 of ", vti0, " and vte0 of ", vte0)
 
         for k in elc_vkeys:

@@ -35,7 +35,7 @@ print('vshock: ', vshock)
 #load path
 print("Loading data...")
 params = dtr.load_params(path,num)
-dfields = dtr.load_fields(path,num)
+dfields = dtr.load_fields(path,num,normalizeFields=True)
 for key in 'ex ey ez bx by bz'.split(): #our functions assume 3D fields. When the fields are 2D, we load the 2D data into two identitical sheets to mimic the 3D data structure
     if(not(key+'_zz' in dfields.keys())):
         dfields[key+'_zz'] = np.asarray([0,1])
@@ -74,7 +74,7 @@ dfields = ft.lorentz_transform_vx(dfields,vshock)
 #-------------------------------------------------------------------------------
 print("Doing FPC analysis for each slice of x for ions...")
 dx = dfields['ex_xx'][4]-dfields['ex_xx'][0]
-xlim = [245,250]#[np.min(dfields['ex_xx']),np.max(dfields['ex_xx'])]
+xlim = [np.min(dfields['ex_xx']),np.max(dfields['ex_xx'])]
 ylim = [np.min(dfields['ex_yy']),np.max(dfields['ex_zz'])]
 zlim = [np.min(dfields['ex_zz']),np.max(dfields['ex_zz'])]
 CEx, CEy, CEz, x, Hist, vx, vy, vz, num_par = fpc.compute_correlation_over_x(dfields, dpar_ion, vmax, dv, dx, vshock, xlim, ylim, zlim)

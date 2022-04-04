@@ -68,7 +68,7 @@ def save3Vdata(Hist_out, CEx_out, CEy_out, CEz_out, vx_out, vy_out, vz_out, x_ou
             _ = ncout.createVariable(key,None)
             _[:] = params[key]
 
-    ncout.description = 'dHybridR MLA data'
+    ncout.description = 'FPC data'
     ncout.generationtime = str(datetime.now())
     ncout.version = get_git_head()
 
@@ -541,7 +541,7 @@ def load2vdata(filename):
 #TODO: parse_input_file and read_input tries to do the same thing. However,
 # both functions have different potential flaws. Need to make parse function
 # that does not have flaws
-#TODO: move to data_h5 or data_dhybridr
+#TODO: create move to data_dhybridr (which should be data_h5 renamed)
 def parse_input_file(path):
     """
     Puts dHybridR input file into dictionary.

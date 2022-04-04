@@ -37,10 +37,14 @@ def plot_velsig(vx,vy,vz,dv,vmax,CEiproj,fieldkey,planename,ttl=r'$C_{E_i}(v_i,v
         JdotE = compute_energization(CEiplot,dv)
         if(fieldkey == 'ex'):
             plt.gca().set_title(ttl+'$J \cdot E_x$ = ' + "{:.2e}".format(JdotE),loc='left')
-        if(fieldkey == 'ey'):
+        elif(fieldkey == 'ey'):
             plt.gca().set_title(ttl+'$J \cdot E_y$ = ' + "{:.2e}".format(JdotE),loc='left')
-        if(fieldkey == 'ez'):
+        elif(fieldkey == 'ez'):
             plt.gca().set_title(ttl+'$J \cdot E_z$ = ' + "{:.2e}".format(JdotE),loc='left')
+        else:
+            plt.gca().set_title(ttl+'$J \cdot E_i$ = ' + "{:.2e}".format(JdotE),loc='left')
+    else:
+        plt.gca().set_title(ttl,loc='left')
 
     clrbar = plt.colorbar(im, ax=plt.gca())#,format='%.1e')
     if(not(plotLog)):

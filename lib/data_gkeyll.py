@@ -226,6 +226,19 @@ def spoof_particle_data(hist,vx,vy,vz,x1,x2,y1,y2,z1,z2,Vframe_relative_to_sim,n
 
     return dpar
 
+#TODO: make write to lua file
+def get_input_file(flnm_prefix,num,species='ion',verbose=True):
+        if(verbose):
+            print("Getting input file from %s_%s_%d.bp" % (flnm_prefix,species,num))
+        fh = adios.file("%s_%s_%d.bp" % (flnm_prefix,species,num)) #get input file from species dist data
+        inputFile = adios.attr(fh, 'inputfile').value.decode('UTF-8')
+        fh.close()
+        inputFile = base64.b64decode(inputFile).decode("utf-8")
+        #inputFile = inputFile.splitlines()
+
+        return inputFile
+
+
 def get_input_params(flnm_prefix,num,species='ion',verbose=True):
     """
     """

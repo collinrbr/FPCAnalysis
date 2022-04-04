@@ -1142,7 +1142,6 @@ def compute_cor_from_cprime(cprimebinned, vx, vy, vz, dv, directionkey):
     cor : 3d array
         FPC data
     """
-
     if(directionkey == 'x'):
         axis = 2
         vv = vx
@@ -1152,13 +1151,13 @@ def compute_cor_from_cprime(cprimebinned, vx, vy, vz, dv, directionkey):
     elif(directionkey == 'z'):
         axis = 0
         vv = vz
-    elif(directionkey == 'eperp2'):
+    elif(directionkey == 'epar'):
         axis = 2
         vv = vx
     elif(directionkey == 'eperp1'):
         axis = 1
         vv = vy
-    elif(directionkey == 'epar'):
+    elif(directionkey == 'eperp2'):
         axis = 0
         vv = vz
 
