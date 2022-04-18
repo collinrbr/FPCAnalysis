@@ -6,6 +6,7 @@ import glob
 import numpy as np
 import h5py
 import os
+import math
 
 #See https://github.com/PrincetonUniversity/tristan-mp-v2/blob/master/inputs/input.full for details about input and output
 
@@ -30,6 +31,7 @@ def load_params(path,num):
         params['me'] = paramfl['me'][0]
         params['ppc'] = paramfl['ppc0'][0]
         params['sizex'] = paramfl['sizex'][0]
+        params['delgam'] = paramfl['delgam'][0]
 
     return params
 
@@ -205,46 +207,25 @@ def load_particles(path, num, normalizeVelocity=False, _getvti=False):
     pts_ion['q'] = 1. #tracks frame (along vx) relative to sim
 
     if(normalizeVelocity or _getvti):
-        from lib.analysis import compute_vrms
 
-        #print("Attempting to compute thermal velocity in the far upstream region to normalize velocity...")
-        #print("Please see load_particles in data_tristan.py for assumptions...")
+        params = load_params(path,num)
 
-        pts_elc = format_par_like_dHybridR(pts_elc)
-        pts_ion = format_par_like_dHybridR(pts_ion)
+        vti0 = params['c']*math.sqrt(params['delgam'])
+        vte0 = math.sqrt(params['mi']/params['me'])*vti0
 
-        #normalize
-        elc_vkeys = 'ue ve we'.split()
-        ion_vkeys = 'ui vi wi'.split()
-        elc_poskeys = 'xe ye ze'.split()
-        ion_poskeys = 'xi yi zi'.split()
-        c = load_params(path,num)['c']
-        comp = load_params(path,num)['comp']
-        for k in elc_vkeys:
-            pts_elc[k] = pts_elc[k]*c/(pts_elc['gammae']*comp**2) #note: velocity is in units γV_i/c in original output
-        for k in ion_vkeys:
-            pts_ion[k] = pts_ion[k]*c/(pts_ion['gammai']*comp**2) #note: velocity is in units γV_i/c in original output
-
-
-        #comupte vti and vte in the far upstream region
-        vmax = 20.*np.mean(np.abs(pts_ion['p1'])) #note: we only consider particles with v_i <= vmax when computing v_rms
-        dv = vmax/50.
-        upperxbound = np.max(pts_ion['x1'])
-        lowerxbound = upperxbound*.95 #WARNING: assumes that the beam is undisturbed in this region
-        lowerybound = np.min(pts_ion['x2'])
-        upperybound = np.max(pts_ion['x2'])
-        lowerzbound = np.min(pts_ion['x3'])
-        upperzbound = np.max(pts_ion['x3'])
-        vti0 = compute_vrms(pts_ion,vmax,dv,lowerxbound,upperxbound,lowerybound,upperybound,lowerzbound,upperzbound)
-        vte0 = compute_vrms(pts_elc,vmax,dv,lowerxbound,upperxbound,lowerybound,upperybound,lowerzbound,upperzbound)
-        vti0 = np.sqrt(vti0)
-        vte0 = np.sqrt(vte0)
+        comp = params['comp']
 
         if(_getvti):#TODO: this isnt the cleanest way of doing this, clean this up and find a differnt way to do this
             return vti0, vte0
 
         #print("Computed vti0 of ", vti0, " and vte0 of ", vte0)
 
+
+         #normalize
+        elc_vkeys = 'ue ve we'.split()
+        ion_vkeys = 'ui vi wi'.split()
+        elc_poskeys = 'xe ye ze'.split()
+        ion_poskeys = 'xi yi zi'.split()
         for k in elc_vkeys:
             pts_elc[k] /= vte0
         for k in ion_vkeys:
