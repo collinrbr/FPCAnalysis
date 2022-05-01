@@ -82,6 +82,9 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
         if(directionkey != 'z'):
             print("Warning, direction of derivative does not match field direction")
 
+
+    #print(dpar.keys())
+    #print(('q' in dpar.keys()))
     # # find average E field based on provided bounds #TODO: remove this
     # gfieldptsx = (x1 <= dfields[fieldkey+'_xx']) & (dfields[fieldkey+'_xx'] <= x2)
     # gfieldptsy = (y1 <= dfields[fieldkey+'_yy']) & (dfields[fieldkey+'_yy'] <= y2)
@@ -135,6 +138,9 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
           'Vframe_relative_to_sim': dpar['Vframe_relative_to_sim']
         }
 
+        if('q' in dpar.keys()):
+            dparsubset['q'] =dpar['q']
+
         cprimebinned, hist, vx, vy, vz = compute_cprime_hist(dparsubset, dfields, fieldkey, vmax, dv)
         del dparsubset
 
@@ -150,6 +156,9 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
               'x3': dpar['x3'][gptsparticle][:],
               'Vframe_relative_to_sim': dpar['Vframe_relative_to_sim']
             }
+
+            if('q' in dpar.keys()): #TODO: fix redundancy with this
+                dparsubset['q'] = dpar['q']
         except:
             dparsubset = {
               'p1': np.asarray([0.]),
@@ -160,6 +169,9 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
               'x3': np.asarray([0.]),
               'Vframe_relative_to_sim': dpar['Vframe_relative_to_sim']
             }
+
+            if('q' in dpar.keys()):
+                dparsubset['q'] = dpar['q']
 
             totalPtcl = len(dpar['p1'][:])
             totalFieldpts = -1 # TODO just remove this varaible, doesn't make sense anymore
@@ -1045,7 +1057,14 @@ def compute_cprime_hist(dparticles, dfields, fieldkey, vmax, dv):
         if(dfields['ex_xx'][_xxidx] < xx):
             _x2 = dfields['ex_xx'][_xxidx+1]
 
+        _q_in_keys = False
+        if('q' in dparticles.keys()): #quick fix. TODO: implement this better in such a way that no keys are dropped...
+            _qtemp = dparticles['q']
+            _q_in_keys = True
         dparticles = change_velocity_basis(dfields,dparticles,[_x1,_x2],[dfields['ex_yy'][0],dfields['ex_yy'][-1]],[dfields['ex_zz'][0],dfields['ex_zz'][-1]]) #WARNING: we also assume field aligned coordinates uses full yz domain in weighted field average!!!
+        if(_q_in_keys):
+            dparticles['q'] = _qtemp
+
         vparbasis, vperp1basis, vperp2basis = compute_field_aligned_coord(dfields,[_x1,_x2],[dfields['ex_yy'][0],dfields['ex_yy'][-1]],[dfields['ex_zz'][0],dfields['ex_zz'][-1]]) #WARNING: we also assume that field aligned is defined using the whole yz domain in compute cprime function as well!!!
         _ = np.asarray([vparbasis,vperp1basis,vperp2basis]).T
         changebasismatrix = np.linalg.inv(_)
@@ -1060,9 +1079,12 @@ def compute_cprime_hist(dparticles, dfields, fieldkey, vmax, dv):
     # start = time.time()
     #TODO: improve performance of this block vvvv---------------------------------------------------------------------------
     cprimew = np.zeros(len(dparticles['x1']))
+    #print('just b4', dparticles.keys())
     if('q' in dparticles.keys()):
+        #print("Charge was found!")
         q = dparticles['q']  #TODO: assign q to gkeyll and dHybridR data
     else:
+        #print("Warning! Charge was not specified for dpar dict. Defaulting to q = 1.")
         q = 1.
     for i in range(0, len(dparticles['x1'])):
         fieldval = weighted_field_average(dparticles['x1'][i], dparticles['x2'][i], dparticles['x3'][i], dfields, fieldkey,changebasismatrix = changebasismatrix)
