@@ -287,4 +287,6 @@ def format_par_like_dHybridR(dpar):
     if('we' in keys):
         dpar['p3'] = dpar['we']
 
+    dpar['q'] = dpar['q']
+
     return dpar
