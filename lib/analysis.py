@@ -529,7 +529,7 @@ def take_fft2(data,daxisx0,daxis1):
 
     return k0, k1, fftdata
 
-def remove_average_fields_over_yz(dfields):
+def remove_average_fields_over_yz(dfields, Efield_only = False):
     """
     Removes yz average from field data i.e. delta_field(x,y,z) = field(x,y,z)-<field(x,y,z)>_(y,z)
 
@@ -537,6 +537,8 @@ def remove_average_fields_over_yz(dfields):
     ----------
     dfields : dict
         field data dictionary from flow_loader
+    Efield_only : bool, opt
+        if true, returns total bfield
 
     Returns
     -------
@@ -549,13 +551,15 @@ def remove_average_fields_over_yz(dfields):
     dfieldfluc['ex'] = dfieldfluc['ex']-dfieldfluc['ex'].mean(axis=(0,1))
     dfieldfluc['ey'] = dfieldfluc['ey']-dfieldfluc['ey'].mean(axis=(0,1))
     dfieldfluc['ez'] = dfieldfluc['ez']-dfieldfluc['ez'].mean(axis=(0,1))
-    dfieldfluc['bx'] = dfieldfluc['bx']-dfieldfluc['bx'].mean(axis=(0,1))
-    dfieldfluc['by'] = dfieldfluc['by']-dfieldfluc['by'].mean(axis=(0,1))
-    dfieldfluc['bz'] = dfieldfluc['bz']-dfieldfluc['bz'].mean(axis=(0,1))
+    
+    if(not(Efield_only)):
+        dfieldfluc['bx'] = dfieldfluc['bx']-dfieldfluc['bx'].mean(axis=(0,1))
+        dfieldfluc['by'] = dfieldfluc['by']-dfieldfluc['by'].mean(axis=(0,1))
+        dfieldfluc['bz'] = dfieldfluc['bz']-dfieldfluc['bz'].mean(axis=(0,1))
 
     return dfieldfluc
 
-def remove_average_flow_over_yz(dflow):
+def remove__flow_over_yz(dflow):
     """
     Removes yz average from field data i.e. delta_field(x,y,z) = field(x,y,z)-<field(x,y,z)>_(y,z)
 
@@ -578,7 +582,7 @@ def remove_average_flow_over_yz(dflow):
 
     return dflowfluc
 
-def get_average_fields_over_yz(dfields):
+def get_average_fields_over_yz(dfields, Efield_only = False):
     """
     Returns yz average of field i.e. dfield_avg(x,y,z) = <field(x,y,z)>_(y,z)
 
@@ -589,6 +593,8 @@ def get_average_fields_over_yz(dfields):
     ----------
     dfields : dict
         field data dictionary from flow_loader
+    Efield_only : bool, opt
+        if true, returns total bfield
 
     Returns
     -------
@@ -603,9 +609,11 @@ def get_average_fields_over_yz(dfields):
     dfieldavg['ex'][:] = dfieldavg['ex'].mean(axis=(0,1))
     dfieldavg['ey'][:] = dfieldavg['ey'].mean(axis=(0,1))
     dfieldavg['ez'][:] = dfieldavg['ez'].mean(axis=(0,1))
-    dfieldavg['bx'][:] = dfieldavg['bx'].mean(axis=(0,1))
-    dfieldavg['by'][:] = dfieldavg['by'].mean(axis=(0,1))
-    dfieldavg['bz'][:] = dfieldavg['bz'].mean(axis=(0,1))
+    
+    if(not(Efield_only)):
+        dfieldavg['bx'][:] = dfieldavg['bx'].mean(axis=(0,1))
+        dfieldavg['by'][:] = dfieldavg['by'].mean(axis=(0,1))
+        dfieldavg['bz'][:] = dfieldavg['bz'].mean(axis=(0,1))
 
     return dfieldavg
 
