@@ -39,6 +39,10 @@ def load_fields(path_fields, num, field_vars = 'ex ey ez bx by bz', normalizeFie
     """
     This assumes 1D implies data in the 3rd axis only, 2D implies data in the 2nd and 3rd axis only.
 
+    Note: to normalize the fields data, one must provide fields data in the  correct frame (shock frame). However,
+    when transforming the fields to this correct frame, the boost velocity must be in the correct normalization 
+    (typically the original output velocity normalization). Thus, vshock must be in the correct normalization
+    for this function to work!!!
     """
     if(normalizeFields):
         field_vars += ' dens'
