@@ -35,7 +35,7 @@ def load_params(path,num):
 
     return params
 
-def load_fields(path_fields, num, field_vars = 'ex ey ez bx by bz', normalizeFields=False):
+def load_fields(path_fields, num, field_vars = 'ex ey ez bx by bz', normalizeFields=False, vshock=None):
     """
     This assumes 1D implies data in the 3rd axis only, 2D implies data in the 2nd and 3rd axis only.
 
@@ -91,7 +91,14 @@ def load_fields(path_fields, num, field_vars = 'ex ey ez bx by bz', normalizeFie
             field[key+'_yy'] = np.linspace(0., field[key].shape[1]*dy, field[key].shape[1])
             field[key+'_zz'] = np.linspace(0., field[key].shape[0]*dz, field[key].shape[0])
 
+    field['Vframe_relative_to_sim'] = 0. #TODO: fix this, it is incorrect at least some of the time as data is reported in the upstream frame (frame where v_x,up = 0) at least some of the time
+
     if(normalizeFields):
+        if(vshock == None):
+            print("Please specify vshock...") #must transform to correct frame
+            print("(Note: this function assumes output data is in the upstream frame, vshock is velocity of shock in frame of upstream)")
+            print("(WARNING: vshock should have the output velocity normalization)")
+
         #normalize to d_i
         comp = load_params(path_fields,num)['comp']
         for key in field_vars:
@@ -102,10 +109,19 @@ def load_fields(path_fields, num, field_vars = 'ex ey ez bx by bz', normalizeFie
             if(key+'_zz' in field.keys()):
                 field[key+'_zz'] /= comp
 
+        from lib.frametransform import lorentz_transform_vx
+
+        field = lorentz_transform_vx(field,vshock)
+
         #normalize to correct units
         for key in field_vars:
             bnorm = np.mean((field['bx'][:,:,-10:]**2+field['by'][:,:,-10:]**2+field['bz'][:,:,-10:]**2)**0.5)
-            enorm = np.mean((field['ex'][:,:,-10:]**2+field['ey'][:,:,-10:]**2+field['ez'][:,:,-10:]**2)**0.5)
+            #enorm = np.mean((field['ex'][:,:,-10:]**2+field['ey'][:,:,-10:]**2+field['ez'][:,:,-10:]**2)**0.5)
+
+            dennorm = field['dens'][0,0,:][np.nonzero(field['dens'][0,0,:])][-20]#den array is weird. Its zero towards the end and its first couple of nonzero vals towards the end is small
+            v0norm = bnorm/np.sqrt(4.*np.pi*dennorm*params['mi'])*comp #alfven speed
+            cnorm = params['c']
+            enorm = bnorm*v0norm/cnorm
             if(key[0] == 'b'):
                 field[key] /= bnorm
             elif(key[0] == 'e'):
@@ -124,11 +140,9 @@ def load_fields(path_fields, num, field_vars = 'ex ey ez bx by bz', normalizeFie
                 # dennorm = field['dens'][0,0,:][np.nonzero(field['dens'][0,0,:])][-10]#den array is weird. Its zero towards the end and its first couple of nonzero vals towards the end is small
                 # v0norm = bnorm/np.sqrt(4.*np.pi*dennorm*params['mi'])
                 # cnorm = params['c']
-                # print('norm')
-                # print(bnorm,v0norm,cnorm,bnorm*v0norm/cnorm)
+                print('norm')
+                print(bnorm,v0norm,cnorm,bnorm*v0norm/cnorm)
                 # field[key] /= bnorm*v0norm/cnorm
-
-    field['Vframe_relative_to_sim'] = 0. #TODO: fix this, it is incorrect at least some of the time as data is reported in the upstream frame (frame where v_x,up = 0) at least some of the time
 
     return field
 
