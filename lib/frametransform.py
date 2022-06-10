@@ -185,6 +185,7 @@ def shock_from_ex_cross(all_fields, dt=0.01):
 
     # fit to line
     vshock, v0 = np.polyfit(tvals, xvals, 1)
+    print(vshock, v0)
 
     return vshock, xshockvals
 

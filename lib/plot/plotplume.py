@@ -259,6 +259,8 @@ def plot_wavemodes_and_compare_to_sweeps_kperp(kpars,beta_i,tau,wavemodes_matchi
     from lib.plume import fastmagson_curve
     from lib.plume import slowmagson_curve
     from lib.plume import whistler_curve
+    from lib.plume import test_curve
+
 
     kperps = np.linspace(kperplim[0],kperplim[1],1000)
     kawcrvs = []

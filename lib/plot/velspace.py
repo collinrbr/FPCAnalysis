@@ -504,6 +504,15 @@ def dist_log_plot_3dir_2v(vx, vy, vz, vmax, H_xy, H_xz, H_yz, flnm = '',ttl='',x
     axs[1].set_aspect('equal', 'box')
     #axs[1].colorbar(cmap = cmap, extend='min')
 
+    #lazy way to flip plot
+    _ = vz_yz
+    vz_yz = vy_yz
+    vy_yz = _
+    #H_yz = np.transpose(H_yz)
+    _ = ylbl
+    ylbl = zlbl
+    zlbl = _
+
     if(plotSymLog):
         _vmax = np.max([-1*np.min(H_yz),np.max(H_yz)])
         pcm2 = axs[2].pcolormesh(vz_yz, vy_yz, H_yz, cmap='PiYG', shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-1*_vmax, vmax=_vmax))
@@ -527,7 +536,7 @@ def dist_log_plot_3dir_2v(vx, vy, vz, vmax, H_xy, H_xz, H_yz, flnm = '',ttl='',x
     plt.subplots_adjust(hspace=.5,wspace=.5)
 
     if(flnm != ''):
-        plt.savefig(flnm,format='png')
+        plt.savefig(flnm,format='png',dpi=300)
     else:
         plt.show()
     plt.close()

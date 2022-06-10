@@ -61,7 +61,7 @@ def plot_field(dfields, fieldkey, axis='_xx', xxindex = 0, yyindex = 0, zzindex 
     if(flnm == ''):
         plt.show()
     else:
-        plt.savefig(flnm,format='png')
+        plt.savefig(flnm,format='png',dpi=300)
     plt.close()
 
 def plot_all_fields(dfields, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0, flnm = '',lowxlim=None, highxlim=None):
@@ -364,6 +364,8 @@ def time_stack_line_plot2(dfieldsdict, fieldkey, offsetval = 2., axis = '_xx', x
     flnm : str, optional
         if specified will save plot to flnm
     """
+    from matplotlib.pyplot import cm
+    color = cm.rainbow(np.linspace(0, 1, len(dfieldsdict['dfields'])))
 
     #fig, axs = plt.subplots(len(dfieldsdict['frame']), sharex=True, sharey=True)
     fig = plt.figure()
@@ -373,17 +375,19 @@ def time_stack_line_plot2(dfieldsdict, fieldkey, offsetval = 2., axis = '_xx', x
     _i = 0
     for k in range(0,len(dfieldsdict['dfields'])):
         fieldval = np.asarray([dfieldsdict['dfields'][k][fieldkey][xxindex][yyindex][i] for i in range(0,len(dfieldsdict['dfields'][k][fieldkey+axis]))])+_i*offsetval
-        plt.plot(fieldcoord,fieldval)
+        plt.plot(fieldcoord,fieldval,color='black')
         _i += 1
 
     #TODO: generalize this for all axis keys
-    plt.ylabel('time')
-    plt.xlabel('$x$')
+    plt.ylabel('time', fontsize=40)
+    plt.xlabel('$x$ $(d_i)$', fontsize=40)
+    plt.xticks(fontsize=15)
     plt.yticks([])
     if(flnm == ''):
         plt.show()
     else:
-        plt.savefig(flnm+'.png',format='png')
+        fig.tight_layout()
+        plt.savefig(flnm+'.png',dpi=300,format='png')
     plt.close()
 
 def plot_stack_field_along_x(dfields,fieldkey,stackaxis,yyindex=0,zzindex=0,xlow=None,xhigh=None,flnm=''):

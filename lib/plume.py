@@ -415,6 +415,8 @@ def whistler_curve(kperp,kpar,beta_i,tau,
 
     return omega_over_Omega_i
 
+
+
 def select_wavemodes(dwavemodes, depth, kpars, kperps, tol=0.05):
     """
     Grabs wavemodes with given kpar and kperp from kpar/kperp list
