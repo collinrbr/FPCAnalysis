@@ -93,7 +93,7 @@ def mesh_3d_to_2d(meshx, meshy, meshz, planename):
         2d meshz grid
     """
     nz,ny,nx = meshx.shape
-    if(planename == 'xy'):
+    if(planename == 'xy' or planename == 'parperp1'):
         meshx2d = np.zeros((ny, nx))
         meshy2d = np.zeros((ny, nx))
 
@@ -102,7 +102,7 @@ def mesh_3d_to_2d(meshx, meshy, meshz, planename):
 
         return meshx2d, meshy2d
 
-    elif(planename == 'xz'):
+    elif(planename == 'xz' or planename == 'parperp2'):
         meshx2d = np.zeros((nz, nx))
         meshz2d = np.zeros((nz, nx))
 
@@ -111,7 +111,7 @@ def mesh_3d_to_2d(meshx, meshy, meshz, planename):
 
         return meshx2d, meshz2d
 
-    elif(planename == 'yz'):
+    elif(planename == 'yz' or planename == 'perp1perp2'):
         meshy2d = np.zeros((nz, ny))
         meshz2d = np.zeros((nz, ny))
 
@@ -139,22 +139,22 @@ def array_3d_to_2d(arr3d, planename):
     nz = len(arr3d)
     ny = len(arr3d[0])
     nx = len(arr3d[0][0])
-    if(planename == 'xy'):
+    if(planename == 'xy' or planename == 'parperp1'):
         arr2d = np.apply_along_axis(np.sum, 0, arr3d)
         arr2d = np.swapaxes(arr2d, 0, 1) #rest of the code assumes this ordering
         return arr2d
 
-    elif(planename == 'xz'):
+    elif(planename == 'xz' or planename ==  'parperp2'):
         arr2d = np.apply_along_axis(np.sum, 1, arr3d)
         arr2d = np.swapaxes(arr2d, 0, 1) #rest of the code assumes this ordering
         return arr2d
 
-    elif(planename == 'yz'):
+    elif(planename == 'yz' or planename == 'perp1perp2'):
         arr2d = np.apply_along_axis(np.sum, 2, arr3d)
         arr2d = np.swapaxes(arr2d, 0, 1) #rest of the code assumes this ordering
         return arr2d
     else:
-        print("Please enter xy, xz, or yz for planename...")
+        print("Please enter xy, xz, yz, parperp1, parperp2, or perp1perp2 for planename...")
 
 
 def get_average_in_box(x1, x2, y1, y2, z1, z2, datadict, dictkey):

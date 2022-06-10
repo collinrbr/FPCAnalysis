@@ -6,6 +6,7 @@ import glob
 import numpy as np
 import h5py
 import os
+import math
 
 #See https://github.com/PrincetonUniversity/tristan-mp-v2/blob/master/inputs/input.full for details about input and output
 
@@ -26,16 +27,25 @@ def load_params(path,num):
         params['sigma'] = paramfl['sigma'][0]
         params['istep'] = paramfl['istep'][0]
         params['massratio'] = paramfl['mi'][0]/paramfl['me'][0]
+        params['mi'] = paramfl['mi'][0]
+        params['me'] = paramfl['me'][0]
         params['ppc'] = paramfl['ppc0'][0]
         params['sizex'] = paramfl['sizex'][0]
+        params['delgam'] = paramfl['delgam'][0]
 
     return params
 
-def load_fields(path_fields, num, field_vars = 'ex ey ez bx by bz'):
+def load_fields(path_fields, num, field_vars = 'ex ey ez bx by bz', normalizeFields=False, vshock=None):
     """
     This assumes 1D implies data in the 3rd axis only, 2D implies data in the 2nd and 3rd axis only.
 
+    Note: to normalize the fields data, one must provide fields data in the  correct frame (shock frame). However,
+    when transforming the fields to this correct frame, the boost velocity must be in the correct normalization 
+    (typically the original output velocity normalization). Thus, vshock must be in the correct normalization
+    for this function to work!!!
     """
+    if(normalizeFields):
+        field_vars += ' dens'
     field_vars = field_vars.split()
     field = {}
     field['Vframe_relative_to_sim_out'] = 0.
@@ -85,36 +95,60 @@ def load_fields(path_fields, num, field_vars = 'ex ey ez bx by bz'):
             field[key+'_yy'] = np.linspace(0., field[key].shape[1]*dy, field[key].shape[1])
             field[key+'_zz'] = np.linspace(0., field[key].shape[0]*dz, field[key].shape[0])
 
-    field['Vframe_relative_to_sim'] = 0.
+    field['Vframe_relative_to_sim'] = 0. #TODO: fix this, it is incorrect at least some of the time as data is reported in the upstream frame (frame where v_x,up = 0) at least some of the time
+
+    if(normalizeFields):
+        if(vshock == None):
+            print("Please specify vshock...") #must transform to correct frame
+            print("(Note: this function assumes output data is in the upstream frame, vshock is velocity of shock in frame of upstream)")
+            print("(WARNING: vshock should have the output velocity normalization)")
+
+        #normalize to d_i
+        comp = load_params(path_fields,num)['comp']
+        for key in field_vars:
+            if(key+'_xx' in field.keys()):
+                field[key+'_xx'] /= comp
+            if(key+'_yy' in field.keys()):
+                field[key+'_yy'] /= comp
+            if(key+'_zz' in field.keys()):
+                field[key+'_zz'] /= comp
+
+        from lib.frametransform import lorentz_transform_vx
+
+        field = lorentz_transform_vx(field,vshock)
+
+        #normalize to correct units
+        for key in field_vars:
+            bnorm = np.mean((field['bx'][:,:,-10:]**2+field['by'][:,:,-10:]**2+field['bz'][:,:,-10:]**2)**0.5)
+            #enorm = np.mean((field['ex'][:,:,-10:]**2+field['ey'][:,:,-10:]**2+field['ez'][:,:,-10:]**2)**0.5)
+
+            dennorm = field['dens'][0,0,:][np.nonzero(field['dens'][0,0,:])][-20]#den array is weird. Its zero towards the end and its first couple of nonzero vals towards the end is small
+            v0norm = bnorm/np.sqrt(4.*np.pi*dennorm*params['mi'])*comp #alfven speed
+            cnorm = params['c']
+            enorm = bnorm*v0norm/cnorm
+            if(key[0] == 'b'):
+                field[key] /= bnorm
+            elif(key[0] == 'e'):
+                #TODO: get this in the correct normalization!!!!
+                field[key] /= enorm
+
+                # #should normalize to v_{a,0} B0/ c-----------------------------------
+                # #see Haggerty 2019
+                # #we either assume vti = v_a (i.e. beta of 1) and compute vti
+                # #or attempt to compute vti
+                #
+                # bnorm = np.mean((field['bx'][:,:,-1]**2+field['by'][:,:,-1]**2+field['bz'][:,:,-1]**2)**0.5)
+                # #vti0, vte0 = load_particles(path_fields, num, normalizeVelocity=False, _getvti=True)
+                # #v0norm = vti0 #assumes plasma beta of 1 !!!!
+                #
+                # dennorm = field['dens'][0,0,:][np.nonzero(field['dens'][0,0,:])][-10]#den array is weird. Its zero towards the end and its first couple of nonzero vals towards the end is small
+                # v0norm = bnorm/np.sqrt(4.*np.pi*dennorm*params['mi'])
+                # cnorm = params['c']
+                print('norm')
+                print(bnorm,v0norm,cnorm,bnorm*v0norm/cnorm)
+                # field[key] /= bnorm*v0norm/cnorm
 
     return field
-
-# def bin_flow_data(dpar, dfields):
-#     """
-# 
-#     """
-#
-#     dfields = load_fields(path, num)
-#     dpar = load_particles(path, num, normalizeVelocity=normalizeVelocity)
-#
-#     is3D = False
-#     is2D = False
-#     is1D = False
-#     if('ex_zz' in in dfields.keys()):
-#         is3D = True
-#     elif('ex_yy' in dfields.keys()):
-#         is2D = True
-#     elif('ex_yy' in dfields.keys()):
-#         is1D = True
-#
-#     dpar = format_par_like_dHybridR(dpar)
-#
-#     dflow = {}
-#
-#     if(is1D):
-#         dflow['u1_xx'] = dfields[]
-#         for _i in range(0,len(dpar['p1'])):
-#             if()
 
 def load_current(path, num):
 
@@ -128,7 +162,7 @@ def load_den(path,num):
 
     return load_fields(path,num,field_vars=den_vars)
 
-def load_particles(path, num, normalizeVelocity=False):
+def load_particles(path, num, normalizeVelocity=False, _getvti=False):
     """
     Loads TRISTAN particle data
 
@@ -160,39 +194,36 @@ def load_particles(path, num, normalizeVelocity=False):
     pts_elc['Vframe_relative_to_sim'] = 0. #tracks frame (along vx) relative to sim
     pts_ion['Vframe_relative_to_sim'] = 0. #tracks frame (along vx) relative to sim
 
-    if(normalizeVelocity):
-        from lib.analysis import compute_vrms
+    pts_elc['q'] = -1. #tracks frame (along vx) relative to sim
+    pts_ion['q'] = 1. #tracks frame (along vx) relative to sim
 
-        print("Attempting to compute thermal velocity in the far upstream region to normalize velocity...")
-        print("Please see load_particles in data_tristan.py for assumptions...")
+    if(normalizeVelocity or _getvti):
 
-        pts_elc = format_par_like_dHybridR(pts_elc)
-        pts_ion = format_par_like_dHybridR(pts_ion)
+        params = load_params(path,num)
 
-        #comupte vti and vte in the far upstream region
-        vmax = 20.*np.mean(np.abs(pts_ion['p1'])) #note: we only consider particles with v_i <= vmax when computing v_rms
-        dv = vmax/50.
-        upperxbound = np.max(pts_ion['x1'])
-        lowerxbound = upperxbound*.95 #WARNING: assumes that the beam is undisturbed in this region
-        lowerybound = np.min(pts_ion['x2'])
-        upperybound = np.max(pts_ion['x2'])
-        lowerzbound = np.min(pts_ion['x3'])
-        upperzbound = np.max(pts_ion['x3'])
-        vti0 = compute_vrms(pts_ion,vmax,dv,lowerxbound,upperxbound,lowerybound,upperybound,lowerzbound,upperzbound)
-        vte0 = compute_vrms(pts_elc,vmax,dv,lowerxbound,upperxbound,lowerybound,upperybound,lowerzbound,upperzbound)
-        vti0 = np.sqrt(vti0)
-        vte0 = np.sqrt(vte0)
-        print("Computed vti0 of ", vti0, " and vte0 of ", vte0)
+        vti0 = math.sqrt(params['delgam'])#Note: velocity is in units γV_i/c so we do not include '*params['c']'
+        vte0 = math.sqrt(params['mi']/params['me'])*vti0
+
+        comp = params['comp']
+
+        if(_getvti):#TODO: this isnt the cleanest way of doing this, clean this up and find a differnt way to do this
+            return vti0, vte0
+
+        #print("Computed vti0 of ", vti0, " and vte0 of ", vte0)
 
         #normalize
         elc_vkeys = 'ue ve we'.split()
         ion_vkeys = 'ui vi wi'.split()
-        c = load_params(path,num)['c']
-        print('')
+        elc_poskeys = 'xe ye ze'.split()
+        ion_poskeys = 'xi yi zi'.split()
         for k in elc_vkeys:
-            pts_elc[k] = pts_elc[k]*c/(vte0*pts_elc['gammae']) #note: velocity is in units γV_i/c in original output
+            pts_elc[k] /= vte0
         for k in ion_vkeys:
-            pts_ion[k] = pts_ion[k]*c/(vti0*pts_ion['gammai']) #note: velocity is in units γV_i/c in original output
+            pts_ion[k] /= vti0
+        for k in elc_poskeys:
+            pts_elc[k] /= comp
+        for k in ion_poskeys:
+            pts_ion[k] /= comp
 
     return pts_elc, pts_ion
 
@@ -253,7 +284,7 @@ def format_par_like_dHybridR(dpar):
     if('yi' in keys):
         dpar['x2'] = dpar['yi']
     if('zi' in keys):
-        dpar['x3'] = dpar['xi']
+        dpar['x3'] = dpar['zi']
     if('ui' in keys):
         dpar['p1'] = dpar['ui']
     if('vi' in keys):
@@ -266,7 +297,7 @@ def format_par_like_dHybridR(dpar):
     if('ye' in keys):
         dpar['x2'] = dpar['ye']
     if('ze' in keys):
-        dpar['x3'] = dpar['xe']
+        dpar['x3'] = dpar['ze']
     if('ue' in keys):
         dpar['p1'] = dpar['ue']
     if('ve' in keys):
@@ -274,220 +305,6 @@ def format_par_like_dHybridR(dpar):
     if('we' in keys):
         dpar['p3'] = dpar['we']
 
+    dpar['q'] = dpar['q']
+
     return dpar
-
-# def estimate_grid_setup(dfields, dparticles_ion):
-#     """
-#     Estimates the setup of the box using particle data.
-#     Assumes there exists one particle near each boundary of the box and that the box is of integer size
-#
-#     (Original toy data was missing simulation box setup so we use this function to estimate it for now)
-#     """
-#
-#     from copy import copy
-#
-#     x1, x2, y1, y2, z1, z2 = 0., 0., 0., 0., 0., 0.
-#
-#     x1 = round(min(dparticles_ion['xi']))
-#     x2 = round(max(dparticles_ion['xi']))
-#     y1 = round(min(dparticles_ion['yi']))
-#     y2 = round(max(dparticles_ion['yi']))
-#     z1 = round(min(dparticles_ion['zi']))
-#     z2 = round(max(dparticles_ion['zi']))
-#
-#     nz,ny,nx = dfields['bz'].shape
-#
-#     dx = (x2-x1)/(nx)
-#     dy = (y2-y1)/(ny)
-#     dz = (z2-z1)/(nz)
-#
-#     _xx = [dx*float(i)+dx/2. for i in range(0,nx)]
-#     _yy = [dy*float(i)+dy/2. for i in range(0,ny)]
-#     _zz = [dz*float(i)+dz/2. for i in range(0,nz)]
-#
-#     keys = ['ex','ey','ez','bx','by','bz']
-#     for key in keys:
-#         dfields[key+'_xx'] = copy(_xx)
-#         dfields[key+'_xx'] = np.asarray(dfields[key+'_xx'])
-#         dfields[key+'_yy'] = copy(_yy)
-#         dfields[key+'_yy'] = np.asarray(dfields[key+'_yy'])
-#         dfields[key+'_zz'] = copy(_zz)
-#         dfields[key+'_zz'] = np.asarray(dfields[key+'_zz'])
-#
-#     return dfields
-
-
-#--------------------------------------------------------------------------------------------------------
-#--------------------------------------------------------------------------------------------------------
-#--------------------------------------------------------------------------------------------------------
-
-
-#if we need to save ram, should probably make these functions 3
-def take_subset_particles(x1, x2, y1, y2, z1, z2, dpar, species=None):
-    pass
-def save_subset(Vframe_relative_to_sim_out, x1_out, x2_out, y1_out, y2_out, z1_out, z2_out, params = {}, filename = 'tristanHist.nc'):
-    pass
-def load_subset():
-    pass
-
-# Note, it is typically a bad idea to 'prebin' data before computing correlation as we lose spatial information of each particle
-# Instead, we must assume each particle is located at the average position of the spatial bin and use the average field value in that bin
-# Overall, we lose the smaller scale field fluctuations in our velocity signature
-
-# def makeHistFromTristanData(vmax, dv, x1, x2, y1, y2, z1, z2, dpar, species=None):
-#     """
-#     Computes distribution function from Tristan particle data
-#     Parameters
-#     ----------
-#     vmax : float
-#         specifies signature domain in velocity space
-#         (assumes square and centered about zero)
-#     dv : float
-#         velocity space grid spacing
-#         (assumes square)
-#     x1 : float
-#         lower x bound
-#     x2 : float
-#         upper x bound
-#     y1 : float
-#         lower y bound
-#     y2 : float
-#         upper y bound
-#     z1 : float
-#         lower y bound
-#     z2 : float
-#         upper y bound
-#     dpar : dict
-#         xx vx yy vy zz vz data dictionary from read_particles or read_box_of_particles
-#     species : string
-#         'e' or 'i' depending on whether computing distribution function from electrons or ions
-#
-#     Returns
-#     -------
-#     vx : 3d array
-#         vx velocity grid
-#     vy : 3d array
-#         vy velocity grid
-#     vz : 3d array
-#         vz velocity grid
-#     totalPtcl : float
-#         total number of particles in the correlation box
-#     Hist : 3d array
-#         distribution function in box
-#     """
-#
-#     #define mask that includes particles within range
-#     gptsparticle = (x1 < dpar['x'+species] ) & (dpar['x'+species] < x2) & (y1 < dpar['y'+species]) & (dpar['y'+species] < y2) & (z1 < dpar['z'+species]) & (dpar['z'+species] < z2)
-#     totalPtcl = np.sum(gptsparticle)
-#
-#     #make bins
-#     vxbins = np.arange(-vmax-dv, vmax+dv, dv)
-#     vx = (vxbins[1:] + vxbins[:-1])/2.
-#     vybins = np.arange(-vmax-dv, vmax+dv, dv)
-#     vy = (vybins[1:] + vybins[:-1])/2.
-#     vzbins = np.arange(-vmax-dv, vmax+dv, dv)
-#     vz = (vzbins[1:] + vzbins[:-1])/2.
-#
-#     #make the bins 3d arrays
-#     _vx = np.zeros((len(vz),len(vy),len(vx)))
-#     _vy = np.zeros((len(vz),len(vy),len(vx)))
-#     _vz = np.zeros((len(vz),len(vy),len(vx)))
-#     for i in range(0,len(vx)):
-#         for j in range(0,len(vy)):
-#             for k in range(0,len(vz)):
-#                 _vx[k][j][i] = vx[i]
-#
-#     for i in range(0,len(vx)):
-#         for j in range(0,len(vy)):
-#             for k in range(0,len(vz)):
-#                 _vy[k][j][i] = vy[j]
-#
-#     for i in range(0,len(vx)):
-#         for j in range(0,len(vy)):
-#             for k in range(0,len(vz)):
-#                 _vz[k][j][i] = vz[k]
-#
-#     vx = _vx
-#     vy = _vy
-#     vz = _vz
-#
-#     #shift particle data to shock frame
-#     dpar_p1 = np.asarray(dpar['u'+species][gptsparticle][:])
-#     dpar_p2 = np.asarray(dpar['v'+species][gptsparticle][:])
-#     dpar_p3 = np.asarray(dpar['w'+species][gptsparticle][:])
-#
-#     #find distribution
-#     Hist,_ = np.histogramdd((dpar_p3,dpar_p2,dpar_p1),
-#                          bins=[vzbins,vybins,vxbins])
-#
-#     return vx, vy, vz, totalPtcl, Hist
-#
-# def save_hist(Hist_out, Vframe_relative_to_sim_out, x1_out, x2_out, y1_out, y2_out, z1_out, z2_out, params = {}, filename = 'tristanHist.nc'):
-#     """
-#     Saves histogram in netcdf4 file for reading later
-#     """
-#     #TODO: save params in this file
-#
-#     from netCDF4 import Dataset
-#     from datetime import datetime
-#     from lib.net_cdf4 import get_git_head
-#
-#     # open a netCDF file to write
-#     ncout = Dataset(filename, 'w', format='NETCDF4')
-#
-#     ncout.description = 'Tristan distribution data in some specified domain'
-#     ncout.generationtime = str(datetime.now())
-#     ncout.version = get_git_head()
-#
-#     ncout.createDimension('nvx', None)
-#     ncout.createDimension('nvy', None)
-#     ncout.createDimension('nvz', None)
-#
-#     vx_out = vx_out[0][0][:]
-#     vx = ncout.createVariable('vx','f4', ('nvx',))
-#     vx.nvx = len(vx_out)
-#     vx.longname = 'v_x/v_ti'
-#     vx[:] = vx_out[:]
-#
-#     vy_out = np.asarray([vy_out[0][i][0] for i in range(0,len(vy_out))])
-#     vy = ncout.createVariable('vy','f4', ('nvy',))
-#     vy.nvy = len(vy_out)
-#     vy.longname = 'v_y/v_ti'
-#     vy[:] = vy_out[:]
-#
-#     vz_out = np.asarray([vz_out[i][0][0] for i in range(0,len(vz_out))]) #assumes same number of data points along all axis in vz_out mesh var
-#     vz = ncout.createVariable('vz','f4', ('nvz',))
-#     vz.nvz = len(vz_out)
-#     vz.longname = 'v_z/v_ti'
-#     vz[:] = vz_out[:]
-#
-#     Hist = ncout.createVariable('Hist','f4', ('nvz', 'nvy', 'nvx'))
-#     Hist.longname = 'Hist'
-#     Hist[:] = Hist_out[:]
-#
-#     Vframe_relative_to_sim = ncout.createVariable('Vframe_relative_to_sim', 'f4')
-#     Vframe_relative_to_sim[:] = Vframe_relative_to_sim_out
-#
-#     x1 = ncout.createVariable('x1', 'f4')
-#     x1[:] = x1_out
-#
-#     x2 = ncout.createVariable('x2', 'f4')
-#     x2[:] = x2_out
-#
-#     y1 = ncout.createVariable('y1', 'f4')
-#     y1[:] = y1_out
-#
-#     y2 = ncout.createVariable('y2', 'f4')
-#     y2[:] = y2_out
-#
-#     z1 = ncout.createVariable('y1', 'f4')
-#     z1[:] = z1_out
-#
-#     z2 = ncout.createVariable('z2', 'f4')
-#     z2[:] = z2_out
-#
-#     #save file
-#     ncout.close()
-#
-# def load_hist(filename):
-#     pass

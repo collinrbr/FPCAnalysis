@@ -37,10 +37,14 @@ def plot_velsig(vx,vy,vz,dv,vmax,CEiproj,fieldkey,planename,ttl=r'$C_{E_i}(v_i,v
         JdotE = compute_energization(CEiplot,dv)
         if(fieldkey == 'ex'):
             plt.gca().set_title(ttl+'$J \cdot E_x$ = ' + "{:.2e}".format(JdotE),loc='left')
-        if(fieldkey == 'ey'):
+        elif(fieldkey == 'ey'):
             plt.gca().set_title(ttl+'$J \cdot E_y$ = ' + "{:.2e}".format(JdotE),loc='left')
-        if(fieldkey == 'ez'):
+        elif(fieldkey == 'ez'):
             plt.gca().set_title(ttl+'$J \cdot E_z$ = ' + "{:.2e}".format(JdotE),loc='left')
+        else:
+            plt.gca().set_title(ttl+'$J \cdot E_i$ = ' + "{:.2e}".format(JdotE),loc='left')
+    else:
+        plt.gca().set_title(ttl,loc='left')
 
     clrbar = plt.colorbar(im, ax=plt.gca())#,format='%.1e')
     if(not(plotLog)):
@@ -57,7 +61,11 @@ def plot_velsig(vx,vy,vz,dv,vmax,CEiproj,fieldkey,planename,ttl=r'$C_{E_i}(v_i,v
         plt.close('all')#saves RAM
     else:
         plt.show()
-    plt.close()
+    #plt.close()
+    fig = plt.gcf()
+    ax = plt.gca()
+
+    return ax, fig
 
 
 #TODO: update/ remove this
@@ -408,7 +416,7 @@ def dist_log_plot_3dir(vx, vy, vz, vmax, H_in, flnm = '',ttl='',xlbl=r"$v_x/v_{t
     H_xz = array_3d_to_2d(H,'xz')
     H_yz = array_3d_to_2d(H,'yz')
 
-    dist_log_plot_3dir_2v(vx, vy, vz, vmax, H_xy, H_xz, H_yz, flnm = flnm,ttl=ttl,xlbl=xlbl,ylbl=ylbl,zlbl=zlbl,plotSymLog=plotSymLog)
+    return dist_log_plot_3dir_2v(vx, vy, vz, vmax, H_xy, H_xz, H_yz, flnm = flnm,ttl=ttl,xlbl=xlbl,ylbl=ylbl,zlbl=zlbl,plotSymLog=plotSymLog)
 
 def dist_log_plot_3dir_2v(vx, vy, vz, vmax, H_xy, H_xz, H_yz, flnm = '',ttl='',xlbl=r"$v_x/v_{ti}$",ylbl=r"$v_y/v_{ti}$",zlbl=r"$v_z/v_{ti}$",plotSymLog=False):
     """
@@ -458,7 +466,10 @@ def dist_log_plot_3dir_2v(vx, vy, vz, vmax, H_xy, H_xz, H_yz, flnm = '',ttl='',x
     vx_xz, vz_xz = mesh_3d_to_2d(vx,vy,vz,'xz')
     vy_yz, vz_yz = mesh_3d_to_2d(vx,vy,vz,'yz')
 
-    fig, axs = plt.subplots(1,3,figsize=(3*5,1*5))
+    fntsize = 10
+    plt.rcParams.update({'font.size': fntsize})
+
+    fig, axs = plt.subplots(1,3,figsize=(3*3.25,1*3.25))
     cmap = matplotlib.cm.get_cmap('plasma')
     bkgcolor = 'black'
     numtks = 5
@@ -479,8 +490,8 @@ def dist_log_plot_3dir_2v(vx, vy, vz, vmax, H_xy, H_xz, H_yz, flnm = '',ttl='',x
     #     plt.title(r"$f(v_x, v_y)$",loc="right")
     # else:
     #     plt.title(ttl)
-    axs[0].set_xlabel(xlbl)
-    axs[0].set_ylabel(ylbl)
+    axs[0].set_xlabel(xlbl,fontsize = fntsize)
+    axs[0].set_ylabel(ylbl,fontsize = fntsize)
     axs[0].grid(color="grey", linestyle="--", linewidth=1.0, alpha=0.6)
     axs[0].set_aspect('equal', 'box')
     #axs[0].colorbar(cmap = cmap, extend='min')
@@ -498,8 +509,8 @@ def dist_log_plot_3dir_2v(vx, vy, vz, vmax, H_xy, H_xz, H_yz, flnm = '',ttl='',x
     axs[1].set_ylim(-vmax, vmax)
     axs[1].set_xticks(np.linspace(-vmax, vmax, numtks))
     axs[1].set_yticks(np.linspace(-vmax, vmax, numtks))
-    axs[1].set_xlabel(xlbl)
-    axs[1].set_ylabel(zlbl)
+    axs[1].set_xlabel(xlbl,fontsize = fntsize)
+    axs[1].set_ylabel(zlbl,fontsize = fntsize)
     axs[1].grid(color="grey", linestyle="--", linewidth=1.0, alpha=0.6)
     axs[1].set_aspect('equal', 'box')
     #axs[1].colorbar(cmap = cmap, extend='min')
@@ -523,8 +534,8 @@ def dist_log_plot_3dir_2v(vx, vy, vz, vmax, H_xy, H_xz, H_yz, flnm = '',ttl='',x
     axs[2].set_ylim(-vmax, vmax)
     axs[2].set_xticks(np.linspace(-vmax, vmax, numtks))
     axs[2].set_yticks(np.linspace(-vmax, vmax, numtks))
-    axs[2].set_xlabel(ylbl)
-    axs[2].set_ylabel(zlbl)
+    axs[2].set_xlabel(ylbl,fontsize = fntsize)
+    axs[2].set_ylabel(zlbl,fontsize = fntsize)
     axs[2].grid(color="grey", linestyle="--", linewidth=1.0, alpha=0.6)
     axs[2].set_aspect('equal', 'box')
     #axs[2].colorbar(cmap = cmap, extend='min')
@@ -539,7 +550,8 @@ def dist_log_plot_3dir_2v(vx, vy, vz, vmax, H_xy, H_xz, H_yz, flnm = '',ttl='',x
         plt.savefig(flnm,format='png',dpi=300)
     else:
         plt.show()
-    plt.close()
+
+    return axs, fig
 
 def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
                                 H_xy, H_xz, H_yz,

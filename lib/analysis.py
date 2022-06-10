@@ -529,7 +529,7 @@ def take_fft2(data,daxisx0,daxis1):
 
     return k0, k1, fftdata
 
-def remove_average_fields_over_yz(dfields):
+def remove_average_fields_over_yz(dfields, Efield_only = False):
     """
     Removes yz average from field data i.e. delta_field(x,y,z) = field(x,y,z)-<field(x,y,z)>_(y,z)
 
@@ -537,6 +537,8 @@ def remove_average_fields_over_yz(dfields):
     ----------
     dfields : dict
         field data dictionary from flow_loader
+    Efield_only : bool, opt
+        if true, returns total bfield
 
     Returns
     -------
@@ -549,13 +551,15 @@ def remove_average_fields_over_yz(dfields):
     dfieldfluc['ex'] = dfieldfluc['ex']-dfieldfluc['ex'].mean(axis=(0,1))
     dfieldfluc['ey'] = dfieldfluc['ey']-dfieldfluc['ey'].mean(axis=(0,1))
     dfieldfluc['ez'] = dfieldfluc['ez']-dfieldfluc['ez'].mean(axis=(0,1))
-    dfieldfluc['bx'] = dfieldfluc['bx']-dfieldfluc['bx'].mean(axis=(0,1))
-    dfieldfluc['by'] = dfieldfluc['by']-dfieldfluc['by'].mean(axis=(0,1))
-    dfieldfluc['bz'] = dfieldfluc['bz']-dfieldfluc['bz'].mean(axis=(0,1))
+    
+    if(not(Efield_only)):
+        dfieldfluc['bx'] = dfieldfluc['bx']-dfieldfluc['bx'].mean(axis=(0,1))
+        dfieldfluc['by'] = dfieldfluc['by']-dfieldfluc['by'].mean(axis=(0,1))
+        dfieldfluc['bz'] = dfieldfluc['bz']-dfieldfluc['bz'].mean(axis=(0,1))
 
     return dfieldfluc
 
-def remove_average_flow_over_yz(dflow):
+def remove__flow_over_yz(dflow):
     """
     Removes yz average from field data i.e. delta_field(x,y,z) = field(x,y,z)-<field(x,y,z)>_(y,z)
 
@@ -578,7 +582,7 @@ def remove_average_flow_over_yz(dflow):
 
     return dflowfluc
 
-def get_average_fields_over_yz(dfields):
+def get_average_fields_over_yz(dfields, Efield_only = False):
     """
     Returns yz average of field i.e. dfield_avg(x,y,z) = <field(x,y,z)>_(y,z)
 
@@ -589,6 +593,8 @@ def get_average_fields_over_yz(dfields):
     ----------
     dfields : dict
         field data dictionary from flow_loader
+    Efield_only : bool, opt
+        if true, returns total bfield
 
     Returns
     -------
@@ -603,9 +609,11 @@ def get_average_fields_over_yz(dfields):
     dfieldavg['ex'][:] = dfieldavg['ex'].mean(axis=(0,1))
     dfieldavg['ey'][:] = dfieldavg['ey'].mean(axis=(0,1))
     dfieldavg['ez'][:] = dfieldavg['ez'].mean(axis=(0,1))
-    dfieldavg['bx'][:] = dfieldavg['bx'].mean(axis=(0,1))
-    dfieldavg['by'][:] = dfieldavg['by'].mean(axis=(0,1))
-    dfieldavg['bz'][:] = dfieldavg['bz'].mean(axis=(0,1))
+    
+    if(not(Efield_only)):
+        dfieldavg['bx'][:] = dfieldavg['bx'].mean(axis=(0,1))
+        dfieldavg['by'][:] = dfieldavg['by'].mean(axis=(0,1))
+        dfieldavg['bz'][:] = dfieldavg['bz'].mean(axis=(0,1))
 
     return dfieldavg
 
@@ -1437,8 +1445,8 @@ def compute_field_aligned_coord(dfields,xlim,ylim,zlim):
     from lib.array_ops import find_nearest
     from copy import deepcopy
 
-    if(np.abs(xlim[1]-xlim[0]) > 2.):
-        print("Warning, when computing field aligned coordinates, we found that xlim[1]-xlim[0] is large, are you sure you want to find ")
+    if(np.abs(xlim[1]-xlim[0]) > 4.):
+        print("Warning, when computing field aligned coordinates, we found that xlim[1]-xlim[0] is large. Consider reducing size...")
 
     #TODO: rename vpar,vperp to epar, eperp...
     xavg = (xlim[1]+xlim[0])/2.
@@ -1452,8 +1460,10 @@ def compute_field_aligned_coord(dfields,xlim,ylim,zlim):
     vperp2basis = np.cross([1.,0,0],B0) #x hat cross B0
     tol = 0.005
     _B0 = B0 / np.linalg.norm(B0)
-    if(np.abs(np.dot([_B0[0],_B0[1],_B0[2]],[1.,0.,0.])) < tol): #assumes B0 != [-1,0,0]
-        print("Warning, B0 is parallel to x (typically the shock normal)...")
+    if(np.abs(np.linalg.norm(np.cross([_B0[0],_B0[1],_B0[2]],[1.,0.,0.]))) < tol):
+        print("Warning, it seems B0 is parallel to xhat (typically the shock normal)...")
+        print("(Bx,By,Bz): ", _B0[0],_B0[1],_B0[2])
+        print("xhat: 1,0,0")
         print("Already in field aligned coordinates. Returning standard basis...")
         return np.asarray([1.,0,0]),np.asarray([0,1.,0]),np.asarray([0,0,1.])
     vperp2basis /= np.linalg.norm(vperp2basis)
@@ -1479,6 +1489,8 @@ def change_velocity_basis(dfields,dpar,xlim,ylim,zlim,debug=False):
         yy bounds of each integration box
     zlim : array
         zz bounds of each integration box
+    debug : bool, opt
+        print debug statements if energy is not conserved
 
     Returns
     -------
@@ -1506,9 +1518,9 @@ def change_velocity_basis(dfields,dpar,xlim,ylim,zlim,debug=False):
     #change basis
     dparnewbasis = {}
     dparnewbasis['ppar'],dparnewbasis['pperp1'],dparnewbasis['pperp2'] = np.matmul(changebasismatrix,[dpar['p1'][gptsparticle][:],dpar['p2'][gptsparticle][:],dpar['p3'][gptsparticle][:]])
-    # dparnewbasis['x1'] = deepcopy(dpar['x1'][:])
-    # dparnewbasis['x2'] = deepcopy(dpar['x2'][:])
-    # dparnewbasis['x3'] = deepcopy(dpar['x3'][:])
+    dparnewbasis['x1'] = deepcopy(dpar['x1'][:])
+    dparnewbasis['x2'] = deepcopy(dpar['x2'][:])
+    dparnewbasis['x3'] = deepcopy(dpar['x3'][:])
 
     #check v^2 for both basis to make sure everything matches
     if(debug):
