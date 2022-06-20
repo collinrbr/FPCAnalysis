@@ -326,6 +326,81 @@ def plot_wlt(xx, kx, wlt, ky0 = None, kz0 = None, flnm = '', plotstrongestkx = F
         plt.close('all')#saves RAM
     plt.close()
 
+def plot_wltv2(xx, kx, wlt, fieldvals, ky0 = None, kz0 = None, flnm = '', plotstrongestkx = False, xlim = None, ylim = None, xxline = None, yyline = None, clrbarlbl = None,axhline=None):
+    """
+    (ky kz should be floats if passed (because we commonly take WLT of f(x,ky0,kz0)))
+    
+    same as plot_wlt, but shows bz field for reference
+    """
+
+    from lib.array_ops import find_nearest
+    from mpl_toolkits.axes_grid1 import make_axes_locatable
+
+    #fig, ax = plt.subplots(2,1,figsize=(10,6),sharex=True, gridspec_kw={'height_ratios': [10, 3]})
+    fig = plt.figure(figsize=(10,4.5))
+    ax1 = plt.subplot(111)
+    #ax2 = ax[1]
+
+    img1 = ax1.pcolormesh(xx,kx,np.abs(wlt),cmap='Spectral', shading='gouraud')
+    #cbar = plt.colorbar(img1, ax=ax1)
+    #if(clrbarlbl != None):
+    #    cbar.set_label(clrbarlbl,labelpad=25, rotation=270, panchor=False)
+    
+    ax1.set_ylabel('$k_x$')
+    ax1.grid()
+    
+    if(ylim != None):
+        ax1.set_ylim(ylim[0],ylim[1])
+
+    divider = make_axes_locatable(ax1)
+    ax2 = divider.append_axes("bottom", size="27%", pad=0.08)
+    cax = divider.append_axes("right", size="2%", pad=0.08)
+    cbar = plt.colorbar( img1, ax=ax1, cax=cax )
+    if(clrbarlbl != None):
+        cbar.set_label(clrbarlbl,labelpad=25, rotation=270)
+
+
+    ax2.plot(xx,fieldvals,color='black',linewidth=1)
+    ax2.set_xlabel('$x$')
+    ax2.set_ylabel('$<B_z>_(y,z)$')
+    ax2.grid()
+
+    ax1.set_xlim(xx[0],xx[-1])
+    ax2.set_xlim(xx[0],xx[-1])
+
+    ax2.set_xticks(np.arange(0,100,10)) #hard coded for paper
+    ax1.set_xticks(np.arange(0,100,10)) #hard coded for paper
+    ax1.set_yticks([1,2,3,4])
+    ax1.axes.xaxis.set_ticklabels([])
+
+    plt.subplots_adjust(hspace=.05)
+
+    #BELOW IS NOT TESTED and most of it needs to be removed
+    if(ky0 != None and kz0 != None):
+        plt.title('ky='+str(ky0)[0:6]+' kz='+str(kz0)[0:6])
+    if(xxline != None and yyline != None):
+        plt.plot(xxline,yyline)
+    #if(xlim != None):
+        #plt.xlim(xlim[0],xlim[1])
+    #if(ylim != None):
+    #    ax1.set_ylim(ylim[0],ylim[1])
+    if(plotstrongestkx):
+        kxline = []
+        for i in range(0,len(xx)):
+            kxline.append(kx[find_nearest(wlt[:,i],np.max(wlt[:,i]))])
+        plt.plot(xx,kxline)
+    if(axhline != None):
+        plt.axhline(axhline)
+
+    if(flnm == ''):
+        plt.show()
+    else:
+        #flnm='ky='+str(ky0)[0:6]+'kz='+str(kz0)[0:6]+'wlt'
+        plt.savefig(flnm,format='png',dpi=250)
+        plt.close('all')#saves RAM
+    plt.close()
+
+
 def plot_power_spectrum(dwavemodes,flnm='',key='normB',gridsize1=75,gridsize2=75,gridsize3=75,kperp1lim=None,kperp2lim=None,kparlim=None):
     _x1temp = []
     _x2temp = []

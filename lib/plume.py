@@ -440,6 +440,11 @@ def test_curve(kperp,kpar,beta_i,tau,
     omega_over_Omega_i : float
         ratio of freq to gyrofreq
     """
+    
+    #MTSI
+    U = 6
+    massratio = 1836
+
     if(comp_error_prop):
         from uncertainties import ufloat
         from uncertainties.umath import sqrt
