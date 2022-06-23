@@ -253,12 +253,14 @@ def plot_sweep_field(plume_sweep,xaxiskey,xlbl='',xlim=None,ylim=None,flnm='',pl
     plt.close()
 
 #todo: make sure given wavemodes are close to give kpars
-def plot_wavemodes_and_compare_to_sweeps_kperp(kpars,beta_i,tau,wavemodes_matching_kpar,kperplim = [.1,10], flnm = '',delta_beta_i = 0, delta_tau = 0,xlim=[],ylim=[]):
+def plot_wavemodes_and_compare_to_sweeps_kperp(kpars,beta_i,tau,wavemodes_matching_kpar,kperplim = [.1,10], flnm = '',delta_beta_i = 0, delta_tau = 0,xlim=[],ylim=[],plot_testcrv=False,flip_omega_sign=False):
     from lib.plume import get_freq_from_wvmd
     from lib.plume import kaw_curve
     from lib.plume import fastmagson_curve
     from lib.plume import slowmagson_curve
     from lib.plume import whistler_curve
+    from lib.plume import test_curve
+
 
     kperps = np.linspace(kperplim[0],kperplim[1],1000)
     kawcrvs = []
@@ -269,6 +271,8 @@ def plot_wavemodes_and_compare_to_sweeps_kperp(kpars,beta_i,tau,wavemodes_matchi
     slowcrv_errors = []
     whicrvs = []
     whicrv_errors = []
+    testcrvs = []
+    testcrv_errors  = []
     #plot theoretical curves
     for kpar in kpars:
         kawcrv = []
@@ -279,6 +283,8 @@ def plot_wavemodes_and_compare_to_sweeps_kperp(kpars,beta_i,tau,wavemodes_matchi
         slowcrv_error = []
         whicrv = []
         whicrv_error = []
+        testcrv = []
+        testcrv_error = []
         for kperp in kperps:
             kawcrv.append(kaw_curve(kperp,kpar,beta_i,tau,comp_error_prop=False))
             kawcrv_error.append(kaw_curve(kperp,kpar,beta_i,tau,delta_beta_i=delta_beta_i,delta_tau=delta_tau,comp_error_prop=True).s)
@@ -288,6 +294,10 @@ def plot_wavemodes_and_compare_to_sweeps_kperp(kpars,beta_i,tau,wavemodes_matchi
             slowcrv_error.append(slowmagson_curve(kperp,kpar,beta_i,tau,delta_beta_i=delta_beta_i,delta_tau=delta_tau,comp_error_prop=True).s)
             whicrv.append(whistler_curve(kperp,kpar,beta_i,tau,comp_error_prop=False))
             whicrv_error.append(whistler_curve(kperp,kpar,beta_i,tau,delta_beta_i=delta_beta_i,delta_tau=delta_tau,comp_error_prop=True).s)
+        
+            testcrv.append(test_curve(kperp,kpar,beta_i,tau,comp_error_prop=False))
+            testcrv_error.append(test_curve(kperp,kpar,beta_i,tau,delta_beta_i=delta_beta_i,delta_tau=delta_tau,comp_error_prop=True).s)
+
         kawcrvs.append(np.asarray(kawcrv))
         kawcrv_errors.append(np.asarray(kawcrv_error))
         fastcrvs.append(np.asarray(fastcrv))
@@ -296,6 +306,8 @@ def plot_wavemodes_and_compare_to_sweeps_kperp(kpars,beta_i,tau,wavemodes_matchi
         slowcrv_errors.append(slowcrv_error)
         whicrvs.append(np.asarray(whicrv))
         whicrv_errors.append(np.asarray(whicrv_error))
+        testcrvs.append(np.asarray(testcrv))
+        testcrv_errors.append(np.asarray(testcrv_error))
 
     plotkperps = []
     plotkperp_errors = []
@@ -326,6 +338,11 @@ def plot_wavemodes_and_compare_to_sweeps_kperp(kpars,beta_i,tau,wavemodes_matchi
             omega2.append(omega_faradayreal2.n)
             omega2_error.append(omega_faradayreal2.s)
 
+        if(flip_omega_sign): #needed b/c we might have a sign error
+            omega = -1.*np.asarray(omega)
+            omega0 = -1.*np.asarray(omega0)
+            omega2 = -1.*np.asarray(omega2)
+
         plotkperps.append(plotkperp)
         plotkperp_errors.append(plotkperp_error)
         omegas.append(omega)
@@ -354,7 +371,10 @@ def plot_wavemodes_and_compare_to_sweeps_kperp(kpars,beta_i,tau,wavemodes_matchi
         plt.plot(kperps,slowcrvs[i],linestyle[i],color='green',linewidth=lnwidth)
         plt.fill_between(kperps,slowcrvs[i]-slowcrv_errors[i],slowcrvs[i]+slowcrv_errors[i],alpha=.2,color='green')
         plt.plot(kperps,whicrvs[i],linestyle[i],color='red',linewidth=lnwidth)
-        plt.fill_between(kperps,whicrvs[i]-whicrv_errors[i],whicrvs[i]+whicrv_errors[i],alpha=.2,color='green')
+        plt.fill_between(kperps,whicrvs[i]-whicrv_errors[i],whicrvs[i]+whicrv_errors[i],alpha=.2,color='red')
+        if(plot_testcrv):
+            plt.plot(kperps,testcrvs[i],linestyle[i],color='gray',linewidth=lnwidth)
+            plt.fill_between(kperps,testcrvs[i]-testcrv_errors[i],testcrvs[i]+testcrv_errors[i],alpha=.2,color='gray')
 
     plt.yscale('log')
     plt.xscale('log')
@@ -378,12 +398,13 @@ def plot_wavemodes_and_compare_to_sweeps_kperp(kpars,beta_i,tau,wavemodes_matchi
         plt.show()
 
 #TODO: make sure given wavemodes are close to given kperps
-def plot_wavemodes_and_compare_to_sweeps_kpar(kperps,beta_i,tau,wavemodes_matching_kpar,kparlim = [.1,10], flnm = '',delta_beta_i = 0, delta_tau = 0,xlim=[],ylim=[]):
+def plot_wavemodes_and_compare_to_sweeps_kpar(kperps,beta_i,tau,wavemodes_matching_kpar,kparlim = [.1,10], flnm = '',delta_beta_i = 0, delta_tau = 0,xlim=[],ylim=[],plot_testcrv=False,flip_omega_sign=False):
     from lib.plume import get_freq_from_wvmd
     from lib.plume import kaw_curve
     from lib.plume import fastmagson_curve
     from lib.plume import slowmagson_curve
     from lib.plume import whistler_curve
+    from lib.plume import test_curve
 
     kpars = np.linspace(kparlim[0],kparlim[1],1000)
     kawcrvs = []
@@ -394,6 +415,8 @@ def plot_wavemodes_and_compare_to_sweeps_kpar(kperps,beta_i,tau,wavemodes_matchi
     slowcrv_errors = []
     whicrvs = []
     whicrv_errors = []
+    testcrvs = []
+    testcrv_errors =  []
     #plot theoretical curves
     for kperp in kperps:
         kawcrv = []
@@ -404,6 +427,8 @@ def plot_wavemodes_and_compare_to_sweeps_kpar(kperps,beta_i,tau,wavemodes_matchi
         slowcrv_error = []
         whicrv = []
         whicrv_error = []
+        testcrv = []
+        testcrv_error = []
         for kpar in kpars:
             kawcrv.append(kaw_curve(kperp,kpar,beta_i,tau,comp_error_prop=False))
             kawcrv_error.append(kaw_curve(kperp,kpar,beta_i,tau,delta_beta_i=delta_beta_i,delta_tau=delta_tau,comp_error_prop=True).s)
@@ -413,6 +438,9 @@ def plot_wavemodes_and_compare_to_sweeps_kpar(kperps,beta_i,tau,wavemodes_matchi
             slowcrv_error.append(slowmagson_curve(kperp,kpar,beta_i,tau,delta_beta_i=delta_beta_i,delta_tau=delta_tau,comp_error_prop=True).s)
             whicrv.append(whistler_curve(kperp,kpar,beta_i,tau,comp_error_prop=False))
             whicrv_error.append(whistler_curve(kperp,kpar,beta_i,tau,delta_beta_i=delta_beta_i,delta_tau=delta_tau,comp_error_prop=True).s)
+        
+            testcrv.append(test_curve(kperp,kpar,beta_i,tau,comp_error_prop=False))
+            testcrv_error.append(test_curve(kperp,kpar,beta_i,tau,delta_beta_i=delta_beta_i,delta_tau=delta_tau,comp_error_prop=True).s)
         kawcrvs.append(np.asarray(kawcrv))
         kawcrv_errors.append(np.asarray(kawcrv_error))
         fastcrvs.append(np.asarray(fastcrv))
@@ -421,6 +449,9 @@ def plot_wavemodes_and_compare_to_sweeps_kpar(kperps,beta_i,tau,wavemodes_matchi
         slowcrv_errors.append(slowcrv_error)
         whicrvs.append(np.asarray(whicrv))
         whicrv_errors.append(np.asarray(whicrv_error))
+        testcrvs.append(np.asarray(testcrv))
+        testcrv_errors.append(np.asarray(testcrv_error))
+
 
     plotkpars = []
     plotkpar_errors = []
@@ -451,6 +482,11 @@ def plot_wavemodes_and_compare_to_sweeps_kpar(kperps,beta_i,tau,wavemodes_matchi
             omega2.append(omega_faradayreal2.n)
             omega2_error.append(omega_faradayreal2.s)
 
+        if(flip_omega_sign): #needed b/c we might have a sign error
+            omega = -1.*np.asarray(omega)
+            omega0 = -1.*np.asarray(omega0)
+            omega2 = -1.*np.asarray(omega2)
+
         plotkpars.append(plotkpar)
         plotkpar_errors.append(plotkpar_error)
         omegas.append(omega)
@@ -475,7 +511,10 @@ def plot_wavemodes_and_compare_to_sweeps_kpar(kperps,beta_i,tau,wavemodes_matchi
         plt.plot(kpars,slowcrvs[i],linestyle[i],color='green',linewidth=lnwidth)
         plt.fill_between(kpars,slowcrvs[i]-slowcrv_errors[i],slowcrvs[i]+slowcrv_errors[i],alpha=.2,color='green')
         plt.plot(kpars,whicrvs[i],linestyle[i],color='red',linewidth=lnwidth)
-        plt.fill_between(kpars,whicrvs[i]-whicrv_errors[i],whicrvs[i]+whicrv_errors[i],alpha=.2,color='green')
+        plt.fill_between(kpars,whicrvs[i]-whicrv_errors[i],whicrvs[i]+whicrv_errors[i],alpha=.2,color='red')
+        if(plot_testcrv):
+            plt.plot(kpars,testcrvs[i],linestyle[i],color='gray',linewidth=lnwidth)
+            plt.fill_between(kpars,testcrvs[i]-testcrv_errors[i],testcrvs[i]+testcrv_errors[i],alpha=.2,color='gray')
 
     plt.yscale('log')
     plt.xscale('log')

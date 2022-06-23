@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 import os
 
-def make_table(rowlbls,collbls,data,ttl='',flnm=''):
+def make_table(rowlbls,collbls,data,ttl='',flnm='',fntsize=10):
     """
     Makes a simple table using matplotlibs default table
 
@@ -24,7 +24,7 @@ def make_table(rowlbls,collbls,data,ttl='',flnm=''):
     fig.set_figheight(.5*len(rowlbls))
     fig.set_figwidth(30)
     ax.set_axis_off()
-    matplotlib.rcParams.update({'font.size': 10})
+    matplotlib.rcParams.update({'font.size': fntsize})
     table = ax.table(
         cellText = data,
         rowLabels = rowlbls,
