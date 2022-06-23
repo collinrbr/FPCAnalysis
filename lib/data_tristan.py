@@ -40,7 +40,7 @@ def load_fields(path_fields, num, field_vars = 'ex ey ez bx by bz', normalizeFie
     This assumes 1D implies data in the 3rd axis only, 2D implies data in the 2nd and 3rd axis only.
 
     Note: to normalize the fields data, one must provide fields data in the  correct frame (shock frame). However,
-    when transforming the fields to this correct frame, the boost velocity must be in the correct normalization 
+    when transforming the fields to this correct frame, the boost velocity must be in the correct normalization
     (typically the original output velocity normalization). Thus, vshock must be in the correct normalization
     for this function to work!!!
     """
@@ -123,7 +123,7 @@ def load_fields(path_fields, num, field_vars = 'ex ey ez bx by bz', normalizeFie
             #enorm = np.mean((field['ex'][:,:,-10:]**2+field['ey'][:,:,-10:]**2+field['ez'][:,:,-10:]**2)**0.5)
 
             dennorm = field['dens'][0,0,:][np.nonzero(field['dens'][0,0,:])][-20]#den array is weird. Its zero towards the end and its first couple of nonzero vals towards the end is small
-            v0norm = bnorm/np.sqrt(4.*np.pi*dennorm*params['mi'])*comp #alfven speed
+            v0norm = bnorm/np.sqrt(4.*np.pi*dennorm*params['mi'])*comp #alfven speed; note this seems empirically correct but needs to be verified
             cnorm = params['c']
             enorm = bnorm*v0norm/cnorm
             if(key[0] == 'b'):
