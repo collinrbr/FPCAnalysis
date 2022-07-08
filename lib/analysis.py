@@ -559,9 +559,11 @@ def remove_average_fields_over_yz(dfields, Efield_only = False):
 
     return dfieldfluc
 
-def remove__flow_over_yz(dflow):
+def remove_flow_over_yz(dflow):
     """
     Removes yz average from field data i.e. delta_field(x,y,z) = field(x,y,z)-<field(x,y,z)>_(y,z)
+
+    Note; this was named remove__flow_over_yz (note the extra '_') at some point, not sure if it was called by this name anywhere
 
     Parameters
     ----------
@@ -1712,7 +1714,7 @@ def compute_vrms(dpar,vmax,dv,x1,x2,y1,y2,z1,z2):
 
     return vrms_squared
 
-def compute_vrms_par(dpar,vmax,dv,x1,x2,y1,y2,z1,z2,vparbasis):
+def compute_vrms_par(dpar,dfields,vmax,dv,x1,x2,y1,y2,z1,z2,vparbasis):
     """
     Same as compute_vrms, but finds the parallel vrms...
 
@@ -1723,6 +1725,8 @@ def compute_vrms_par(dpar,vmax,dv,x1,x2,y1,y2,z1,z2,vparbasis):
     vzdrift = 0.
     vydrift = 0.
     vxdrift = 0.
+
+    dparnewbasis = anl.change_velocity_basis(dfields,dpar,xlimsubset,ylim,zlim,debug=True)
 
     #bin into hist with field aligned coordinates
     vperp2bins = np.arange(-vmax, vmax+dv, dv)
@@ -1935,7 +1939,7 @@ def compute_beta_i_par(dpar,dfields,dden,vmax,dv,x1,x2,y1,y2,z1,z2):
     vparbasis, vperp1basis, vperp2basis = compute_field_aligned_coord(dfields,xlim,ylim,zlim)
 
     #compute v_th
-    v_ion_th_par = np.sqrt(compute_vrms_par(dpar,vmax,dv,x1,x2,y1,y2,z1,z2,vparbasis))
+    v_ion_th_par = np.sqrt(compute_vrms_par(dpar,dfields,vmax,dv,x1,x2,y1,y2,z1,z2,vparbasis))
 
     #compute v_alfven_ion
     v_ion_a_par = compute_alfven_vel_par(dfields,dden,x1,x2,y1,y2,z1,z2,vparbasis)
