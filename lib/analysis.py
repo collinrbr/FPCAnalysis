@@ -1726,6 +1726,8 @@ def compute_vrms_par(dpar,dfields,vmax,dv,x1,x2,y1,y2,z1,z2,vparbasis):
     vydrift = 0.
     vxdrift = 0.
 
+    Vdrift = [0,0,0]
+
     dparnewbasis = change_velocity_basis(dfields,dpar,[x1,x2],[y1,y2],[z1,z2],debug=False)
 
     #bin into hist with field aligned coordinates
