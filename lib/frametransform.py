@@ -142,7 +142,7 @@ def estimate_shock_pos(dfields, yyindex=0, zzindex=0):
     return xposshock
 
 
-def shock_from_ex_cross(all_fields, dt=0.01):
+def shock_from_ex_cross(all_fields, dt=0.01, return_yintercept = False):
     """
     Estimates shock velocity by tracking the first 'signficant' Ex zero crossing
 
@@ -155,6 +155,9 @@ def shock_from_ex_cross(all_fields, dt=0.01):
 
     dt : float
         size of time step in inverse Omega_ci0
+
+    return_yintercept : bool, opt
+        if true, has additional return for y intercept of shockvel fit
 
     Returns
     -------
@@ -187,8 +190,10 @@ def shock_from_ex_cross(all_fields, dt=0.01):
     vshock, v0 = np.polyfit(tvals, xvals, 1)
     print(vshock, v0)
 
-    return vshock, xshockvals
-
+    if(return_yintercept):
+        return vshock, xshockvals, v0
+    else:
+        return vshock, xshockvals
 
 def shockvel_from_compression_ratio(M):
     """
@@ -210,7 +215,7 @@ def shockvel_from_compression_ratio(M):
         return lambda v: M/v-(gamma+1.)/((2./(M-v)**2)+gamma-1)
 
     from scipy.optimize import fsolve
-    vshock = fsolve(shock(M), 1.)  # start search at vshock=2.
+    vshock = fsolve(shock(M), 1.)  # start search at vshock=1.
 
     return vshock
 

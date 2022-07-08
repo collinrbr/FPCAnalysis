@@ -551,7 +551,7 @@ def remove_average_fields_over_yz(dfields, Efield_only = False):
     dfieldfluc['ex'] = dfieldfluc['ex']-dfieldfluc['ex'].mean(axis=(0,1))
     dfieldfluc['ey'] = dfieldfluc['ey']-dfieldfluc['ey'].mean(axis=(0,1))
     dfieldfluc['ez'] = dfieldfluc['ez']-dfieldfluc['ez'].mean(axis=(0,1))
-    
+
     if(not(Efield_only)):
         dfieldfluc['bx'] = dfieldfluc['bx']-dfieldfluc['bx'].mean(axis=(0,1))
         dfieldfluc['by'] = dfieldfluc['by']-dfieldfluc['by'].mean(axis=(0,1))
@@ -609,7 +609,7 @@ def get_average_fields_over_yz(dfields, Efield_only = False):
     dfieldavg['ex'][:] = dfieldavg['ex'].mean(axis=(0,1))
     dfieldavg['ey'][:] = dfieldavg['ey'].mean(axis=(0,1))
     dfieldavg['ez'][:] = dfieldavg['ez'].mean(axis=(0,1))
-    
+
     if(not(Efield_only)):
         dfieldavg['bx'][:] = dfieldavg['bx'].mean(axis=(0,1))
         dfieldavg['by'][:] = dfieldavg['by'].mean(axis=(0,1))
@@ -1712,6 +1712,46 @@ def compute_vrms(dpar,vmax,dv,x1,x2,y1,y2,z1,z2):
 
     return vrms_squared
 
+def compute_vrms_par(dpar,vmax,dv,x1,x2,y1,y2,z1,z2,vparbasis):
+    """
+    Same as compute_vrms, but finds the parallel vrms...
+
+    vparbasis : array
+        is the vpar basis vector (normalized) in cartesian coordinates
+    """
+    #TODO: compute vdrift, convert to field aligned coordinates, and shift
+    vzdrift = 0.
+    vydrift = 0.
+    vxdrift = 0.
+
+    #bin into hist with field aligned coordinates
+    vperp2bins = np.arange(-vmax, vmax+dv, dv)
+    vperp2 = (vperp2bins[1:] + vperp2bins[:-1])/2.
+    vperp1bins = np.arange(-vmax, vmax+dv, dv)
+    vperp1 = (vperp1bins[1:] + vperp1bins[:-1])/2.
+    vparbins = np.arange(-vmax, vmax+dv, dv)
+    vpar = (vparbins[1:] + vparbins[:-1])/2.
+
+    hist,_ = np.histogramdd((dparnewbasis['pperp2']-Vdrift[2], dparnewbasis['pperp1']-Vdrift[1],  dparnewbasis['ppar']-Vdrift[0],), bins=[vperp2bins, vperp1bins, vparbins])
+
+    #compute number density
+    num_den = get_num_par_in_box(dpar,x1,x2,y1,y2,z1,z2)
+
+    # computure parallel pressure
+    pressure = 0.
+    for i in range(0,len(vperp2)):
+        for j in range(0,len(vperp1)):
+            for k in range(0,len(vpar)):
+                vel = math.sqrt(vpar[i]**2.)#+vy[j]**2.+vz[k]**2.)
+                pressure += hist[k,j,i]*vel**2.*dv**3.
+    pressure = pressure / 3.
+
+    vrms_squared_par = pressure/num_den #TODO: check if im missing a factor here
+
+    vrms_par = np.sqrt(vrms_squared_par)
+
+    return vrms_par
+
 def compute_alfven_vel(dfields,dden,x1,x2,y1,y2,z1,z2):
     """
     Computes the average alfven veloicty normalized to dHybridR units, v_a/v_{a,ref}
@@ -1747,7 +1787,7 @@ def compute_alfven_vel(dfields,dden,x1,x2,y1,y2,z1,z2):
 
     from lib.array_ops import get_average_in_box
 
-    rho = get_average_in_box(x1,x2,y1,y2,z1,z2,dden, 'den')
+    rho = get_average_in_box(x1,x2,y1,y2,z1,z2, dden, 'den')
 
     bx = get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'bx')
     by = get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'by')
@@ -1755,6 +1795,54 @@ def compute_alfven_vel(dfields,dden,x1,x2,y1,y2,z1,z2):
     btot = math.sqrt(bx**2.+by**2.+bz**2.)
 
     v_a = btot/rho
+
+    return v_a
+
+def compute_alfven_vel_par(dfields,dden,x1,x2,y1,y2,z1,z2,vparbasis):
+    """
+    Computes the average alfven veloicty normalized to dHybridR units, v_a/v_{a,ref}
+    in the given box.
+
+    Note, v_{a,ref} is defined in the simulation input
+
+    Parameters
+    ----------
+    dfields : dict
+        field data dictionary from field_loader
+    dden : dict
+        fluid density data dictionary from den_loader
+    x1 : float
+        lower x bound
+    x2 : float
+        upper x bound
+    y1 : float
+        lower y bound
+    y2 : float
+        upper y bound
+    z1 : float
+        lower y bound
+    z2 : float
+        upper y bound
+
+    Returns
+    -------
+    v_a : float
+        alfven velocity normalized to reference alfven velocity
+
+    """
+
+    from lib.array_ops import get_average_in_box
+
+    rho = get_average_in_box(x1,x2,y1,y2,z1,z2, dden, 'den')
+
+    bx = get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'bx')
+    by = get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'by')
+    bz = get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'bz')
+
+    bpar = np.abs(np.dot([bx,by,bz],vparbasis))
+
+
+    v_a = bpar/rho
 
     return v_a
 
@@ -1795,7 +1883,7 @@ def compute_beta_i(dpar,dfields,dden,vmax,dv,x1,x2,y1,y2,z1,z2):
     """
 
     #compute v_th
-    v_ion_th = compute_vrms(dpar,vmax,dv,x1,x2,y1,y2,z1,z2)
+    v_ion_th = np.sqrt(compute_vrms(dpar,vmax,dv,x1,x2,y1,y2,z1,z2))
 
     #compute v_alfven_ion
     v_ion_a = compute_alfven_vel(dfields,dden,x1,x2,y1,y2,z1,z2)
@@ -1803,6 +1891,58 @@ def compute_beta_i(dpar,dfields,dden,vmax,dv,x1,x2,y1,y2,z1,z2):
     beta_i = v_ion_th**2./v_ion_a**2.
 
     return beta_i, v_ion_th, v_ion_a
+
+def compute_beta_i_par(dpar,dfields,dden,vmax,dv,x1,x2,y1,y2,z1,z2):
+    """
+    Computes plasma beta for ions using, beta_i = v_ion_th**2./v_ion_a**2.
+
+    Parameters
+    ----------
+    dpar : dict
+        xx vx yy vy zz vz data dictionary from read_particles or read_box_of_particles
+    dfields : dict
+        field data dictionary from field_loader
+    dden : dict
+        fluid density data dictionary from den_loader
+    vmax : float
+        max limit in velocity space used when estimating thermal velocity using moments of the distribution
+    dv : float
+        velocity space grid spacing
+        (assumes square)
+    x1 : float
+        lower x bound
+    x2 : float
+        upper x bound
+    y1 : float
+        lower y bound
+    y2 : float
+        upper y bound
+    z1 : float
+        lower y bound
+    z2 : float
+        upper y bound
+
+    Returns
+    -------
+    beta_i_par : float
+        average parallel ion plasma beta in box
+    """
+
+    #get parallel vector
+    xlim = [x1,x2]
+    ylim = [y1,y2]
+    zlim = [z1,z2]
+    vparbasis, vperp1basis, vperp2basis = compute_field_aligned_coord(dfields,xlim,ylim,zlim)
+
+    #compute v_th
+    v_ion_th_par = np.sqrt(compute_vrms_par(dpar,vmax,dv,x1,x2,y1,y2,z1,z2,vparbasis))
+
+    #compute v_alfven_ion
+    v_ion_a_par = compute_alfven_vel_par(dfields,dden,x1,x2,y1,y2,z1,z2,vparbasis)
+
+    beta_i_par = v_ion_th_par**2./v_ion_a_par**2.
+
+    return beta_i_par, v_ion_th_par, v_ion_a_par
 
 def compute_electron_temp(dden,x1,x2,y1,y2,z1,z2,Te0=1.,gamma=1.66667,num_den_elec0=1.):
     """
