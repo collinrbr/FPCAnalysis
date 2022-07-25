@@ -231,8 +231,9 @@ inputdict = dnc.parse_input_file(path)
 params = dnc.build_params(inputdict,numframe)
 
 flnm = 'FPCnometadata'
-if(num_threads == 1):#For now, we pre project if multithreading
+if(num_threads == 1):#Save in both forms!
     dnc.save3Vdata(Hist, CEx, CEy, CEz, vx, vy, vz, x, enerCEx, enerCEy, enerCEz, dfields['Vframe_relative_to_sim'], params = params, num_par = num_par, filename = resultsdir+flnm+'.nc')
+    dnc.save2Vdata(Histxy,Histxz,Histyz,CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz, vx, vy, vz, x, enerCEx, enerCEy, enerCEz, dfields['Vframe_relative_to_sim'], params = params, num_par = num_par, filename = resultsdir+flnm+'_2v.nc')
 else:
     dnc.save2Vdata(Histxy,Histxz,Histyz,CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz, vx, vy, vz, x, enerCEx, enerCEy, enerCEz, dfields['Vframe_relative_to_sim'], params = params, num_par = num_par, filename = resultsdir+flnm+'_2v.nc')
 print("Done! Please use findShock.py and addMetadata to assign metadata...")
