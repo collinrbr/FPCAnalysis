@@ -1469,7 +1469,7 @@ def compute_field_aligned_coord(dfields,xlim,ylim,zlim):
         print("Already in field aligned coordinates. Returning standard basis...")
         return np.asarray([1.,0,0]),np.asarray([0,1.,0]),np.asarray([0,0,1.])
     vperp2basis /= np.linalg.norm(vperp2basis)
-    vperp1basis = -1*np.cross(vparbasis,vperp2basis)
+    vperp1basis = -1.0 * np.cross(vparbasis,vperp2basis)
     vperp1basis /= np.linalg.norm(vperp1basis)
 
     return vparbasis, vperp1basis, vperp2basis
