@@ -1800,7 +1800,7 @@ def compute_alfven_vel(dfields,dden,x1,x2,y1,y2,z1,z2):
     bz = get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'bz')
     btot = math.sqrt(bx**2.+by**2.+bz**2.)
 
-    v_a = btot/rho
+    v_a = btot/np.sqrt(4*pi*rho)
 
     return v_a
 
@@ -1848,7 +1848,7 @@ def compute_alfven_vel_par(dfields,dden,x1,x2,y1,y2,z1,z2,vparbasis):
     bpar = np.abs(np.dot([bx,by,bz],vparbasis))
 
 
-    v_a = bpar/rho
+    v_a = bpar/np.sqrt(4*pi*rho)
 
     return v_a
 
@@ -1894,7 +1894,7 @@ def compute_beta_i(dpar,dfields,dden,vmax,dv,x1,x2,y1,y2,z1,z2):
     #compute v_alfven_ion
     v_ion_a = compute_alfven_vel(dfields,dden,x1,x2,y1,y2,z1,z2)
 
-    beta_i = v_ion_th**2./v_ion_a**2.
+    beta_i = 2*v_ion_th**2./v_ion_a**2.
 
     return beta_i, v_ion_th, v_ion_a
 
@@ -1946,7 +1946,7 @@ def compute_beta_i_par(dpar,dfields,dden,vmax,dv,x1,x2,y1,y2,z1,z2):
     #compute v_alfven_ion
     v_ion_a_par = compute_alfven_vel_par(dfields,dden,x1,x2,y1,y2,z1,z2,vparbasis)
 
-    beta_i_par = v_ion_th_par**2./v_ion_a_par**2.
+    beta_i_par = 2*v_ion_th_par**2./v_ion_a_par**2.
 
     return beta_i_par, v_ion_th_par, v_ion_a_par
 
