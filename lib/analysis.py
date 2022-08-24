@@ -1800,7 +1800,7 @@ def compute_alfven_vel(dfields,dden,x1,x2,y1,y2,z1,z2):
     bz = get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'bz')
     btot = math.sqrt(bx**2.+by**2.+bz**2.)
 
-    v_a = btot/np.sqrt(4*np.pi*rho)
+    v_a = btot/rho
 
     return v_a
 
@@ -1849,7 +1849,7 @@ def compute_alfven_vel_par(dfields,dden,x1,x2,y1,y2,z1,z2,vparbasis):
     bpar = np.abs(np.dot([bx,by,bz],vparbasis))
 
 
-    v_a = bpar/np.sqrt(4*np.pi*rho)
+    v_a = bpar/rho
 
     return v_a
 
