@@ -2025,7 +2025,7 @@ def compute_tau(dpar,dden,vmax,dv,x1,x2,y1,y2,z1,z2):
     Returns
     -------
     tau : float
-        temperature ration Te/Ti in box
+        temperature ration Ti/Te in box
     """
 
     print("WARNING THIS DOES NOT INCLUDE DRIFT VELOCITY YET")
@@ -2035,7 +2035,7 @@ def compute_tau(dpar,dden,vmax,dv,x1,x2,y1,y2,z1,z2):
     v_ion_th = compute_vrms(dpar,vmax,dv,x1,x2,y1,y2,z1,z2)
     Ti = v_ion_th**2.
 
-    tau = Te/Ti
+    tau = Ti/Te
 
     return tau
 
