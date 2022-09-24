@@ -191,7 +191,7 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
         totalPtcl = len(dpar['p1'][:])
         totalFieldpts = -1 # TODO just remove this varaible, doesn't make sense anymore
         #TODO: check frame!!!!!!
-        dpar['p1'] -= vshock #TODO: clean this up
+        #dpar['p1'] -= vshock #TODO: clean this up- THIS IS A BUG- REMOVE IT
         cprimebinned, hist, vx, vy, vz = compute_cprime_hist(dparsubset, dfields, fieldkey, vmax, dv)
 
     cor = compute_cor_from_cprime(cprimebinned, vx, vy, vz, dv, directionkey)
