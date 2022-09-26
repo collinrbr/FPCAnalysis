@@ -562,17 +562,17 @@ def get_freq_from_wvmd(wm,tol=0.01, comp_error_prop=False,debug=False):
         kperp2 = ufloat(wm['kperp2'],wm['delta_kperp2'])
         kpar = ufloat(wm['kpar'],wm['delta_kpar'])
 
-        omega1 = (-kpar.n/wm['Bperp1'])*wm['Eperp2'] #kpar is assumed to have no error in it
+        omega1 = (kpar.n/wm['Bperp1'])*wm['Eperp2'] #kpar is assumed to have no error in it
         omega1_error = (-kpar.s/wm['Bperp1'])*wm['Eperp2']
         omega1real = ufloat(omega1.real,np.abs(omega1_error.real))
         omega1imag = ufloat(omega1.imag,np.abs(omega1_error.imag))
 
-        omega2 = -(1./wm['Bperp2'])*(wm['kpar']*wm['Eperp1']-kperp1.n*wm['Epar'])
+        omega2 = (1./wm['Bperp2'])*(wm['kpar']*wm['Eperp1']-kperp1.n*wm['Epar'])
         omega2_error = -(1./wm['Bperp2'])*(kperp1.s*wm['Epar']) #uncertainties does not handle complex numbers yet, but fornuately, as these complex numbers are scalars w/o error, it's trivial to do by hand
         omega2real = ufloat(omega2.real,np.abs(omega2_error.real))
         omega2imag = ufloat(omega2.imag,np.abs(omega2_error.imag))
 
-        omega3 = kperp1.n/wm['Bpar']*wm['Eperp2']
+        omega3 = -kperp1.n/wm['Bpar']*wm['Eperp2']
         omega3_error = kperp1.s/wm['Bpar']*wm['Eperp2'] #uncertainties does not handle complex numbers yet, but fornuately, as these complex numbers are scalars w/o error, it's trivial to do by hand
         omega3real = ufloat(omega3.real,np.abs(omega3_error.real))
         omega3imag = ufloat(omega3.imag,np.abs(omega3_error.imag))
@@ -588,13 +588,13 @@ def get_freq_from_wvmd(wm,tol=0.01, comp_error_prop=False,debug=False):
 
     else:
         #get omega using first constraint
-        omega1 = (-wm['kpar']/wm['Bperp1'])*wm['Eperp2']
+        omega1 = (wm['kpar']/wm['Bperp1'])*wm['Eperp2']
 
         #get omega using first constraint
-        omega2 = -(1./wm['Bperp2'])*(wm['kpar']*wm['Eperp1']-wm['kperp1']*wm['Epar'])
+        omega2 = (1./wm['Bperp2'])*(wm['kpar']*wm['Eperp1']-wm['kperp1']*wm['Epar'])
 
         #get omega using second constraint
-        omega3 = wm['kperp1']/wm['Bpar']*wm['Eperp2']
+        omega3 = -wm['kperp1']/wm['Bpar']*wm['Eperp2']
 
         tol = 0.5
         if(np.abs(np.abs(omega1)-np.abs(omega3))>tol and debug):
