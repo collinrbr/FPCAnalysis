@@ -588,13 +588,13 @@ def get_freq_from_wvmd(wm,tol=0.01, comp_error_prop=False,debug=False):
 
     else:
         #get omega using first constraint
-        omega1 = (wm['kpar']/wm['Bperp1'])*wm['Eperp2']
+        omega1 = -(wm['kpar']/wm['Bperp1'])*wm['Eperp2']
 
         #get omega using first constraint
-        omega2 = (1./wm['Bperp2'])*(wm['kpar']*wm['Eperp1']-wm['kperp1']*wm['Epar'])
+        omega2 = -(1./wm['Bperp2'])*(wm['kpar']*wm['Eperp1']-wm['kperp1']*wm['Epar'])
 
         #get omega using second constraint
-        omega3 = -wm['kperp1']/wm['Bpar']*wm['Eperp2']
+        omega3 = wm['kperp1']/wm['Bpar']*wm['Eperp2']
 
         tol = 0.5
         if(np.abs(np.abs(omega1)-np.abs(omega3))>tol and debug):
