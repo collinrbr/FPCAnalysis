@@ -77,7 +77,7 @@ print("Lorentz transforming fields...")
 dfields = ft.lorentz_transform_vx(dfields,vshock)
 
 #-------------------------------------------------------------------------------
-# do FPC analysis for ions
+# do FPC analysis for ions and project output
 #-------------------------------------------------------------------------------
 print("Doing FPC analysis for each slice of x for ions...")
 dx = dfields['ex_xx'][50]-dfields['ex_xx'][0]
@@ -85,7 +85,65 @@ xlim = [np.min(dfields['ex_xx']),np.max(dfields['ex_xx'])]
 ylim = [np.min(dfields['ex_yy']),np.max(dfields['ex_yy'])]
 zlim = [np.min(dfields['ex_zz']),np.max(dfields['ex_zz'])]
 CEx, CEy, CEz, x, Hist, vx, vy, vz, num_par = fpc.compute_correlation_over_x(dfields, dpar_ion, vmax, dv, dx, vshock, xlim, ylim, zlim)
-Histxy,Histxz,Histyz,CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz = fpc.project_CEi_hist(Hist, CEx, CEy, CEz)
+
+Histxy = []
+Histxz = []
+Histyz = []
+for i in range(0,len(Hist)):
+    tempHistxy = ao.array_3d_to_2d(Hist[i],'xy')
+    tempHistxz = ao.array_3d_to_2d(Hist[i],'xz')
+    tempHistyz = ao.array_3d_to_2d(Hist[i],'yz')
+    Histxy.append(tempHistxy)
+    Histxz.append(tempHistxz)
+    Histyz.append(tempHistyz)
+Histxy = np.asarray(Histxy)
+Histxz = np.asarray(Histxz)
+Histyz = np.asarray(Histyz)
+
+CExxy = []
+CExxz = []
+CExyz = []
+for i in range(0,len(Hist)):
+    tempCExxy = ao.array_3d_to_2d(CEx[i],'xy')
+    tempCExxz = ao.array_3d_to_2d(CEx[i],'xz')
+    tempCExyz = ao.array_3d_to_2d(CEx[i],'yz')
+    CExxy.append(tempCExxy)
+    CExxz.append(tempCExxz)
+    CExyz.append(tempCExyz)
+CExxy = np.asarray(CExxy)
+CExxz = np.asarray(CExxz)
+CExyz = np.asarray(CExyz)
+
+CEyxy = []
+CEyxz = []
+CEyyz = []
+for i in range(0,len(Hist)):
+    tempCEyxy = ao.array_3d_to_2d(CEy[i],'xy')
+    tempCEyxz = ao.array_3d_to_2d(CEy[i],'xz')
+    tempCEyyz = ao.array_3d_to_2d(CEy[i],'yz')
+    CEyxy.append(tempCEyxy)
+    CEyxz.append(tempCEyxz)
+    CEyyz.append(tempCEyyz)
+CEyxy = np.asarray(CEyxy)
+CEyxz = np.asarray(CEyxz)
+CEyyz = np.asarray(CEyyz)
+
+CEzxy = []
+CEzxz = []
+CEzyz = []
+for i in range(0,len(Hist)):
+    tempCEzxy = ao.array_3d_to_2d(CEz[i],'xy')
+    tempCEzxz = ao.array_3d_to_2d(CEz[i],'xz')
+    tempCEzyz = ao.array_3d_to_2d(CEz[i],'yz')
+    CEzxy.append(tempCEzxy)
+    CEzxz.append(tempCEzxz)
+    CEzyz.append(tempCEzyz)
+CEzxy = np.asarray(CEzxy)
+CEzxz = np.asarray(CEzxz)
+CEzyz = np.asarray(CEzyz)
+
+
+
 #-------------------------------------------------------------------------------
 # compute energization
 #-------------------------------------------------------------------------------
@@ -111,6 +169,8 @@ enerCEx = anl.compute_energization_over_x(CEx_xy,dv)
 enerCEy = anl.compute_energization_over_x(CEy_xy,dv)
 enerCEz = anl.compute_energization_over_x(CEz_xy,dv)
 
+print(enerCEx)
+
 #-------------------------------------------------------------------------------
 # Save data with relevant input parameters
 #-------------------------------------------------------------------------------
@@ -126,6 +186,63 @@ print('Done with ion results!')
 print("Doing FPC analysis for each slice of x for electrons...")
 CEx, CEy, CEz, x, Hist, vx, vy, vz, num_par = fpc.compute_correlation_over_x(dfields, dpar_elec, vmax, dv, dx, vshock, xlim, ylim, zlim)
 Histxy,Histxz,Histyz,CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz = fpc.project_CEi_hist(Hist, CEx, CEy, CEz)
+
+Histxy = []
+Histxz = []
+Histyz = []
+for i in range(0,len(Hist)):
+    tempHistxy = ao.array_3d_to_2d(Hist[i],'xy')
+    tempHistxz = ao.array_3d_to_2d(Hist[i],'xz')
+    tempHistyz = ao.array_3d_to_2d(Hist[i],'yz')
+    Histxy.append(tempHistxy)
+    Histxz.append(tempHistxz)
+    Histyz.append(tempHistyz)
+Histxy = np.asarray(Histxy)
+Histxz = np.asarray(Histxz)
+Histyz = np.asarray(Histyz)
+
+CExxy = []
+CExxz = []
+CExyz = []
+for i in range(0,len(Hist)):
+    tempCExxy = ao.array_3d_to_2d(CEx[i],'xy')
+    tempCExxz = ao.array_3d_to_2d(CEx[i],'xz')
+    tempCExyz = ao.array_3d_to_2d(CEx[i],'yz')
+    CExxy.append(tempCExxy)
+    CExxz.append(tempCExxz)
+    CExyz.append(tempCExyz)
+CExxy = np.asarray(CExxy)
+CExxz = np.asarray(CExxz)
+CExyz = np.asarray(CExyz)
+
+CEyxy = []
+CEyxz = []
+CEyyz = []
+for i in range(0,len(Hist)):
+    tempCEyxy = ao.array_3d_to_2d(CEy[i],'xy')
+    tempCEyxz = ao.array_3d_to_2d(CEy[i],'xz')
+    tempCEyyz = ao.array_3d_to_2d(CEy[i],'yz')
+    CEyxy.append(tempCEyxy)
+    CEyxz.append(tempCEyxz)
+    CEyyz.append(tempCEyyz)
+CEyxy = np.asarray(CEyxy)
+CEyxz = np.asarray(CEyxz)
+CEyyz = np.asarray(CEyyz)
+
+CEzxy = []
+CEzxz = []
+CEzyz = []
+for i in range(0,len(Hist)):
+    tempCEzxy = ao.array_3d_to_2d(CEz[i],'xy')
+    tempCEzxz = ao.array_3d_to_2d(CEz[i],'xz')
+    tempCEzyz = ao.array_3d_to_2d(CEz[i],'yz')
+    CEzxy.append(tempCEzxy)
+    CEzxz.append(tempCEzxz)
+    CEzyz.append(tempCEzyz)
+CEzxy = np.asarray(CEzxy)
+CEzxz = np.asarray(CEzxz)
+CEzyz = np.asarray(CEzyz)
+
 #-------------------------------------------------------------------------------
 # compute energization
 #-------------------------------------------------------------------------------
