@@ -900,7 +900,7 @@ def make_9panel_sweep_from_2v(Hist_vxvy, Hist_vxvz, Hist_vyvz,
                                     C_Ex_vxvy[i], C_Ex_vxvz[i], C_Ex_vyvz[i],
                                     C_Ey_vxvy[i], C_Ey_vxvz[i], C_Ey_vyvz[i],
                                     C_Ez_vxvy[i], C_Ez_vxvz[i], C_Ez_vyvz[i],
-                                    flnm = directory+str(i), computeJdotE = False, params = params_in, metadata = mdt, xpos = x[i], plotLog=plotLog)
+                                    flnm = directory+str(i).zfill(6), computeJdotE = False, params = params_in, metadata = mdt, xpos = x[i], plotLog=plotLog)
 
 def make_superplot_gif(vx, vy, vz, vmax, Hist, CEx, CEy, CEz, x, directory):
     """
