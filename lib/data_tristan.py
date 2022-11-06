@@ -21,6 +21,8 @@ def load_params(path,num):
 
     with h5py.File(path + 'param.' + num, 'r') as paramfl:
 
+        #print(list(paramfl.keys())) #for some reason, have to print keys this way?
+
         #TODO change keynames to match previously used keynames
         params['comp'] = paramfl['c_omp'][0]
         params['c'] = paramfl['c'][0]
@@ -30,7 +32,11 @@ def load_params(path,num):
         params['mi'] = paramfl['mi'][0]
         params['me'] = paramfl['me'][0]
         params['ppc'] = paramfl['ppc0'][0]
-        params['sizex'] = paramfl['sizex'][0]
+        try:
+            params['sizex'] = paramfl['sizex'][0]
+        except:
+            print("Warning: couldn't find sizex key, trying to load sizey as sizex instead...")
+            params['sizex'] = paramfl['sizey'][0]
         params['delgam'] = paramfl['delgam'][0]
 
     return params

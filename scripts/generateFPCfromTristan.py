@@ -18,9 +18,11 @@ try:
     path = sys.argv[1]
     num = sys.argv[2]
     vshock = float(sys.argv[3])
+    vmax = float(sys.argv[4])
+    dv = float(sys.argv[5])
 except:
     print("This generates FPC netcdf4 file from Tristan data")
-    print("usage: " + sys.argv[0] + " path framenum vshock")
+    print("usage: " + sys.argv[0] + " path framenum vshock vmax dv")
     print("Here, vshock is the velocity of the shock relative to the frame of the data in units of v/vti")
     print("Warning: Frame num expects leading zeros.")
     sys.exit()
@@ -28,6 +30,8 @@ except:
 print('path: ', path)
 print('framenum: ', num)
 print('vshock: ', vshock)
+print('vmax: ', vmax)
+print('dv: ', dv)
 
 #-------------------------------------------------------------------------------
 # load data
@@ -36,10 +40,12 @@ print('vshock: ', vshock)
 print("Loading data...")
 params = dtr.load_params(path,num)
 dfields = dtr.load_fields(path,num,normalizeFields=True)
+
 for key in 'ex ey ez bx by bz'.split(): #our functions assume 3D fields. When the fields are 2D, we load the 2D data into two identitical sheets to mimic the 3D data structure
     if(not(key+'_zz' in dfields.keys())):
         dfields[key+'_zz'] = np.asarray([0,1])
     if(not(key+'_yy' in dfields.keys())):
+        print(key)
         dfields[key+'_yy'] = np.asarray([0,1])
 dpar_elec, dpar_ion = dtr.load_particles(path,num,normalizeVelocity=True) #we like to normalize to each species thermal velocity in the upstream. This function will attempt to calculate this use moments of the dist. It's not perfect, but it works for now
 dpar_ion = dtr.format_par_like_dHybridR(dpar_ion) #For now, we rename the particle data keys too look like the keys we used when processing dHybridR data so this data is compatible with our old routines
@@ -55,12 +61,13 @@ lowerxbound = upperxbound*.95 #WARNING: assumes that the beam is undisturbed in 
 gdpts = (dpar_ion['x1'] > lowerxbound)
 params['MachAlfven'] = np.mean(dpar_ion['p1'][gdpts][:])-vshock #inflow mach alfven (assumes beta = 1) #TODO: stop using this assumption everywhere in this library
 
+#OLD: TODO REMOVE
 #-------------------------------------------------------------------------------
 # set up vmax
 #-------------------------------------------------------------------------------
-print("Computing vmax...")
-vmax = anl.get_max_speed(dpar_ion)
-dv = vmax/30.
+# print("Computing vmax...")
+# vmax = anl.get_max_speed(dpar_ion)
+# dv = vmax/30.
 
 #-------------------------------------------------------------------------------
 # estimate shock vel and lorentz transform
@@ -73,9 +80,9 @@ dfields = ft.lorentz_transform_vx(dfields,vshock)
 # do FPC analysis for ions
 #-------------------------------------------------------------------------------
 print("Doing FPC analysis for each slice of x for ions...")
-dx = dfields['ex_xx'][4]-dfields['ex_xx'][0]
+dx = dfields['ex_xx'][50]-dfields['ex_xx'][0]
 xlim = [np.min(dfields['ex_xx']),np.max(dfields['ex_xx'])]
-ylim = [np.min(dfields['ex_yy']),np.max(dfields['ex_zz'])]
+ylim = [np.min(dfields['ex_yy']),np.max(dfields['ex_yy'])]
 zlim = [np.min(dfields['ex_zz']),np.max(dfields['ex_zz'])]
 CEx, CEy, CEz, x, Hist, vx, vy, vz, num_par = fpc.compute_correlation_over_x(dfields, dpar_ion, vmax, dv, dx, vshock, xlim, ylim, zlim)
 Histxy,Histxz,Histyz,CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz = fpc.project_CEi_hist(Hist, CEx, CEy, CEz)
