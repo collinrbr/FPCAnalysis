@@ -57,15 +57,16 @@ def plot_velsig(vx,vy,vz,dv,vmax,CEiproj,fieldkey,planename,ttl=r'$C_{E_i}(v_i,v
         plt.axvline(axvlinex)
 
     if(flnm != ''):
+        print("Saving fig as",flnm)
         plt.savefig(flnm+'.png',format='png',dpi=300,bbox_inches='tight')
         plt.close('all')#saves RAM
     else:
         plt.show()
-    #plt.close()
-    fig = plt.gcf()
-    ax = plt.gca()
+    plt.close()
+    # fig = plt.gcf()
+    # ax = plt.gca()
 
-    return ax, fig
+    #return ax, fig
 
 
 #TODO: update/ remove this
@@ -1008,3 +1009,82 @@ def project_dist_1d(vx,vy,vz,hist,axis):
     plt.grid()
     plt.ylabel('f('+axis+'/vti)')
     plt.show()
+
+def make_FPC_plot(dfields,dpar,dv,vmax,vshock,x1,x2,fieldkey,planename,flnm=''):
+    """
+    Wrapper for plot_velsig
+    """
+
+    ttl = ''
+    directionkey = fieldkey[-1]
+    #sets up labels for plot
+    if(fieldkey == 'epar'):
+        directionkey = 'epar'
+        ttl = '$C_{E_{||}}'
+    elif(fieldkey == 'eperp1'):
+        directionkey = 'eperp1'
+        ttl = '$C_{E_{\perp,1}}'
+    elif(fieldkey == 'eperp2'):
+        directionkey = 'eperp2'
+        ttl = '$C_{E_{\perp,2}}'
+    elif(fieldkey == 'ex'):
+        ttl = '$C_{E_{x}}'
+    elif(fieldkey == 'ey'):
+        ttl = '$C_{E_{y}}'
+    elif(fieldkey == 'ez'):
+        ttl = '$C_{E_{z}}'
+
+    if(planename == 'parperp1'):
+        ttl += '(v_{||},v_{\perp,1})$'
+        xlbl = "$v_{||}/v_{ts}$"
+        ylbl =  "$v_{\perp,1}/v_{ts}$"
+    elif(planename == 'parperp2'):
+        ttl += '(v_{||},v_{\perp,2})$'
+        xlbl = "$v_{||}/v_{ts}$"
+        ylbl =  "$v_{\perp,2}/v_{ts}$"
+    elif(planename == 'perp1perp2'):
+        ttl += '(v_{\perp,1},v_{\perp,2})$'
+        xlbl = "$v_{\perp,1}/v_{ts}$"
+        ylbl =  "$v_{\perp,2}/v_{ts}$"
+    elif(planename == 'xy'):
+        ttl += '(v_x,v_y)$'
+        xlbl = "$v_{x}/v_{ts}$"
+        ylbl =  "$v_{y}/v_{ts}$"
+    elif(planename == 'xz'):
+        ttl += '(v_x,v_z)$'
+        xlbl = "$v_{x}/v_{ts}$"
+        ylbl =  "$v_{z}/v_{ts}$"
+    elif(planename == 'yz'):
+        ttl += '(v_y,v_z)$'
+        xlbl = "$v_{y}/v_{ts}$"
+        ylbl =  "$v_{z}/v_{ts}$"
+    ttl+='; '
+
+    #for now, we use the full yz domain to capture as many particles as possible
+    y1 = dfields['ex_yy'][0]
+    y2 = dfields['ex_yy'][-1]
+    z1 = dfields['ex_zz'][0]
+    z2 = dfields['ex_zz'][-1]
+
+    #computes FPC
+    #note: v1[k,j,i],v2[k,j,i],v3[k,j,i] corresponds to cor[k,j,i]
+    #where v1 corresponds to vx/vpar (in stand/fieldaligned)
+    #where v2 corresponds to vy/vperp1 (in stand/fieldaligned)
+    #where v3 corresponds to vz/vperp2 (in stand/fieldaligned)
+    from lib.fpc import compute_hist_and_cor
+
+    v1, v2, v3, totalPtcl, totalFieldpts, hist, cor = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
+                                                                            dpar, dfields, vshock, fieldkey, directionkey)
+    del totalFieldpts #this needs to be removed from the code as it is not used anymore
+
+
+    print("npar in box: ",str(np.sum(hist)))
+
+    #makes plot
+    from lib.array_ops import array_3d_to_2d
+    CEiproj = array_3d_to_2d(cor, planename)
+
+    if(flnm != ''):
+        print("Requesting that file is saved as",flnm,"!")
+
+    plot_velsig(v1,v2,v3,dv,vmax,CEiproj,fieldkey,planename,ttl=ttl,xlabel=xlbl,ylabel=ylbl,flnm=flnm)
