@@ -97,6 +97,7 @@ def load_fields(path_fields, num, field_vars = 'ex ey ez bx by bz', normalizeFie
             field[key+'_yy'] = np.linspace(0., field[key].shape[1]*dy, field[key].shape[1])
             field[key+'_zz'] = np.linspace(0., field[key].shape[0]*dz, field[key].shape[0])
 
+    print("Debug")
     if(normalizeFields):
         #normalize to d_i
         comp = load_params(path_fields,num)['comp']
@@ -108,10 +109,12 @@ def load_fields(path_fields, num, field_vars = 'ex ey ez bx by bz', normalizeFie
             if(key+'_zz' in field.keys()):
                 field[key+'_zz'] /= comp
 
+        bnorm = np.mean((field['bx'][:,:,-10:]**2+field['by'][:,:,-10:]**2+field['bz'][:,:,-10:]**2)**0.5)
+        enorm = np.mean((field['ex'][:,:,-10:]**2+field['ey'][:,:,-10:]**2+field['ez'][:,:,-10:]**2)**0.5)
+
         #normalize to correct units
         for key in field_vars:
-            bnorm = np.mean((field['bx'][:,:,-10:]**2+field['by'][:,:,-10:]**2+field['bz'][:,:,-10:]**2)**0.5)
-            enorm = np.mean((field['ex'][:,:,-10:]**2+field['ey'][:,:,-10:]**2+field['ez'][:,:,-10:]**2)**0.5)
+            print("Normalizing key:",key)
             if(key[0] == 'b'):
                 field[key] /= bnorm
             elif(key[0] == 'e'):
