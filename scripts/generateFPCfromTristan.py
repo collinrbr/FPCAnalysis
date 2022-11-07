@@ -22,10 +22,23 @@ try:
     dv = float(sys.argv[5])
 except:
     print("This generates FPC netcdf4 file from Tristan data")
-    print("usage: " + sys.argv[0] + " path framenum vshock vmax dv")
+    print("usage: " + sys.argv[0] + " path framenum vshock vmax dv useflucfields(default F)")
     print("Here, vshock is the velocity of the shock relative to the frame of the data in units of v/vti")
     print("Warning: Frame num expects leading zeros.")
     sys.exit()
+
+try:
+    usedfluc = sys.argv[6]
+    if(usedfluc == 'T'):
+        usedfluc = True
+        print("Using fluctuating fields!")
+    else:
+        usedfluc = False
+        print("Using total fields!")
+except:
+    usedfluc = False
+    print("Using total fields!")
+
 
 print('path: ', path)
 print('framenum: ', num)
@@ -61,14 +74,6 @@ lowerxbound = upperxbound*.95 #WARNING: assumes that the beam is undisturbed in 
 gdpts = (dpar_ion['x1'] > lowerxbound)
 params['MachAlfven'] = np.mean(dpar_ion['p1'][gdpts][:])-vshock #inflow mach alfven (assumes beta = 1) #TODO: stop using this assumption everywhere in this library
 
-#OLD: TODO REMOVE
-#-------------------------------------------------------------------------------
-# set up vmax
-#-------------------------------------------------------------------------------
-# print("Computing vmax...")
-# vmax = anl.get_max_speed(dpar_ion)
-# dv = vmax/30.
-
 #-------------------------------------------------------------------------------
 # estimate shock vel and lorentz transform
 #-------------------------------------------------------------------------------
@@ -76,11 +81,14 @@ print("Lorentz transforming fields...")
 #Lorentz transform fields
 dfields = ft.lorentz_transform_vx(dfields,vshock)
 
+if(usedfluc):
+    dfields = anl.remove_average_fields_over_yz(dfields)
+
 #-------------------------------------------------------------------------------
 # do FPC analysis for ions and project output
 #-------------------------------------------------------------------------------
 print("Doing FPC analysis for each slice of x for ions...")
-dx = dfields['ex_xx'][50]-dfields['ex_xx'][0]
+dx = dfields['ex_xx'][150]-dfields['ex_xx'][0]
 xlim = [np.min(dfields['ex_xx']),np.max(dfields['ex_xx'])]
 ylim = [np.min(dfields['ex_yy']),np.max(dfields['ex_yy'])]
 zlim = [np.min(dfields['ex_zz']),np.max(dfields['ex_zz'])]
@@ -169,13 +177,13 @@ enerCEx = anl.compute_energization_over_x(CEx_xy,dv)
 enerCEy = anl.compute_energization_over_x(CEy_xy,dv)
 enerCEz = anl.compute_energization_over_x(CEz_xy,dv)
 
-print(enerCEx)
-
 #-------------------------------------------------------------------------------
 # Save data with relevant input parameters
 #-------------------------------------------------------------------------------
 print("Saving ion results in netcdf4 file...")
 flnm = path.replace("/", "_")+'ion_FPCnometadata'
+if(usedfluc):
+    flnm += 'dfluc'
 flnm = flnm.replace('~','-')
 dnc.save2Vdata(Histxy,Histxz,Histyz,CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz, vx, vy, vz, x, enerCEx, enerCEy, enerCEz, dfields['Vframe_relative_to_sim'], params = params, num_par = num_par, filename = flnm+'_2v.nc')
 print('Done with ion results!')
@@ -274,6 +282,8 @@ enerCEz = anl.compute_energization_over_x(CEz_xy,dv)
 print("Saving elec results in netcdf4 file...")
 
 flnm = path.replace("/", "_")+'elec_FPCnometadata'
+if(usedfluc):
+    flnm += 'dfluc'
 flnm = flnm.replace('~','-')
 dnc.save2Vdata(Histxy,Histxz,Histyz,CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz, vx, vy, vz, x, enerCEx, enerCEy, enerCEz, dfields['Vframe_relative_to_sim'], params = params, num_par = num_par, filename = flnm+'_2v.nc')
 print('Done!!!')

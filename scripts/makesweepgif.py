@@ -79,7 +79,7 @@ pltvv.make_9panel_sweep_from_2v(Hist_vxvy, Hist_vxvz, Hist_vyvz,
 
 #make gif from png
 if(plotLog):
-    outname = path+'log.9panelplot'
+    outname = path+'.log9panelplot'
 else:
     outname = path+'.9panelplot'
 rsltmng.make_gif_from_folder(directory,outname+'.gif')

@@ -1043,6 +1043,7 @@ def compute_cprime_hist(dparticles, dfields, fieldkey, vmax, dv):
     if(not(vvkey in dparticles.keys())):
         #we assume particle data is passed in standard basis and would need to be converted to field aligned
         from lib.analysis import change_velocity_basis
+        from lib.analysis import change_velocity_basis_local
         from lib.array_ops import find_nearest
         from lib.analysis import compute_field_aligned_coord
 
@@ -1065,9 +1066,10 @@ def compute_cprime_hist(dparticles, dfields, fieldkey, vmax, dv):
         if(_q_in_keys):
             dparticles['q'] = _qtemp
 
-        vparbasis, vperp1basis, vperp2basis = compute_field_aligned_coord(dfields,[_x1,_x2],[dfields['ex_yy'][0],dfields['ex_yy'][-1]],[dfields['ex_zz'][0],dfields['ex_zz'][-1]]) #WARNING: we also assume that field aligned is defined using the whole yz domain in compute cprime function as well!!!
+        vparbasis, vperp1basis, vperp2basis = compute_field_aligned_coord(dfields,[_x1,_x2],[dfields['ex_yy'][0],dfields['ex_yy'][-1]],[dfields['ex_zz'][0],dfields['ex_zz'][-1]])
         _ = np.asarray([vparbasis,vperp1basis,vperp2basis]).T
         changebasismatrix = np.linalg.inv(_)
+
     else:
         changebasismatrix = None
 

@@ -57,7 +57,7 @@ def plot_velsig(vx,vy,vz,dv,vmax,CEiproj,fieldkey,planename,ttl=r'$C_{E_i}(v_i,v
         plt.axvline(axvlinex)
 
     if(flnm != ''):
-        plt.savefig(flnm+'.png',format='png',dpi=300)
+        plt.savefig(flnm+'.png',format='png',dpi=300,bbox_inches='tight')
         plt.close('all')#saves RAM
     else:
         plt.show()
@@ -663,7 +663,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     #CEx_xy
     maxCe = max(np.max(CEx_xy),abs(np.max(CEx_xy)))
     if(plotLog):
-        im10 = axs[1,0].pcolormesh(vy_xy,vx_xy,CEx_xy,vmax=maxCe,vmin=-maxCe,cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
+        im10 = axs[1,0].pcolormesh(vy_xy,vx_xy,CEx_xy,cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
     else:
         im10 = axs[1,0].pcolormesh(vy_xy,vx_xy,CEx_xy,vmax=maxCe,vmin=-maxCe,cmap="seismic", shading="gouraud")
     #axs[1,0].set_title('$C_{Ex}(v_x,v_y)$')
@@ -683,7 +683,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     #CEx_xz
     maxCe = max(np.max(CEx_xz),abs(np.max(CEx_xz)))
     if(plotLog):
-        im11 = axs[1,1].pcolormesh(vz_xz,vx_xz,CEx_xz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
+        im11 = axs[1,1].pcolormesh(vz_xz,vx_xz,CEx_xz, cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
     else:
         im11 = axs[1,1].pcolormesh(vz_xz,vx_xz,CEx_xz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
     #axs[1,1].set_title('$C_{Ex}(v_x,v_z)$')
@@ -700,7 +700,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     #CEx_yz
     maxCe = max(np.max(CEx_yz),abs(np.max(CEx_yz)))
     if(plotLog):
-        im12 = axs[1,2].pcolormesh(vz_yz,vy_yz,CEx_yz.T,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
+        im12 = axs[1,2].pcolormesh(vz_yz,vy_yz,CEx_yz.T,cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
     else:
         im12 = axs[1,2].pcolormesh(vz_yz,vy_yz,CEx_yz.T,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
     #axs[1,2].set_title('$C_{Ex}(v_y,v_z)$')
@@ -717,7 +717,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     #CEy_xy
     maxCe = max(np.max(CEy_xy),abs(np.max(CEy_xy)))
     if(plotLog):
-        im20 = axs[2,0].pcolormesh(vy_xy,vx_xy,CEy_xy,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
+        im20 = axs[2,0].pcolormesh(vy_xy,vx_xy,CEy_xy,cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
     else:
         im20 = axs[2,0].pcolormesh(vy_xy,vx_xy,CEy_xy,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
     #axs[2,0].set_title('$C_{Ey}(v_x,v_y)$')
@@ -737,7 +737,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     #CEy_xz
     maxCe = max(np.max(CEy_xz),abs(np.max(CEy_xz)))
     if(plotLog):
-        im21 = axs[2,1].pcolormesh(vz_xz,vx_xz,CEy_xz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
+        im21 = axs[2,1].pcolormesh(vz_xz,vx_xz,CEy_xz,cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
     else:
         im21 = axs[2,1].pcolormesh(vz_xz,vx_xz,CEy_xz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
     #axs[2,1].set_title('$C_{Ey}(v_x,v_z)$')
@@ -754,7 +754,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     #CEy_yz
     maxCe = max(np.max(CEy_yz),abs(np.max(CEy_yz)))
     if(plotLog):
-        im22 = axs[2,2].pcolormesh(vz_yz,vy_yz,CEy_yz.T,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
+        im22 = axs[2,2].pcolormesh(vz_yz,vy_yz,CEy_yz.T, cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
     else:
         im22 = axs[2,2].pcolormesh(vz_yz,vy_yz,CEy_yz.T,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
     #axs[2,2].set_title('$C_{Ey}(v_y,v_z)$')
@@ -771,7 +771,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     #CEz_xy
     maxCe = max(np.max(CEz_xy),abs(np.max(CEz_xy)))
     if(plotLog):
-        im30 = axs[3,0].pcolormesh(vy_xy,vx_xy,CEz_xy,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
+        im30 = axs[3,0].pcolormesh(vy_xy,vx_xy,CEz_xy,cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
     else:
         im30 = axs[3,0].pcolormesh(vy_xy,vx_xy,CEz_xy,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
     #axs[3,0].set_title('$C_{Ez}(v_x,v_y)$')
@@ -792,7 +792,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     #CEz_xz
     maxCe = max(np.max(CEz_xz),abs(np.max(CEz_xz)))
     if(plotLog):
-        im31 = axs[3,1].pcolormesh(vz_xz,vx_xz,CEz_xz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
+        im31 = axs[3,1].pcolormesh(vz_xz,vx_xz,CEz_xz,cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
     else:
         im31 = axs[3,1].pcolormesh(vz_xz,vx_xz,CEz_xz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
     #axs[3,1].set_title('$C_{Ez}(v_x,v_z)$')
@@ -810,7 +810,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     #CEz_yz
     maxCe = max(np.max(CEz_yz),abs(np.max(CEz_yz)))
     if(plotLog):
-        im32 = axs[3,2].pcolormesh(vz_yz,vy_yz,CEz_yz.T,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
+        im32 = axs[3,2].pcolormesh(vz_yz,vy_yz,CEz_yz.T,cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
     else:
         im32 = axs[3,2].pcolormesh(vz_yz,vy_yz,CEz_yz.T,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
     #axs[3,2].set_title('$C_{Ez}(v_y,v_z)$')
@@ -831,7 +831,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
             axs[_i,_j].set_ylim(-vmax,vmax)
 
     #set ticks
-    intvl = 10.
+    intvl = 5.
     tcks = np.arange(0,vmax,intvl)
     tcks = np.concatenate((-1*np.flip(tcks),tcks))
     for _i in range(0,4):
@@ -895,12 +895,16 @@ def make_9panel_sweep_from_2v(Hist_vxvy, Hist_vxvz, Hist_vyvz,
     for i in range(0,len(Hist_vxvy)):
         print('Making plot ' + str(i) + ' of ' + str(len(Hist_vxvy)))
         mdt = str('Metadata = ' + str(metadata[i]))
+        #try: #sometimes netcdf4 will contain bin with no particles, which messes up plotting routine. For now we skip those bins
         plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
                                     Hist_vxvy[i], Hist_vxvz[i], Hist_vyvz[i],
                                     C_Ex_vxvy[i], C_Ex_vxvz[i], C_Ex_vyvz[i],
                                     C_Ey_vxvy[i], C_Ey_vxvz[i], C_Ey_vyvz[i],
                                     C_Ez_vxvy[i], C_Ez_vxvz[i], C_Ez_vyvz[i],
                                     flnm = directory+str(i).zfill(6), computeJdotE = False, params = params_in, metadata = mdt, xpos = x[i], plotLog=plotLog)
+        # except:
+        #     print("Failed to make plot for this slice!!")
+        #     print("npar:", np.sum(Hist_vxvy))
 
 def make_superplot_gif(vx, vy, vz, vmax, Hist, CEx, CEy, CEz, x, directory):
     """

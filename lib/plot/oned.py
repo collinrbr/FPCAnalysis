@@ -64,7 +64,7 @@ def plot_field(dfields, fieldkey, axis='_xx', xxindex = 0, yyindex = 0, zzindex 
         plt.savefig(flnm,format='png')
     plt.close()
 
-def plot_all_fields(dfields, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0, flnm = '',lowxlim=None, highxlim=None):
+def plot_all_fields(dfields, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0, flnm = '',lowxlim=None, highxlim=None,axvlines=None):
     """
     Plots all field data at some static frame down a line along x,y,z.
 
@@ -146,10 +146,17 @@ def plot_all_fields(dfields, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0, 
     elif(axis == '_yy'):
         axs[5].set_xlabel("$z$ (di)")
     plt.subplots_adjust(hspace=0.5)
+
+    if(axvlines != None):
+        for ax in axs:
+            for axvval in axvlines:
+                ax.axvline(axvval,color='black')
+
+
     if(flnm == ''):
         plt.show()
     else:
-        plt.savefig(flnm,format='png')
+        plt.savefig(flnm,dpi=300,format='png')
     plt.close()
 
 

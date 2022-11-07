@@ -551,7 +551,7 @@ def remove_average_fields_over_yz(dfields, Efield_only = False):
     dfieldfluc['ex'] = dfieldfluc['ex']-dfieldfluc['ex'].mean(axis=(0,1))
     dfieldfluc['ey'] = dfieldfluc['ey']-dfieldfluc['ey'].mean(axis=(0,1))
     dfieldfluc['ez'] = dfieldfluc['ez']-dfieldfluc['ez'].mean(axis=(0,1))
-    
+
     if(not(Efield_only)):
         dfieldfluc['bx'] = dfieldfluc['bx']-dfieldfluc['bx'].mean(axis=(0,1))
         dfieldfluc['by'] = dfieldfluc['by']-dfieldfluc['by'].mean(axis=(0,1))
@@ -609,7 +609,7 @@ def get_average_fields_over_yz(dfields, Efield_only = False):
     dfieldavg['ex'][:] = dfieldavg['ex'].mean(axis=(0,1))
     dfieldavg['ey'][:] = dfieldavg['ey'].mean(axis=(0,1))
     dfieldavg['ez'][:] = dfieldavg['ez'].mean(axis=(0,1))
-    
+
     if(not(Efield_only)):
         dfieldavg['bx'][:] = dfieldavg['bx'].mean(axis=(0,1))
         dfieldavg['by'][:] = dfieldavg['by'].mean(axis=(0,1))
@@ -1531,6 +1531,100 @@ def change_velocity_basis(dfields,dpar,xlim,ylim,zlim,debug=False):
                 print('Warning. Change of basis did not converse total energy...')
 
     return dparnewbasis
+
+def change_velocity_basis_local(dfields,dpar,xlim,ylim,zlim,debug=False):
+    """
+    Converts to field aligned coordinate system
+    Parallel direction is along average magnetic field direction at average in limits
+
+    **differs from change_velocity_basis in that the local FAC at the location of each particle is used**
+
+    Parameters
+    ----------
+    dfields : dict
+        dict returned by field_loader
+    dpar : dict
+        dict returned by read_particles
+    xlim : array
+        xx bounds of analysis (i.e. where the sweep starts and stops)
+    ylim : array
+        yy bounds of each integration box
+    zlim : array
+        zz bounds of each integration box
+    debug : bool, opt
+        print debug statements if energy is not conserved
+
+    Returns
+    -------
+    dparnewbasis : dict
+        particle dictionary in new basis
+    """
+    from copy import deepcopy
+
+    if(dfields['Vframe_relative_to_sim'] != dpar['Vframe_relative_to_sim']):
+        print("Warning, field data is not in the same frame as particle data...")
+
+    gptsparticle = (xlim[0] <= dpar['x1']) & (dpar['x1'] <= xlim[1]) & (ylim[0] <= dpar['x2']) & (dpar['x2'] <= ylim[1]) & (zlim[0] <= dpar['x3']) & (dpar['x3'] <= zlim[1])
+
+    dparnewbasis = {}
+    dparnewbasis['x1'] = deepcopy(dpar['x1'][gptsparticle][:])
+    dparnewbasis['x2'] = deepcopy(dpar['x2'][gptsparticle][:])
+    dparnewbasis['x3'] = deepcopy(dpar['x3'][gptsparticle][:])
+    dparnewbasis['ppar'] = np.zeros((len(dpar['x1'][gptsparticle][:])))
+    dparnewbasis['pperp1'] = np.zeros((len(dpar['x1'][gptsparticle][:])))
+    dparnewbasis['pperp2'] = np.zeros((len(dpar['x1'][gptsparticle][:])))
+
+    changebasismatrixes = []
+
+    for _idx in range(0,len(dparnewbasis['x1'])):
+        #print(_idx,len(dpar_ion['x1'][:]))
+        from lib.fpc import weighted_field_average
+
+        bx = weighted_field_average(dpar['x1'][gptsparticle][_idx], dpar['x2'][gptsparticle][_idx], dpar['x3'][gptsparticle][_idx], dfields, 'bx')
+        by = weighted_field_average(dpar['x1'][gptsparticle][_idx], dpar['x2'][gptsparticle][_idx], dpar['x3'][gptsparticle][_idx], dfields, 'by')
+        bz = weighted_field_average(dpar['x1'][gptsparticle][_idx], dpar['x2'][gptsparticle][_idx], dpar['x3'][gptsparticle][_idx], dfields, 'bz')
+
+        #FROM COMPUTE FIELD ALIGNED
+        B0 = [bx,by,bz] #***Assumes xlim is sufficiently thin*** as get_B0 uses <B(x0,y,z)>_(yz)=B0
+
+        #get normalized basis vectors
+        vparbasis = deepcopy(B0)
+        vparbasis /= np.linalg.norm(vparbasis)
+        #vperp1basis = _get_perp_component([0,1,0],vparbasis) #TODO: check that this returns something close to 0,1,0 as B0 is approximately in the xz plane (with some fluctuations)
+        vperp2basis = np.cross([1.,0,0],B0) #x hat cross B0
+        tol = 0.005
+        _B0 = B0 / np.linalg.norm(B0)
+        # if(np.abs(np.linalg.norm(np.cross([_B0[0],_B0[1],_B0[2]],[1.,0.,0.]))) < tol):
+        #     print("Warning, it seems B0 is parallel to xhat (typically the shock normal)...")
+        #     print("(Bx,By,Bz): ", _B0[0],_B0[1],_B0[2])
+        #     print("xhat: 1,0,0")
+        #     print("Already in field aligned coordinates. Returning standard basis...")
+        #     return np.asarray([1.,0,0]),np.asarray([0,1.,0]),np.asarray([0,0,1.])
+        vperp2basis /= np.linalg.norm(vperp2basis)
+        vperp1basis = np.cross(vparbasis,vperp2basis)
+        vperp1basis /= np.linalg.norm(vperp1basis)
+
+        _ = np.asarray([vparbasis,vperp1basis,vperp2basis]).T
+        changebasismatrix = np.linalg.inv(_)
+
+        _ppar,_pperp1,_pperp2 = np.matmul(changebasismatrix,[dpar['p1'][_idx],dpar['p2'][_idx],dpar['p3'][_idx]])
+
+        dparnewbasis['ppar'][_idx] = _ppar
+        dparnewbasis['pperp1'][_idx] = _pperp1
+        dparnewbasis['pperp2'][_idx] =_pperp2
+
+        changebasismatrixes.append(changebasismatrix)
+
+    #check v^2 for both basis to make sure everything matches
+    if(debug):
+        for i in range(0,20):
+            normnewbasis = np.linalg.norm([dparnewbasis['ppar'][i],dparnewbasis['pperp1'][i],dparnewbasis['pperp2'][i]])
+            normoldbasis = np.linalg.norm([dpar['p1'][i],dpar['p2'][i],dpar['p3'][i]])
+            if(np.abs(normnewbasis-normoldbasis) > 0.001):
+                print('Warning. Change of basis did not converse total energy...')
+                print(np.abs(normnewbasis-normoldbasis))
+
+    return dparnewbasis, changebasismatrixes
 
 def compute_temp_aniso(dparfieldaligned,vmax,dv,V=[0.,0.,0.]):
     """
