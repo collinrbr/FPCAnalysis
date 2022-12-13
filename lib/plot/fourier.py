@@ -375,3 +375,53 @@ def plot_power_spectrum(dwavemodes,flnm='',key='normB',gridsize1=75,gridsize2=75
     plt.close()
     
     return hxbin0, hxbin1, hxbin2
+
+def plot_power_spectrum_cart(dwavemodes,flnm='',key='normB',gridsize1=35,gridsize2=35,gridsize3=35,kxlim=None,kylim=None,kzlim=None):
+    _x1temp = []
+    _x2temp = []
+    _ytemp = []
+    _ztemp = []
+    for wvmd in dwavemodes['wavemodes']:
+        _x1temp.append(wvmd['kx'])
+        _x2temp.append(wvmd['ky'])
+        _ytemp.append(wvmd['kz'])
+        _ztemp.append(wvmd[key])
+
+    fig, axs = plt.subplots(1, 3, figsize=(15,5))
+
+    hxbin0 = axs[0].hexbin(_x1temp, _x2temp, cmap='Spectral', C=_ztemp,gridsize=gridsize1,reduce_C_function=np.sum)
+    axs[0].set_xlabel('$k_{x} \, \, d_i$',fontsize=16)
+    axs[0].set_ylabel('$k_{y} \, \, d_i$',fontsize=16)
+    if(kxlim != None):
+        axs[0].set_xlim(-kxlim,kxlim)
+        axs[0].set_ylim(-kylim,kylim)
+    axs[0].set_aspect('equal')
+    plt.colorbar(hxbin0,ax=axs[0],fraction=.05)
+
+    hxbin1 = axs[1].hexbin(_x1temp, _ytemp, cmap='Spectral', C=_ztemp,gridsize=gridsize1,reduce_C_function=np.sum)
+    axs[1].set_xlabel('$k_{x} \, \, d_i$',fontsize=16)
+    axs[1].set_ylabel('$k_{z} \, \, d_i$',fontsize=16)
+    if(kxlim != None):
+        axs[1].set_xlim(-kxlim,kxlim)
+        axs[1].set_ylim(-kzlim,kzlim)
+    axs[1].set_aspect('equal')
+    plt.colorbar(hxbin1,ax=axs[1],fraction=.05)
+
+    hxbin2 = axs[2].hexbin(_x2temp, _ytemp, cmap='Spectral', C=_ztemp,gridsize=gridsize1,reduce_C_function=np.sum)
+    axs[2].set_xlabel('$k_{y} \, \, d_i$',fontsize=16)
+    axs[2].set_ylabel('$k_{z} \, \, d_i$',fontsize=16)
+    if(kxlim != None):
+        axs[2].set_xlim(-kylim,kylim)
+        axs[2].set_ylim(-kzlim,kzlim)
+    axs[2].set_aspect('equal')
+    plt.colorbar(hxbin2,ax=axs[2],fraction=.05)
+
+    plt.subplots_adjust(wspace=.5)
+
+    if(flnm != ''):
+        plt.savefig(flnm,dpi=300,format='png',bbox_inches='tight')
+    else:
+        plt.show()
+    plt.close()
+
+    return hxbin0, hxbin1, hxbin2
