@@ -27,8 +27,8 @@ try:
 
 except:
     print("This script queues up generateFPC.py on all analysis inputs in specified folder")
-    print("Warning: this script assumes the user has presliced the data...")
-    print("usage: " + sys.argv[0] + " analysisinputdir numcores(opt) logdir(opt)")
+    print("Warning: this script workes best when the user has presliced the data...")
+    print("usage: " + sys.argv[0] + " analysisinputdir numcores(opt) logdir(opt) usedfluc(opt; T/F)")
     sys.exit()
 
 try:
@@ -46,6 +46,14 @@ try:
         pass
 except:
     logdir = ''
+
+try:
+    usedfluc = sys.argv[4]
+    if (not(usedfluc in ['T','F'])):
+        print("Error: usedfluc much be T or F")
+        exit()
+except:
+    usedfluc = 'F'
 
 filenames = os.listdir(analysisinputdir)
 filenames = sorted(filenames)
@@ -79,9 +87,12 @@ for flnm in filenames:
     os.system(cmd)
     if(preslice_dir==None):
         print("Warning: multiprocessing requires preslicing...")
+        if(usedfluc == 'T'):
+            print("ERROR: can't compute dfluc without preslicing (this is technically possible, but the generateFPC.py script arguments need to be changed")
+            exit()
         cmd = 'python3 scripts/generateFPC.py '+analysisinputdir+'/'+flnm+' T F  >> '+logdir+flnm+'.output'
     else:
-        cmd = 'python3 scripts/generateFPC.py '+analysisinputdir+'/'+flnm+' T F '+str(numcores)+' '+preslice_dir + ' >> '+logdir+flnm+'.output'
+        cmd = 'python3 scripts/generateFPC.py '+analysisinputdir+'/'+flnm+' T F '+str(numcores)+' '+preslice_dir +' '+usedfluc+' >> '+logdir+flnm+'.output'
 
     print(cmd)
     os.system(cmd)
