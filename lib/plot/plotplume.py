@@ -398,13 +398,196 @@ def plot_wavemodes_and_compare_to_sweeps_kperp(kpars,beta_i,tau,wavemodes_matchi
         plt.show()
 
 #TODO: make sure given wavemodes are close to given kperps
-def plot_wavemodes_and_compare_to_sweeps_kpar(kperps,beta_i,tau,wavemodes_matching_kpar,kparlim = [.1,10], flnm = '',delta_beta_i = 0, delta_tau = 0,xlim=[],ylim=[],plot_testcrv=False,flip_omega_sign=False):
+def plot_wavemodes_and_compare_to_sweeps_kperp(kpars,beta_i,tau,wavemodes_matching_kpar,kperplim = [.1,10], flnm = '',delta_beta_i = 0, delta_tau = 0,xlim=[],ylim=[],plot_testcrv=False,flip_omega_sign=False,extralines=[],extracolors=[],scalarfac = 1.):
     from lib.plume import get_freq_from_wvmd
     from lib.plume import kaw_curve
     from lib.plume import fastmagson_curve
     from lib.plume import slowmagson_curve
     from lib.plume import whistler_curve
     from lib.plume import test_curve
+
+    if(scalarfac == 1.):
+        print("WARNING: empirical curves plotted may be in a different normalization, as the frequency/ wavenumber computed from wavemode is normalized to the upstream parameters but empircal curves need local normalization")
+        print("Please account scalarfact = btotlocaloverbtotup/(np.sqrt(ntotlocalovernup)) by passing optional parameter scalarfac = scalarfact")
+        print("However, this factor is often approx 1")
+
+
+    kperps = np.linspace(kperplim[0],kperplim[1],1000)
+    kawcrvs = []
+    kawcrv_errors = []
+    fastcrvs = []
+    fastcrv_errors = []
+    slowcrvs = []
+    slowcrv_errors = []
+    whicrvs = []
+    whicrv_errors = []
+    testcrvs = []
+    testcrv_errors  = []
+    #plot theoretical curves
+    for kpar in kpars:
+        kawcrv = []
+        kawcrv_error = []
+        fastcrv = []
+        fastcrv_error = []
+        slowcrv = []
+        slowcrv_error = []
+        whicrv = []
+        whicrv_error = []
+        testcrv = []
+        testcrv_error = []
+        for kperp in kperps:
+            kawcrv.append(kaw_curve(kperp,kpar,beta_i,tau,comp_error_prop=False))
+            kawcrv_error.append(kaw_curve(kperp,kpar,beta_i,tau,delta_beta_i=delta_beta_i,delta_tau=delta_tau,comp_error_prop=True).s)
+            fastcrv.append(fastmagson_curve(kperp,kpar,beta_i,tau,comp_error_prop=False))
+            fastcrv_error.append(fastmagson_curve(kperp,kpar,beta_i,tau,delta_beta_i=delta_beta_i,delta_tau=delta_tau,comp_error_prop=True).s)
+            slowcrv.append(slowmagson_curve(kperp,kpar,beta_i,tau,comp_error_prop=False))
+            slowcrv_error.append(slowmagson_curve(kperp,kpar,beta_i,tau,delta_beta_i=delta_beta_i,delta_tau=delta_tau,comp_error_prop=True).s)
+            whicrv.append(whistler_curve(kperp,kpar,beta_i,tau,comp_error_prop=False))
+            whicrv_error.append(whistler_curve(kperp,kpar,beta_i,tau,delta_beta_i=delta_beta_i,delta_tau=delta_tau,comp_error_prop=True).s)
+
+            testcrv.append(test_curve(kperp,kpar,beta_i,tau,comp_error_prop=False))
+            testcrv_error.append(test_curve(kperp,kpar,beta_i,tau,delta_beta_i=delta_beta_i,delta_tau=delta_tau,comp_error_prop=True).s)
+
+        kawcrvs.append(np.asarray(kawcrv))
+        kawcrv_errors.append(np.asarray(kawcrv_error))
+        fastcrvs.append(np.asarray(fastcrv))
+        fastcrv_errors.append(fastcrv_error)
+        slowcrvs.append(np.asarray(slowcrv))
+        slowcrv_errors.append(slowcrv_error)
+        whicrvs.append(np.asarray(whicrv))
+        whicrv_errors.append(np.asarray(whicrv_error))
+        testcrvs.append(np.asarray(testcrv))
+        testcrv_errors.append(np.asarray(testcrv_error))
+
+    plotkperps = []
+    plotkperp_errors = []
+    omegas = []
+    omega_errors = []
+    omegas0 = []
+    omega0_errors = []
+    omegas2 = []
+    omega2_errors = []
+    #grab points and compute error for each wavemode
+    for match_list in wavemodes_matching_kpar:
+        plotkperp = []
+        plotkperp_error = []
+        omega = []
+        omega_error = []
+        omega0 = []
+        omega0_error = []
+        omega2 = []
+        omega2_error = []
+        for wvmd in match_list['wavemodes']:
+            omega_faradayreal0,tempgamma0,omega_faradayreal,tempgamma1,omega_faradayreal2,tempgamma2 = get_freq_from_wvmd(wvmd,comp_error_prop=True)
+
+            print(wvmd)
+
+            print("om0 gam0 om1 gam1 om2 gam2")
+            print(omega_faradayreal0,tempgamma0,omega_faradayreal,tempgamma1,omega_faradayreal2,tempgamma2)
+
+            plotkperp.append(wvmd['kperp'])
+            plotkperp_error.append(wvmd['delta_kperp1'])
+            omega.append(omega_faradayreal.n)
+            omega_error.append(omega_faradayreal.s)
+            omega0.append(omega_faradayreal0.n)
+            omega0_error.append(omega_faradayreal0.s)
+            omega2.append(omega_faradayreal2.n)
+            omega2_error.append(omega_faradayreal2.s)
+
+        if(flip_omega_sign): #needed b/c we might have a sign error
+            print("did flip omega sign")
+            omega = -1.*np.asarray(omega)
+            omega0 = -1.*np.asarray(omega0)
+            omega2 = -1.*np.asarray(omega2)
+        else:
+            print("did NOT flip omega sign")
+
+        plotkperps.append(plotkperp)
+        plotkperp_errors.append(plotkperp_error)
+        omegas.append(omega)
+        omega_errors.append(omega_error)
+        omegas0.append(omega0)
+        omega0_errors.append(omega0_error)
+        omegas2.append(omega2)
+        omega2_errors.append(omega2_error)
+
+    #if(len(kpars) != 3):
+        #print('Error, this function is set up to plot 3 curves (per wavemode) only... TODO: generalize this')
+        #return
+
+    linestyle = ['-',':','--','-.','.',',','-',':','--','-.','.',',','-',':','--','-.','.',',','-',':','--','-.','.',',']
+    lnwidth = 1.75
+
+    kawcrvs = np.asarray(kawcrvs)
+    kawcrv_errors = np.asarray(kawcrv_errors)
+    fastcrvs = np.asarray(fastcrvs)
+    fastcrv_errors = np.asarray(fastcrv_errors)
+    slowcrvs = np.asarray(slowcrvs)
+    slowcrv_errors = np.asarray(slowcrv_errors)
+    whicrvs = np.asarray(whicrvs)
+    whicrv_errors = np.asarray(whicrv_errors)
+
+    plt.figure(figsize=(6,6))
+    for i in range(0,len(kawcrvs)):
+        plt.errorbar(plotkperps[i],np.real(omegas[i]), xerr = plotkperp_errors[i], yerr=omega_errors[i], fmt="o",color='C0')
+        plt.errorbar(plotkperps[i],np.real(omegas0[i]), xerr = plotkperp_errors[i], yerr=omega0_errors[i], fmt="s",color='C1')
+        plt.errorbar(plotkperps[i],np.real(omegas2[i]), xerr = plotkperp_errors[i], yerr=omega2_errors[i], fmt='*',color='C3')
+        plt.plot(kperps,scalarfac*kawcrvs[i],linestyle[i],color='black',linewidth=lnwidth,label='$k_{||}$='+str(format(kpars[i],'.2f')))
+        plt.fill_between(kperps,scalarfac*kawcrvs[i]-scalarfac*kawcrv_errors[i],scalarfac*kawcrvs[i]+scalarfac*kawcrv_errors[i],alpha=.2,color='black')
+        plt.plot(kperps,scalarfac*fastcrvs[i],linestyle[i],color='blue',linewidth=lnwidth)
+        plt.fill_between(kperps,scalarfac*fastcrvs[i]-scalarfac*fastcrv_errors[i],scalarfac*fastcrvs[i]+scalarfac*fastcrv_errors[i],alpha=.2,color='blue')
+        plt.plot(kperps,scalarfac*slowcrvs[i],linestyle[i],color='green',linewidth=lnwidth)
+        plt.fill_between(kperps,scalarfac*slowcrvs[i]-scalarfac*slowcrv_errors[i],scalarfac*slowcrvs[i]+scalarfac*slowcrv_errors[i],alpha=.2,color='green')
+        plt.plot(kperps,scalarfac*whicrvs[i],linestyle[i],color='red',linewidth=lnwidth)
+        plt.fill_between(kperps,scalarfac*whicrvs[i]-scalarfac*whicrv_errors[i],scalarfac*whicrvs[i]+scalarfac*whicrv_errors[i],alpha=.2,color='red')
+        if(plot_testcrv):
+            plt.plot(kperps,testcrvs[i],linestyle[i],color='gray',linewidth=lnwidth)
+            plt.fill_between(kperps,testcrvs[i]-testcrv_errors[i],testcrvs[i]+testcrv_errors[i],alpha=.2,color='gray')
+
+    if(extralines != []):
+        for _i in range(0,len(extralines[0])):
+            print(_i)
+            plt.plot(extralines[0][_i],extralines[1][_i],color=extracolors[_i],ls=':')
+
+    plt.yscale('log')
+    plt.xscale('log')
+    plt.legend(prop={'size': 20})
+    plt.xlabel('$k_{\perp} d_i$',fontsize=22)
+    plt.ylabel('$\omega / \Omega_i$',fontsize=22)
+    plt.gca().yaxis.set_tick_params(labelsize=18)
+    plt.gca().xaxis.set_tick_params(labelsize=18)
+    plt.grid(True, which="both", ls="-")
+    plt.axis('scaled')
+    plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
+    if(ylim == []):
+        plt.ylim(.1,10)
+    else:
+        plt.ylim(ylim[0],ylim[1])
+    if(xlim == []):
+        plt.xlim(.1,10)
+    else:
+        plt.xlim(xlim[0],xlim[1])
+    if(flnm != ''):
+        plt.savefig(flnm+'.png',format='png',dpi=600,bbox_inches="tight")
+        plt.close()
+    else:
+        plt.show()
+
+    return omegas, omegas0, omegas2, plotkperps, omega_errors
+
+#TODO: make sure given wavemodes are close to given kperps
+def plot_wavemodes_and_compare_to_sweeps_kpar(kperps,beta_i,tau,wavemodes_matching_kpar,kparlim = [.1,10], flnm = '',delta_beta_i = 0, delta_tau = 0,xlim=[],ylim=[],plot_testcrv=False,flip_omega_sign=False,extralines=[],extracolors=[],scalarfac = 1.):
+    from lib.plume import get_freq_from_wvmd
+    from lib.plume import kaw_curve
+    from lib.plume import fastmagson_curve
+    from lib.plume import slowmagson_curve
+    from lib.plume import whistler_curve
+    from lib.plume import test_curve
+
+    if(scalarfac == 1.):
+        print("WARNING: empirical curves plotted may be in a different normalization, as the frequency/ wavenumber computed from wavemode is normalized to the upstream parameters but empircal curves need local normalization")
+        print("Please account scalarfact = btotlocaloverbtotup/(np.sqrt(ntotlocalovernup)) by passing optional parameter scalarfac = scalarfact")
+        print("However, this factor is often approx 1")
 
     kpars = np.linspace(kparlim[0],kparlim[1],1000)
     kawcrvs = []
@@ -438,7 +621,7 @@ def plot_wavemodes_and_compare_to_sweeps_kpar(kperps,beta_i,tau,wavemodes_matchi
             slowcrv_error.append(slowmagson_curve(kperp,kpar,beta_i,tau,delta_beta_i=delta_beta_i,delta_tau=delta_tau,comp_error_prop=True).s)
             whicrv.append(whistler_curve(kperp,kpar,beta_i,tau,comp_error_prop=False))
             whicrv_error.append(whistler_curve(kperp,kpar,beta_i,tau,delta_beta_i=delta_beta_i,delta_tau=delta_tau,comp_error_prop=True).s)
-        
+
             testcrv.append(test_curve(kperp,kpar,beta_i,tau,comp_error_prop=False))
             testcrv_error.append(test_curve(kperp,kpar,beta_i,tau,delta_beta_i=delta_beta_i,delta_tau=delta_tau,comp_error_prop=True).s)
         kawcrvs.append(np.asarray(kawcrv))
@@ -499,30 +682,47 @@ def plot_wavemodes_and_compare_to_sweeps_kpar(kperps,beta_i,tau,wavemodes_matchi
     linestyle = ['-',':','--','-.','.',',','-',':','--','-.','.',',','-',':','--','-.','.',',','-',':','--','-.','.',',']
     lnwidth = 1.75
 
-    plt.figure(figsize=(8,8))
+    kawcrvs = np.asarray(kawcrvs)
+    kawcrv_errors = np.asarray(kawcrv_errors)
+    fastcrvs = np.asarray(fastcrvs)
+    fastcrv_errors = np.asarray(fastcrv_errors)
+    slowcrvs = np.asarray(slowcrvs)
+    slowcrv_errors = np.asarray(slowcrv_errors)
+    whicrvs = np.asarray(whicrvs)
+    whicrv_errors = np.asarray(whicrv_errors)
+
+    plt.figure(figsize=(6,6))
     for i in range(0,len(kawcrvs)):
         plt.errorbar(plotkpars[i],np.real(omegas[i]), xerr = plotkpar_errors[i], yerr=omega_errors[i], fmt="o",color='C0')
         plt.errorbar(plotkpars[i],np.real(omegas0[i]), xerr = plotkpar_errors[i], yerr=omega0_errors[i], fmt="s",color='C1')
         plt.errorbar(plotkpars[i],np.real(omegas2[i]), xerr = plotkpar_errors[i], yerr=omega2_errors[i], fmt="*",color='C3')
-        plt.plot(kpars,kawcrvs[i],linestyle[i],color='black',linewidth=lnwidth,label='$k_\perp$='+str(format(kperps[i],'.2f')))
-        plt.fill_between(kpars,kawcrvs[i]-kawcrv_errors[i],kawcrvs[i]+kawcrv_errors[i],alpha=.2,color='black')
-        plt.plot(kpars,fastcrvs[i],linestyle[i],color='blue',linewidth=lnwidth)
-        plt.fill_between(kpars,fastcrvs[i]-fastcrv_errors[i],fastcrvs[i]+fastcrv_errors[i],alpha=.2,color='blue')
-        plt.plot(kpars,slowcrvs[i],linestyle[i],color='green',linewidth=lnwidth)
-        plt.fill_between(kpars,slowcrvs[i]-slowcrv_errors[i],slowcrvs[i]+slowcrv_errors[i],alpha=.2,color='green')
-        plt.plot(kpars,whicrvs[i],linestyle[i],color='red',linewidth=lnwidth)
-        plt.fill_between(kpars,whicrvs[i]-whicrv_errors[i],whicrvs[i]+whicrv_errors[i],alpha=.2,color='red')
+        plt.plot(kpars,scalarfac*kawcrvs[i],linestyle[i],color='black',linewidth=lnwidth,label='$k_\perp$='+str(format(kperps[i],'.2f')))
+        plt.fill_between(kpars,scalarfac*kawcrvs[i]-scalarfac*kawcrv_errors[i],scalarfac*kawcrvs[i]+scalarfac*kawcrv_errors[i],alpha=.2,color='black')
+        plt.plot(kpars,scalarfac*fastcrvs[i],linestyle[i],color='blue',linewidth=lnwidth)
+        plt.fill_between(kpars,scalarfac*fastcrvs[i]-scalarfac*fastcrv_errors[i],scalarfac*fastcrvs[i]+scalarfac*fastcrv_errors[i],alpha=.2,color='blue')
+        plt.plot(kpars,scalarfac*slowcrvs[i],linestyle[i],color='green',linewidth=lnwidth)
+        plt.fill_between(kpars,scalarfac*slowcrvs[i]-scalarfac*slowcrv_errors[i],scalarfac*slowcrvs[i]+scalarfac*slowcrv_errors[i],alpha=.2,color='green')
+        plt.plot(kpars,scalarfac*whicrvs[i],linestyle[i],color='red',linewidth=lnwidth)
+        plt.fill_between(kpars,scalarfac*whicrvs[i]-scalarfac*whicrv_errors[i],scalarfac*whicrvs[i]+scalarfac*whicrv_errors[i],alpha=.2,color='red')
         if(plot_testcrv):
             plt.plot(kpars,testcrvs[i],linestyle[i],color='gray',linewidth=lnwidth)
             plt.fill_between(kpars,testcrvs[i]-testcrv_errors[i],testcrvs[i]+testcrv_errors[i],alpha=.2,color='gray')
 
+    if(extralines != []):
+        for _i in range(0,len(extralines[0])):
+            print(_i)
+            plt.plot(extralines[0][_i],extralines[1][_i],color=extracolors[_i],ls=':')
+
     plt.yscale('log')
     plt.xscale('log')
-    plt.legend()
-    plt.xlabel('$k_{||} d_i$')
-    plt.ylabel('$\omega / \Omega_i$')
+    plt.legend(prop={'size': 20})
+    plt.xlabel('$k_{||} d_i$', fontsize = 22)
+    plt.ylabel('$\omega / \Omega_i$', fontsize = 22)
+    plt.gca().yaxis.set_tick_params(labelsize=18)
+    plt.gca().xaxis.set_tick_params(labelsize=18)
     plt.grid(True, which="both", ls="-")
     plt.axis('scaled')
+    plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
     if(ylim == []):
         plt.ylim(.1,10)
     else:
@@ -536,3 +736,5 @@ def plot_wavemodes_and_compare_to_sweeps_kpar(kperps,beta_i,tau,wavemodes_matchi
         plt.close()
     else:
         plt.show()
+
+    return omegas, omegas0, omegas2, plotkpars, omega_errors

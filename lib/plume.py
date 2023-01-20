@@ -562,7 +562,7 @@ def get_freq_from_wvmd(wm,tol=0.01, comp_error_prop=False,debug=False):
         kperp2 = ufloat(wm['kperp2'],wm['delta_kperp2'])
         kpar = ufloat(wm['kpar'],wm['delta_kpar'])
 
-        omega1 = (-kpar.n/wm['Bperp1'])*wm['Eperp2'] #kpar is assumed to have no error in it
+        omega1 = -(kpar.n/wm['Bperp1'])*wm['Eperp2'] #kpar is assumed to have no error in it
         omega1_error = (-kpar.s/wm['Bperp1'])*wm['Eperp2']
         omega1real = ufloat(omega1.real,np.abs(omega1_error.real))
         omega1imag = ufloat(omega1.imag,np.abs(omega1_error.imag))
@@ -588,7 +588,7 @@ def get_freq_from_wvmd(wm,tol=0.01, comp_error_prop=False,debug=False):
 
     else:
         #get omega using first constraint
-        omega1 = (-wm['kpar']/wm['Bperp1'])*wm['Eperp2']
+        omega1 = -(wm['kpar']/wm['Bperp1'])*wm['Eperp2']
 
         #get omega using first constraint
         omega2 = -(1./wm['Bperp2'])*(wm['kpar']*wm['Eperp1']-wm['kperp1']*wm['Epar'])

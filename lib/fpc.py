@@ -148,7 +148,7 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
         gptsparticle = (x1 <= dpar['x1']) & (dpar['x1'] <= x2) & (y1 <= dpar['x2']) & (dpar['x2'] <= y2) & (z1 <= dpar['x3']) & (dpar['x3'] <= z2)
         try: #This is hacky TODO: clean this up by simply returning hist and cor arrays full of zeros
             dparsubset = {
-              'p1': dpar['p1'][gptsparticle][:],
+              'p1': dpar['p1'][gptsparticle][:]-vshock,
               'p2': dpar['p2'][gptsparticle][:],
               'p3': dpar['p3'][gptsparticle][:],
               'x1': dpar['x1'][gptsparticle][:],
@@ -191,7 +191,7 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
         totalPtcl = len(dpar['p1'][:])
         totalFieldpts = -1 # TODO just remove this varaible, doesn't make sense anymore
         #TODO: check frame!!!!!!
-        dpar['p1'] -= vshock #TODO: clean this up
+        #dpar['p1'] -= vshock #TODO: clean this up- THIS IS A BUG- REMOVE IT
         cprimebinned, hist, vx, vy, vz = compute_cprime_hist(dparsubset, dfields, fieldkey, vmax, dv)
 
     cor = compute_cor_from_cprime(cprimebinned, vx, vy, vz, dv, directionkey)

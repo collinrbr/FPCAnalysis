@@ -98,6 +98,8 @@ all_dfields = dh5.all_dfield_loader(path=path_fields, is2d3v=is2d3v)
 if(not(is2d3v)): #TODO: add check_input for 2d3v
     anl.check_input(analysisinputflnm,dfields)
 
+dx = dfields['ex_xx'][1]-dfields['ex_xx'][0]
+
 #Load data using normal output files
 if(not(use_restart) and dpar_folder == None):
     print("Loading particle data...")
@@ -109,9 +111,9 @@ if(not(use_restart) and dpar_folder == None):
         if xlim is None:
             xlim = [dfields['ex_xx'][0],dfields['ex_xx'][-1]]
         if ylim is None:
-            ylim = [dfields['ex_yy'][0],dfields['ex_yy'][-1]]
+            ylim = [dfields['ex_yy'][0]-dx/2,dfields['ex_yy'][-1]+dx/2]
         if zlim is None:
-            zlim = [dfields['ex_zz'][0],dfields['ex_zz'][-1]]
+            zlim = [dfields['ex_zz'][0]-dx/2,dfields['ex_zz'][-1]+dx/2]
         dparticles = dh5.read_box_of_particles(path_particles, numframe, xlim[0], xlim[1], ylim[0], ylim[1], zlim[0], zlim[1], is2d3v=is2d3v)
     #Load all the particles
     else:
@@ -139,9 +141,9 @@ if(dpar_folder != None): #TODO: clean up how xlim, ylim, zlim is assigned everyw
         if xlim is None:
             xlim = [dfields['ex_xx'][0],dfields['ex_xx'][-1]]
         if ylim is None:
-            ylim = [dfields['ex_yy'][0],dfields['ex_yy'][-1]]
+            ylim = [dfields['ex_yy'][0]-dx/2,dfields['ex_yy'][-1]+dx/2]
         if zlim is None:
-            zlim = [dfields['ex_zz'][0],dfields['ex_zz'][-1]]
+            zlim = [dfields['ex_zz'][0]-dx/2,dfields['ex_zz'][-1]+dx/2]
 
 #-------------------------------------------------------------------------------
 # If vmax is not specified, use maximum particle velocity as vmax
