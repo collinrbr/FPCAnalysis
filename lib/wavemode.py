@@ -120,10 +120,16 @@ def compute_wavemodes(xx,dfields,xlim,ylim,zlim,
 
                 #value used to see if wave fluctuates in the direction we expect an MHD alfven wave to
                 wavemode['testAlfvenval'] = np.cross(_B,np.cross(_k,epar))
-                wavemode['testAlfvenval'] /= (np.linalg.norm(_B)*np.linalg.norm(np.cross(_k,epar)))
-
+                try:
+                    wavemode['testAlfvenval'] /= (np.linalg.norm(_B)*np.linalg.norm(np.cross(_k,epar)))
+                except:
+                    wavemode['testAlfvenval'] = -1.
+                
                 #consistency check
-                wavemode['kdotB'] = np.dot(_k,_B)/(np.linalg.norm(_k)*np.linalg.norm(_B)) #should be small
+                try:
+                    wavemode['kdotB'] = np.dot(_k,_B)/(np.linalg.norm(_k)*np.linalg.norm(_B)) #should be small
+                except:
+                    wavemode['kdotB'] = -1
 
                 if(vth != None):
                     wavemode['vth']=vth

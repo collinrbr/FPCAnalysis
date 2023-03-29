@@ -35,7 +35,7 @@ def load_params(path,num):
         try:
             params['sizex'] = paramfl['sizex'][0]
         except:
-            print("Warning: couldn't find sizex key, trying to load sizey as sizex instead...")
+            #print("Warning: couldn't find sizex key, trying to load sizey as sizex instead...")
             params['sizex'] = paramfl['sizey'][0]
         params['delgam'] = paramfl['delgam'][0]
 
@@ -98,7 +98,7 @@ def load_fields(path_fields, num, field_vars = 'ex ey ez bx by bz', normalizeFie
             field[key+'_yy'] = np.linspace(0., field[key].shape[1]*dy, field[key].shape[1])
             field[key+'_zz'] = np.linspace(0., field[key].shape[0]*dz, field[key].shape[0])
 
-    print("Debug")
+    #print("Debug")
     if(normalizeFields):
         #normalize to d_i
         comp = load_params(path_fields,num)['comp']
@@ -110,12 +110,13 @@ def load_fields(path_fields, num, field_vars = 'ex ey ez bx by bz', normalizeFie
             if(key+'_zz' in field.keys()):
                 field[key+'_zz'] /= comp
 
-        bnorm = np.mean((field['bx'][:,:,-10:]**2+field['by'][:,:,-10:]**2+field['bz'][:,:,-10:]**2)**0.5)
-        enorm = np.mean((field['ex'][:,:,-10:]**2+field['ey'][:,:,-10:]**2+field['ez'][:,:,-10:]**2)**0.5)
+        if('ex' in field.keys()):
+            bnorm = np.mean((field['bx'][:,:,-10:]**2+field['by'][:,:,-10:]**2+field['bz'][:,:,-10:]**2)**0.5)
+            enorm = np.mean((field['ex'][:,:,-10:]**2+field['ey'][:,:,-10:]**2+field['ez'][:,:,-10:]**2)**0.5)
 
         #normalize to correct units
         for key in field_vars:
-            print("Normalizing key:",key)
+            #print("Normalizing key:",key)
             if(key[0] == 'b'):
                 field[key] /= bnorm
             elif(key[0] == 'e'):
@@ -142,11 +143,11 @@ def load_fields(path_fields, num, field_vars = 'ex ey ez bx by bz', normalizeFie
 
     return field
 
-def load_current(path, num):
+def load_current(path, num,normalizeFields=False):
 
     flow_vars = 'jx jy jz'
 
-    return load_fields(path,num,field_vars=flow_vars)
+    return load_fields(path,num,field_vars=flow_vars,normalizeFields=normalizeFields)
 
 def load_den(path,num):
 

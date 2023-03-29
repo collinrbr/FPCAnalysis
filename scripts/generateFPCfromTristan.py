@@ -201,7 +201,7 @@ enerCEz = anl.compute_energization_over_x(CEz_xy,dv)
 print("Saving ion results in netcdf4 file...")
 flnm = path.replace("/", "_")+'ion_FPCnometadata'
 if(usedfluc):
-    flnm += 'dfluc'
+    flnm = flnm+'dfluc'
 flnm = flnm.replace('~','-')
 dnc.save2Vdata(Histxy,Histxz,Histyz,CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz, vx, vy, vz, x, enerCEx, enerCEy, enerCEz, dfields['Vframe_relative_to_sim'], params = params, num_par = num_par, filename = flnm+'_2v.nc')
 print('Done with ion results!')
