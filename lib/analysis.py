@@ -1518,9 +1518,9 @@ def change_velocity_basis(dfields,dpar,xlim,ylim,zlim,debug=False):
     #change basis
     dparnewbasis = {}
     dparnewbasis['ppar'],dparnewbasis['pperp1'],dparnewbasis['pperp2'] = np.matmul(changebasismatrix,[dpar['p1'][gptsparticle][:],dpar['p2'][gptsparticle][:],dpar['p3'][gptsparticle][:]])
-    dparnewbasis['x1'] = deepcopy(dpar['x1'][:])
-    dparnewbasis['x2'] = deepcopy(dpar['x2'][:])
-    dparnewbasis['x3'] = deepcopy(dpar['x3'][:])
+    dparnewbasis['x1'] = deepcopy(dpar['x1'][gptsparticle][:])
+    dparnewbasis['x2'] = deepcopy(dpar['x2'][gptsparticle][:])
+    dparnewbasis['x3'] = deepcopy(dpar['x3'][gptsparticle][:])
 
     #check v^2 for both basis to make sure everything matches
     if(debug):

@@ -22,7 +22,7 @@ try:
     dv = float(sys.argv[5])
 except:
     print("This generates FPC netcdf4 file from Tristan data")
-    print("usage: " + sys.argv[0] + " path framenum vshock vmax dv useflucfields(default F)")
+    print("usage: " + sys.argv[0] + " path framenum vshock vmax dv useflucfields(default F) fieldaligned(default F)")
     print("Here, vshock is the velocity of the shock relative to the frame of the data in units of v/vti")
     print("Warning: Frame num expects leading zeros.")
     sys.exit()
@@ -39,12 +39,30 @@ except:
     usedfluc = False
     print("Using total fields!")
 
+try:
+    useFAC = sys.argv[7]
+    if(usedfluc == 'T'):
+        useFAC = True
+        print("Using FAC!")
+    else:
+        useFAC = False
+        print("Not using FAC!")
+except:
+    useFAC = False
+    print("Using using FAC!")
+
 
 print('path: ', path)
 print('framenum: ', num)
 print('vshock: ', vshock)
 print('vmax: ', vmax)
 print('dv: ', dv)
+
+if(useFAC):
+    print('Using FAC while sweeping is still a work in progress....')
+    print("TODO: netcdf4 that can handle FAC")
+    print("TODO: add FAC to sweep function")
+    print("TODO: generate 9 pan sweep that can handle FAC netcdf4 file")
 
 #-------------------------------------------------------------------------------
 # load data

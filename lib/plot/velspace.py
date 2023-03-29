@@ -585,7 +585,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     from matplotlib.colors import LogNorm
     import matplotlib.colors as colors
 
-    plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
+    plt.style.use("cb.mplstyle") #sets style parameters for matplotlib plots
 
     fig, axs = plt.subplots(4,3,figsize=(4*5,3*5),sharex=True)
 
@@ -1010,7 +1010,7 @@ def project_dist_1d(vx,vy,vz,hist,axis):
     plt.ylabel('f('+axis+'/vti)')
     plt.show()
 
-def make_FPC_plot(dfields,dpar,dv,vmax,vshock,x1,x2,fieldkey,planename,flnm=''):
+def make_FPC_plot(dfields,dpar,dv,vmax,vshock,x1,x2,fieldkey,planename,flnm='',usefluc=False,usebar=False):
     """
     Wrapper for plot_velsig
     """
@@ -1018,21 +1018,28 @@ def make_FPC_plot(dfields,dpar,dv,vmax,vshock,x1,x2,fieldkey,planename,flnm=''):
     ttl = ''
     directionkey = fieldkey[-1]
     #sets up labels for plot
+    if(usefluc):
+        ttl = '$\widetilde{C}'
+    elif(usebar):
+        ttl = '$\overline{C}'
+    else:
+        ttl = '$C'
+
     if(fieldkey == 'epar'):
         directionkey = 'epar'
-        ttl = '$C_{E_{||}}'
+        ttl += '_{E_{||}}'
     elif(fieldkey == 'eperp1'):
         directionkey = 'eperp1'
-        ttl = '$C_{E_{\perp,1}}'
+        ttl += '_{E_{\perp,1}}'
     elif(fieldkey == 'eperp2'):
         directionkey = 'eperp2'
-        ttl = '$C_{E_{\perp,2}}'
+        ttl += '_{E_{\perp,2}}'
     elif(fieldkey == 'ex'):
-        ttl = '$C_{E_{x}}'
+        ttl += '_{E_{x}}'
     elif(fieldkey == 'ey'):
-        ttl = '$C_{E_{y}}'
+        ttl += '_{E_{y}}'
     elif(fieldkey == 'ez'):
-        ttl = '$C_{E_{z}}'
+        ttl += '_{E_{z}}'
 
     if(planename == 'parperp1'):
         ttl += '(v_{||},v_{\perp,1})$'

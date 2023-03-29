@@ -21,7 +21,7 @@ def load_params(path,num):
 
     with h5py.File(path + 'param.' + num, 'r') as paramfl:
 
-        #print(list(paramfl.keys())) #for some reason, have to print keys this way?
+        # print(list(paramfl.keys())) #for some reason, have to print keys this way?
 
         #TODO change keynames to match previously used keynames
         params['comp'] = paramfl['c_omp'][0]
@@ -46,6 +46,7 @@ def load_fields(path_fields, num, field_vars = 'ex ey ez bx by bz', normalizeFie
     This assumes 1D implies data in the 3rd axis only, 2D implies data in the 2nd and 3rd axis only.
 
     """
+    
     if(normalizeFields):
         field_vars += ' dens'
     field_vars = field_vars.split()
@@ -178,12 +179,21 @@ def load_particles(path, num, normalizeVelocity=False, _getvti=False):
     pts_elc = {}
     pts_ion = {}
     with h5py.File(path + 'prtl.tot.' + num, 'r') as f:
+
         for k in dens_vars_elc:
             pts_elc[k] = f[k][:] #note: velocity is in units γV_i/c
         for l in dens_vars_ion:
             pts_ion[l] = f[l][:]
+
+        pts_elc['inde'] = f['inde'][:]
+        pts_ion['indi'] = f['indi'][:]
+
+        pts_elc['proce'] = f['proce'][:]
+        pts_ion['proci'] = f['proci'][:]
+
     pts_elc['Vframe_relative_to_sim'] = 0. #tracks frame (along vx) relative to sim
     pts_ion['Vframe_relative_to_sim'] = 0. #tracks frame (along vx) relative to sim
+
 
     pts_elc['q'] = -1. #tracks frame (along vx) relative to sim
     pts_ion['q'] = 1. #tracks frame (along vx) relative to sim
