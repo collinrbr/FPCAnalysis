@@ -2093,3 +2093,47 @@ def project_dist_to_vx(vx,vy,vz,hist):
     hist_vx = np.sum(hist_vyvx,axis=0)
 
     return vx[0,0,:], hist_vx
+
+def reduce_dict(ddict,reducfrac=[2,2,2],planes=['z','y','x']):
+    #ddict: dict to be reduced
+    #reducfrac: 1/frac to be reduced (corresponds to plane) (can be [*,*,*] or [*,*])
+    #planes: planes to reduce size of data (should be all when data is 3D, 2 when 2D) (['z','y','x'] or ['y','x'])
+    
+    #get keys that need to be reduced:
+    dkeys = list(ddict.keys())
+    keys = [dkeys[_i] for _i in range(0,len(dkeys)) if ('_' in dkeys[_i] and dkeys[_i][-1] in planes)]
+    
+    print("Warning: most of the functions in this library assume a square grid... ")
+    print("Should probably reduce all axis by the same fraction")
+    
+    import copy
+    ddictout = copy.deepcopy(ddict)
+    
+    for kyidx in range(0,len(keys)):
+        if(not(keys[kyidx].split('_')[0] in keys)):
+            keys.append(keys[kyidx].split('_')[0])
+            
+    for ky in keys:
+        if('_' in ky):
+            if('x' in planes):
+                if(ky[-1] == 'x'):
+                    if(len(reducfrac)==2):
+                        ddictout[ky] = ddictout[ky][::reducfrac[1]]  
+                    if(len(reducfrac)==3):
+                        ddictout[ky] = ddictout[ky][::reducfrac[2]]  
+            if('y'in planes):
+                if(ky[-1] == 'y'):
+                    if(len(reducfrac)==2):
+                        ddictout[ky] = ddictout[ky][::reducfrac[0]]  
+                    if(len(reducfrac)==3):
+                        ddictout[ky] = ddictout[ky][::reducfrac[1]] 
+            if('z' in planes):
+                if(ky[-1] == 'z'):
+                    ddictout[ky] = ddictout[ky][::reducfrac[0]]
+        else:
+            if('x' in planes and 'y' in planes):
+                ddictout[ky] = ddictout[ky][::1,::reducfrac[1],::reducfrac[0]]
+            elif('x' in planes and 'y' in planes and 'z' in planes):
+                ddictout[ky] = ddictout[ky][::reducfrac[2],::reducfrac[1],::reducfrac[0]]
+                                           
+    return ddictout
