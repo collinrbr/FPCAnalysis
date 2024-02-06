@@ -73,9 +73,9 @@ def get_dpar_from_bounds(dpar_folder,x1,x2,verbose=False):
         bounds = f.split('_')
         xbounds.append([float(bounds[0]),float(bounds[1])])
 
-    leftmostbound_index = -1 #must lag by one to capture all wanted slices
+    leftmostbound_index = 0
     testidx = 0
-    while(float(xbounds[testidx][0])<=x1):
+    while(float(xbounds[testidx][0])<x1):
         testidx += 1
         leftmostbound_index += 1
 
