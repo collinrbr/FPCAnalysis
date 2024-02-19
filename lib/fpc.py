@@ -6,7 +6,7 @@ import numpy as np
 
 
 def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
-                            dpar, dfields, vshock, fieldkey, directionkey,checkFrameandGrabSubset=True):
+                            dpar, dfields, vshock, fieldkey, directionkey,checkFrameandGrabSubset=True,altcorrfields=None):
     """
     Computes distribution function and correlation wrt to given field
 
@@ -141,14 +141,14 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
         if('q' in dpar.keys()):
             dparsubset['q'] =dpar['q']
 
-        cprimebinned, hist, vx, vy, vz = compute_cprime_hist(dparsubset, dfields, fieldkey, vmax, dv)
+        cprimebinned, hist, vx, vy, vz = compute_cprime_hist(dparsubset, dfields, fieldkey, vmax, dv,altcorrfields=altcorrfields)
         del dparsubset
 
     else:
         gptsparticle = (x1 <= dpar['x1']) & (dpar['x1'] <= x2) & (y1 <= dpar['x2']) & (dpar['x2'] <= y2) & (z1 <= dpar['x3']) & (dpar['x3'] <= z2)
         try: #This is hacky TODO: clean this up by simply returning hist and cor arrays full of zeros
             dparsubset = {
-              'p1': dpar['p1'][gptsparticle][:]-vshock,
+              'p1': dpar['p1'][gptsparticle][:],
               'p2': dpar['p2'][gptsparticle][:],
               'p3': dpar['p3'][gptsparticle][:],
               'x1': dpar['x1'][gptsparticle][:],
@@ -175,7 +175,7 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
 
             totalPtcl = len(dpar['p1'][:])
             totalFieldpts = -1 # TODO just remove this varaible, doesn't make sense anymore
-            cprimebinned, hist, vx, vy, vz = compute_cprime_hist(dparsubset, dfields, fieldkey, vmax, dv)
+            cprimebinned, hist, vx, vy, vz = compute_cprime_hist(dparsubset, dfields, fieldkey, vmax, dv, altcorrfields=altcorrfields)
 
             cor = compute_cor_from_cprime(cprimebinned, vx, vy, vz, dv, directionkey)
             del cprimebinned
@@ -191,7 +191,7 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
         totalPtcl = len(dpar['p1'][:])
         totalFieldpts = -1 # TODO just remove this varaible, doesn't make sense anymore
         #TODO: check frame!!!!!!
-        #dpar['p1'] -= vshock #TODO: clean this up- THIS IS A BUG- REMOVE IT
+        dpar['p1'] -= vshock #TODO: clean this up
         cprimebinned, hist, vx, vy, vz = compute_cprime_hist(dparsubset, dfields, fieldkey, vmax, dv)
 
     cor = compute_cor_from_cprime(cprimebinned, vx, vy, vz, dv, directionkey)
@@ -990,7 +990,7 @@ def _weighted_field_average(xx, yy, zz, dfields, fieldkey):
     return fieldaverage
 
 
-def compute_cprime_hist(dparticles, dfields, fieldkey, vmax, dv):
+def compute_cprime_hist(dparticles, dfields, fieldkey, vmax, dv,altcorrfields=None):
     """
     Computes cprime for all particles passed to it
 
@@ -1057,11 +1057,13 @@ def compute_cprime_hist(dparticles, dfields, fieldkey, vmax, dv):
         if(dfields['ex_xx'][_xxidx] < xx):
             _x2 = dfields['ex_xx'][_xxidx+1]
 
+        dx = dfields['ex_yy'][1]-dfields['ex_yy'][0]
+
         _q_in_keys = False
         if('q' in dparticles.keys()): #quick fix. TODO: implement this better in such a way that no keys are dropped...
             _qtemp = dparticles['q']
             _q_in_keys = True
-        dparticles = change_velocity_basis(dfields,dparticles,[_x1,_x2],[dfields['ex_yy'][0],dfields['ex_yy'][-1]],[dfields['ex_zz'][0],dfields['ex_zz'][-1]]) #WARNING: we also assume field aligned coordinates uses full yz domain in weighted field average!!!
+        dparticles = change_velocity_basis(dfields,dparticles,[_x1,_x2],[dfields['ex_yy'][0]-dx,dfields['ex_yy'][-1]+dx],[dfields['ex_zz'][0]-dx,dfields['ex_zz'][-1]+dx]) #WARNING: we also assume field aligned coordinates uses full yz domain in weighted field average!!!
         if(_q_in_keys):
             dparticles['q'] = _qtemp
 
@@ -1086,8 +1088,15 @@ def compute_cprime_hist(dparticles, dfields, fieldkey, vmax, dv):
     else:
         #print("Warning! Charge was not specified for dpar dict. Defaulting to q = 1.")
         q = 1.
+
+    if(altcorrfields == None):
+        print("NOT USING ALT CORR FIELDS")
+        dfieldscorr = dfields
+    else:
+        print("USING ALT CORR FIELDS")
+        dfieldscorr = altcorrfields
     for i in range(0, len(dparticles['x1'])):
-        fieldval = weighted_field_average(dparticles['x1'][i], dparticles['x2'][i], dparticles['x3'][i], dfields, fieldkey,changebasismatrix = changebasismatrix)
+        fieldval = weighted_field_average(dparticles['x1'][i], dparticles['x2'][i], dparticles['x3'][i], dfieldscorr, fieldkey,changebasismatrix = changebasismatrix)
         cprimew[i] = q*dparticles[vvkey][i]*fieldval
     cprimew = np.asarray(cprimew)
     #end = time.time()
