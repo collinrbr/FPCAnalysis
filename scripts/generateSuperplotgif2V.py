@@ -38,13 +38,23 @@ path_fields = path
 path_particles = path+"Output/Raw/Sp01/raw_sp01_{:08d}.h5"
 
 #load original netcdf4 file
-(Hist_vxvy, Hist_vxvz, Hist_vyvz,
-   C_Ex_vxvy, C_Ex_vxvz, C_Ex_vyvz,
-   C_Ey_vxvy, C_Ey_vxvz, C_Ey_vyvz,
-   C_Ez_vxvy, C_Ez_vxvz, C_Ez_vyvz,
-   vx, vy, vz, x_in,
-   enerCEx_in, enerCEy_in, enerCEz_in,
-   Vframe_relative_to_sim_in, metadata_in, params_in) = dnc.load2vdata(filename)
+try:
+    (Hist_vxvy, Hist_vxvz, Hist_vyvz,
+       C_Ex_vxvy, C_Ex_vxvz, C_Ex_vyvz,
+       C_Ey_vxvy, C_Ey_vxvz, C_Ey_vyvz,
+       C_Ez_vxvy, C_Ez_vxvz, C_Ez_vyvz,
+       vx, vy, vz, x_in,
+       enerCEx_in, enerCEy_in, enerCEz_in,
+       Vframe_relative_to_sim_in, metadata_in, params_in) = dnc.load2vdata(filename)
+except:
+    #load newer netcdf4 file
+    (Hist_vxvy, Hist_vxvz, Hist_vyvz,
+        C_Ex_vxvy, C_Ex_vxvz, C_Ex_vyvz,
+        C_Ey_vxvy, C_Ey_vxvz, C_Ey_vyvz,
+        C_Ez_vxvy, C_Ez_vxvz, C_Ez_vyvz,
+        vx, vy, vz, x_in,
+        enerCEx_in, enerCEy_in, enerCEz_in,
+        npar_in, Vframe_relative_to_sim_in, metadata_in, params_in) = dnc.load2vdata(filename)
 
 #-------------------------------------------------------------------------------
 # make superplot pngs
