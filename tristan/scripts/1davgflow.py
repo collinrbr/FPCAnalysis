@@ -51,7 +51,11 @@ except:
     dpar_ion = ft.shift_particles(dpar_ion, vshock, beta0, params['mi']/params['me'], isIon=True) #converts from normalization by va to vth
     dpar_elec = ft.shift_particles(dpar_elec, vshock, beta0, params['mi']/params['me'], isIon=False)
     dflow = aa.compute_dflow(dfields, dpar_ion, dpar_elec)
-    dflowavg = aa.get_average_flow_over_yz(dflow)
+
+    import pickle
+    picklefile = 'dflow.pickle'
+    with open(picklefile, 'wb') as handle:
+        pickle.dump(dflow, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 params = ld.load_params(flpath,framenum)
 dt = params['c']/params['comp'] #in units of wpe
@@ -86,7 +90,7 @@ axs[3].plot(dflowavg['ui_xx'],dflowavg['ui'][0,0,:])
 axs[3].set_ylabel(r'$<v_{x,i}/v_{th,i}>$')
 axs[4].plot(dflowavg['ue_xx'],dflowavg['ue'][0,0,:])
 axs[4].set_ylabel(r'$<v_{x,e}/v_{th,e}>$')
-axs[-1].set_xlabel('x/d_i')
+axs[-1].set_xlabel(r'$x/d_i$')
 for ax in axs:
     ax.grid()
 plt.savefig('figures/1dplots/1dflowfig_xdriftandydriftvsx_shockframe.png',format='png',dpi=300)
@@ -104,6 +108,6 @@ axs[0].legend()
 axs[1].legend()
 axs[0].grid()
 axs[1].grid()
-axs[-1].set_xlabel('x/d_i')
+axs[-1].set_xlabel(r'$x/d_i$')
 plt.savefig('figures/1dplots/1dflowfig_shockframe.png',format='png',dpi=300)
 plt.close()

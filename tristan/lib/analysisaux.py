@@ -190,6 +190,26 @@ def compute_dflow(dfields, dpar_ion, dpar_elec, is2D=True, debug=False, return_e
                     else:
                         if(debug):print("Warning: no particles found in bin...")
                         dflow[outkeys[_keyidx]][_k,_j,_i] = 0.
+    outkeys = 'numi nume'.split()
+    for _keyidx in range(0,len(outkeys)):
+        if(debug): print("Computing dens for key: ", outkeys[_keyidx])
+
+        dflow[outkeys[_keyidx]] = np.zeros(dfields['ex'].shape)
+        dflow[outkeys[_keyidx]+'_xx'] = dfields['ex_xx'][:]
+        dflow[outkeys[_keyidx]+'_yy'] = dfields['ex_yy'][:]
+        dflow[outkeys[_keyidx]+'_zz'] = dfields['ex_zz'][:]
+
+        for _i in range(0, nx):
+            for _j in range(0, ny):
+                for _k in range(0, nz):
+                    if((len(ion_bins[_k][_j][_i]) > 0 and outkeys[_keyidx][-1]=='i') or (len(elec_bins[_k][_j][_i]) > 0 and outkeys[_keyidx][-1]=='e') ):
+                        if(outkeys[_keyidx][-1] == 'i'):
+                            dflow[outkeys[_keyidx]][_k,_j,_i] = float(len(ion_bins[_k][_j][_i]))
+                        elif(outkeys[_keyidx][-1] == 'e'):
+                            dflow[outkeys[_keyidx]][_k,_j,_i] = float(len(elec_bins[_k][_j][_i]))
+                    else:
+                        if(debug):print("Warning: no particles found in bin...")
+                        dflow[outkeys[_keyidx]][_k,_j,_i] = 0.
 
         if(is2D):dflow[outkeys[_keyidx]][1,:,:]=dflow[outkeys[_keyidx]][0,:,:]
     return dflow
@@ -300,7 +320,15 @@ def get_average_flow_over_yz(dflow):
 
     for key in dflowavg.keys():
         if(not('_xx' in key) and not('_yy' in key) and not('_zz' in key)):
-            dflowavg[key][:] = dflowavg[key].mean(axis=(0,1))
+            for _idx in range(0,len(dflowavg[key][0,0,:])):
+                for _jdx in range(0,len(dflowavg[key][0,:,_idx])):
+                    for _kdx in range(0,len(dflowavg[key][:,_jdx,_idx])):
+                        if('i' in key and not('num' in key)):
+                            dflowavg[key][_kdx,_jdx,_idx] = np.sum(dflowavg[key][:,:,_idx]*dflow['numi'][:,:,_idx])/np.sum(dflow['numi'][:,:,_idx])
+                        elif('e' in key and not('num' in key)):
+                            dflowavg[key][_kdx,_jdx,_idx] = np.sum(dflowavg[key][:,:,_idx]*dflow['nume'][:,:,_idx])/np.sum(dflow['nume'][:,:,_idx])
+                        elif('num' in key):
+                            dflowavg[key][_kdx,_jdx,_idx] = np.mean(dflow['nume'][:,:,_idx])
 
     return dflowavg
 
@@ -1206,6 +1234,69 @@ def iwlt_noscale(t,k,cwtdata):
             f_ti += np.real(cwtdata[_kidx,_n])/k[_kidx]**1.
         f_t.append(f_ti)
     f_t = np.asarray(f_t)
+
+    return f_t
+
+def force_find_iwlt_scale(t,w=6,retstep=1):
+    """
+    Finds the inverse wlt scale empirically for a morlet wave
+
+    Out inverse wlt function is off by some reconstruction constant, this attempts to compute that constant
+
+    TODO: compute this value analytically
+
+    Parameters
+    ----------
+    t : array
+        time/position axis of wavelet transform
+    w : float, optional
+        width parameter of morlet wave
+    retstep : float, optional
+        spacing using when computing wlt transform
+        see wlt() documentation
+
+    Returns
+    -------
+    ratio : float
+        constant ratio between original and reconstructed signal
+    """
+    t = np.asarray(t)
+    dt = t[1]-t[0]
+    _yy = np.cos(10.*dt*t)
+
+
+    k, cwt = wlt(t,_yy,retstep=retstep)
+    _yyreconstructed = iwlt_noscale(t,k,cwt)
+
+    ratio = np.sum(np.abs(_yy))/np.sum(np.abs(_yyreconstructed)) #take ratio of integrals of abs(data)
+
+    return ratio
+
+def iwlt(t,k,cwtdata,w=6):
+    """
+    Parameters
+    ----------
+    t : array
+        time/position axis of wavelet transform
+    k : array
+        freq/wavenumber axis of wavelet transform
+    cwtdata : 2d array
+        wavelet transform data from wlt() function
+    w : float, optional
+        width parameter of morlet wave
+
+    Returns
+    -------
+    f_t : 1d array
+        reconstructed original signal computed using inverse wavelet transform
+        WARNING: some signals can not be reconstructed well
+    """
+    #TODO: stop using force_find_iwlt scale
+
+    f_t = iwlt_noscale(t,k,cwtdata)
+    retstep = int(len(t)/len(k))
+    ratio = force_find_iwlt_scale(t,w=6,retstep=retstep)
+    f_t = ratio*f_t
 
     return f_t
 
