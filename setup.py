@@ -1,21 +1,29 @@
 import os
+import subprocess
 import sys
-from setuptools import setup
 
-def create_virtualenv():
-    python_version = sys.version_info
-    virtualenv_command = f"python -m venv myenv"
-    os.system(virtualenv_command)
+def create_virtualenv(env_name, python_version):
+    # Ensure virtualenv is installed
+    subprocess.run([sys.executable, "-m", "pip", "install", "virtualenv"])
 
-def install_required_libraries():
-    with open('requirements.txt') as f:
-        required_libraries = f.read().splitlines()
-        for library in required_libraries:
-            os.system(f"myenv/bin/pip install {library}")
+    # Create the virtual environment with the specified Python version
+    subprocess.run([sys.executable, "-m", "virtualenv", f"--python=python{python_version}", env_name])
+
+def install_required_libraries(env_name):
+    # Activate the virtual environment and install the required libraries
+    requirements_file = 'requirements.txt'
+    if os.name == 'nt':  # Windows
+        pip_executable = os.path.join(env_name, 'Scripts', 'pip')
+    else:  # Unix/Linux/MacOS
+        pip_executable = os.path.join(env_name, 'bin', 'pip')
+
+    subprocess.run([pip_executable, 'install', '-r', requirements_file])
 
 def main():
-    create_virtualenv()
-    install_required_libraries()
+    env_name = 'FPCAnalysis'
+    python_version = '3.8'  # Specify the Python version you want here
+    create_virtualenv(env_name, python_version)
+    install_required_libraries(env_name)
 
 if __name__ == "__main__":
     main()
