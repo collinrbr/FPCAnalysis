@@ -37,9 +37,16 @@ def main():
     install_required_libraries(env_name)
 
 if __name__ == "__main__":
+    print("If this has any error, please see the comments at the bottom of setup.py for debugging help!")
+
+    import time
+    time.sleep(5)
+
     main()
     print("Completed!")
     print("If this has any error, please see the comments at the bottom of setup.py for debugging help")
+    print("Please activate the new enviroment! 'source FPCAnalysis/bin/activate' for linux/mac and 'FPCAnalysis\Scripts\activate' for windows")
+    print("This will need to be done every time a new terminal is launched!!!")
 
     #Ubuntu fixes!
     #If you get "FileNotFoundError: [Errno 2] No such file or directory: 'python3.8'" try running:
