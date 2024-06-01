@@ -1,13 +1,23 @@
+#!/usr/bin/env python3
 import os
 import subprocess
 import sys
+import shutil
 
+def check_python_version(version):
+    python_executable = f"python{version}"  # Modify the prefix as needed
+    if os.system(f"{python_executable} --version > /dev/null 2>&1") != 0:
+        print(f"Python {version} is not installed.")
+        print("Please install python3.8! (Try 'sudo apt-get install python3.8' for linux and 'brew install python@3.8' for mac (requires brew!)'")
+        exit()
+    else:
+        print(f"Python {version} is installed.")
 def create_virtualenv(env_name, python_version):
     # Ensure virtualenv is installed
     subprocess.run([sys.executable, "-m", "pip", "install", "virtualenv"])
 
     # Create the virtual environment with the specified Python version
-    subprocess.run([sys.executable, "-m", "virtualenv", f"--python=python{python_version}", env_name])
+    subprocess.run([sys.executable, "-m", "virtualenv", "--python=python"+str(python_version), env_name])
 
 def install_required_libraries(env_name):
     # Activate the virtual environment and install the required libraries
@@ -22,9 +32,18 @@ def install_required_libraries(env_name):
 def main():
     env_name = 'FPCAnalysis'
     python_version = '3.8'  # Specify the Python version you want here
+    check_python_version(python_version)
     create_virtualenv(env_name, python_version)
     install_required_libraries(env_name)
 
 if __name__ == "__main__":
     main()
+    print("Completed!")
+    print("If this has any error, please see the comments at the bottom of setup.py for debugging help")
 
+    #Ubuntu fixes!
+    #If you get "FileNotFoundError: [Errno 2] No such file or directory: 'python3.8'" try running:
+    #sudo apt-get install python3.8
+    
+    #If you get "ModuleNotFoundError: No module named 'distutils.util'" try running: 
+    #sudo apt-get install --reinstall python3.8-distutils
