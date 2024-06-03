@@ -4,6 +4,7 @@
 ## Table of Contents
 
 - [About](#About)
+- [Computing FPC](docs/FPC.md)
 
 ## About <a name = "about"></a>
 
