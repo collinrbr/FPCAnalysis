@@ -45,7 +45,7 @@ if __name__ == "__main__":
     main()
     print("Completed!")
     print("If this has any error, please see the comments at the bottom of setup.py for debugging help")
-    print("Please activate the new enviroment! 'source FPCAnalysis/bin/activate' for linux/mac and 'FPCAnalysis\Scripts\activate' for windows")
+    print("Please activate the new enviroment! 'source FPCAnalysis/bin/activate' for linux/mac and 'FPCAnalysis\\Scripts\\activate' for windows")
     print("This will need to be done every time a new terminal is launched!!!")
 
     #Ubuntu fixes!
