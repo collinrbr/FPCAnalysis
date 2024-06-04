@@ -6,7 +6,6 @@ import numpy as np
 import math
 import postgkyl as pg
 import base64
-import adios
 
 #TODO: polyorder is specified in the input file. Consider grabbing from input file rather than letting the user specify it
 def load_dist(flnm_prefix,num,species='ion',polyorder=2,interpLevel=3,xpos=None,normVel=True):
@@ -228,6 +227,7 @@ def spoof_particle_data(hist,vx,vy,vz,x1,x2,y1,y2,z1,z2,Vframe_relative_to_sim,n
 
 #TODO: make write to lua file
 def get_input_file(flnm_prefix,num,species='ion',verbose=True):
+        import adios #TODO: figure out how to quickly install with setup.py and move to top of file
         if(verbose):
             print("Getting input file from %s_%s_%d.bp" % (flnm_prefix,species,num))
         fh = adios.file("%s_%s_%d.bp" % (flnm_prefix,species,num)) #get input file from species dist data
@@ -242,6 +242,7 @@ def get_input_file(flnm_prefix,num,species='ion',verbose=True):
 def get_input_params(flnm_prefix,num,species='ion',verbose=True):
     """
     """
+    import adios #TODO: figure out how to quickly install with setup.py and move to top of file
     if(verbose):
         print("Getting input params from %s_%s_%d.bp" % (flnm_prefix,species,num))
     fh = adios.file("%s_%s_%d.bp" % (flnm_prefix,species,num)) #get input file from species dist data
