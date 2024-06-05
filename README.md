@@ -29,7 +29,9 @@ FPC.md			WLT.md			normalization.md	regression_unit_test.md	shockvel.md
 
 ## Setup <a name = "setup"></a>
 
-Requirements: python 3.8
+Requirements: python 3.11; pip; conda
+
+Here, we walk through how to make an environment that contains this library. Installing directly to your main environment is not recommended.
 
 1. Clone this repo
 ```
@@ -38,7 +40,7 @@ git clone https://github.com/collinrbr/FPCAnalysis.git
 
 2. Run setup script to install libraries with correct version. It may be possible for newer versions of the the python libraries to be used, but compatability is not tested. 
 ```
-./setup.py
+./install.py
 ```
 This will create a folder 'FPCAnalysis' that contains the python environment for doing FPCAnalysis with these scripts.
 
@@ -49,17 +51,12 @@ Note, if one wishes to use additional libraries, add them to the requirements.tx
 
 This can be done in one of several ways. The most general way is to activate the enviroment in your terminal.
 
-** ONE MUST NAVIGATE TO THIS DIRECTORY AND REACTIVE THE ENVIRONMENT EVERYTIME A NEW TERMINAL IS OPENED ** 
+** ONE MUST NAVIGATE TO THIS DIRECTORY AND REACTIVE THE ENVIRONMENT EVERYTIME A NEW TERMINAL IS OPENED TO USE THIS ENVIRONMENT** 
 Linux/Mac:
 ```
-source FPCAnalysis/bin/activate
+conda activate FPCAnalysisenv
 ```
-
-Windows
-```
-FPCAnalysis\\Scripts\\activate
-```
-** ONE MUST NAVIGATE TO THIS DIRECTORY AND REACTIVE THE ENVIRONMENT EVERYTIME A NEW TERMINAL IS OPENED **
+** ONE MUST NAVIGATE TO THIS DIRECTORY AND REACTIVE THE ENVIRONMENT EVERYTIME A NEW TERMINAL IS OPENED TO USE THIS ENVIRONMENT**
 
 One can also add the following to the top of anyscripts that is written for this environment, in which case, it is no longer necessary to activate the environment when running any script with the following added to it:
 ```
@@ -67,6 +64,10 @@ One can also add the following to the top of anyscripts that is written for this
 ```
 
 Now, you can select an example notebook/ script and start running!
+
+To uninstall remove the FPCAnalysisenv folder created by the install script.
+
+To add additional libraries to this environment, activate the environment and then either `pip install' them or `conda install' them.
 
 ## Example Data <a name = "exdata"></a>
 
