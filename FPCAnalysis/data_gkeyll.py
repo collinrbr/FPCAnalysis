@@ -6,6 +6,7 @@ import numpy as np
 import math
 import postgkyl as pg
 import base64
+import adios2
 
 #TODO: polyorder is specified in the input file. Consider grabbing from input file rather than letting the user specify it
 def load_dist(flnm_prefix,num,species='ion',polyorder=2,interpLevel=3,xpos=None,normVel=True):
@@ -225,30 +226,27 @@ def spoof_particle_data(hist,vx,vy,vz,x1,x2,y1,y2,z1,z2,Vframe_relative_to_sim,n
 
     return dpar
 
-#TODO: make write to lua file
-def get_input_file(flnm_prefix,num,species='ion',verbose=True):
-        import adios #TODO: figure out how to quickly install with setup.py and move to top of file
-        if(verbose):
-            print("Getting input file from %s_%s_%d.bp" % (flnm_prefix,species,num))
-        fh = adios.file("%s_%s_%d.bp" % (flnm_prefix,species,num)) #get input file from species dist data
-        inputFile = adios.attr(fh, 'inputfile').value.decode('UTF-8')
-        fh.close()
-        inputFile = base64.b64decode(inputFile).decode("utf-8")
-        #inputFile = inputFile.splitlines()
+def get_input_file(flnm_prefix, num, species='ion', verbose=True):
+    import subprocess
 
-        return inputFile
+    if(verbose):
+        print("Getting input file from %s_%s_%d.bp" % (flnm_prefix,species,num))
+
+    flnm = "%s_%s_%d.bp" % (flnm_prefix,species,num)
+    command = ['pgkyl', flnm, 'extract']
+    result = subprocess.run(command, capture_output=True, text=True, check=True)
+    inputFile = result
+
+    return inputFile
 
 
 def get_input_params(flnm_prefix,num,species='ion',verbose=True):
     """
     """
-    import adios #TODO: figure out how to quickly install with setup.py and move to top of file
     if(verbose):
         print("Getting input params from %s_%s_%d.bp" % (flnm_prefix,species,num))
-    fh = adios.file("%s_%s_%d.bp" % (flnm_prefix,species,num)) #get input file from species dist data
-    inputFile = adios.attr(fh, 'inputfile').value.decode('UTF-8')
-    fh.close()
-    inputFile = base64.b64decode(inputFile).decode("utf-8")
+    
+    inputFile = get_input_file(flnm_prefix, num, species=species, verbose=False)
     inputFile = inputFile.splitlines()
 
     params = {}
