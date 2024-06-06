@@ -11,7 +11,7 @@ def plot_sweep(plume_sweeps,xaxiskey,yaxiskey,wavemodes=[''],xlbl='',ylbl='',lbl
     WARNING: does NOT check if plume sweeps are different solutions to the same dispersion relation. Assumes they all are.
     """
 
-    from lib.plot.resultsmanager import plume_keyname_to_plotname
+    from FPCAnalysis.plot.resultsmanager import plume_keyname_to_plotname
 
     plt.figure()
     for idx, p_swp in enumerate(plume_sweeps):
@@ -111,7 +111,7 @@ def plot_sweep_norms(plume_sweep,xaxiskey,xlbl='',xlim=None,ylim=None,flnm='',ax
     WARNING: does NOT check if plume sweeps are different solutions to the same dispersion relation. Assumes they all are.
     """
 
-    from lib.plot.resultsmanager import plume_keyname_to_plotname
+    from FPCAnalysis.plot.resultsmanager import plume_keyname_to_plotname
 
     fig,ax = plt.subplots(2,1,figsize=(16,8),sharex=True)
     field_keys = ['bxr','bxi','byr','byi','bzr','bzi','exr','exi','eyr','eyi','ezr','ezi']
@@ -190,7 +190,7 @@ def plot_sweep_field(plume_sweep,xaxiskey,xlbl='',xlim=None,ylim=None,flnm='',pl
     WARNING: does NOT check if plume sweeps are different solutions to the same dispersion relation. Assumes they all are.
     """
 
-    from lib.plot.resultsmanager import plume_keyname_to_plotname
+    from FPCAnalysis.plot.resultsmanager import plume_keyname_to_plotname
 
     fig,ax = plt.subplots(2,1,figsize=(16,8),sharex=True)
     if(plotE == False):
@@ -254,11 +254,11 @@ def plot_sweep_field(plume_sweep,xaxiskey,xlbl='',xlim=None,ylim=None,flnm='',pl
 
 #todo: make sure given wavemodes are close to give kpars
 def plot_wavemodes_and_compare_to_sweeps_kperp(kpars,beta_i,tau,wavemodes_matching_kpar,kperplim = [.1,10], flnm = '',delta_beta_i = 0, delta_tau = 0,xlim=[],ylim=[]):
-    from lib.plume import get_freq_from_wvmd
-    from lib.plume import kaw_curve
-    from lib.plume import fastmagson_curve
-    from lib.plume import slowmagson_curve
-    from lib.plume import whistler_curve
+    from FPCAnalysis.plume import get_freq_from_wvmd
+    from FPCAnalysis.plume import kaw_curve
+    from FPCAnalysis.plume import fastmagson_curve
+    from FPCAnalysis.plume import slowmagson_curve
+    from FPCAnalysis.plume import whistler_curve
 
     kperps = np.linspace(kperplim[0],kperplim[1],1000)
     kawcrvs = []
@@ -379,11 +379,11 @@ def plot_wavemodes_and_compare_to_sweeps_kperp(kpars,beta_i,tau,wavemodes_matchi
 
 #TODO: make sure given wavemodes are close to given kperps
 def plot_wavemodes_and_compare_to_sweeps_kpar(kperps,beta_i,tau,wavemodes_matching_kpar,kparlim = [.1,10], flnm = '',delta_beta_i = 0, delta_tau = 0,xlim=[],ylim=[]):
-    from lib.plume import get_freq_from_wvmd
-    from lib.plume import kaw_curve
-    from lib.plume import fastmagson_curve
-    from lib.plume import slowmagson_curve
-    from lib.plume import whistler_curve
+    from FPCAnalysis.plume import get_freq_from_wvmd
+    from FPCAnalysis.plume import kaw_curve
+    from FPCAnalysis.plume import fastmagson_curve
+    from FPCAnalysis.plume import slowmagson_curve
+    from FPCAnalysis.plume import whistler_curve
 
     kpars = np.linspace(kparlim[0],kparlim[1],1000)
     kawcrvs = []

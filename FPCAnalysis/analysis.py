@@ -68,7 +68,7 @@ def compute_dflow(dfields, dpar_ion, dpar_elec, is2D=True, debug=False, return_e
         ion and electron velocity moments
     """
 
-    from lib.arrayaux import find_nearest
+    from FPCAnalysis.arrayaux import find_nearest
 
     if(debug): print("Entering compute dflow and initializing arrays...")
 
@@ -357,7 +357,7 @@ def compute_gain_due_to_jdotE(dflow,xvals,jdotE,isIon,verbose=False):
         total energy acculmulated due to 
     """
 
-    from lib.arrayaux import find_nearest
+    from FPCAnalysis.arrayaux import find_nearest
 
     dflowavg = get_average_flow_over_yz(dflow)
 
@@ -430,7 +430,7 @@ def bin_integrate_gyro(x_grid, y_grid, C_vals, rmax, nrbins):
     #TODO: finish!
 
     """
-    from lib.arrayaux import find_nearest
+    from FPCAnalysis.arrayaux import find_nearest
 
     drval = float(rmax)/float(nrbins)
     r_bins = np.asarray([itemp*drval for itemp in range(nrbins)])
@@ -599,7 +599,7 @@ def calc_E_crossB(dfields,x1,x2,y1,y2,z1,z2):
     ExBvz : float
         z component of E cross B drift
     """
-    from lib.array_ops import get_average_in_box
+    from FPCAnalysis.array_ops import get_average_in_box
 
     exf = get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'ex')
     eyf = get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'ey')
@@ -636,7 +636,7 @@ def calc_Ji_Ei(dfields, dflow, x1, x2, y1, y2, z1, z2):
         upper y bound
     """
 
-    from lib.array_ops import get_average_in_box
+    from FPCAnalysis.array_ops import get_average_in_box
 
     if(dfields['Vframe_relative_to_sim'] != dflow['Vframe_relative_to_sim']):
         print("Error, fields and flow are not in the same frame...")
@@ -806,7 +806,7 @@ def deconvolve_for_fft(dfields,fieldkey,startval,endval):
     fieldvalsdeconvolved : 1d array
         value of deconvolved field
     """
-    from lib.array_ops import find_nearest
+    from FPCAnalysis.array_ops import find_nearest
 
     #grab field in ramp
     startvalidx = find_nearest(startval,dfields[fieldkey])
@@ -1129,7 +1129,7 @@ def wlt(t,data,w=6,klim=None,retstep=1,powerTwoSpace=False):
         wavelet transform data
     """
     from scipy import signal
-    from lib.arrayaux import find_nearest
+    from FPCAnalysis.arrayaux import find_nearest
 
     dt = t[1]-t[0]
 
@@ -1284,7 +1284,7 @@ def midpass_wlt_filter(t,data,k_filter_center,k_filter_width):
     data : 1d array
         filtered data
     """
-    from lib.array_ops import find_nearest
+    from FPCAnalysis.array_ops import find_nearest
     k, cwt = wlt(t,data)
 
     kidx_upper = find_nearest(k,k_filter_center+k_filter_width/2.)
@@ -1387,7 +1387,7 @@ def yz_fft_filter(dfields,ky0,kz0):
         filted field dict
     """
 
-    from lib.array_ops import find_nearest
+    from FPCAnalysis.array_ops import find_nearest
     from copy import deepcopy
 
     dfieldsfiltered = deepcopy(dfields)
@@ -1449,7 +1449,7 @@ def xyz_wlt_fft_filter(kz,ky,kx,xx,bxkzkykxxx,bykzkykxxx,bzkzkykxxx,
     #
     # dfieldsfiltered = deepcopy(dfields)
 
-    from lib.array_ops import find_nearest
+    from FPCAnalysis.array_ops import find_nearest
 
     if(kx_center0 <= 0 or kx_center0-kx_width0/2. <=0):
         print('Warning, at least part of the mid pass filter is negative (i.e. kx_center <= 0 or kx_center0-kx_width0/2. <=0).')#TODO: implement
@@ -1503,7 +1503,7 @@ def xyz_wlt_fft_filter(kz,ky,kx,xx,bxkzkykxxx,bykzkykxxx,bzkzkykxxx,
 #     This function didnt lead to useful results, and is no longer used...
 #     """
 #
-#     from lib.array_ops import find_nearest
+#     from FPCAnalysis.array_ops import find_nearest
 #
 #     #compute delta fields
 #     dfieldsfluc = remove_average_fields_over_yz(dfields)
@@ -1666,7 +1666,7 @@ def get_B_avg(dfields,xlim,ylim,zlim):
         B0 at specified xx
     """
 
-    from lib.array_ops import get_average_in_box
+    from FPCAnalysis.array_ops import get_average_in_box
 
     x1 = xlim[0]
     x2 = xlim[1]
@@ -1734,7 +1734,7 @@ def _get_perp_component(x1,y1):
 #     Note: dfields is normally the yz averaged removed fields (e.g. B_fluc(x,y,z) = B(x,y,z)-<B(x,y,z)>_(y,z))
 #     """
 #
-#     from lib.array_ops import find_nearest
+#     from FPCAnalysis.array_ops import find_nearest
 #
 #     xxidx = find_nearest(dfields['bz_xx'],xx)
 #
@@ -1859,7 +1859,7 @@ def compute_field_aligned_coord(dfields,xlim,ylim,zlim):
     vparbasis/vperp1basis/vperp2basis : [float,float,float]
         field aligned basis (ordered [vx,vy,vz])
     """
-    from lib.arrayaux import find_nearest
+    from FPCAnalysis.arrayaux import find_nearest
     from copy import deepcopy
 
     if(np.abs(xlim[1]-xlim[0]) > 4.):
@@ -1990,7 +1990,7 @@ def change_velocity_basis_local(dfields,dpar,loadfrac=1,debug=False):
     changebasismatrixes = []
 
     for _idx in range(0,len(dparnewbasis['x1'])):
-        from lib.fpcaux import weighted_field_average
+        from FPCAnalysis.fpcaux import weighted_field_average
 
         bx = weighted_field_average(dpar['x1'][_idx], dpar['x2'][_idx], dpar['x3'][_idx], dfields, 'bx')
         by = weighted_field_average(dpar['x1'][_idx], dpar['x2'][_idx], dpar['x3'][_idx], dfields, 'by')
@@ -2245,7 +2245,7 @@ def compute_alfven_vel(dfields,dden,x1,x2,y1,y2,z1,z2):
 
     """
 
-    from lib.array_ops import get_average_in_box
+    from FPCAnalysis.array_ops import get_average_in_box
 
     rho = get_average_in_box(x1,x2,y1,y2,z1,z2,dden, 'den')
 

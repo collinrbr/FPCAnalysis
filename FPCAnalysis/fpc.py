@@ -192,10 +192,14 @@ def _comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock,
 
     See documentation for compute_hist_and_cor
     """
-    vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock, 'ex', 'x',checkFrameandGrabSubset=checkFrameandGrabSubset)
-    vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEy = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock, 'ey', 'y',checkFrameandGrabSubset=checkFrameandGrabSubset)
-    vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEz = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock, 'ez', 'z',checkFrameandGrabSubset=checkFrameandGrabSubset)
+    from FPCAnalysis.frametransform import shift_particles
 
+    dparticles = shift_particles(dparticles, vshock) #TODO: our shift function
+
+    vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, 'ex', 'x')
+    vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEy = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, 'ey', 'y')
+    vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEz = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, 'ez', 'z')
+        
     return vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx, CEy, CEz
 
 def project_CEi_hist(Hist, CEx, CEy, CEz):
@@ -218,7 +222,7 @@ def project_CEi_hist(Hist, CEx, CEy, CEz):
     (Hist/CEi)** : 2D array
         2D projection onto ** axis
     """
-    from lib.array_ops import array_3d_to_2d
+    from FPCAnalysis.array_ops import array_3d_to_2d
 
     Histxy = array_3d_to_2d(Hist,'xy')
     Histxz = array_3d_to_2d(Hist,'xz')
@@ -246,7 +250,7 @@ def _grab_dpar_and_comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dpar_folder, d
     See documentation for compute_hist_and_cor and comp_cor_over_x_multithread
     """
 
-    from lib.data_h5 import get_dpar_from_bounds
+    from FPCAnalysis.data_h5 import get_dpar_from_bounds
     import gc
 
     dpar = get_dpar_from_bounds(dpar_folder,x1,x2)
@@ -273,6 +277,7 @@ def _grab_dpar_and_comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dpar_folder, d
     else:
         return vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx, CEy, CEz
 
+#TODO: update return documentation
 def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim=None, ylim=None, zlim=None, max_workers = 8):
     """
     Computes distribution function and correlation wrt to given field for every slice in xx using multiprocessing
@@ -301,7 +306,7 @@ def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim
         upper and lower bounds of integration box
 
     Returns
-    ------- #TODO: update return documentation
+    ------- 
     CEx_out : 4d array
         CEx(x; vz, vy, vx) data
     CEy_out : 4d array
@@ -668,10 +673,10 @@ def compute_correlation_over_x(dfields, dparticles, vmax, dv, dx, vshock, xlim=N
 
     while(x2 <= xEnd):
         print('scan pos-> x1: ',x1,' x2: ',x2,' y1: ',y1,' y2: ',y2,' z1: ', z1,' z2: ',z2)
-        vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock, 'ex', 'x')
-        vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEy = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock, 'ey', 'y')
-        vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEz = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock, 'ez', 'z')
-        print('num particles in box: ', totalPtcl)
+        vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, 'ex', 'x')
+        vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEy = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, 'ey', 'y')
+        vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEz = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, 'ez', 'z')
+        print('number of particles found in box: ', totalPtcl)
         x_out.append(np.mean([x1,x2]))
         CEx_out.append(CEx)
         CEy_out.append(CEy)
@@ -928,7 +933,7 @@ def _weighted_field_average(xx, yy, zz, dfields, fieldkey):
         field value at given test location found using trilinear interpolation
     """
 
-    from lib.array_ops import find_two_nearest
+    from FPCAnalysis.array_ops import find_two_nearest
 
     idxxx1, idxxx2 = find_two_nearest(dfields[fieldkey+'_xx'],xx)
     idxyy1, idxyy2 = find_two_nearest(dfields[fieldkey+'_yy'],yy)
@@ -995,9 +1000,9 @@ def compute_cprime_hist(dparticles, dfields, fieldkey, vmax, dv, useBoxFAC=True,
         vz velocity grid
     """
     from scipy.stats import binned_statistic_dd
-    from lib.ftransfromaux import lorentz_transform_v
-    from lib.analysisaux import convert_fluc_to_par
-    from lib.analysisaux import convert_fluc_to_local_par
+    from FPCAnalysis.frametransform import lorentz_transform_v
+    from FPCAnalysis.analysis import convert_fluc_to_par
+    from FPCAnalysis.analysis import convert_fluc_to_local_par
     import copy
 
     if(fieldkey == 'ex' or fieldkey == 'bx'):
@@ -1013,7 +1018,7 @@ def compute_cprime_hist(dparticles, dfields, fieldkey, vmax, dv, useBoxFAC=True,
     elif(fieldkey == 'eperp2' or fieldkey == 'eperp2'):
         vvkey = 'pperp2'
 
-    altcorfields['Vframe_relative_to_sim'] = 0
+    if(altcorfields != None): altcorfields['Vframe_relative_to_sim'] = 0
     dfields['Vframe_relative_to_sim'] = 0 #TODO: reomve this key- we don't use it anymore!
 
 
@@ -1021,10 +1026,10 @@ def compute_cprime_hist(dparticles, dfields, fieldkey, vmax, dv, useBoxFAC=True,
     fieldaligned_keys = ['epar','eperp1','eperp2','bpar','bperp1','bperp2']
     if(fieldkey in fieldaligned_keys):
         #we assume particle data is passed in standard basis and would need to be converted to field aligned
-        from lib.analysisaux import change_velocity_basis
-        from lib.analysisaux import change_velocity_basis_local
-        from lib.arrayaux import find_nearest
-        from lib.analysisaux import compute_field_aligned_coord
+        from FPCAnalysis.analysis import change_velocity_basis
+        from FPCAnalysis.analysis import change_velocity_basis_local
+        from FPCAnalysis.array_ops import find_nearest
+        from FPCAnalysis.analysis import compute_field_aligned_coord
 
         #get smallest box that contains all particles (assumes using full yz domain)
         xx = np.min(dparticles['x1'][:])

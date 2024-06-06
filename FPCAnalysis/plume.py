@@ -432,7 +432,7 @@ def select_wavemodes(dwavemodes, depth, kpars, kperps, tol=0.05):
     tol : float, opt
         tolerance of agreement between wavemode and given kpar/kperp
     """
-    from lib.plume import rotate_and_norm_to_plume_basis
+    from FPCAnalysis.plume import rotate_and_norm_to_plume_basis
     #iterate over kpars
     wavemodes_matching_kpar = []
 

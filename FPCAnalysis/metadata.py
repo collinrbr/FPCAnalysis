@@ -23,7 +23,7 @@ def build_metadata(xlim,dx,startval,endval):
         binary metadata
     """
 
-    from lib.array_ops import find_nearest
+    from FPCAnalysis.array_ops import find_nearest
 
     if(startval > endval):
         print("Error, startval should be less than end val...")

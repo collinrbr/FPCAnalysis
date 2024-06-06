@@ -8,12 +8,12 @@ import os
 
 def plot_velsig(vx,vy,vz,dv,vmax,CEiproj,fieldkey,planename,ttl=r'$C_{E_i}(v_i,v_j)$; ',flnm='',xlabel=r"$v_i/v_{ti}$",ylabel=r"$v_j/v_{ti}$",plotLog=False,computeJdotE=True,axvlinex = None, maxCe = None):
 
-    from lib.array_ops import mesh_3d_to_2d
+    from FPCAnalysis.array_ops import mesh_3d_to_2d
     import matplotlib
     from matplotlib.colors import LogNorm
-    from lib.array_ops import array_3d_to_2d
+    from FPCAnalysis.array_ops import array_3d_to_2d
     import matplotlib.colors as colors
-    from lib.analysis import compute_energization
+    from FPCAnalysis.analysis import compute_energization
 
 
     CEiplot = CEiproj
@@ -398,10 +398,10 @@ def dist_log_plot_3dir(vx, vy, vz, vmax, H_in, flnm = '',ttl='',xlbl=r"$v_x/v_{t
     """
 
     plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
-    from lib.array_ops import mesh_3d_to_2d
+    from FPCAnalysis.array_ops import mesh_3d_to_2d
     import matplotlib
     from matplotlib.colors import LogNorm
-    from lib.array_ops import array_3d_to_2d
+    from FPCAnalysis.array_ops import array_3d_to_2d
     import matplotlib.colors as colors
 
     from copy import copy
@@ -447,10 +447,10 @@ def dist_log_plot_3dir_2v(vx, vy, vz, vmax, H_xy, H_xz, H_yz, flnm = '',ttl='',x
     """
 
     plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
-    from lib.array_ops import mesh_3d_to_2d
+    from FPCAnalysis.array_ops import mesh_3d_to_2d
     import matplotlib
     from matplotlib.colors import LogNorm
-    from lib.array_ops import array_3d_to_2d
+    from FPCAnalysis.array_ops import array_3d_to_2d
     import matplotlib.colors as colors
 
     #from copy import copy
@@ -582,8 +582,8 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         string describing metadata to be shown on plot
     """
     from matplotlib.colors import LogNorm
-    from lib.arrayaux import mesh_3d_to_2d
-    from lib.analysisaux import compute_energization
+    from FPCAnalysis.arrayaux import mesh_3d_to_2d
+    from FPCAnalysis.analysisaux import compute_energization
     import matplotlib.colors as colors
 
     if(normtoN):
@@ -1333,7 +1333,7 @@ def make_superplot_gif(vx, vy, vz, vmax, Hist, CEx, CEy, CEz, x, directory):
         (omit final '/')
     """
 
-    from lib.array_ops import array_3d_to_2d
+    from FPCAnalysis.array_ops import array_3d_to_2d
 
     try:
         os.mkdir(directory)
@@ -1474,7 +1474,7 @@ def make_FPC_plot(dfields,dpar,dv,vmax,vshock,x1,x2,fieldkey,planename,flnm='',u
     #where v1 corresponds to vx/vpar (in stand/fieldaligned)
     #where v2 corresponds to vy/vperp1 (in stand/fieldaligned)
     #where v3 corresponds to vz/vperp2 (in stand/fieldaligned)
-    from lib.fpc import compute_hist_and_cor
+    from FPCAnalysis.fpc import compute_hist_and_cor
 
     v1, v2, v3, totalPtcl, totalFieldpts, hist, cor = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
                                                                             dpar, dfields, vshock, fieldkey, directionkey)
@@ -1484,7 +1484,7 @@ def make_FPC_plot(dfields,dpar,dv,vmax,vshock,x1,x2,fieldkey,planename,flnm='',u
     print("npar in box: ",str(np.sum(hist)))
 
     #makes plot
-    from lib.array_ops import array_3d_to_2d
+    from FPCAnalysis.array_ops import array_3d_to_2d
     CEiproj = array_3d_to_2d(cor, planename)
 
     if(flnm != ''):
@@ -1530,8 +1530,8 @@ def plot_dist_v_fields_supergrid(vx, vy, vz, vmax,
         string describing metadata to be shown on plot
     """
     from matplotlib.colors import LogNorm
-    from lib.arrayaux import mesh_3d_to_2d
-    from lib.analysisaux import compute_energization
+    from FPCAnalysis.arrayaux import mesh_3d_to_2d
+    from FPCAnalysis.analysisaux import compute_energization
     import matplotlib.colors as colors
 
     if(normtoN):

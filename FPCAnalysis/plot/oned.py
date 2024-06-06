@@ -33,7 +33,7 @@ def plot_field(dfields, fieldkey, axis='_xx', xxindex = 0, yyindex = 0, zzindex 
         if specified will save plot to flnm
     """
 
-    from lib.plot.resultsmanager import keyname_to_plotname
+    from FPCAnalysis.plot.resultsmanager import keyname_to_plotname
 
     if(axis == '_zz'):
         fieldval = np.asarray([dfields[fieldkey][i][yyindex][xxindex] for i in range(0,len(dfields[fieldkey+axis]))])
@@ -82,7 +82,7 @@ def plot_all_fields(dfields, axis='_xx', xxindex = 0, yyindex = 0, zzindex = 0, 
         index of data along zz axis (ignored if axis = '_zz')
     """
 
-    from lib.plot.resultsmanager import keyname_to_plotname
+    from FPCAnalysis.plot.resultsmanager import keyname_to_plotname
 
     if(axis == '_zz'):
         ex = np.asarray([dfields['ex'][i][yyindex][xxindex] for i in range(0,len(dfields['ex'+axis]))])
@@ -420,7 +420,7 @@ def plot_stack_field_along_x(dfields,fieldkey,stackaxis,yyindex=0,zzindex=0,xlow
     flnm : str, optional
         if specified will save plot to flnm
     """
-    from lib.plot.resultsmanager import keyname_to_plotname
+    from FPCAnalysis.plot.resultsmanager import keyname_to_plotname
 
     if(stackaxis != '_yy' and stackaxis != '_zz'):
         print("Please stack along _yy or _zz")
@@ -470,7 +470,7 @@ def plot_compression_ratio(dfields, upstreambound, downstreambound, xxindex=0, y
         if specified will save plot to flnm
     """
 
-    from lib.frametransform import get_comp_ratio
+    from FPCAnalysis.frametransform import get_comp_ratio
 
     ratio,bzup,bzdown = get_comp_ratio(dfields,upstreambound,downstreambound)
 

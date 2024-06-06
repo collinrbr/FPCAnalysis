@@ -1,26 +1,10 @@
-#!/usr/bin/env python
-
-import sys
-sys.path.append(".")
-
-import lib.analysis as anl
-import lib.array_ops as ao
-import lib.data_h5 as dh5
-import lib.data_netcdf4 as dnc
-import lib.fpc as fpc
-import lib.frametransform as ft
-import lib.metadata as md
-
-import lib.plot.oned as plt1d
-import lib.plot.twod as plt2d
-import lib.plot.debug as pltdebug
-import lib.plot.fourier as pltfr
-import lib.plot.resultsmanager as rsltmng
-import lib.plot.velspace as pltvv
-
 import os
 import math
 import numpy as np
+import sys
+
+from FPCAnalysis import *
+
 try:
     analysisinputflnm = sys.argv[1]
 except:
@@ -89,10 +73,10 @@ path_particles = path+"Output/Raw/Sp01/raw_sp01_{:08d}.h5"
 
 #load relevant time slice fields
 print("Loading field data...")
-dfields = dh5.field_loader(path=path_fields,num=numframe,is2d3v=is2d3v)
+dfields = ddhr.field_loader(path=path_fields,num=numframe,is2d3v=is2d3v)
 
 #Load all fields along all time slices
-all_dfields = dh5.all_dfield_loader(path=path_fields, is2d3v=is2d3v)
+all_dfields = ddhr.all_dfield_loader(path=path_fields, is2d3v=is2d3v)
 
 #check input to make sure box makes sense
 if(not(is2d3v)): #TODO: add check_input for 2d3v
@@ -103,7 +87,7 @@ if(not(use_restart) and dpar_folder == None):
     print("Loading particle data...")
     #Load slice of particle data
     if xlim is not None and ylim is not None and zlim is not None:
-        dparticles = dh5.read_box_of_particles(path_particles, numframe, xlim[0], xlim[1], ylim[0], ylim[1], zlim[0], zlim[1], is2d3v=is2d3v)
+        dparticles = ddhr.read_box_of_particles(path_particles, numframe, xlim[0], xlim[1], ylim[0], ylim[1], zlim[0], zlim[1], is2d3v=is2d3v)
     #Load all data in unspecified limits and only data in bounds in specified limits
     elif xlim is not None or ylim is not None or zlim is not None:
         if xlim is None:
@@ -112,21 +96,21 @@ if(not(use_restart) and dpar_folder == None):
             ylim = [dfields['ex_yy'][0],dfields['ex_yy'][-1]]
         if zlim is None:
             zlim = [dfields['ex_zz'][0],dfields['ex_zz'][-1]]
-        dparticles = dh5.read_box_of_particles(path_particles, numframe, xlim[0], xlim[1], ylim[0], ylim[1], zlim[0], zlim[1], is2d3v=is2d3v)
+        dparticles = ddhr.read_box_of_particles(path_particles, numframe, xlim[0], xlim[1], ylim[0], ylim[1], zlim[0], zlim[1], is2d3v=is2d3v)
     #Load all the particles
     else:
-        dparticles = dh5.read_particles(path_particles, numframe, is2d3v=is2d3v)
+        dparticles = ddhr.read_particles(path_particles, numframe, is2d3v=is2d3v)
 
 #Load data using restart files
 if(use_restart and dpar_folder == None):
     print("Loading particle data using restart files...")
     #Load slice of particle data
     if xlim is not None:
-        dparticles = dh5.read_restart(path, xlim=xlim,nthreads=num_threads)
+        dparticles = ddhr.read_restart(path, xlim=xlim,nthreads=num_threads)
     #Load all data in unspecified limits and only data in bounds in specified limits
     else:
         xlim = [dfields['ex_xx'][0],dfields['ex_xx'][-1]]
-        dparticles = dh5.read_restart(path,nthreads=num_threads)
+        dparticles = ddhr.read_restart(path,nthreads=num_threads)
 
     #set up other bounds (TODO: clean this up (redundant code in above if block; code this only once))
     if ylim is None:
@@ -159,11 +143,11 @@ if(vmax == None):
 #print(is_2D3V)
 if(is_2D3V == 'T'): #TODO: fix inconsistency (is_2D3V is either 'T'/'F' while is2D3V is either True or False) have one var and use only boolean
     if('x3' not in dparticles.keys()): #all simulations that are '2d' should be 2d 3v with coordinates (xx,yy;vx,vy,vz)
-        dparticles = dh5.par_2d_to_3d(dparticles)
-        dfields = dh5.dict_2d_to_3d(dfields,0)
+        dparticles = ddhr.par_2d_to_3d(dparticles)
+        dfields = ddhr.dict_2d_to_3d(dfields,0)
         _fields = []
         for k in range(0,len(all_dfields['dfields'])):
-            _fields.append(dh5.dict_2d_to_3d(all_dfields['dfields'][k],0))
+            _fields.append(ddhr.dict_2d_to_3d(all_dfields['dfields'][k],0))
         all_dfields['dfields'] = _fields
 
 #-------------------------------------------------------------------------------
@@ -178,6 +162,9 @@ _fields = []
 for k in range(0,len(all_dfields['dfields'])):
     _fields.append(ft.lorentz_transform_vx(all_dfields['dfields'][k],vshock))
 all_dfields['dfields'] = _fields
+
+#boost particles
+dparticles = ft.shift_particles(dparticles, vshock)
 
 #-------------------------------------------------------------------------------
 # use fluc if requested
@@ -195,6 +182,7 @@ if dx is None:
     dx = dfields['ex_xx'][1]-dfields['ex_xx'][0]
 if(num_threads == 1):
     CEx, CEy, CEz, x, Hist, vx, vy, vz, num_par = fpc.compute_correlation_over_x(dfields, dparticles, vmax, dv, dx, vshock, xlim, ylim, zlim)
+    Histxy,Histxz,Histyz,CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz = project_CEi_hist(Hist, CEx, CEy, CEz)
 else:
     CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz,x, Histxy,Histxz,Histyz, vx, vy, vz, num_par = fpc.comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim=xlim, ylim=ylim, zlim=zlim, max_workers=num_threads)
 
@@ -231,8 +219,8 @@ inputdict = dnc.parse_input_file(path)
 params = dnc.build_params(inputdict,numframe)
 
 flnm = 'FPCnometadata'
-if(num_threads == 1):#For now, we pre project if multithreading
-    dnc.save3Vdata(Hist, CEx, CEy, CEz, vx, vy, vz, x, enerCEx, enerCEy, enerCEz, dfields['Vframe_relative_to_sim'], params = params, num_par = num_par, filename = resultsdir+flnm+'.nc')
+if(num_threads == 1):
+    dnc.save2Vdata(Histxy,Histxz,Histyz,CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz, vx, vy, vz, x, enerCEx, enerCEy, enerCEz, dfields['Vframe_relative_to_sim'], params = params, num_par = num_par, filename = resultsdir+flnm+'_2v.nc')
 else:
     dnc.save2Vdata(Histxy,Histxz,Histyz,CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz, vx, vy, vz, x, enerCEx, enerCEy, enerCEz, dfields['Vframe_relative_to_sim'], params = params, num_par = num_par, filename = resultsdir+flnm+'_2v.nc')
-print("Done! Please use findShock.py and addMetadata to assign metadata...")
+print("Done!")

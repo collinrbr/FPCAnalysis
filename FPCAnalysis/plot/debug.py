@@ -76,8 +76,8 @@ def check_JiEi_vs_CEi(dfields,dflow,dparticles,x,enerCEx,enerCEy,dx,xlim=None,yl
         zz bounds of integration box used when normalizing energization by CEi
     """
 
-    from lib.analysis import calc_Ji_Ei
-    from lib.analysis import get_num_par_in_box
+    from ddhr.analysis import calc_Ji_Ei
+    from ddhr.analysis import get_num_par_in_box
 
     #normalize by number of particles in box
     if xlim is not None:
@@ -272,7 +272,7 @@ def plot_coords(epar,eperp1,eperp2,flnm = ''):
 
 def plot_flucs_on_field_aligned_coords(dfields,k,delB,xlim,ylim,zlim,flnm = ''):
 
-    from lib.analysis import compute_field_aligned_coord
+    from ddhr.analysis import compute_field_aligned_coord
 
     font = {'family': 'serif', 'color': 'darkred', 'weight': 'normal', 'size': 16}
 

@@ -49,8 +49,8 @@ def compute_wavemodes(xx,dfields,xlim,ylim,zlim,
         wavemode data in frequency/wavenumber space for every
     """
 
-    from lib.analysisaux import compute_field_aligned_coord
-    from lib.arrayaux import find_nearest
+    from FPCAnalysis.analysisaux import compute_field_aligned_coord
+    from FPCAnalysis.arrayaux import find_nearest
 
     dwavemodes = {'wavemodes':[],'sortkey':None}
 
@@ -301,7 +301,7 @@ def wavemodes_table(dwavemodes,keys,depth,flnm='',writeToText=False):
     writeToText : bool (opt)
         if true, will also print out text file containing same data as table
     """
-    from lib.plot.table import make_table
+    from FPCAnalysis.plot.table import make_table
 
     collbls = [_wavemodes_key_to_label(key) for key in keys]
     rowlbls = range(0,depth)

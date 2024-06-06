@@ -45,6 +45,12 @@ def read_particles(path, numframe=None, is2d3v = False):
 
     pts['Vframe_relative_to_sim'] = 0.
 
+    if('SP01' in path or 'Sp01' in path or 'sp01' in path):
+        pts['q'] = 1.
+    else:
+        print("Warning, was not able to load the charge of this species...")
+        print("Please set by making adding dictname['q'] = qval...")
+
     return pts
 
 def get_dpar_from_bounds(dpar_folder,x1,x2,verbose=False):
@@ -117,6 +123,13 @@ def get_dpar_from_bounds(dpar_folder,x1,x2,verbose=False):
     pts['Vframe_relative_to_sim'] = 0. #TODO: track this throughout slicing so we dont have to assume this when loading
 
     print("Done loading files for x1=",x1," to x2=",x2)
+
+    if('SP01' in path or 'Sp01' in path or 'sp01' in path):
+        pts['q'] = 1.
+    else:
+        print("Warning, was not able to load the charge of this species...")
+        print("Please set by making adding dictname['q'] = qval...")
+
     return pts
 
 def read_box_of_particles(path, numframe, x1, x2, y1, y2, z1, z2, is2d3v = False):
@@ -171,6 +184,12 @@ def read_box_of_particles(path, numframe, x1, x2, y1, y2, z1, z2, is2d3v = False
                     if(k != 'x3'):
                         pts[k] = f[k][gptsx & gptsy][:]
     pts['Vframe_relative_to_sim'] = 0.
+
+    if('SP01' in path or 'Sp01' in path or 'sp01' in path):
+        pts['q'] = 1.
+    else:
+        print("Warning, was not able to load the charge of this species...")
+        print("Please set by making adding dictname['q'] = qval...")
 
     return pts
 
@@ -715,6 +734,12 @@ def read_restart(path,verbose=True,xlim=None,nthreads=1):
                         time.sleep(1)
 
     dpar = _pts_to_par_dict(pts)
+    if('SP01' in path or 'Sp01' in path or 'sp01' in path):
+        dpar['q'] = 1.
+    else:
+        print("Warning, was not able to load the charge of this species...")
+        print("Please set by making adding dictname['q'] = qval...")
+
     del pts
 
     return dpar

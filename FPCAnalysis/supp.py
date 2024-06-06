@@ -52,7 +52,7 @@ def morlet2(M, s, w=5):
     Examples
     --------
     >>> from scipy import signal
-    >>> import matplotlib.pyplot as plt
+    >>> import matplotFPCAnalysis.pyplot as plt
 
     >>> M = 100
     >>> s = 4.0
@@ -65,7 +65,7 @@ def morlet2(M, s, w=5):
     analysis:
 
     >>> from scipy import signal
-    >>> import matplotlib.pyplot as plt
+    >>> import matplotFPCAnalysis.pyplot as plt
     >>> t, dt = np.linspace(0, 1, 200, retstep=True)
     >>> fs = 1/dt
     >>> w = 6.
@@ -144,7 +144,7 @@ def cwt(data, wavelet, widths, dtype=None, **kwargs):
     Examples
     --------
     >>> from scipy import signal
-    >>> import matplotlib.pyplot as plt
+    >>> import matplotFPCAnalysis.pyplot as plt
     >>> t = np.linspace(-1, 1, 200, endpoint=False)
     >>> sig  = np.cos(2 * np.pi * 7 * t) + signal.gausspulse(t - 0.4, fc=2)
     >>> widths = np.arange(1, 31)
@@ -252,7 +252,7 @@ def convolve(in1, in2, mode='full', method='direct'):
     >>> win = signal.windows.hann(50)
     >>> filtered = signal.convolve(sig, win, mode='same') / sum(win)
 
-    >>> import matplotlib.pyplot as plt
+    >>> import matplotFPCAnalysis.pyplot as plt
     >>> fig, (ax_orig, ax_win, ax_filt) = plt.subplots(3, 1, sharex=True)
     >>> ax_orig.plot(sig)
     >>> ax_orig.set_title('Original pulse')
@@ -384,7 +384,7 @@ def correlate(in1, in2, mode='full', method='direct'):
     that has passed through a noisy channel.
 
     >>> from scipy import signal
-    >>> import matplotlib.pyplot as plt
+    >>> import matplotFPCAnalysis.pyplot as plt
     >>> rng = np.random.default_rng()
 
     >>> sig = np.repeat([0., 1., 1., 0., 1., 0., 0., 1.], 128)

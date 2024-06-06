@@ -34,7 +34,7 @@ def plot_fft_norm(dfields,fieldkey,planename,flnm = '',takeaxisaverage=True, xxi
     yaxislim : float
         upper and lower bound of plot [-yaxislim to yaxislim]
     """
-    from lib.analysis import take_fft2
+    from FPCAnalysis.analysis import take_fft2
 
 
     fieldttl = ''
@@ -292,7 +292,7 @@ def plot_wlt(xx, kx, wlt, ky0 = None, kz0 = None, flnm = '', plotstrongestkx = F
     (ky kz should be floats if passed (because we commonly take WLT of f(x,ky0,kz0)))
     """
 
-    from lib.array_ops import find_nearest
+    from FPCAnalysis.array_ops import find_nearest
 
     plt.figure(figsize=(10,5))
     plt.pcolormesh(xx,kx,np.abs(wlt),cmap='Spectral', shading='gouraud')
@@ -725,8 +725,8 @@ def plot_kyxx_box_aligned(WFTdata,plotkey,flnm,kmax = 20):
 
 def plot_spec_2d(WFTdata,dfields,loadflnm='',xxrange=None,flnm='2dspec',key='normE',binkey='kpar',binsize=.2,binlowerbound=-10,binupperbound=10,verbose=False):
     
-    from lib.wavemodeaux import compute_wavemodes
-    from lib.arrayaux import find_nearest
+    from FPCAnalysis.wavemodeaux import compute_wavemodes
+    from FPCAnalysis.arrayaux import find_nearest
 
     xplot = []
     yplot = []

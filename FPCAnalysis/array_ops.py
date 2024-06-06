@@ -618,7 +618,7 @@ def find_local_maxima(data, threshold=.05, pltdebug=False):
     peaks = _peaks
 
     if(pltdebug):
-        import matplotlib.pyplot as plt
+        import matplotFPCAnalysis.pyplot as plt
 
         plt.plot(data)
         plt.plot(peaks, data[peaks], "x")

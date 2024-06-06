@@ -35,7 +35,7 @@ def lorentz_transform_vx(dfields, vx):
 
     return dfieldslor
 
-def lorentz_transform_vx(dfields, vx, c):
+def lorentz_transform_vx_c(dfields, vx, c):
     """
     Takes lorentz transform where V=(vx,0,0)
 
@@ -60,7 +60,7 @@ def lorentz_transform_vx(dfields, vx, c):
     dfieldslor['ez'] = gamma*(dfields['ez']+vx*dfields['by'])
 
     dfieldslor['bx'] = dfields['bx']
-    dfieldslor['by'] = gamma*(dfields['by']+vx/c**2*dfields['ez']) #TODO: check these units (i.e. should there be an extra 1/c factor?)
+    dfieldslor['by'] = gamma*(dfields['by']+vx/c**2*dfields['ez']) 
     dfieldslor['bz'] = gamma*(dfields['bz']-vx/c**2*dfields['ey'])
 
     dfieldslor['Vframe_relative_to_sim'] = (dfields['Vframe_relative_to_sim']+vx)/(1.+vx*dfields['Vframe_relative_to_sim']/c**2)
@@ -126,9 +126,11 @@ def transform_flow(dflow, vx):
 
 def shift_particles(dparticles, vx):
     """
-    Transforms velocity frame of particles
+    Transforms velocity frame of particles by vx
 
-    Works with dHybridR data
+    Warning: Make sure vx and dparticles['p1'] have same units!
+
+    We assume a linear boost is close enough
 
     Parameters
     ----------
@@ -145,7 +147,7 @@ def shift_particles(dparticles, vx):
 
     return dparticlestransform
 
-def shift_particles(dparticles, vx, beta, mi_me, isIon, Ti_Te = 1., galileanboost = True, c = None):
+def shift_particles_tristan(dparticles, vx, beta, mi_me, isIon, Ti_Te = 1., galileanboost = True, c = None):
     """
     Transforms velocity frame of particles
 

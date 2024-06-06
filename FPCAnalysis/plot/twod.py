@@ -135,7 +135,7 @@ def make_field_pmesh(ddict,fieldkey,planename,flnm = '',takeaxisaverage=False, x
         for j in range(0,len(xplot1d)):
             yplot[i][j] = yplot1d[i]
 
-    plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
+    plt.style.use("cb.mplstyle") #sets style parameters for matplotlib plots
     if((planename == 'xy' or planename == 'xz') and (xlimmin == None and xlimmax == None)):
         plt.figure(figsize=(2*6.5,6))
     else:
