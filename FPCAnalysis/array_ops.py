@@ -159,7 +159,7 @@ def array_3d_to_2d(arr3d, planename):
 
 def get_average_in_box(x1, x2, y1, y2, z1, z2, datadict, dictkey):
     """
-    Get linear average of fields in box from grid points within box.
+    Get flat average of fields in box from grid points within box.
 
     Parameters
     ----------
@@ -186,22 +186,275 @@ def get_average_in_box(x1, x2, y1, y2, z1, z2, datadict, dictkey):
         average value in box
     """
 
-    # mask data outside of given bounds
-    gptsx = (x1 <= datadict[dictkey+'_xx']) & (datadict[dictkey+'_xx'] <= x2)
-    gptsy = (y1 <= datadict[dictkey+'_yy']) & (datadict[dictkey+'_yy'] <= y2)
-    gptsz = (z1 <= datadict[dictkey+'_zz']) & (datadict[dictkey+'_zz'] <= z2)
+    #get bounds of data
+    xidxmin = find_nearest(datadict['ex_xx'], x1)
+    xidxmax = find_nearest(datadict['ex_xx'], x2)
+    yidxmin = find_nearest(datadict['ex_yy'], y1)
+    yidxmax = find_nearest(datadict['ex_yy'], y2)
+    zidxmin = find_nearest(datadict['ex_zz'], z1)
+    zidxmax = find_nearest(datadict['ex_zz'], z2)
 
-    goodpts = []
-    for i in range(0, len(gptsx)):
-        for j in range(0, len(gptsy)):
-            for k in range(0, len(gptsz)):
-                if(gptsx[i] and gptsy[j] and gptsz[k]):
-                    goodpts.append(datadict[dictkey][k][j][i])
+    #adjust if needed and possible
+    if(datadict[dictkey+'_xx'][xidxmin] > x1 and xidxmin != 0): xidxmin = xidxmin - 1
+    if(datadict[dictkey+'_xx'][xidxmax] < x2 and xidxmax != len(datadict[dictkey+'_xx'])-1): xidxmax = xidxmax + 1
+    if(datadict[dictkey+'_yy'][yidxmin] > y1 and yidxmin != 0): yidxmin = yidxmin - 1
+    if(datadict[dictkey+'_yy'][yidxmax] < y2 and yidxmax != len(datadict[dictkey+'_yy'])-1): yidxmax = yidxmax + 1
+    if(datadict[dictkey+'_zz'][zidxmin] > z1 and zidxmin != 0): zidxmin = zidxmin - 1
+    if(datadict[dictkey+'_zz'][zidxmax] < z2 and zidxmax != len(datadict[dictkey+'_zz'])-1): zidxmax = zidxmax + 1
+
+    goodpts=datadict[dictkey][zidxmin:zidxmax,yidxmin:yidxmax,xidxmin:xidxmax]
 
     avg = np.average(goodpts)
     return avg
 
+def subset_dict(ddict,startidxs,endidxs,planes=['z','y','x']):
+    """
+    Takes connected subset of provided dict
 
+    Parameters
+    ----------
+    ddict : dict
+        field, fluid, dens dict- (e.g. dfields from load_fields in loadaux)
+    startidxs/endidxs : array of size 2/3
+        start/end indexes arrays ([zidx,yidx,xidx] e.g. [0,56,100]) 
+    planes : array of size 3
+        planes to modify (['z','y','x'] or ['y','x'])
+
+    Returns
+    -------
+    ddictout : dict
+        subseet of provided dict
+    """
+
+    #get keys that need to be reduced:
+    dkeys = list(ddict.keys())
+    keys = [dkeys[_i] for _i in range(0,len(dkeys)) if ('_' in dkeys[_i] and dkeys[_i][-1] in planes)]
+
+    import copy
+    ddictout = copy.deepcopy(ddict)
+
+    for kyidx in range(0,len(keys)):
+        if(not(keys[kyidx].split('_')[0] in keys)):
+            keys.append(keys[kyidx].split('_')[0])
+
+    for ky in keys:
+        if('_' in ky):
+            if('x' in planes):
+                if(ky[-1] == 'x'):
+                    if(len(startidxs)==2):
+                        ddictout[ky] = ddictout[ky][startidxs[1]:endidxs[1]]
+                    if(len(startidxs)==3):
+                        ddictout[ky] = ddictout[ky][startidxs[2]:endidxs[2]]
+            if('y'in planes):
+                if(ky[-1] == 'y'):
+                    if(len(startidxs)==2):
+                        ddictout[ky] = ddictout[ky][startidxs[0]:endidxs[0]]
+                    if(len(startidxs)==3):
+                        ddictout[ky] = ddictout[ky][startidxs[1]:endidxs[1]]
+            if('z' in planes):
+                if(ky[-1] == 'z'):
+                    ddictout[ky] = ddictout[ky][startidxs[0]:endidxs[0]]
+        else:
+            if('x' in planes and 'y' in planes and not('z' in planes)):
+                ddictout[ky] = ddictout[ky][startidxs[0]:endidxs[0],startidxs[1]:endidxs[1]]
+            elif('x' in planes and 'y' in planes and 'z' in planes):
+                ddictout[ky] = ddictout[ky][startidxs[0]:endidxs[0],startidxs[1]:endidxs[1],startidxs[2]:endidxs[2]]
+
+    return ddictout
+
+def truncate_dict(ddict,reducfrac=[1,1,2],planes=['z','y','x']):
+    """
+    Truncates fraction of array greater tha fraction size. 
+
+    E.g. reducfrac=[3] for array [1,2,3,4,5,6] will return [1,2]
+
+    Parameters
+    ----------
+    ddict : dict
+        field, fluid, dens dict- (e.g. dfields from load_fields in loadaux)
+    reducfrac : array of size 2/3
+        reducfrac in each direction
+    planes : array of size 3
+        planes to modify (['z','y','x'] or ['y','x'])
+
+    Returns
+    -------
+    ddictout : dict
+        subseet of provided dict
+    """
+
+    #get keys that need to be reduced:
+    dkeys = list(ddict.keys())
+    keys = [dkeys[_i] for _i in range(0,len(dkeys)) if ('_' in dkeys[_i] and dkeys[_i][-1] in planes)]
+
+    import copy
+    ddictout = copy.deepcopy(ddict)
+
+    for kyidx in range(0,len(keys)):
+        if(not(keys[kyidx].split('_')[0] in keys)):
+            keys.append(keys[kyidx].split('_')[0])
+
+    for ky in keys:
+        if('_' in ky):
+            if('x' in planes):
+                if(ky[-1] == 'x'):
+                    if(len(reducfrac)==2):
+                        ddictout[ky] = ddictout[ky][0:int(round(len(ddictout[ky])/reducfrac[1]))]
+                    if(len(reducfrac)==3):
+                        ddictout[ky] = ddictout[ky][0:int(round(len(ddictout[ky])/reducfrac[2]))]
+            if('y'in planes):
+                if(ky[-1] == 'y'):
+                    if(len(reducfrac)==2):
+                        ddictout[ky] = ddictout[ky][0:int(round(len(ddictout[ky])/reducfrac[0]))]
+                    if(len(reducfrac)==3):
+                        ddictout[ky] = ddictout[ky][0:int(round(len(ddictout[ky])/reducfrac[1]))]
+            if('z' in planes):
+                if(ky[-1] == 'z'):
+                    ddictout[ky] = ddictout[ky][0:int(round(len(ddictout[ky])/reducfrac[0]))]
+        else:
+            if('x' in planes and 'y' in planes and not('z' in planes)):
+                ddictout[ky] = ddictout[ky][0:int(round(len(ddictout[ky][0,:,0])/reducfrac[0])),0:int(round(len(ddictout[ky][0,0,:]/reducfrac[1])))]
+            elif('x' in planes and 'y' in planes and 'z' in planes):
+                ddictout[ky] = ddictout[ky][0:int(round(len(ddictout[ky][:,0,0])/reducfrac[0])),0:int(round(len(ddictout[ky][0,:,0])/reducfrac[1])),0:int(round(len(ddictout[ky][0,0,:])/reducfrac[2]))]
+
+    return ddictout
+
+def avg_dict(ddict,binidxsz=[2,2,2],planes=['z','y','x']):
+    """
+    Averages array into bins equal to integer multiples of original size
+
+    Note: grid must be divisible without truncation into new grid
+
+    Parameters
+    ----------
+    ddict : dict
+        field, fluid, dens dict- (e.g. dfields from load_fields in loadaux)
+    binidxsz : array of size 2/3 (of integers)
+        new, larger, integer multiple size of binn
+    planes : array of size 3
+        planes to modify (['z','y','x'] or ['y','x'])
+
+    Returns
+    -------
+    ddictout : dict
+        subseet of provided dict
+    """
+
+    #get keys that need to be reduced:
+    dkeys = list(ddict.keys())
+    keys = [dkeys[_i] for _i in range(0,len(dkeys)) if ('_' in dkeys[_i] and dkeys[_i][-1] in planes)]
+
+    import copy
+    ddictout = copy.deepcopy(ddict)
+
+    for kyidx in range(0,len(keys)):
+        if(not(keys[kyidx].split('_')[0] in keys)):
+            keys.append(keys[kyidx].split('_')[0])
+
+    #TODO: test and use something like numpy.mean(x.reshape(-1, 2), 1) 
+    for ky in keys:
+        if('_' in ky):
+            if('x' in planes):
+                if(ky[-1] == 'x'):
+                    if(len(binidxsz)==2):
+                        print("Error! Must be used with a 3d sim") #TODO: implement for 2d arrays
+                        return
+                    if(len(binidxsz)==3):
+                        ddictout[ky] = avg_bin_1darr(ddictout[ky],binidxsz[2])
+            if('y'in planes):
+                if(ky[-1] == 'y'):
+                    if(len(binidxsz)==2):
+                        print("Error! Must be a 3d sim") #TODO: implement for 2d arrays
+                        return
+                    if(len(binidxsz)==3):
+                        ddictout[ky] = avg_bin_1darr(ddictout[ky],binidxsz[1])
+            if('z' in planes):
+                if(ky[-1] == 'z'):
+                    ddictout[ky] = avg_bin_1darr(ddictout[ky],binidxsz[0])
+        else:
+            if('x' in planes and 'y' in planes and not('z' in planes)):
+                print("Error! Must be used with a 3d sim")
+                return
+            elif('x' in planes and 'y' in planes and 'z' in planes):
+                ddictout[ky] = avg_bin_3darr(ddictout[ky],binidxsz[0],binidxsz[1],binidxsz[2])
+
+    return ddictout
+
+#TODO: rename downsample_factor1
+def avg_bin_3darr(data_array,downsample_factor1,downsample_factor2,downsample_factor3):
+    """
+    Averages 3D array of shape (factor1,factor2,factor3) into 3D array of shape (factor1/downsample_factor1,factor2/downsample_factor2,factor3/downsample_factor3)
+
+    Parameters
+    ----------
+    data_array : 3D array
+        data to be averaged
+    downsample_factor(1/2/3) : int
+        factor to downsample array by in each dim
+
+    Returns
+    -------
+    downsampled_array : 3D array
+        averaged data
+    """
+
+    nz,ny,nx = data_array.shape
+    if(not(nz % downsample_factor1 == 0)):
+        print("Error! nz must be divisible by downsample_factor1!")
+        return
+
+    if(not(ny % downsample_factor2 == 0)):
+        print("Error! ny must be divisible by downsample_factor2!")
+        return
+
+    if(not(nx % downsample_factor3 == 0)):
+        print("Error! nx must be divisible by downsample_factor3!")
+        return
+
+    new_height = data_array.shape[0] // downsample_factor1
+    new_width = data_array.shape[1] // downsample_factor2
+    new_depth = data_array.shape[2] // downsample_factor3
+    reshaped_array = data_array[:new_height * downsample_factor1,
+                            :new_width * downsample_factor2,
+                            :new_depth * downsample_factor3]
+    reshaped_array = reshaped_array.reshape(new_height, downsample_factor1,
+                                        new_width, downsample_factor2,
+                                        new_depth, downsample_factor3)
+    downsampled_array = np.mean(reshaped_array, axis=(1, 3, 5))
+
+    return np.asarray(downsampled_array)
+
+def avg_bin_1darr(data_array,downsample_factor):
+    """
+    Averages 1D array of shape (factor1) into 1D array of shape (factor1/downsample_factor1)
+
+    Parameters
+    ----------
+    data_array : 1D array
+        data to be averaged
+    downsample_factor : int
+        factor to downsample array
+
+    Returns
+    -------
+    downsampled_array : 1D array
+        averaged data
+    """
+
+    narr = len(data_array)
+    if(not(narr % downsample_factor == 0)):
+        print("Error! narr must be divisible by downsample_factor")
+        print('narr: ', narr, 'downsample_factor: ', downsample_factor, 'narr%downsample_factor', narr%downsample_factor)
+        return
+
+    new_length = len(data_array) // downsample_factor
+    reshaped_array = data_array[:new_length * downsample_factor]
+    reshaped_array = reshaped_array.reshape(new_length, downsample_factor)
+    downsampled_array = np.mean(reshaped_array, axis=1)
+
+    return np.asarray(downsampled_array)
+
+#TODO: there is one function that is redundant (see subset_dict)- pick and remove one maybe?
 def get_field_subset(dfields, startx, endx, starty, endy, startz, endz):
     """
     Grabs subset box of field data
