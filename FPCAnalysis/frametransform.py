@@ -8,7 +8,10 @@ import numpy as np
 def lorentz_transform_vx(dfields, vx):
     """
     Takes lorentz transform where V=(vx,0,0)
-    TODO: check if units work (in particular where did gamma go)
+
+    Assumes gamma is small
+
+    Units are meant to work with dHybridR data, (default normalization)
 
     Parameters
     ----------
@@ -29,6 +32,73 @@ def lorentz_transform_vx(dfields, vx):
     dfieldslor['by'] = dfields['by']  # assume v/c^2 is small
     dfieldslor['bz'] = dfields['bz']  # assume v/c^2 is small
     dfieldslor['Vframe_relative_to_sim'] = dfields['Vframe_relative_to_sim'] + vx
+
+    return dfieldslor
+
+def lorentz_transform_vx(dfields, vx, c):
+    """
+    Takes lorentz transform where V=(vx,0,0)
+
+    Units are meant to work with Tristan mp2 data, using normalized=True when loading
+
+    Parameters
+    ----------
+    dfields : dict
+        field data dictionary from field_loader
+    vx : float
+        boost velocity along x in Ma (aka v / va)
+    """
+
+    from copy import deepcopy
+
+    dfieldslor = deepcopy(dfields)  # deep copy
+
+    gamma = 1./np.sqrt(1.-(vx/c)**2)
+
+    dfieldslor['ex'] = dfieldslor['ex']
+    dfieldslor['ey'] = gamma*(dfields['ey']-vx*dfields['bz'])
+    dfieldslor['ez'] = gamma*(dfields['ez']+vx*dfields['by'])
+
+    dfieldslor['bx'] = dfields['bx']
+    dfieldslor['by'] = gamma*(dfields['by']+vx/c**2*dfields['ez']) #TODO: check these units (i.e. should there be an extra 1/c factor?)
+    dfieldslor['bz'] = gamma*(dfields['bz']-vx/c**2*dfields['ey'])
+
+    dfieldslor['Vframe_relative_to_sim'] = (dfields['Vframe_relative_to_sim']+vx)/(1.+vx*dfields['Vframe_relative_to_sim']/c**2)
+
+    return dfieldslor
+
+def lorentz_transform_v(dfields, vx, vy, vz, c):
+    """
+    Takes lorentz transform where V=(vx,0,0)
+
+    Units are meant to work with Tristan mp2 data, using normalized=True when loading
+
+    Parameters
+    ----------
+    dfields : dict
+        field data dictionary from field_loader
+    vx : float
+        boost velocity along x in Ma (aka v / va)
+    """
+
+    from copy import deepcopy
+
+    dfieldslor = deepcopy(dfields)  # deep copy
+
+    vtot = np.sqrt(vx**2+vy**2+vz**2)
+    if(vtot/c >= 1): print("ERROR vtot/c was greater than 1 vtot/c vtot c", vtot/c, vtot, c)
+    if(vtot/c >= 1): exit()
+
+    gamma = 1./np.sqrt(1-(vtot/c)**2)
+
+    dfieldslor['ex']= gamma*(dfields['ex']+vy*dfields['bz']-vz*dfields['by'])-(gamma-1.0)*(dfields['ex']*vx/vtot+dfields['ey']*vy/vtot+dfields['ez']*vz/vtot)
+    dfieldslor['ey']= gamma*(dfields['ey']-vx*dfields['bz']+vz*dfields['bx'])-(gamma-1.0)*(dfields['ex']*vx/vtot+dfields['ey']*vy/vtot+dfields['ez']*vz/vtot)
+    dfieldslor['ez']= gamma*(dfields['ez']+vx*dfields['by']-vy*dfields['bx'])-(gamma-1.0)*(dfields['ex']*vx/vtot+dfields['ey']*vy/vtot+dfields['ez']*vz/vtot)
+
+    #!!!!!Pressed for time and the magnetic fields aren't used whenever this function is used, so I will implement it later TODO: implement
+    dfieldslor['bx'] = dfields['bx']
+    dfieldslor['by'] = gamma*(dfields['by']+vx/c**2*dfields['ez']) #TODO: check these units (i.e. should there be an extra 1/c factor?)
+    dfieldslor['bz'] = gamma*(dfields['bz']-vx/c**2*dfields['ey'])
 
     return dfieldslor
 
@@ -58,6 +128,8 @@ def shift_particles(dparticles, vx):
     """
     Transforms velocity frame of particles
 
+    Works with dHybridR data
+
     Parameters
     ----------
     dparticles : dict
@@ -73,6 +145,61 @@ def shift_particles(dparticles, vx):
 
     return dparticlestransform
 
+def shift_particles(dparticles, vx, beta, mi_me, isIon, Ti_Te = 1., galileanboost = True, c = None):
+    """
+    Transforms velocity frame of particles
+
+    Works with Tristan data
+
+    TODO: rewrite to be relativistic (should do the same for shift current and for calculating the velocity of the shock)
+
+    TODO: rewrite parameter inputs!
+
+    c is in units of va (c_input = c/va (val of 3 means c is 3 times va)
+
+    Parameters
+    ----------
+    dparticles : dict
+        particle data dictionary
+    vx : float
+        boost velocity along x in Ma (aka v / va)
+    """
+    import copy
+
+    if(galileanboost): #Useful to save comp time
+        dparticlestransform = copy.deepcopy(dparticles)  # deep copy
+        vxaliases = ['p1','ui','ue','vx'] #names of keys that correspond to 'vx'
+        for key in vxaliases:
+            if(key in dparticles.keys()):
+                if(isIon):
+                    dparticlestransform[key] = dparticles[key] - vx / np.sqrt(beta)
+                else:
+                    dparticlestransform[key] = dparticles[key] - vx * (1./(np.sqrt(beta)*(mi_me**0.5)))*(Ti_Te)
+        dparticlestransform['Vframe_relative_to_sim'] = dparticles['Vframe_relative_to_sim'] + vx
+
+    else:
+        pass
+
+    return dparticlestransform
+
+def shift_curr(dcurr, vx, beta, Ti_Te = 1., q=1.):
+    """
+    Works with Tristan data (normalized = True)
+    """
+
+    #TODO: IF VX IS LARGE ENOUGH, WE SHOULD CONSIDER LORENTZ BOOST-> should do this for all boosts and for shock speed determination
+
+    import copy
+
+    dcurrtransform = copy.deepcopy(dcurr)
+    keyalias = ['jx','ux']
+    for key in dcurrtransform.keys():
+        if(key in dcurr.keys()):
+            dcurrtransform[key] = dcurr[key] - vx / np.sqrt(beta)
+    dcurrtransform['Vframe_relative_to_sim'] = dcurr['Vframe_relative_to_sim'] + vx
+
+    return dcurrtransform
+
 
 def shift_hist():
     """
@@ -81,7 +208,7 @@ def shift_hist():
     pass
 
 
-def estimate_shock_pos(dfields, yyindex=0, zzindex=0):
+def estimate_shock_pos(dfields, yyindex=0, zzindex=0, sigfrac = .1):
     """
     Estimates the position of the shock using first Ex, x axis crossing after the shock forms
 
@@ -96,6 +223,8 @@ def estimate_shock_pos(dfields, yyindex=0, zzindex=0):
         index of data along yy axis
     zzindex : int, opt
         index of data along yy axis
+    sigfrac : float, opt
+        How large a fluctuation needs to be (relative to max) to be 'signficant'. For the shock ripple dHybridR m06th4 sim we used 0.05 and for the nonadiabatic tristan mp1 sim we used .175
     """
 
     xposshock = 0.
@@ -123,7 +252,6 @@ def estimate_shock_pos(dfields, yyindex=0, zzindex=0):
     #  use physics relationship (from June 17 discussion with Dr. Howes) to find
     Exmax = np.amax(Exvals)
 
-    sigfrac = .05  # local max cutoff fraction relative to Exmax
     shockfrontidx = 0
     for k in range(0, len(xposcandidatesidx[0])):
         if(Exvals[xposcandidatesidx[0][k]] >= sigfrac*Exmax):
@@ -142,7 +270,7 @@ def estimate_shock_pos(dfields, yyindex=0, zzindex=0):
     return xposshock
 
 
-def shock_from_ex_cross(all_fields, dt=0.01):
+def shock_from_ex_cross(all_fields, dt):
     """
     Estimates shock velocity by tracking the first 'signficant' Ex zero crossing
 
@@ -178,7 +306,6 @@ def shock_from_ex_cross(all_fields, dt=0.01):
     framevals = all_fields['frame'][startidx:]
 
     # convert frame to time
-    print("Warning, using dt = 0.01 Omega^-1... TODO: automate loading this...")
     tvals = []
     for k in range(0, len(framevals)):
         tvals.append(framevals[k]*dt)
