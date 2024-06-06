@@ -246,6 +246,8 @@ def field_loader(field_vars='all', components='all', num=None,
         dictionary containing field information and location. Ordered (z,y,x)
     """
 
+    num = int(num)
+
     _field_choices_ = {'B':'Magnetic',
                        'E':'Electric',
                        'J':'CurrentDens'}

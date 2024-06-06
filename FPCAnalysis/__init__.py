@@ -1,7 +1,7 @@
 from . import array_ops as ao
 from . import analysis as anl
 from . import data_gkeyll as dg
-from . import data_h5 as dh5
+from . import data_dhybridr as ddhr
 from . import data_netcdf4 as dnc
 from . import data_tristan as dt
 from . import fpc as fpc
