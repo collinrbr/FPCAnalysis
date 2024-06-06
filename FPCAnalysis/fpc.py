@@ -6,16 +6,11 @@ import numpy as np
 
 
 def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
-                            dpar, dfields, vshock, fieldkey, directionkey,checkFrameandGrabSubset=True):
+                            dpar, dfields, fieldkey, directionkey, useBoxFAC = True, altcorfields = None, beta = None, massratio = None, c = None):
     """
     Computes distribution function and correlation wrt to given field
 
-    Function will automatically shift frame of particles if particles are in simulation frame.
-    However, it is more efficient to shift particles before calling this function.
-
-    TODO: this function is very non optimized, mainly due to repeated searching of dparticles array.
-    Should optimize this by passing particle subsets (ie boxes of particles)
-    to do FPC of
+    Warning: assumes fields and particles are in the same frame
 
     Parameters
     ----------
@@ -41,8 +36,6 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
         xx vx yy vy zz vz data dictionary from read_particles or read_box_of_particles
     dfields : dict
         field data dictionary from field_loader
-    vshock : float
-        velocity of shock in x direction
     fieldkey : str
         name of the field you want to correlate with
         ex,ey,ez,bx,by, or bz
@@ -50,9 +43,12 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
         name of direction you want to take the derivative with respect to
         x,y,or z
         *should match the direction of the fieldkey*
-    checkFrameandGrabSubset : bool(opt) TODO: RENAME THIS VAR
-        check if all given particles are in box and in correct frame
-        should typically be true unless trying to save RAM
+    useBoxFAC : bool, opt
+        if TRUE, compute field aligned coordinate system using the average value of the magnetic field across the whole 
+        transverse domain. Otherwise, will use local value of each particle to compute field aligned coordinate system
+    altcorfields : dict, opt
+        if not None, then all calculations will be performed using dfields except for the correlation. Used when computing
+        fluct correlation in field aligned coordinates
 
     Returns
     -------
@@ -71,6 +67,47 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
     Cor : 3d array
         velocity space sigature data in box
     """
+    
+    null_for_debug = False #returns zero array, which saves a lot of time, for debug purposes
+    if(null_for_debug):
+        # bin into cprime(vx,vy,vz)
+        vxbins = np.arange(-vmax, vmax+dv, dv)
+        vx = (vxbins[1:] + vxbins[:-1])/2.
+        vybins = np.arange(-vmax, vmax+dv, dv)
+        vy = (vybins[1:] + vybins[:-1])/2.
+        vzbins = np.arange(-vmax, vmax+dv, dv)
+        vz = (vzbins[1:] + vzbins[:-1])/2.
+
+        # make the bins 3d arrays
+        _vx = np.zeros((len(vz), len(vy), len(vx)))
+        _vy = np.zeros((len(vz), len(vy), len(vx)))
+        _vz = np.zeros((len(vz), len(vy), len(vx)))
+        for i in range(0, len(vx)):
+            for j in range(0, len(vy)):
+                for k in range(0, len(vz)):
+                    _vx[k][j][i] = vx[i]
+
+        for i in range(0, len(vx)):
+            for j in range(0, len(vy)):
+                for k in range(0, len(vz)):
+                    _vy[k][j][i] = vy[j]
+
+        for i in range(0, len(vx)):
+            for j in range(0, len(vy)):
+                for k in range(0, len(vz)):
+                    _vz[k][j][i] = vz[k]
+
+        vx = _vx
+        vy = _vy
+        vz = _vz
+    
+        totalPtcl = 0
+        hist = np.zeros(vx.shape)
+        cor = np.zeros(vx.shape)
+       
+        print("Warning: returning zero array for hist and cor...")
+        return vx, vy, vz, totalPtcl, hist, cor
+
     # check input
     if(fieldkey == 'ex' or fieldkey == 'bx'):
         if(directionkey != 'x'):
@@ -82,123 +119,64 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
         if(directionkey != 'z'):
             print("Warning, direction of derivative does not match field direction")
 
+    #change keys for backwards compat
+    if('xi' in dpar.keys()):
+        dpar['x1'] = dpar['xi']
+        dpar['x2'] = dpar['yi']
+        dpar['x3'] = dpar['zi']
+        dpar['p1'] = dpar['ui']
+        dpar['p2'] = dpar['vi']
+        dpar['p3'] = dpar['wi']
+    if('xe' in dpar.keys()):
+        dpar['x1'] = dpar['xe']
+        dpar['x2'] = dpar['ye']
+        dpar['x3'] = dpar['ze']
+        dpar['p1'] = dpar['ue']
+        dpar['p2'] = dpar['ve']
+        dpar['p3'] = dpar['we']
 
-    #print(dpar.keys())
-    #print(('q' in dpar.keys()))
-    # # find average E field based on provided bounds #TODO: remove this
-    # gfieldptsx = (x1 <= dfields[fieldkey+'_xx']) & (dfields[fieldkey+'_xx'] <= x2)
-    # gfieldptsy = (y1 <= dfields[fieldkey+'_yy']) & (dfields[fieldkey+'_yy'] <= y2)
-    # gfieldptsz = (z1 <= dfields[fieldkey+'_zz']) & (dfields[fieldkey+'_zz'] <= z2)
-    #
-    # goodfieldpts = []
-    # for i in range(0, len(dfields['ex_xx'])):
-    #     for j in range(0, len(dfields['ex_yy'])):
-    #         for k in range(0, len(dfields['ex_zz'])):
-    #             if(gfieldptsx[i] and gfieldptsy[j] and gfieldptsz[k]):
-    #                 goodfieldpts.append(dfields[fieldkey][k][j][i])
-
-    # define mask that includes particles within range
-    #print('debug: ', x1,x2,y1,y2,z1,z2,'more debug: ',type(dpar['x1']),len(dpar['x1']),type(dpar['x2']),len(dpar['x2']),type(dpar['x3']),len(dpar['x3']))
-    #gptsparticle = (x1 <= dpar['x1']) & (dpar['x1'] <= x2) & (y1 <= dpar['x2']) & (dpar['x2'] <= y2) & (z1 <= dpar['x3']) & (dpar['x3'] <= z2)
-
-    if(checkFrameandGrabSubset):
+    if(z1 != None and z2 != None):
         gptsparticle = (x1 <= dpar['x1']) & (dpar['x1'] <= x2) & (y1 <= dpar['x2']) & (dpar['x2'] <= y2) & (z1 <= dpar['x3']) & (dpar['x3'] <= z2)
-
-        # shift particle data to shock frame if needed TODO:  clean this up
-        #TODO: avoid doing this, it is very inefficient with RAM
-        if(dfields['Vframe_relative_to_sim'] == vshock and dpar['Vframe_relative_to_sim'] == 0.): #TODO: use shift particles function
-            dpar_p1 = np.asarray(dpar['p1'][gptsparticle][:])
-            dpar_p1 -= vshock
-            dpar_p2 = np.asarray(dpar['p2'][gptsparticle][:])
-            dpar_p3 = np.asarray(dpar['p3'][gptsparticle][:])
-        elif(dpar['Vframe_relative_to_sim'] != vshock):
-            "WARNING: particles were not in simulation frame or provided vshock frame. This FPC is probably incorrect..."
-        else:
-            dpar_p1 = np.asarray(dpar['p1'][gptsparticle][:])
-            dpar_p2 = np.asarray(dpar['p2'][gptsparticle][:])
-            dpar_p3 = np.asarray(dpar['p3'][gptsparticle][:])
-
-        totalPtcl = np.sum(gptsparticle)
-
-        # # avgfield = np.average(goodfieldpts)
-        # totalFieldpts = np.sum(goodfieldpts)
-
-        if(dfields['Vframe_relative_to_sim'] != vshock):
-            "WARNING: dfields is not in the same frame as the provided vshock"
-
-        # build dparticles subset using shifted particle data
-        # TODO: this isnt clean code (using dpar_p1/2/3 'multiple times' in histogram and in compute_cprime)
-        dparsubset = {
-          'p1': dpar_p1,
-          'p2': dpar_p2,
-          'p3': dpar_p3,
-          'x1': dpar['x1'][gptsparticle][:],
-          'x2': dpar['x2'][gptsparticle][:],
-          'x3': dpar['x3'][gptsparticle][:],
-          'Vframe_relative_to_sim': dpar['Vframe_relative_to_sim']
-        }
-
-        if('q' in dpar.keys()):
-            dparsubset['q'] =dpar['q']
-
-        cprimebinned, hist, vx, vy, vz = compute_cprime_hist(dparsubset, dfields, fieldkey, vmax, dv)
-        del dparsubset
-
     else:
-        gptsparticle = (x1 <= dpar['x1']) & (dpar['x1'] <= x2) & (y1 <= dpar['x2']) & (dpar['x2'] <= y2) & (z1 <= dpar['x3']) & (dpar['x3'] <= z2)
-        try: #This is hacky TODO: clean this up by simply returning hist and cor arrays full of zeros
-            dparsubset = {
-              'p1': dpar['p1'][gptsparticle][:],
-              'p2': dpar['p2'][gptsparticle][:],
-              'p3': dpar['p3'][gptsparticle][:],
-              'x1': dpar['x1'][gptsparticle][:],
-              'x2': dpar['x2'][gptsparticle][:],
-              'x3': dpar['x3'][gptsparticle][:],
-              'Vframe_relative_to_sim': dpar['Vframe_relative_to_sim']
-            }
+       gptsparticle = (x1 <= dpar['x1']) & (dpar['x1'] <= x2) & (y1 <= dpar['x2']) & (dpar['x2'] <= y2)
 
-            if('q' in dpar.keys()): #TODO: fix redundancy with this
-                dparsubset['q'] = dpar['q']
-        except:
-            dparsubset = {
-              'p1': np.asarray([0.]),
-              'p2': np.asarray([0.]),
-              'p3': np.asarray([0.]),
-              'x1': np.asarray([0.]),
-              'x2': np.asarray([0.]),
-              'x3': np.asarray([0.]),
-              'Vframe_relative_to_sim': dpar['Vframe_relative_to_sim']
-            }
+    _vxdown = None
+    _vydown = None
+    _vzdown = None
 
-            if('q' in dpar.keys()):
-                dparsubset['q'] = dpar['q']
 
-            totalPtcl = len(dpar['p1'][:])
-            totalFieldpts = -1 # TODO just remove this varaible, doesn't make sense anymore
-            cprimebinned, hist, vx, vy, vz = compute_cprime_hist(dparsubset, dfields, fieldkey, vmax, dv)
+    if(False): #TODO: reimplement this check by fixing boosts for particles... => dfields['Vframe_relative_to_sim'] != dpar['Vframe_relative_to_sim']):
+        print("ERROR: particles and fields are not in the same frame...")
+        return
+    else:
+        dpar_p1 = np.asarray(dpar['p1'][gptsparticle][:])
+        dpar_p2 = np.asarray(dpar['p2'][gptsparticle][:])
+        dpar_p3 = np.asarray(dpar['p3'][gptsparticle][:])
 
-            cor = compute_cor_from_cprime(cprimebinned, vx, vy, vz, dv, directionkey)
-            del cprimebinned
+    totalPtcl = np.sum(gptsparticle)
 
-            #make data empty
-            totalPtcl = 0.
-            totalFieldpts = -1
-            hist = np.zeros(hist.shape)
-            cor = np.zeros(hist.shape)
+    # build dparticles subset using shifted particle data
+    dparsubset = {
+        'q': dpar['q'],
+        'p1': dpar_p1,
+        'p2': dpar_p2,
+        'p3': dpar_p3,
+        'x1': dpar['x1'][gptsparticle][:],
+        'x2': dpar['x2'][gptsparticle][:],
+        'x3': dpar['x3'][gptsparticle][:],
+        'Vframe_relative_to_sim': dpar['Vframe_relative_to_sim']
+    }
 
-            return vx, vy, vz, totalPtcl, totalFieldpts, hist, cor
+    if('q' in dpar.keys()):
+        dparsubset['q'] = dpar['q']
 
-        totalPtcl = len(dpar['p1'][:])
-        totalFieldpts = -1 # TODO just remove this varaible, doesn't make sense anymore
-        #TODO: check frame!!!!!!
-        dpar['p1'] -= vshock #TODO: clean this up
-        cprimebinned, hist, vx, vy, vz = compute_cprime_hist(dparsubset, dfields, fieldkey, vmax, dv)
+    cprimebinned, hist, vx, vy, vz = compute_cprime_hist(dparsubset, dfields, fieldkey, vmax, dv, useBoxFAC=useBoxFAC, altcorfields=altcorfields, beta = beta, massratio = massratio, c = c, vxdown=_vxdown,vydown=_vydown,vzdown=_vzdown)
+    del dparsubset
 
     cor = compute_cor_from_cprime(cprimebinned, vx, vy, vz, dv, directionkey)
     del cprimebinned
 
-    totalFieldpts = -1
-    return vx, vy, vz, totalPtcl, totalFieldpts, hist, cor
+    return vx, vy, vz, totalPtcl, hist, cor
 
 #TODO: lot of redundancy is this library. FIX THIS
 #1. compute vx, vy, vz redundantly
@@ -885,18 +863,6 @@ def weighted_field_average(xx, yy, zz, dfields, fieldkey, changebasismatrix = No
 
     fieldaligned_keys = ['epar','eperp1','eperp2','bpar','bperp1','bperp2']
     if(fieldkey in fieldaligned_keys):
-        #from lib.analysis import compute_field_aligned_coord
-        #from lib.array_ops import find_nearest
-        # _xxidx = find_nearest(dfields['ex_xx'],xx) #TODO: make a function that gets cell edge and call it here
-        # _x1 = dfields['ex_xx'][_xxidx]#get xx cell edge 1
-        # if(dfields['ex_xx'][_xxidx] - _x1 < 0):#get xx cell edge 2
-        #     _x2 = _x1
-        #     _x1 = dfields['ex_xx'][_xxidx-1]
-        # else:
-        #     _x2 = dfields['ex_xx'][_xxidx+1]
-        # vparbasis, vperp1basis, vperp2basis = compute_field_aligned_coord(dfields,[_x1,_x2],[dfields['ex_yy'][0],dfields['ex_yy'][-1]],[dfields['ex_zz'][0],dfields['ex_zz'][-1]]) #WARNING: we also assume that field aligned is defined using the whole yz domain in compute cprime function as well!!!
-        # _ = np.asarray([vparbasis,vperp1basis,vperp2basis]).T
-        # changebasismatrix = np.linalg.inv(_)
 
         if(fieldkey[0] == 'e'):
             #grab vals in standard coordinates
@@ -908,7 +874,6 @@ def weighted_field_average(xx, yy, zz, dfields, fieldkey, changebasismatrix = No
             epar,eperp1,eperp2 = np.matmul(changebasismatrix,[exval,eyval,ezval])
 
             #return correct key
-            #TODO: this code is kinda redundant, as we compute field aligned in all directions, we should consider optimizing this, but it would be difficult
             if(fieldkey == 'epar'):
                 return epar
             elif(fieldkey == 'eperp1'):
@@ -926,7 +891,6 @@ def weighted_field_average(xx, yy, zz, dfields, fieldkey, changebasismatrix = No
             bpar,bperp1,bperp2 = np.matmul(changebasismatrix,[bxval,byval,bzval])
 
             #return correct key
-            #TODO: this code is kinda redundant, as we compute field aligned in all directions, we should consider optimizing this, but it would be difficult
             if(fieldkey == 'bpar'):
                 return bpar
             elif(fieldkey == 'bperp1'):
@@ -989,8 +953,8 @@ def _weighted_field_average(xx, yy, zz, dfields, fieldkey):
 
     return fieldaverage
 
-
-def compute_cprime_hist(dparticles, dfields, fieldkey, vmax, dv):
+#TODO: finish documentation
+def compute_cprime_hist(dparticles, dfields, fieldkey, vmax, dv, useBoxFAC=True, altcorfields=None, beta=None, massratio=None, c = None, vxdown=None,vydown=None,vzdown=None):
     """
     Computes cprime for all particles passed to it
 
@@ -1009,6 +973,12 @@ def compute_cprime_hist(dparticles, dfields, fieldkey, vmax, dv):
     dv : float
         velocity space grid spacing
         (assumes square)
+    useBoxFAC : bool, opt
+        if TRUE, compute field aligned coordinate system using the average value of the magnetic field across the whole 
+        transverse domain. Otherwise, will use local value of each particle to compute field aligned coordinate system
+    altcorfields : dict, opt
+        if not None, then all calculations will be performed using dfields except for the correlation. Used when computing
+        fluct correlation in field aligned coordinates
 
     Returns
     -------
@@ -1025,6 +995,10 @@ def compute_cprime_hist(dparticles, dfields, fieldkey, vmax, dv):
         vz velocity grid
     """
     from scipy.stats import binned_statistic_dd
+    from lib.ftransfromaux import lorentz_transform_v
+    from lib.analysisaux import convert_fluc_to_par
+    from lib.analysisaux import convert_fluc_to_local_par
+    import copy
 
     if(fieldkey == 'ex' or fieldkey == 'bx'):
         vvkey = 'p1'
@@ -1039,16 +1013,22 @@ def compute_cprime_hist(dparticles, dfields, fieldkey, vmax, dv):
     elif(fieldkey == 'eperp2' or fieldkey == 'eperp2'):
         vvkey = 'pperp2'
 
-    #check if particle data is in correct coordinates
-    if(not(vvkey in dparticles.keys())):
-        #we assume particle data is passed in standard basis and would need to be converted to field aligned
-        from lib.analysis import change_velocity_basis
-        from lib.analysis import change_velocity_basis_local
-        from lib.array_ops import find_nearest
-        from lib.analysis import compute_field_aligned_coord
+    altcorfields['Vframe_relative_to_sim'] = 0
+    dfields['Vframe_relative_to_sim'] = 0 #TODO: reomve this key- we don't use it anymore!
 
+
+    #change to field aligned basis if needed
+    fieldaligned_keys = ['epar','eperp1','eperp2','bpar','bperp1','bperp2']
+    if(fieldkey in fieldaligned_keys):
+        #we assume particle data is passed in standard basis and would need to be converted to field aligned
+        from lib.analysisaux import change_velocity_basis
+        from lib.analysisaux import change_velocity_basis_local
+        from lib.arrayaux import find_nearest
+        from lib.analysisaux import compute_field_aligned_coord
+
+        #get smallest box that contains all particles (assumes using full yz domain)
         xx = np.min(dparticles['x1'][:])
-        _xxidx = find_nearest(dfields['ex_xx'],xx) #TODO: make a function that gets cell edge and call it here
+        _xxidx = find_nearest(dfields['ex_xx'],xx)
         _x1 = dfields['ex_xx'][_xxidx]#get xx cell edge 1
         if(dfields['ex_xx'][_xxidx] > xx):
             _x1 = dfields['ex_xx'][_xxidx-1]
@@ -1058,46 +1038,39 @@ def compute_cprime_hist(dparticles, dfields, fieldkey, vmax, dv):
         if(dfields['ex_xx'][_xxidx] < xx):
             _x2 = dfields['ex_xx'][_xxidx+1]
 
-        _q_in_keys = False
-        if('q' in dparticles.keys()): #quick fix. TODO: implement this better in such a way that no keys are dropped...
-            _qtemp = dparticles['q']
-            _q_in_keys = True
-        dparticles = change_velocity_basis(dfields,dparticles,[_x1,_x2],[dfields['ex_yy'][0],dfields['ex_yy'][-1]],[dfields['ex_zz'][0],dfields['ex_zz'][-1]]) #WARNING: we also assume field aligned coordinates uses full yz domain in weighted field average!!!
-        if(_q_in_keys):
-            dparticles['q'] = _qtemp
+        #use whole transverse box when computing field aligned
+        if(useBoxFAC):
+            dparticles = change_velocity_basis(dfields,dparticles,[_x1,_x2],[dfields['ex_yy'][0],dfields['ex_yy'][-1]],[dfields['ex_zz'][0],dfields['ex_zz'][-1]]) #WARNING: we also assume field aligned coordinates uses full yz domain in weighted field average!!!
 
-        vparbasis, vperp1basis, vperp2basis = compute_field_aligned_coord(dfields,[_x1,_x2],[dfields['ex_yy'][0],dfields['ex_yy'][-1]],[dfields['ex_zz'][0],dfields['ex_zz'][-1]])
-        _ = np.asarray([vparbasis,vperp1basis,vperp2basis]).T
-        changebasismatrix = np.linalg.inv(_)
+            vparbasis, vperp1basis, vperp2basis = compute_field_aligned_coord(dfields,[_x1,_x2],[dfields['ex_yy'][0],dfields['ex_yy'][-1]],[dfields['ex_zz'][0],dfields['ex_zz'][-1]])
+            _ = np.asarray([vparbasis,vperp1basis,vperp2basis]).T
+            changebasismatrix = np.linalg.inv(_)
+
+        #use local coordinates for field aligned
+        else:
+            dparticles, changebasismatrixes = change_velocity_basis_local(dfields,dparticles)
+            pass
 
     else:
         changebasismatrix = None
 
-
-    #print('Debug: x1,',np.min(dparticles['x1']),' x2,',np.max(dparticles['x1']),' y1,',np.min(dparticles['x2']),' y2,',np.max(dparticles['x2']),' z1,',np.min(dparticles['x3']),' z2,',np.max(dparticles['x3']))
-
-    # compute cprime for each particle #TODO: make this block more efficient, it is the slowest part of the code
-    # import time
-    # start = time.time()
-    #TODO: improve performance of this block vvvv---------------------------------------------------------------------------
+    # compute cprime for each particle (often slowest part of code)
     cprimew = np.zeros(len(dparticles['x1']))
-    #print('just b4', dparticles.keys())
     if('q' in dparticles.keys()):
-        #print("Charge was found!")
-        q = dparticles['q']  #TODO: assign q to gkeyll and dHybridR data
+        q = dparticles['q'] 
     else:
-        #print("Warning! Charge was not specified for dpar dict. Defaulting to q = 1.")
         q = 1.
     for i in range(0, len(dparticles['x1'])):
-        fieldval = weighted_field_average(dparticles['x1'][i], dparticles['x2'][i], dparticles['x3'][i], dfields, fieldkey,changebasismatrix = changebasismatrix)
+        if(not(useBoxFAC)):
+            changebasismatrix = changebasismatrixes[i]
+        if(altcorfields == None):
+            fieldval = weighted_field_average(dparticles['x1'][i], dparticles['x2'][i], dparticles['x3'][i], dfields, fieldkey, changebasismatrix = changebasismatrix)
+        else:
+            fieldval = weighted_field_average(dparticles['x1'][i], dparticles['x2'][i], dparticles['x3'][i], altcorfields, fieldkey, changebasismatrix = changebasismatrix)
         cprimew[i] = q*dparticles[vvkey][i]*fieldval
     cprimew = np.asarray(cprimew)
-    #end = time.time()
-    # print(end - start)
-    #TODO: improve performance of this block ^^^^---------------------------------------------------------------------------
 
-    #TODO: rename a lot of this, as it doesn't make sense in field aligned coordinates
-    # bin into cprime(vx,vy,vz) #TODO: use function for this block (it's useful elsewhere to build distribution functions)
+    # bin into cprime(vx,vy,vz)
     vxbins = np.arange(-vmax, vmax+dv, dv)
     vx = (vxbins[1:] + vxbins[:-1])/2.
     vybins = np.arange(-vmax, vmax+dv, dv)
