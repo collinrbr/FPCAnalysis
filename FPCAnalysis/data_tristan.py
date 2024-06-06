@@ -7,12 +7,10 @@ import numpy as np
 import h5py
 import os
 import math
+from netCDF4 import Dataset
+from datetime import datetime
 
-#See https://github.com/PrincetonUniversity/tristan-mp-v2/blob/master/inputs/input.full for details about input and output
-
-#TODO: normalize grid and particle position data to c_omp (from params)
-
-def load_params(path,num):
+def load_params(path,num,debug=False):
     """
     WARNING: num should be a string. TODO: rename to something else
     """
@@ -20,10 +18,8 @@ def load_params(path,num):
     params = {}
 
     with h5py.File(path + 'param.' + num, 'r') as paramfl:
+        if(debug): print(list(paramfl.keys()))
 
-        # print(list(paramfl.keys())) #for some reason, have to print keys this way?
-
-        #TODO change keynames to match previously used keynames
         params['comp'] = paramfl['c_omp'][0]
         params['c'] = paramfl['c'][0]
         params['sigma'] = paramfl['sigma'][0]
@@ -35,13 +31,31 @@ def load_params(path,num):
         try:
             params['sizex'] = paramfl['sizex'][0]
         except:
-            #print("Warning: couldn't find sizex key, trying to load sizey as sizex instead...")
             params['sizex'] = paramfl['sizey'][0]
         params['delgam'] = paramfl['delgam'][0]
 
     return params
 
-def load_fields(path_fields, num, field_vars = 'ex ey ez bx by bz', normalizeFields=False):
+def load_input(path,verbose=False):
+    inputs = {}
+    with open(path, 'r') as file:
+        for line in file:
+            if(verbose):print(line)
+            line = line.strip()
+            if line and '=' in line:
+                key, value = line.split('=')[0],line.split('=')[1]
+                key = key.strip()
+                value = value.split(' ')[1]
+                value = value.strip()
+                try:
+                    value = float(value)
+                except:
+                    pass
+                inputs[key] = value
+
+    return inputs
+
+def load_fields(path_fields, num, field_vars = 'ex ey ez bx by bz', normalizeFields=False, normalizeGrid=True):
     """
     This assumes 1D implies data in the 3rd axis only, 2D implies data in the 2nd and 3rd axis only.
 
@@ -52,7 +66,7 @@ def load_fields(path_fields, num, field_vars = 'ex ey ez bx by bz', normalizeFie
     field_vars = field_vars.split()
     field = {}
     field['Vframe_relative_to_sim_out'] = 0.
-    #with h5py.File(path_fields.format(num),'r') as f:
+    
     is1D = False
     is2D = False
     is3D = False
@@ -82,6 +96,8 @@ def load_fields(path_fields, num, field_vars = 'ex ey ez bx by bz', normalizeFie
         dx = params['istep']
         for key in field_vars:
             field[key+'_xx'] = np.linspace(0., field[key].shape[2]*dx, field[key].shape[2])
+            field[key+'_yy'] = np.asarray([0.,1.])
+            field[key+'_zz'] = np.asarray([0.,1.])
 
     elif(is2D):
         dx = params['istep']
@@ -89,6 +105,7 @@ def load_fields(path_fields, num, field_vars = 'ex ey ez bx by bz', normalizeFie
         for key in field_vars:
             field[key+'_xx'] = np.linspace(0., field[key].shape[2]*dx, field[key].shape[2])
             field[key+'_yy'] = np.linspace(0., field[key].shape[1]*dy, field[key].shape[1])
+            field[key+'_zz'] = np.asarray([0.,1.])
 
     elif(is3D):
         dx = params['istep']
@@ -98,48 +115,38 @@ def load_fields(path_fields, num, field_vars = 'ex ey ez bx by bz', normalizeFie
             field[key+'_yy'] = np.linspace(0., field[key].shape[1]*dy, field[key].shape[1])
             field[key+'_zz'] = np.linspace(0., field[key].shape[0]*dz, field[key].shape[0])
 
-    #print("Debug")
-    if(normalizeFields):
+    if(normalizeGrid):
         #normalize to d_i
-        comp = load_params(path_fields,num)['comp']
-        for key in field_vars:
+        comp = params['comp']
+        massratio = params['mi']/params['me']
+        for key in field.keys():
             if(key+'_xx' in field.keys()):
-                field[key+'_xx'] /= comp
+                field[key+'_xx'] /= (comp*np.sqrt(massratio))
             if(key+'_yy' in field.keys()):
-                field[key+'_yy'] /= comp
+                field[key+'_yy'] /= (comp*np.sqrt(massratio))
             if(key+'_zz' in field.keys()):
-                field[key+'_zz'] /= comp
+                field[key+'_zz'] /= (comp*np.sqrt(massratio))
 
+    if(normalizeFields):
         if('ex' in field.keys()):
-            bnorm = np.mean((field['bx'][:,:,-10:]**2+field['by'][:,:,-10:]**2+field['bz'][:,:,-10:]**2)**0.5)
-            enorm = np.mean((field['ex'][:,:,-10:]**2+field['ey'][:,:,-10:]**2+field['ez'][:,:,-10:]**2)**0.5)
+            bnorm = params['c']**2*params['sigma']/params['comp']
+            sigma_ion = params['sigma']*params['me']/params['mi'] #NOTE: this is subtely differetn than what aaron's normalization is- fix it (missingn factor of gamma0 and mi+me)
+            enorm = bnorm*np.sqrt(sigma_ion)*params['c'] #note, there is an extra factor of 'c hat' (c in code units, which is .45 for the main run being analyzed) that we take out
+    
+        if('jx' in field.keys()):
+            vti0 = np.sqrt(params['delgam'])#Note: velocity is in units γV_i/c so we do not include '*params['c']'
+            jnorm = vti0 #normalize to vti
 
         #normalize to correct units
         for key in field_vars:
-            #print("Normalizing key:",key)
             if(key[0] == 'b'):
                 field[key] /= bnorm
             elif(key[0] == 'e'):
-                #TODO: get this in the correct normalization!!!!
-                field[key] /= enorm
+                field[key] /= enorm 
+            elif(key[0] == 'j'):
+                field[key] /= jnorm
 
-                # #should normalize to v_{a,0} B0/ c-----------------------------------
-                # #see Haggerty 2019
-                # #we either assume vti = v_a (i.e. beta of 1) and compute vti
-                # #or attempt to compute vti
-                #
-                # bnorm = np.mean((field['bx'][:,:,-1]**2+field['by'][:,:,-1]**2+field['bz'][:,:,-1]**2)**0.5)
-                # #vti0, vte0 = load_particles(path_fields, num, normalizeVelocity=False, _getvti=True)
-                # #v0norm = vti0 #assumes plasma beta of 1 !!!!
-                #
-                # dennorm = field['dens'][0,0,:][np.nonzero(field['dens'][0,0,:])][-10]#den array is weird. Its zero towards the end and its first couple of nonzero vals towards the end is small
-                # v0norm = bnorm/np.sqrt(4.*np.pi*dennorm*params['mi'])
-                # cnorm = params['c']
-                # print('norm')
-                # print(bnorm,v0norm,cnorm,bnorm*v0norm/cnorm)
-                # field[key] /= bnorm*v0norm/cnorm
-
-    field['Vframe_relative_to_sim'] = 0. #TODO: fix this, it is incorrect at least some of the time as data is reported in the upstream frame (frame where v_x,up = 0) at least some of the time
+    field['Vframe_relative_to_sim'] = 0. 
 
     return field
 
@@ -149,13 +156,13 @@ def load_current(path, num,normalizeFields=False):
 
     return load_fields(path,num,field_vars=flow_vars,normalizeFields=normalizeFields)
 
-def load_den(path,num):
+def load_den(path,num,normalize=False):
 
     den_vars = 'dens densi'
 
-    return load_fields(path,num,field_vars=den_vars)
+    return load_fields(path,num,field_vars=den_vars,normalizeFields=normalize)
 
-def load_particles(path, num, normalizeVelocity=False, _getvti=False):
+def load_particles(path, num, normalizeVelocity=False,loaddebugsubset=False):
     """
     Loads TRISTAN particle data
 
@@ -165,6 +172,8 @@ def load_particles(path, num, normalizeVelocity=False, _getvti=False):
         path to data folder
     num : int
         frame of data this function will load
+    normalizeVelocity : bool (opt)#TODO: rename
+        normalizes velocity to v_thermal,species and position to d_i
 
     Returns
     -------
@@ -182,9 +191,21 @@ def load_particles(path, num, normalizeVelocity=False, _getvti=False):
     with h5py.File(path + 'prtl.tot.' + num, 'r') as f:
 
         for k in dens_vars_elc:
-            pts_elc[k] = f[k][:] #note: velocity is in units γV_i/c
+            if(loaddebugsubset):
+                if(len(f[k]) > 1):
+                    pts_elc[k] = f[k][::25]
+                else:
+                    pts_elc[k] = f[k][:]
+            else:
+                pts_elc[k] = f[k][:] #note: velocity is in units γV_i/c
         for l in dens_vars_ion:
-            pts_ion[l] = f[l][:]
+            if(loaddebugsubset):
+                if(len(f[k]) > 1):
+                    pts_ion[l] = f[l][::25]
+                else:
+                    pts_ion[l] = f[l][:]
+            else:
+                pts_ion[l] = f[l][:]
 
         pts_elc['inde'] = f['inde'][:]
         pts_ion['indi'] = f['indi'][:]
@@ -195,23 +216,16 @@ def load_particles(path, num, normalizeVelocity=False, _getvti=False):
     pts_elc['Vframe_relative_to_sim'] = 0. #tracks frame (along vx) relative to sim
     pts_ion['Vframe_relative_to_sim'] = 0. #tracks frame (along vx) relative to sim
 
-
     pts_elc['q'] = -1. #tracks frame (along vx) relative to sim
     pts_ion['q'] = 1. #tracks frame (along vx) relative to sim
 
-    if(normalizeVelocity or _getvti):
+    if(normalizeVelocity):
 
         params = load_params(path,num)
-
-        vti0 = math.sqrt(params['delgam'])#Note: velocity is in units γV_i/c so we do not include '*params['c']'
-        vte0 = math.sqrt(params['mi']/params['me'])*vti0
-
+        massratio = load_params(path,num)['mi']/load_params(path,num)['me']
+        vti0 = np.sqrt(params['delgam'])#Note: velocity is in units γV_i/c so we do not include '*params['c']'
+        vte0 = np.sqrt(params['mi']/params['me'])*vti0 #WARNING: THIS ASSUME Ti/Te = 1, TODO: don't assume Ti/Te = 1
         comp = params['comp']
-
-        if(_getvti):#TODO: this isnt the cleanest way of doing this, clean this up and find a differnt way to do this
-            return vti0, vte0
-
-        #print("Computed vti0 of ", vti0, " and vte0 of ", vte0)
 
         #normalize
         elc_vkeys = 'ue ve we'.split()
@@ -223,60 +237,17 @@ def load_particles(path, num, normalizeVelocity=False, _getvti=False):
         for k in ion_vkeys:
             pts_ion[k] /= vti0
         for k in elc_poskeys:
-            pts_elc[k] /= comp
+            pts_elc[k] /= (comp*np.sqrt(massratio))
         for k in ion_poskeys:
-            pts_ion[k] /= comp
+            pts_ion[k] /= (comp*np.sqrt(massratio))
 
     return pts_elc, pts_ion
-
-def format_dict_like_dHybridR(ddict):
-    """
-
-    """
-    keys = ddict.keys()
-
-    if('jx' in keys):
-        ddict['ux'] = ddict['jx']
-    if('jy' in keys):
-        ddict['uy'] = ddict['jy']
-    if('jz' in keys):
-        ddict['uz'] = ddict['jz']
-    if('jx_xx' in keys):
-        ddict['ux_xx'] = ddict['jx_xx']
-    if('jx_yy' in keys):
-        ddict['ux_yy'] = ddict['jx_yy']
-    if('jx_zz' in keys):
-        ddict['ux_zz'] = ddict['jx_zz']
-    if('jy_xx' in keys):
-        ddict['uy_xx'] = ddict['jy_xx']
-    if('jy_yy' in keys):
-        ddict['uy_yy'] = ddict['jy_yy']
-    if('jy_zz' in keys):
-        ddict['uy_zz'] = ddict['jy_zz']
-    if('jz_xx' in keys):
-        ddict['uz_xx'] = ddict['jz_xx']
-    if('jz_yy' in keys):
-        ddict['uz_yy'] = ddict['jz_yy']
-    if('jz_zz' in keys):
-        ddict['uz_zz'] = ddict['jz_zz']
-
-    if('dens' in keys):
-        ddict['den'] = ddict['dens']
-    if('dens_xx' in keys):
-        ddict['den_xx'] = ddict['dens_xx']
-    if('dens_yy' in keys):
-        ddict['den_yy'] = ddict['dens_yy']
-    if('dens_zz' in keys):
-        ddict['den_zz'] = ddict['dens_zz']
-
-    return ddict
 
 def format_par_like_dHybridR(dpar):
     """
     Adds keys (more specifically 'pointers' so no memory is wasted) that makes the data indexable
     with the same key names as dHybridR data
 
-    #TODO: double check that these are 'pointers'
     """
 
     keys = dpar.keys()
