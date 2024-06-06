@@ -12,12 +12,6 @@ def check_python_version(version):
         exit()
     else:
         print(f"Python {version} is installed.")
-def create_virtualenv(env_name, python_version):
-    # Ensure virtualenv is installed
-    subprocess.run([sys.executable, "-m", "pip", "install", "virtualenv"])
-
-    # Create the virtual environment with the specified Python version
-    subprocess.run([sys.executable, "-m", "virtualenv", "--python=python"+str(python_version), env_name])
 
 def install_required_libraries(env_name):
 
@@ -72,12 +66,23 @@ def install_required_libraries(env_name):
     subprocess.run([pip_executable, 'install', '-e', 'postgkyl', '--verbose'])
     print("Done installing postgkeyll!")
 
+    #Install FPCAnalysis lib
+    print("Installing FPCAnalysis library into env!")
+    try:
+        # Run the pip install -e . command with verbose output
+        result = subprocess.run([pip_executable, 'install', '-e', '.', '--verbose'], check=True, text=True)
+        print(result)
+        print("Successfully installed in editable mode.")
+    except subprocess.CalledProcessError as e:
+        print("An error occurred while installing the package.")
+        print(e)
+
+    print("Done installing FPCAnalysis into env!")
 
 def main():
     env_name = 'FPCAnalysisenv'
     python_version = '3.11'  # Specify the Python version you want here
     check_python_version(python_version)
-    create_virtualenv(env_name, python_version)
     install_required_libraries(env_name)
 
 if __name__ == "__main__":
@@ -87,28 +92,19 @@ if __name__ == "__main__":
     time.sleep(5)
 
     main()
+
+    print();print();print();print();
     print("Completed! Installation")
     print("If this has any error, please see the comments at the bottom of setup.py for debugging help")
-    print("Please activate the new enviroment! 'conda activate FPCAnalysisenv' for linux/mac")
+    print("Please activate the new enviroment! 'conda activate /path/to/here/FPCAnalysisenv' for linux/mac")
     print("This will need to be done every time a new terminal is launched!!!")
 
-    print("Attempting to run first import to compile binaries...")
-    try:
-        # Create a temporary file
-        with open('_tempimport.py', 'w') as f:
-            # Write shebang line
-            f.write('#!FPCAnalysisenv/bin/python\n')
-            # Import your module
-            f.write('import FPCAnalysis\n')
-        os.chmod('_tempimport.py', 0o777)
-        python_cmd = [sys.executable, '_tempimport.py']
-        subprocess.run(python_cmd, check=True)
-        os.remove('_tempimport.py')
-        print("Done!")
-    except:
-        print("Was not able to import for the first time to compile binaries. First run with library may be slower than usual as binaries will need to compile!")
-    print();print();print();print();
-    print("Done with install... Please run `conda actiavte /path/to/here/FPCAnalysisenv' (while in this directory) to activate the library or add '#!/path/to/here/FPCAnalysisenv/bin/python' (if on linux/mac) to the top of all scripts!")
+    print('*');print('*');print('*');print('*');
+    print("Done with install... Please run `conda actiavte /path/to/here/FPCAnalysisenv' to activate the library or add '#!/path/to/here/FPCAnalysisenv/bin/python' (if on linux/mac) to the top of all scripts (and run by calling ./*scriptname.py)!")
+    print("When done, use conda deactivate to turn off environemnt,")
+    print("If using the environemnt, you will need to reactivate it every time you open a new terminal if you want to use the FPCAnalysis lib.")
+    print("Be sure to activate the environemnt before launching a new jupyter notebook!")
+    print('*');print('*');print('*');print('*');
 
     #General fixes!
     # Always a good idea to update pip 'python -m pip install --upgrade pip'
