@@ -10,9 +10,14 @@ def compute_wavemodes(xx,dfields,xlim,ylim,zlim,
                      bxkzkykxxx,bykzkykxxx,bzkzkykxxx,
                      exkzkykxxx,eykzkykxxx,ezkzkykxxx,
                      uxkzkykxxx,uykzkykxxx,uzkzkykxxx,
-                     vth=None):
+                     eparlocalkzkykxxx=None,epardetrendkzkykxxx=None,
+                     eperp1detrendkzkykxxx=None,eperp2detrendkzkykxxx=None,
+                     bpardetrendkzkykxxx=None,bperp1detrendkzkykxxx=None,bperp2detrendkzkykxxx=None,
+                     vth=None,specifyxxidx=-1,verbose=False,is2d=True):
 
     """
+    #TODO: document new variables
+
     Creates dwavemodes dictionary, that contains frequency/wavenumber space data of our fields
     in cartesian coordinates and field aligned coordinates for every discrete computed point in
     frequency/wavenumber space
@@ -44,22 +49,30 @@ def compute_wavemodes(xx,dfields,xlim,ylim,zlim,
         wavemode data in frequency/wavenumber space for every
     """
 
-    from lib.analysis import compute_field_aligned_coord
-    from lib.array_ops import find_nearest
+    from lib.analysisaux import compute_field_aligned_coord
+    from lib.arrayaux import find_nearest
 
     dwavemodes = {'wavemodes':[],'sortkey':None}
 
     #note: xx should be in the middle of xlim TODO: check for this
     epar,eperp1,eperp2 = compute_field_aligned_coord(dfields,xlim,ylim,zlim) #WARNING: dfields should be total fields here
 
-    xxidx = find_nearest(dfields['bz_xx'],xx)
+    if(specifyxxidx == -1):
+        xxidx = find_nearest(dfields['bz_xx'],xx)
+    else:
+        xxidx = specifyxxidx
 
     nkz, nky, nkx, nxx = bxkzkykxxx.shape
 
     #Build 1d arrays that we can easily sort by desired metric
     for i in range(0,nkx):
+        if(verbose):print(str(i)+' of ' + str(nkx))
         for j in range(0,nky):
             for k in range(0,nkz):
+                if(is2d):
+                    if(kz[k] != 0):
+                        continue
+
                 wavemode = {}
                 wavemode['kx'] = kx[i]
                 wavemode['ky'] = ky[j]
@@ -74,6 +87,24 @@ def compute_wavemodes(xx,dfields,xlim,ylim,zlim,
                 wavemode['Ux'] = uxkzkykxxx[k,j,i,xxidx]
                 wavemode['Uy'] = uykzkykxxx[k,j,i,xxidx]
                 wavemode['Uz'] = uzkzkykxxx[k,j,i,xxidx]
+
+                if(eparlocalkzkykxxx is not None):
+                    wavemode['Epar_local'] = eparlocalkzkykxxx[k,j,i,xxidx]
+                if(epardetrendkzkykxxx is not None):
+                    wavemode['Epar_detrend'] = epardetrendkzkykxxx[k,j,i,xxidx]
+                if(eperp1detrendkzkykxxx is not None):
+                    wavemode['Eperp1_detrend'] = eperp1detrendkzkykxxx[k,j,i,xxidx]
+                if(eperp2detrendkzkykxxx is not None):
+                    wavemode['Eperp2_detrend'] = eperp2detrendkzkykxxx[k,j,i,xxidx]
+                if(eparlocalkzkykxxx is not None):
+                    wavemode['Epar_local'] = eparlocalkzkykxxx[k,j,i,xxidx]
+                if(bpardetrendkzkykxxx is not None):
+                    wavemode['Bpar_detrend'] = bpardetrendkzkykxxx[k,j,i,xxidx]
+                if(bperp1detrendkzkykxxx is not None):
+                    wavemode['Bperp1_detrend'] = bperp1detrendkzkykxxx[k,j,i,xxidx]
+                if(bperp2detrendkzkykxxx is not None):
+                    wavemode['Bperp2_detrend'] = bperp2detrendkzkykxxx[k,j,i,xxidx]
+
 
                 wavemode['normB'] = np.linalg.norm([wavemode['Bx'],wavemode['By'],wavemode['Bz']])
                 wavemode['normE'] = np.linalg.norm([wavemode['Ex'],wavemode['Ey'],wavemode['Ez']])
@@ -118,18 +149,8 @@ def compute_wavemodes(xx,dfields,xlim,ylim,zlim,
                 wavemode['EcrossBe2'] = np.dot(e2,_EcrossB)
                 wavemode['EcrossBe3'] = np.dot(e3,_EcrossB)
 
-                #value used to see if wave fluctuates in the direction we expect an MHD alfven wave to
-                wavemode['testAlfvenval'] = np.cross(_B,np.cross(_k,epar))
-                try:
-                    wavemode['testAlfvenval'] /= (np.linalg.norm(_B)*np.linalg.norm(np.cross(_k,epar)))
-                except:
-                    wavemode['testAlfvenval'] = -1.
-                
                 #consistency check
-                try:
-                    wavemode['kdotB'] = np.dot(_k,_B)/(np.linalg.norm(_k)*np.linalg.norm(_B)) #should be small
-                except:
-                    wavemode['kdotB'] = -1
+                wavemode['kdotB'] = np.dot(_k,_B)/(np.linalg.norm(_k)*np.linalg.norm(_B)) #should be approx zero
 
                 if(vth != None):
                     wavemode['vth']=vth
