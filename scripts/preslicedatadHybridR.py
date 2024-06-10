@@ -3,20 +3,7 @@
 import sys
 sys.path.append(".")
 
-import lib.analysis as anl
-import lib.array_ops as ao
-import lib.data_h5 as dh5
-import lib.data_netcdf4 as dnc
-import lib.fpc as fpc
-import lib.frametransform as ft
-import lib.metadata as md
-
-import lib.plot.oned as plt1d
-import lib.plot.twod as plt2d
-import lib.plot.debug as pltdebug
-import lib.plot.fourier as pltfr
-import lib.plot.resultsmanager as rsltmng
-import lib.plot.velspace as pltvv
+from FPCAnalysis import *
 
 import os
 import math
@@ -58,10 +45,10 @@ path_particles = path+"Output/Raw/Sp01/raw_sp01_{:08d}.h5"
 
 #load relevant time slice fields
 print("Loading field data (for simulation box dimensions)...") #must load field data to get simulation box dimensions
-dfields = dh5.field_loader(path=path_fields,num=numframe,is2d3v=is2d3v)
+dfields = ddhr.field_loader(path=path_fields,num=numframe,is2d3v=is2d3v)
 
 # #Load all fields along all time slices
-# all_dfields = dh5.all_dfield_loader(path=path_fields, is2d3v=is2d3v)
+# all_dfields = ddhr.all_dfield_loader(path=path_fields, is2d3v=is2d3v)
 
 #check input to make sure box makes sense
 if(not(is2d3v)): #TODO: add check_input for 2d3v
@@ -72,7 +59,7 @@ if(not(use_restart)):
     print("Loading particle data...")
     #Load slice of particle data
     if xlim is not None and ylim is not None and zlim is not None:
-        dparticles = dh5.read_box_of_particles(path_particles, numframe, xlim[0], xlim[1], ylim[0], ylim[1], zlim[0], zlim[1], is2d3v=is2d3v)
+        dparticles = ddhr.read_box_of_particles(path_particles, numframe, xlim[0], xlim[1], ylim[0], ylim[1], zlim[0], zlim[1], is2d3v=is2d3v)
     #Load all data in unspecified limits and only data in bounds in specified limits
     elif xlim is not None or ylim is not None or zlim is not None:
         if xlim is None:
@@ -81,30 +68,13 @@ if(not(use_restart)):
             ylim = [dfields['ex_yy'][0],dfields['ex_yy'][-1]]
         if zlim is None:
             zlim = [dfields['ex_zz'][0],dfields['ex_zz'][-1]]
-        dparticles = dh5.read_box_of_particles(path_particles, numframe, xlim[0], xlim[1], ylim[0], ylim[1], zlim[0], zlim[1], is2d3v=is2d3v)
+        dparticles = ddhr.read_box_of_particles(path_particles, numframe, xlim[0], xlim[1], ylim[0], ylim[1], zlim[0], zlim[1], is2d3v=is2d3v)
     #Load all the particles
     else:
         xlim = [dfields['ex_xx'][0],dfields['ex_xx'][-1]]
         ylim = [dfields['ex_yy'][0],dfields['ex_yy'][-1]]
         zlim = [dfields['ex_zz'][0],dfields['ex_zz'][-1]]
-        dparticles = dh5.read_particles(path_particles, numframe, is2d3v=is2d3v)
-
-# #Load data using restart files
-# if(use_restart):
-#     print("Loading particle data using restart files...")
-#     #Load slice of particle data
-#     if xlim is not None:
-#         dparticles = dh5.read_restart(path, xlim=xlim,nthreads=num_threads)
-#     #Load all data in unspecified limits and only data in bounds in specified limits
-#     else:
-#         xlim = [dfields['ex_xx'][0],dfields['ex_xx'][-1]]
-#         dparticles = dh5.read_restart(path,nthreads=num_threads)
-#
-#     #set up other bounds (TODO: clean this up (redundant code in above if block; code this only once))
-#     if ylim is None:
-#         ylim = [dfields['ex_yy'][0],dfields['ex_yy'][-1]]
-#     if zlim is None:
-#         zlim = [dfields['ex_zz'][0],dfields['ex_zz'][-1]]
+        dparticles = ddhr.read_particles(path_particles, numframe, is2d3v=is2d3v)
 
 #-------------------------------------------------------------------------------
 # slice data
@@ -129,14 +99,14 @@ dparkeys='p1 p2 p3 x1 x2 x3'.split()
 while(x2 <= xEnd):
     print("x1: ", x1, "x2: ", x2)
     if(use_restart): #if we are using restart files, must load relevant files
-        dparticles = dh5.read_restart(path,verbose=True,xlim=[x1,x2],nthreads=1)
+        dparticles = ddhr.read_restart(path,verbose=True,xlim=[x1,x2],nthreads=1)
     gptsparticle = (x1 <= dparticles['x1']) & (dparticles['x1'] <= x2) & (y1 <= dparticles['x2']) & (dparticles['x2'] <= y2) & (z1 <= dparticles['x3']) & (dparticles['x3'] <= z2)
     _tempdpar = {}
     for key in dparkeys:
             _tempdpar[key] = dparticles[key][gptsparticle][:]
 
     outflnm = outdirname + '/' + '{:012.6f}'.format(x1) + '_' + '{:012.6f}'.format(x2)
-    dh5.write_particles_to_hdf5(_tempdpar,outflnm)
+    ddhr.write_particles_to_hdf5(_tempdpar,outflnm)
     x1 += dx
     x2 += dx
 cmd = 'touch origin.txt'

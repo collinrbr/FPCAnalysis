@@ -139,9 +139,9 @@ def shift_particles(dparticles, vx):
     vx : float
         boost velocity along x
     """
-    from copy import copy
+    from copy import deepcopy
 
-    dparticlestransform = copy(dparticles)  # deep copy
+    dparticlestransform = deepcopy(dparticles)  # deep copy
     dparticlestransform['p1'] = dparticles['p1'] - vx
     dparticlestransform['Vframe_relative_to_sim'] = dparticles['Vframe_relative_to_sim'] + vx
 

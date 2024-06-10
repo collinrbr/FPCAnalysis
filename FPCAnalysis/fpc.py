@@ -60,8 +60,6 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
         vz velocity grid
     totalPtcl : float
         total number of particles in the correlation box
-    totalFieldpts : float
-        total number of field gridpoitns in the correlation box
     Hist : 3d array
         distribution function in box
     Cor : 3d array
@@ -138,7 +136,7 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
     if(z1 != None and z2 != None):
         gptsparticle = (x1 <= dpar['x1']) & (dpar['x1'] <= x2) & (y1 <= dpar['x2']) & (dpar['x2'] <= y2) & (z1 <= dpar['x3']) & (dpar['x3'] <= z2)
     else:
-       gptsparticle = (x1 <= dpar['x1']) & (dpar['x1'] <= x2) & (y1 <= dpar['x2']) & (dpar['x2'] <= y2)
+        gptsparticle = (x1 <= dpar['x1']) & (dpar['x1'] <= x2) & (y1 <= dpar['x2']) & (dpar['x2'] <= y2)
 
     _vxdown = None
     _vydown = None
@@ -196,11 +194,11 @@ def _comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock,
 
     dparticles = shift_particles(dparticles, vshock) #TODO: our shift function
 
-    vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, 'ex', 'x')
-    vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEy = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, 'ey', 'y')
-    vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEz = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, 'ez', 'z')
+    vx, vy, vz, totalPtcl, Hist, CEx = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, 'ex', 'x')
+    vx, vy, vz, totalPtcl, Hist, CEy = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, 'ey', 'y')
+    vx, vy, vz, totalPtcl, Hist, CEz = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, 'ez', 'z')
         
-    return vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx, CEy, CEz
+    return vx, vy, vz, totalPtcl, Hist, CEx, CEy, CEz
 
 def project_CEi_hist(Hist, CEx, CEy, CEz):
     """
@@ -250,14 +248,19 @@ def _grab_dpar_and_comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dpar_folder, d
     See documentation for compute_hist_and_cor and comp_cor_over_x_multithread
     """
 
-    from FPCAnalysis.data_h5 import get_dpar_from_bounds
+    from FPCAnalysis.data_dhybridr import get_dpar_from_bounds
+    from FPCAnalysis.frametransform import shift_particles
     import gc
 
     dpar = get_dpar_from_bounds(dpar_folder,x1,x2)
 
+    dpar = shift_particles(dpar, vshock)
+
+    print("debug casting as np...",x1,x2)
+
     print("This worker is starting with x1: ",x1,' x2: ',x2,' y1: ',y1,' y2: ',y2,' z1: ', z1,' z2: ',z2)
 
-    vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx, CEy, CEz = _comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dpar, dfields, vshock,checkFrameandGrabSubset=False)
+    vx, vy, vz, totalPtcl, Hist, CEx, CEy, CEz = _comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dpar, dfields, vshock,checkFrameandGrabSubset=False)
 
     del dpar
 
@@ -271,11 +274,11 @@ def _grab_dpar_and_comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dpar_folder, d
         del CEz
         del Hist
         gc.collect()
-        outputsize = sys.getsizeof([vx, vy, vz, totalPtcl, totalFieldpts, Histxy,Histxz,Histyz,CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz])
+        outputsize = sys.getsizeof([vx, vy, vz, totalPtcl, Histxy,Histxz,Histyz,CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz])
         print("done with projection for ",x1,' x2: ',x2,' y1: ',y1,' y2: ',y2,' z1: ', z1,' z2: ',z2,' sizeofoutput: ', outputsize)
-        return vx, vy, vz, totalPtcl, totalFieldpts, Histxy,Histxz,Histyz,CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz
+        return vx, vy, vz, totalPtcl, Histxy,Histxz,Histyz,CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz
     else:
-        return vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx, CEy, CEz
+        return vx, vy, vz, totalPtcl, Hist, CEx, CEy, CEz
 
 #TODO: update return documentation
 def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim=None, ylim=None, zlim=None, max_workers = 8):
@@ -405,24 +408,24 @@ def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim
                         _i += 1
                     else:
                         tskidx = jobidxs[_i]
-                        _output = futures[_i].result() #return vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx, CEy, CEz
+                        _output = futures[_i].result() #return vx, vy, vz, totalPtcl, Hist, CEx, CEy, CEz
                         print("Got result for x1: ",x1task[tskidx]," x2: ",x2task[tskidx],' npar:', _output[3])
                         vx = _output[0]
                         vy = _output[1]
                         vz = _output[2]
-                        Histxy[tskidx] = _output[5]
-                        Histxz[tskidx] = _output[6]
-                        Histyz[tskidx] = _output[7]
-                        CExxy[tskidx] = _output[8]
-                        CExxz[tskidx] = _output[9]
-                        CExyz[tskidx] = _output[10]
-                        CEyxy[tskidx] = _output[11]
-                        CEyxz[tskidx] = _output[12]
-                        CEyyz[tskidx] = _output[13]
-                        CEzxy[tskidx] = _output[14]
-                        CEzxz[tskidx] = _output[15]
-                        CEzyz[tskidx] = _output[16]
-                        num_par_out[tskidx] = _output[3] #TODO: use consistent ordering of variables
+                        Histxy[tskidx] = _output[4]
+                        Histxz[tskidx] = _output[5]
+                        Histyz[tskidx] = _output[6]
+                        CExxy[tskidx] = _output[7]
+                        CExxz[tskidx] = _output[8]
+                        CExyz[tskidx] = _output[9]
+                        CEyxy[tskidx] = _output[10]
+                        CEyxz[tskidx] = _output[11]
+                        CEyyz[tskidx] = _output[12]
+                        CEzxy[tskidx] = _output[13]
+                        CEzxz[tskidx] = _output[14]
+                        CEzyz[tskidx] = _output[15]
+                        num_par_out[tskidx] = _output[3] 
                         x_out[tskidx] = (x2task[tskidx]+x1task[tskidx])/2.
 
                         #saves ram
@@ -438,159 +441,6 @@ def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim
         executor.shutdown() #will start to shut things down as resouces become free
 
         return CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz,x_out, Histxy,Histxz,Histyz, vx, vy, vz, num_par_out
-
-
-
-
-def comp_cor_over_x_multithreadv0(dfields, dpar_folder, vmax, dv, dx, vshock, xlim=None, ylim=None, zlim=None, max_workers = 8):
-    """
-    Computes distribution function and correlation wrt to given field for every slice in xx using multiprocessing
-
-    Parameters
-    ----------
-    dfields : dict
-        field data dictionary from field_loader
-    dpar_folder : string
-        path to folder containing data from preslicedata.py
-    vmax : float
-        specifies signature domain in velocity space
-        (assumes square and centered about zero)
-    dv : float
-        velocity space grid spacing
-        (assumes square)
-    dx : float
-        integration box size (i.e. the slice size)
-    vshock : float
-        velocity of shock in x direction
-    xlim : [float,float], opt
-        upper and lower bounds of sweep
-    ylim : [float,float], opt
-        upper and lower bounds of integration box
-    zlim : [float,float], opt
-        upper and lower bounds of integration box
-
-    Returns
-    -------
-    CEx_out : 4d array
-        CEx(x; vz, vy, vx) data
-    CEy_out : 4d array
-        CEy(x; vz, vy, vx) data
-    CEz_out : 4d array
-        CEz(x; vz, vy, vx) data
-    x_out : 1d array
-        average x position of each slice
-    Hist_out : 4d array
-        f(x; vz, vy, vx) data
-    vx : 3d array
-        vx velocity grid
-    vy : 3d array
-        vy velocity grid
-    vz : 3d array
-        vz velocity grid
-    num_par_out : 1d array
-        number of particles in box
-    """
-    from concurrent.futures import ProcessPoolExecutor
-    import time
-
-    #set up box bounds
-    if xlim is not None:
-        x1 = xlim[0]
-        x2 = x1+dx
-        xEnd = xlim[1]
-    # If xlim is None, use lower x edge to upper x edge extents
-    else:
-        x1 = dfields['ex_xx'][0]
-        x2 = x1 + dx
-        xEnd = dfields['ex_xx'][-1]
-    if ylim is not None:
-        y1 = ylim[0]
-        y2 = ylim[1]
-    # If ylim is None, use lower y edge to lower y edge + dx extents
-    else:
-        y1 = dfields['ex_yy'][0]
-        y2 = y1 + dx
-    if zlim is not None:
-        z1 = zlim[0]
-        z2 = zlim[1]
-    # If zlim is None, use lower z edge to lower z edge + dx extents
-    else:
-        z1 = dfields['ex_zz'][0]
-        z2 = z1 + dx
-
-    #build task array
-    x1task = []
-    x2task = []
-    while(x2 <= xEnd):
-        x1task.append(x1)
-        x2task.append(x2)
-        x1 += dx
-        x2 += dx
-
-    #empty results array
-    CEx_out = [None for _tmp in x1task]
-    CEy_out = [None for _tmp in x1task]
-    CEz_out = [None for _tmp in x1task]
-    x_out = [None for _tmp in x1task]
-    Hist_out = [None for _tmp in x1task]
-    num_par_out = [None for _tmp in x1task]
-
-    #do multithreading
-    with ProcessPoolExecutor(max_workers = max_workers) as executor:
-        futures = []
-        jobids = [] #array to track where in results array result returned by thread should go
-        num_working = 0
-        tasks_completed = 0
-        taskidx = 0
-
-        while(tasks_completed < len(x1task)): #while there are jobs to do
-            if(num_working < max_workers and taskidx < len(x1task)): #if there is a free worker and job to do, give job
-                print('started scan pos-> x1: ',x1task[taskidx],' x2: ',x2task[taskidx],' y1: ',y1,' y2: ',y2,' z1: ', z1,' z2: ',z2)
-                futures.append(executor.submit(_grab_dpar_and_comp_all_CEi, vmax, dv, x1task[taskidx], x2task[taskidx], y1, y2, z1, z2, dpar_folder, dfields, vshock))
-                jobids.append(taskidx)
-                taskidx += 1
-                num_working += 1
-            else: #otherwise
-                exists_idle = False
-                nft = len(futures)
-                _i = 0
-                while(_i < nft):
-                    popped_element = False
-                    if(futures[_i].done()): #if done get result
-                        print("Found done process,", _i, ", grabbing results...")
-
-                        #get results and place in return vars
-                        resultidx = jobids[_i]
-                        _output = futures[_i].result() #return vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx, CEy, CEz
-                        vx = _output[0]
-                        vy = _output[1]
-                        vz = _output[2]
-                        num_par_out[resultidx] = _output[3] #TODO: use consistent ordering of variables
-                        Hist_out[resultidx] = _output[5]
-                        CEx_out[resultidx] = _output[6]
-                        CEy_out[resultidx] = _output[7]
-                        CEz_out[resultidx] = _output[8]
-                        x_out[resultidx] = (x2task[resultidx]+x1task[resultidx])/2.
-
-                        #update multithreading state vars
-                        num_working -= 1
-                        tasks_completed += 1
-                        exists_idle = True
-                        futures.pop(_i)
-                        jobids.pop(_i)
-                        popped_element = True #want to carefully iterate
-                        nft -= 1
-                        print('done with process,',_i,'ended scan pos-> x1: ',x1task[resultidx],' x2: ',x2task[resultidx],' y1: ',y1,' y2: ',y2,' z1: ', z1,' z2: ',z2,'num particles in box: ', _output[3])
-
-                    if(not(popped_element)):
-                        _i += 1
-
-
-                if(not(exists_idle)):
-                    time.sleep(0.001)
-
-    return CEx_out, CEy_out, CEz_out, x_out, Hist_out, vx, vy, vz, num_par_out
-
 
 def compute_correlation_over_x(dfields, dparticles, vmax, dv, dx, vshock, xlim=None, ylim=None, zlim=None):
     """
@@ -673,9 +523,9 @@ def compute_correlation_over_x(dfields, dparticles, vmax, dv, dx, vshock, xlim=N
 
     while(x2 <= xEnd):
         print('scan pos-> x1: ',x1,' x2: ',x2,' y1: ',y1,' y2: ',y2,' z1: ', z1,' z2: ',z2)
-        vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEx = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, 'ex', 'x')
-        vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEy = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, 'ey', 'y')
-        vx, vy, vz, totalPtcl, totalFieldpts, Hist, CEz = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, 'ez', 'z')
+        vx, vy, vz, totalPtcl, Hist, CEx = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, 'ex', 'x')
+        vx, vy, vz, totalPtcl, Hist, CEy = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, 'ey', 'y')
+        vx, vy, vz, totalPtcl, Hist, CEz = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, 'ez', 'z')
         print('number of particles found in box: ', totalPtcl)
         x_out.append(np.mean([x1,x2]))
         CEx_out.append(CEx)
@@ -769,9 +619,9 @@ def compute_correlation_over_x_field_aligned(dfields, dparticles, vmax, dv, dx, 
 
     while(x2 <= xEnd):
         print('scan pos-> x1: ',x1,' x2: ',x2,' y1: ',y1,' y2: ',y2,' z1: ', z1,' z2: ',z2)
-        vperp2, vperp1, vpar, totalPtcl, totalFieldpts, Hist, CEperp2 = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock, 'eperp2', 'eperp2') #TODO: distinguish eperp2 the field and eperp2 the basis key using different names here(repeat for eperp1 and epar)
-        vperp2, vperp1, vpar, totalFieldpts, Hist, CEperp1 = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock, 'eperp1', 'eperp1')
-        vperp2, vperp1, vpar, totalFieldpts, Hist, CEpar = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock, 'epar', 'epar')
+        vperp2, vperp1, vpar, totalPtcl, Hist, CEperp2 = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock, 'eperp2', 'eperp2') #TODO: distinguish eperp2 the field and eperp2 the basis key using different names here(repeat for eperp1 and epar)
+        vperp2, vperp1, vpar, totalPtcl, Hist, CEperp1 = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock, 'eperp1', 'eperp1')
+        vperp2, vperp1, vpar, totalPtcl, Hist, CEpar = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock, 'epar', 'epar')
         print('num particles in box: ', totalPtcl)
         x_out.append(np.mean([x1,x2]))
         CEperp2_out.append(CEperp2)
