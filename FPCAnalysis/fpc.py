@@ -258,9 +258,13 @@ def _grab_dpar_and_comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dpar_folder, d
     if(beta0 == None):
         dpar = shift_particles(dpar, vshock)
     else:
-        dpar = shift_particles_tristan(dpar, vshock, beta0, params['mi']/params['me'], isIon)
-
-    print("debug casting as np...",x1,x2)
+        dpar = shift_particles_tristan(dpar, vshock, beta0, mi_me, isIon)
+        if('ion' == dpar_folder.split('/')[-1] or 'ion' == dpar_folder.split('/')[-2]): #we use an or in case of double // i.e. //
+            print("'ion' was detected as parent folder. Overwritting charge to 1!")
+            dpar['q'] = 1.
+        elif('elec' == dpar_folder.split('/')[-1] or 'elec' == dpar_folder.split('/')[-2]): #we use an or in case of double // i.e. //
+            print("'Elec' was detected as parent folder. Overwritting charge to -1! Please any ignore prior message stating that charge is 1!")
+            dpar['q'] = -1.
 
     print("This worker is starting with x1: ",x1,' x2: ',x2,' y1: ',y1,' y2: ',y2,' z1: ', z1,' z2: ',z2)
 

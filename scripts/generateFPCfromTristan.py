@@ -26,6 +26,9 @@ if __name__ == '__main__':
     except:
         dpar_folder = None
 
+    dpar_folder_elec = dpar_folder+'/elec/'
+    dpar_folder_ion = dpar_folder+'/ion/'
+
     try:
         use_dfluc = sys.argv[4]
         if(use_dfluc == 'T'):
@@ -127,7 +130,7 @@ if __name__ == '__main__':
         CEx, CEy, CEz, x, Hist, vx, vy, vz, num_par = fpc.compute_correlation_over_x(dfields, dpar_ion, vmax, dv, dx, vshock, xlim, ylim, zlim)
         Histxy,Histxz,Histyz,CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz = fpc.project_CEi_hist(Hist, CEx, CEy, CEz)
     else:
-        CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz,x, Histxy,Histxz,Histyz, vx, vy, vz, num_par = fpc.comp_cor_over_x_multithread(dfields, dpar_folder_ion, vmax, dv, dx, vshock, xlim=xlim, ylim=ylim, zlim=zlim, max_workers=num_threads, beta0=beta0, mi_me=params['mi']/params['me'], isIon=True)
+        CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz,x,Histxy,Histxz,Histyz, vx, vy, vz, num_par = fpc.comp_cor_over_x_multithread(dfields, dpar_folder_ion, vmax, dv, dx, vshock, xlim=xlim, ylim=ylim, zlim=zlim, max_workers=num_threads, beta0=beta0, mi_me=params['mi']/params['me'], isIon=True)
 
     #-------------------------------------------------------------------------------
     # compute energization
