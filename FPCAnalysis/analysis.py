@@ -37,7 +37,7 @@ def norm_constants_tristanmp1(params,dt,inputs):
     c = 1./sigma_ion #Assumes me << mi; returns c in unit of va #Assumes (gamma0-1) factor is neglible
     dt = stride*dt/(wpe_over_wce*wce_over_wci) #originally in wpe, now in units of wci
 
-    return dt 
+    return dt,c 
 
 def compute_dflow(dfields, dpar_ion, dpar_elec, is2D=True, debug=False, return_empty=False, return_bins=True):
     """
@@ -228,6 +228,8 @@ def analysis_input(flnm = 'analysisinput.txt',make_resultsdir=True):
     vmax = None
     resultsdir = 'results/'
 
+    anldict = {}
+
     while(True):
         #read next line
         line = f.readline()
@@ -240,22 +242,31 @@ def analysis_input(flnm = 'analysisinput.txt',make_resultsdir=True):
 
         if(line[0]=='path'):
             path = str(line[1].split("'")[1])
+            anldict['path'] = path
         elif(line[0]=='vmax'):
             vmax = float(line[1])
+            anldict['vmax'] = vmax
         elif(line[0]=='dv'):
             dv = float(line[1])
+            anldict['dv'] = dv
         elif(line[0]=='numframe'):
             numframe = int(line[1])
+            anldict['numframe'] = numframe
         elif(line[0]=='dx'):
             dx = float(line[1])
+            anldict['dx'] = dx
         elif(line[0]=='xlim'):
             xlim = [float(line[1].split(",")[0]), float(line[1].split(",")[1])]
+            anldict['xlim'] = xlim
         elif(line[0]=='ylim'):
             ylim = [float(line[1].split(",")[0]), float(line[1].split(",")[1])]
+            anldict['ylim'] = ylim
         elif(line[0]=='zlim'):
             zlim = [float(line[1].split(",")[0]), float(line[1].split(",")[1])]
+            anldict['zlim'] = zlim
         elif(line[0]=='resultsdir'):
             resultsdir = str(line[1].split("'")[1])
+            anldict['resultsdir'] = resultsdir
     f.close()
 
     if(make_resultsdir):
@@ -275,7 +286,7 @@ def analysis_input(flnm = 'analysisinput.txt',make_resultsdir=True):
             os.system('mkdir '+str(resultsdir))
             os.system('cp '+str(flnm)+' '+str(resultsdir))
 
-    return path,resultsdir,vmax,dv,numframe,dx,xlim,ylim,zlim
+    return anldict
 
 #TODO: check shape of Cor (make sure this is a list of 2d projections rather than 3d.)
 def compute_energization(Cor,dv):

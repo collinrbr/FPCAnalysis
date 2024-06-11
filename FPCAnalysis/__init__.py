@@ -3,7 +3,7 @@ from . import analysis as anl
 from . import data_gkeyll as dg
 from . import data_dhybridr as ddhr
 from . import data_netcdf4 as dnc
-from . import data_tristan as dt
+from . import data_tristan as dtr
 from . import fpc as fpc
 from . import frametransform as ft
 from . import metadata as md

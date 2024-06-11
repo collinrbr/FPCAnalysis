@@ -1,26 +1,10 @@
-#!/usr/bin/env python
-
 import sys
-sys.path.append(".")
-
-import lib.analysis as anl
-import lib.array_ops as ao
-import lib.data_gkeyll as dgkl
-import lib.data_netcdf4 as dnc
-import lib.fpc as fpc
-import lib.frametransform as ft
-import lib.metadata as md
-
-import lib.plot.oned as plt1d
-import lib.plot.twod as plt2d
-import lib.plot.debug as pltdebug
-import lib.plot.fourier as pltfr
-import lib.plot.resultsmanager as rsltmng
-import lib.plot.velspace as pltvv
-
 import os
 import math
 import numpy as np
+
+from FPCAnalysis import *
+
 try:
     flnm_prefix = str(sys.argv[1])
 except:
@@ -51,7 +35,7 @@ dflow = dgkl.load_flow(flnm_prefix,num,species=species)
 
 #assign metadata that might not be there
 if(not('thetaBn' in params.keys())):
-    params['thetaBn'] = 90
+    print("Error, thetaBn was not computed for this shock...")
 if(not('MachAlfven' in params.keys())):
     print("Error, MachAlfven (of inflow) was not computed for this shock...")
 
@@ -62,7 +46,16 @@ ratio = dfields['bz'][0,0,0]/dfields['bz'][0,0,-1] #dirty approx
 print("Computed shock ratio (typically about 2.5):")
 print(ratio)
 vshock = -dflow['ux'][0,0,-1] #-1 * (Inflow velocity) /(ratio-1) (from Juno et al 2021)
-dfields = ft.lorentz_transform_vx(dfields,vshock)
+
+
+print();print();print();print();
+print("WARNING: computing in the frame of rest of the output (most likely the simulation rest frame) until frame transform is implemented for gkeyll data...")
+print();print();print();print();
+
+#TODO: shift particles and fields to be in same frame here!!!!
+#Note: while these functions are written, we need to make they are self consistent units wise
+#dfields = ft.lorentz_transform_vx_gkeyll(dfields,vshock)
+#ddist = ft.shift_dist_gkeyll()
 
 #-------------------------------------------------------------------------------
 # Compute FPC
@@ -70,7 +63,6 @@ dfields = ft.lorentz_transform_vx(dfields,vshock)
 dx = ddist['hist_xx'][1]-ddist['hist_xx'][0]
 vmax = np.max(ddist['vx'])
 dfpc = fpc.compute_correlation_over_x_from_dist(ddist,dfields, vmax, dx, vshock, xlim=None, ylim=[0,1], zlim=[0,1],project=True)
-#dfpc = fpc.project_and_store(vx,vy,vz,x_out,CEx_out,CEy_out,CEz_out,Hist_out)
 
 #compute energization from correlations
 dv = dfpc['vz'][1,0,0]-dfpc['vz'][0,0,0]

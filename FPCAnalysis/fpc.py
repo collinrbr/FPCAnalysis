@@ -241,7 +241,7 @@ def project_CEi_hist(Hist, CEx, CEy, CEz):
     return Histxy,Histxz,Histyz,CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz
 
 
-def _grab_dpar_and_comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dpar_folder, dfields, vshock, project=False):
+def _grab_dpar_and_comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dpar_folder, dfields, vshock, project=False, beta0=None, mi_me=None, isIon=None):
     """
     Wrapper function that loads correct particle data from presliced data and computes FPC
 
@@ -250,11 +250,15 @@ def _grab_dpar_and_comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dpar_folder, d
 
     from FPCAnalysis.data_dhybridr import get_dpar_from_bounds
     from FPCAnalysis.frametransform import shift_particles
+    from FPCAnalysis.frametransform import shift_particles_tristan
     import gc
 
     dpar = get_dpar_from_bounds(dpar_folder,x1,x2)
 
-    dpar = shift_particles(dpar, vshock)
+    if(beta0 == None):
+        dpar = shift_particles(dpar, vshock)
+    else:
+        dpar = shift_particles_tristan(dpar, vshock, beta0, params['mi']/params['me'], isIon)
 
     print("debug casting as np...",x1,x2)
 
@@ -281,7 +285,7 @@ def _grab_dpar_and_comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dpar_folder, d
         return vx, vy, vz, totalPtcl, Hist, CEx, CEy, CEz
 
 #TODO: update return documentation
-def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim=None, ylim=None, zlim=None, max_workers = 8):
+def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim=None, ylim=None, zlim=None, max_workers = 8, beta0=None, mi_me=None, isIon=None):
     """
     Computes distribution function and correlation wrt to given field for every slice in xx using multiprocessing
 
@@ -392,7 +396,10 @@ def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim
         #queue up jobs
         for tskidx in range(0,len(x1task)): #if there is a free worker and job to do, give job
             print('queued scan pos-> x1: ',x1task[tskidx],' x2: ',x2task[tskidx],' y1: ',y1,' y2: ',y2,' z1: ', z1,' z2: ',z2)
-            futures.append(executor.submit(_grab_dpar_and_comp_all_CEi, vmax, dv, x1task[tskidx], x2task[tskidx], y1, y2, z1, z2, dpar_folder, dfields, vshock, project=True))
+            if(beta0 == None):
+                futures.append(executor.submit(_grab_dpar_and_comp_all_CEi, vmax, dv, x1task[tskidx], x2task[tskidx], y1, y2, z1, z2, dpar_folder, dfields, vshock, project=True))
+            else:
+                futures.append(executor.submit(_grab_dpar_and_comp_all_CEi, vmax, dv, x1task[tskidx], x2task[tskidx], y1, y2, z1, z2, dpar_folder, dfields, vshock, project=True, beta0=beta0, mi_me=mi_me, isIon=isIon))
             jobidxs.append(tskidx)
 
         #wait until finished
@@ -1019,6 +1026,7 @@ def compute_cor_from_cprime(cprimebinned, vx, vy, vz, dv, directionkey):
 #-----------------------------------------------------------------------------------------------------------------------
 # Functions related to computing FPC if hist function is already computed
 #-----------------------------------------------------------------------------------------------------------------------
+#TODO: remove vshock as input
 def compute_fpc_from_dist(fieldval,hist,vx,vy,vz,vshock,directionkey,q=1.):
     """
     hist is 3d array (vz,vy,vx as axes)
@@ -1026,7 +1034,7 @@ def compute_fpc_from_dist(fieldval,hist,vx,vy,vz,vshock,directionkey,q=1.):
     """
     if(directionkey == 'x'):
         axis = 2
-        vv = vx-vshock
+        vv = vx
         dv = vx[0,0,1]-vx[0,0,0]
     elif(directionkey == 'y'):
         axis = 1
@@ -1044,7 +1052,8 @@ def compute_fpc_from_dist(fieldval,hist,vx,vy,vz,vshock,directionkey,q=1.):
     return vx, vy, vz, totalPtcl, hist, cor
 
 def _comp_all_CEi_from_dist(x1, x2, y1, y2, z1, z2, ddist, dfields, vshock):
-    #TODO: make 2D and 3D compatable
+    #TODO: double check (fix if needed) that the dfields[fkey] number of indexes and ddist number of indexes matches how it is loaded in the laoding function (do we spoof 1d/2d fields into 3d? What about hist data?)
+    #note: this function retains spatial information by computing FPC locally before binning CEi's together!
 
     #bin histograms and take field average
     _hist = []
@@ -1052,31 +1061,71 @@ def _comp_all_CEi_from_dist(x1, x2, y1, y2, z1, z2, ddist, dfields, vshock):
     for fkey in fieldkeys:
         locals()[fkey+'avg'] = 0.
     num_field_points = 0
-    for xxidx, x0 in enumerate(ddist['hist_xx']):
-        if(x0 >= x1 and x0 <= x2):
-            if(_hist == []):
-                _hist = ddist['hist'][xxidx]
-            else:
-                _hist += ddist['hist'][xxidx]
+
+    #make corr var names 
+    for fkey in fieldkeys:
+        locals()['C'+fkey] = None
+
+    if(len(ddist['hist'].shape) == 1):
+        for xxidx, x0 in enumerate(ddist['hist_xx']):
+            if(x0 >= x1 and x0 <= x2):
+                if(_hist == []):
+                    _hist = ddist['hist'][xxidx]
+                else:
+                    _hist += ddist['hist'][xxidx]
+                num_field_points += 1
 
             for fkey in fieldkeys:
-                locals()[fkey+'avg'] += dfields[fkey][0,0,xxidx] #not 3d or 2d compatable
+                dkey = fkey[-1]
+                vx,vy,vz,totalPtcl,hist,_Ctemp = compute_fpc_from_dist(dfields[fkey][0,0,xxidx],ddist['hist'][xxidx],vx,vy,vz,vshock,dkey)
 
-            num_field_points += 1
+                if(locals()['C'+fkey] is None):
+                    locals()['C'+fkey] = _Ctemp
+                else:
+                    locals()['C'+fkey] += _Ctemp
 
-    for key in fieldkeys:
-        locals()[key+'avg'] /= num_field_points #not 3d or 2d compatable
+    elif(len(ddist['hist'].shape) == 2):
+        for yyidx, y0 in enumerate(ddist['hist_yy']):
+            for xxidx, x0 in enumerate(ddist['hist_xx']):
+                if(x0 >= x1 and x0 <= x2):
+                    if(_hist == []):
+                        _hist = ddist['hist'][yyidx,xxidx]
+                    else:
+                        _hist += ddist['hist'][yyidx,xxidx]
+                    num_field_points += 1
 
-    vx = ddist['vx']
-    vy = ddist['vy']
-    vz = ddist['vz']
-    for fkey in fieldkeys:
-        dkey = fkey[-1]
-        vx,vy,vz,totalPtcl,hist,locals()['C'+fkey] = compute_fpc_from_dist(locals()[fkey+'avg'],_hist,vx,vy,vz,vshock,dkey)
+                for fkey in fieldkeys:
+                    dkey = fkey[-1]
+                    vx,vy,vz,totalPtcl,hist,_Ctemp = compute_fpc_from_dist(dfields[fkey][0,yyidx,xxidx],ddist['hist'][yyidx,xxidx],vx,vy,vz,vshock,dkey)
+
+                    if(locals()['C'+fkey] is None):
+                        locals()['C'+fkey] = _Ctemp
+                    else:
+                        locals()['C'+fkey] += _Ctemp
+
+    elif(len(ddist['hist'].shape) == 3):
+        for zzidx, z0 in enumerate(ddist['hist_zz']):
+            for yyidx, y0 in enumerate(ddist['hist_yy']):
+                for xxidx, x0 in enumerate(ddist['hist_xx']):
+                    if(x0 >= x1 and x0 <= x2):
+                        if(_hist == []):
+                            _hist = ddist['hist'][zzidx,yyidx,xxidx]
+                        else:
+                            _hist += ddist['hist'][zzidx,yyidx,xxidx]
+                        num_field_points += 1
+
+                    for fkey in fieldkeys:
+                        dkey = fkey[-1]
+                        vx,vy,vz,totalPtcl,hist,_Ctemp = compute_fpc_from_dist(dfields[fkey][zzidx,yyidx,xxidx],ddist['hist'][zzidx,yyidx,xxidx],vx,vy,vz,vshock,dkey)
+
+                        if(locals()['C'+fkey] is None):
+                            locals()['C'+fkey] = _Ctemp
+                        else:
+                            locals()['C'+fkey] += _Ctemp
 
     return totalPtcl, _hist, locals()['Cex'], locals()['Cey'], locals()['Cez']
 
-def compute_correlation_over_x_from_dist(ddist,dfields, vmax, dx, vshock, xlim=None, ylim=None, zlim=None, project=False):
+def compute_correlation_over_x_from_dist(ddist,dfields, vmax, dx, vshock, xlim=None, ylim=None, zlim=None, project=True):
 
 
     x_out = []
@@ -1108,7 +1157,7 @@ def compute_correlation_over_x_from_dist(ddist,dfields, vmax, dx, vshock, xlim=N
 
     if(dx < ddist['hist_xx'][1]-ddist['hist_xx'][0]):
         print("ERROR: dx is smaller than spacing between distribution functions")
-        return #TODO raise error here
+        exit()
 
     if xlim is not None:
         x1 = xlim[0]
@@ -1169,7 +1218,7 @@ def compute_correlation_over_x_from_dist(ddist,dfields, vmax, dx, vshock, xlim=N
 
 def project_and_store(vx,vy,vz,xx,CEx,CEy,CEz,Hist):
     """
-    projects 4d data
+    projects 4d data (1 spatial, 3 vel dims)
     """
 
     dfpckeys = ['Histvxvy','Histvxvz','Histvyvz','CExvxvy','CExvxvz','CExvyvz','CEyvxvy','CEyvxvz','CEyvyvz','CEzvxvy','CEzvxvz','CEzvyvz']
