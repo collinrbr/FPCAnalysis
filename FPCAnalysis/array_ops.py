@@ -187,12 +187,12 @@ def get_average_in_box(x1, x2, y1, y2, z1, z2, datadict, dictkey):
     """
 
     #get bounds of data
-    xidxmin = find_nearest(datadict['ex_xx'], x1)
-    xidxmax = find_nearest(datadict['ex_xx'], x2)
-    yidxmin = find_nearest(datadict['ex_yy'], y1)
-    yidxmax = find_nearest(datadict['ex_yy'], y2)
-    zidxmin = find_nearest(datadict['ex_zz'], z1)
-    zidxmax = find_nearest(datadict['ex_zz'], z2)
+    xidxmin = find_nearest(datadict[dictkey+'_xx'], x1)
+    xidxmax = find_nearest(datadict[dictkey+'_xx'], x2)
+    yidxmin = find_nearest(datadict[dictkey+'_yy'], y1)
+    yidxmax = find_nearest(datadict[dictkey+'_yy'], y2)
+    zidxmin = find_nearest(datadict[dictkey+'_zz'], z1)
+    zidxmax = find_nearest(datadict[dictkey+'_zz'], z2)
 
     #adjust if needed and possible
     if(datadict[dictkey+'_xx'][xidxmin] > x1 and xidxmin != 0): xidxmin = xidxmin - 1

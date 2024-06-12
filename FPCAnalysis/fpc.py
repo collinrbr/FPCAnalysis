@@ -188,11 +188,10 @@ def _comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, vshock,
     """
     Wrapper function that computes FPC wrt xx, yy, zz and returns all three of them
 
+    TODO: document betaiup in this file (make parameters entry everywhere it is needed)
+
     See documentation for compute_hist_and_cor
     """
-    from FPCAnalysis.frametransform import shift_particles
-
-    dparticles = shift_particles(dparticles, vshock) #TODO: our shift function
 
     vx, vy, vz, totalPtcl, Hist, CEx = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, 'ex', 'x')
     vx, vy, vz, totalPtcl, Hist, CEy = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2, dparticles, dfields, 'ey', 'y')
@@ -240,8 +239,8 @@ def project_CEi_hist(Hist, CEx, CEy, CEz):
 
     return Histxy,Histxz,Histyz,CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz
 
-
-def _grab_dpar_and_comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dpar_folder, dfields, vshock, project=False, beta0=None, mi_me=None, isIon=None):
+#TODO: carefully document units of inputs everywhere, especially in this file and analysis.py
+def _grab_dpar_and_comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dpar_folder, dfields, vshock, project=False, betaiup=None, beta0=None, mi_me=None, isIon=None):
     """
     Wrapper function that loads correct particle data from presliced data and computes FPC
 
@@ -256,7 +255,7 @@ def _grab_dpar_and_comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dpar_folder, d
     dpar = get_dpar_from_bounds(dpar_folder,x1,x2)
 
     if(beta0 == None):
-        dpar = shift_particles(dpar, vshock)
+        dpar = shift_particles(dpar, vshock, betaiup)
     else:
         dpar = shift_particles_tristan(dpar, vshock, beta0, mi_me, isIon)
         if('ion' == dpar_folder.split('/')[-1] or 'ion' == dpar_folder.split('/')[-2]): #we use an or in case of double // i.e. //
@@ -289,7 +288,7 @@ def _grab_dpar_and_comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dpar_folder, d
         return vx, vy, vz, totalPtcl, Hist, CEx, CEy, CEz
 
 #TODO: update return documentation
-def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim=None, ylim=None, zlim=None, max_workers = 8, beta0=None, mi_me=None, isIon=None):
+def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim=None, ylim=None, zlim=None, max_workers = 8, betaiup=None, beta0=None, mi_me=None, isIon=None):
     """
     Computes distribution function and correlation wrt to given field for every slice in xx using multiprocessing
 
@@ -401,7 +400,7 @@ def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim
         for tskidx in range(0,len(x1task)): #if there is a free worker and job to do, give job
             print('queued scan pos-> x1: ',x1task[tskidx],' x2: ',x2task[tskidx],' y1: ',y1,' y2: ',y2,' z1: ', z1,' z2: ',z2)
             if(beta0 == None):
-                futures.append(executor.submit(_grab_dpar_and_comp_all_CEi, vmax, dv, x1task[tskidx], x2task[tskidx], y1, y2, z1, z2, dpar_folder, dfields, vshock, project=True))
+                futures.append(executor.submit(_grab_dpar_and_comp_all_CEi, vmax, dv, x1task[tskidx], x2task[tskidx], y1, y2, z1, z2, dpar_folder, dfields, vshock, project=True, betaiup=betaiup))
             else:
                 futures.append(executor.submit(_grab_dpar_and_comp_all_CEi, vmax, dv, x1task[tskidx], x2task[tskidx], y1, y2, z1, z2, dpar_folder, dfields, vshock, project=True, beta0=beta0, mi_me=mi_me, isIon=isIon))
             jobidxs.append(tskidx)

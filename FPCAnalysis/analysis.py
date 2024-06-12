@@ -548,7 +548,7 @@ def get_compression_ratio(dfields,upstreambound,downstreambound):
 
     return ratio,bzupstrm,bzdownstrm
 
-def get_num_par_in_box(dparticles,x1,x2,y1,y2,z1,z2):
+def get_num_par_in_box(dparticles,x1,x2,y1,y2,z1,z2,gptsparticle=None):
     """
     Counts the number of particles in a box
 
@@ -574,7 +574,8 @@ def get_num_par_in_box(dparticles,x1,x2,y1,y2,z1,z2):
     totalPtcl : float
         number of particles in box
     """
-    gptsparticle = (x1 < dparticles['x1'] ) & (dparticles['x1'] < x2) & (y1 < dparticles['x2']) & (dparticles['x2'] < y2) & (z1 < dparticles['x3']) & (dparticles['x3'] < z2)
+    if(gptsparticle == None):
+        gptsparticle = (x1 < dparticles['x1'] ) & (dparticles['x1'] < x2) & (y1 < dparticles['x2']) & (dparticles['x2'] < y2) & (z1 < dparticles['x3']) & (dparticles['x3'] < z2)
     totalPtcl = np.sum(gptsparticle)
 
     return float(totalPtcl)
@@ -722,7 +723,17 @@ def check_input(analysisinputflnm,dfields):
     """
 
     import sys
-    path,resultsdir,vmax,dv,numframe,dx,xlim,ylim,zlim = analysis_input(flnm = analysisinputflnm)
+    
+    anldict = analysis_input(flnm = analysisinputflnm)
+    path = anldict['path']
+    resultsdir = anldict['resultsdir']
+    vmax = anldict['vmax']
+    dv = anldict['dv']
+    numframe = anldict['numframe']
+    dx = anldict['dx']
+    xlim = anldict['xlim']
+    ylim = anldict['ylim']
+    zlim = anldict['zlim']
 
     cellsizexx = dfields['ex_xx'][1]-dfields['ex_xx'][0]
     cellsizeyy = dfields['ex_yy'][1]-dfields['ex_yy'][0]
@@ -2171,8 +2182,6 @@ def transform_field_to_kzkykxxx(ddict,fieldkey,retstep=12):
 
 def compute_vrms(dpar,vmax,dv,x1,x2,y1,y2,z1,z2):
     """
-    https://farside.ph.utexas.edu/teaching/plasma/lectures/node29.html
-
     assumes the max speed of any of the particles is less than vmax
 
     Parameters
@@ -2190,45 +2199,30 @@ def compute_vrms(dpar,vmax,dv,x1,x2,y1,y2,z1,z2):
         velocity using root mean squared
         note that the value is squared
     """
-    #TODO: compute vdrift
-    vzdrift = 0.
-    vydrift = 0.
-    vxdrift = 0.
 
-    # bin into cprime(vx,vy,vz)
-    vxbins = np.arange(-vmax, vmax+dv, dv)
-    vx = (vxbins[1:] + vxbins[:-1])/2.
-    vybins = np.arange(-vmax, vmax+dv, dv)
-    vy = (vybins[1:] + vybins[:-1])/2.
-    vzbins = np.arange(-vmax, vmax+dv, dv)
-    vz = (vzbins[1:] + vzbins[:-1])/2.
+    gptsparticle = (x1 <= dpar['x1']) & (dpar['x1'] <= x2) & (y1 <= dpar['x2']) & (dpar['x2'] <= y2) & (z1 <= dpar['x3']) & (dpar['x3'] <= z2)    
+    vzdrift = np.mean(dpar['p1'][gptsparticle])
+    vydrift = np.mean(dpar['p2'][gptsparticle])
+    vxdrift = np.mean(dpar['p3'][gptsparticle])
 
-    # define mask that includes particles within range and make dist
-    gptsparticle = (x1 <= dpar['x1']) & (dpar['x1'] <= x2) & (y1 <= dpar['x2']) & (dpar['x2'] <= y2) & (z1 <= dpar['x3']) & (dpar['x3'] <= z2)
-    hist,_ = np.histogramdd((dpar['p3'][gptsparticle][:]-vzdrift, dpar['p2'][gptsparticle][:]-vydrift, dpar['p1'][gptsparticle][:]-vxdrift), bins=[vzbins, vybins, vxbins])
+    print('debug', vxdrift,vydrift,vzdrift)
 
-    # computure pressure
-    pressure = 0.
-    for i in range(0,len(vx)):
-        for j in range(0,len(vy)):
-            for k in range(0,len(vz)):
-                vel = math.sqrt(vx[i]**2.+vy[j]**2.+vz[k]**2.)
-                pressure += hist[k,j,i]*vel**2.*dv**3.
-    pressure = pressure / 3.
+    vxs = dpar['p1'][gptsparticle]-vxdrift
+    vys = dpar['p2'][gptsparticle]-vydrift
+    vzs = dpar['p3'][gptsparticle]-vzdrift
+    vels = vxs*2+vys*2+vzs*2
 
-    #compute number density
-    num_den = get_num_par_in_box(dpar,x1,x2,y1,y2,z1,z2)
-
-    vrms_squared = pressure/num_den #TODO: check if im missing a factor here
+    mean_squared_velocity = np.mean(vels**2)
+    vrms_squared = np.sqrt(mean_squared_velocity)
 
     return vrms_squared
 
-def compute_alfven_vel(dfields,dden,x1,x2,y1,y2,z1,z2):
+def compute_alfven_vel_dhybridr(dfields,dden,x1,x2,y1,y2,z1,z2):
     """
-    Computes the average alfven veloicty normalized to dHybridR units, v_a/v_{a,ref}
+    Computes the average alfven veloicty normalized to dHybridR units, v_a/v_{th,ref} (ref is almost always ions!)
     in the given box.
 
-    Note, v_{a,ref} is defined in the simulation input
+    WARNING: this assumes that va = 1 (in code units) upstream (this is true when units='NORM')
 
     Parameters
     ----------
@@ -2252,11 +2246,20 @@ def compute_alfven_vel(dfields,dden,x1,x2,y1,y2,z1,z2):
     Returns
     -------
     v_a : float
-        alfven velocity normalized to reference alfven velocity
+        alfven velocity normalized to upstream alfven velocity IFF units=NORM
 
     """
 
     from FPCAnalysis.array_ops import get_average_in_box
+
+    try:
+        if(dfields['units'] == 'NORM'):
+            pass
+        else:
+            print("Error, dHybridR data was not normalized with units='NORM' in input!")
+            return
+    except:
+        print("Warning, could not load units of dfields. This function assumes that dhyrbidr is using units=NORM. Please check if it is!")
 
     rho = get_average_in_box(x1,x2,y1,y2,z1,z2,dden, 'den')
 
@@ -2265,11 +2268,22 @@ def compute_alfven_vel(dfields,dden,x1,x2,y1,y2,z1,z2):
     bz = get_average_in_box(x1, x2, y1, y2, z1, z2, dfields, 'bz')
     btot = math.sqrt(bx**2.+by**2.+bz**2.)
 
-    v_a = btot/rho
+    v_a = btot/np.sqrt(rho) #btot=1 and rho=1 when units=Norm in dhybridr file
+
 
     return v_a
 
-def compute_beta_i(dpar,dfields,dden,vmax,dv,x1,x2,y1,y2,z1,z2):
+def compute_beta_i_upstream_dhybridr(inputs):
+    vthi = inputs['vth']
+
+    if(inputs['units'] == 'NORM'):
+        betaup = 2*vthi**2/1. # in these units va = 1 upstream by definition!
+        return betaup
+    else:
+        print("Error! Units != NORM. This function has not been implemented for other units yet!")
+        return
+
+def compute_beta_i_dhybridr(dpar,dfields,dden,vmax,dv,x1,x2,y1,y2,z1,z2):
     """
     Computes plasma beta for ions using, beta_i = v_ion_th**2./v_ion_a**2.
 
@@ -2309,9 +2323,9 @@ def compute_beta_i(dpar,dfields,dden,vmax,dv,x1,x2,y1,y2,z1,z2):
     v_ion_th = compute_vrms(dpar,vmax,dv,x1,x2,y1,y2,z1,z2)
 
     #compute v_alfven_ion
-    v_ion_a = compute_alfven_vel(dfields,dden,x1,x2,y1,y2,z1,z2)
+    v_ion_a = compute_alfven_vel_dhybridr(dfields,dden,x1,x2,y1,y2,z1,z2)
 
-    beta_i = v_ion_th**2./v_ion_a**2.
+    beta_i = 2.*v_ion_th**2./v_ion_a**2.
 
     return beta_i, v_ion_th, v_ion_a
 

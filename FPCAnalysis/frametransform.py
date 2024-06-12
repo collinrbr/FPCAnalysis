@@ -124,25 +124,27 @@ def transform_flow(dflow, vx):
     return dflowtransform
 
 
-def shift_particles(dparticles, vx):
+def shift_particles(dparticles, vx, beta_s):
     """
     Transforms velocity frame of particles by vx
 
-    Warning: Make sure vx and dparticles['p1'] have same units!
+    Warning: Please use correct units for vx!
 
-    We assume a linear boost is close enough
+    Here, we assume a linear boost
 
     Parameters
     ----------
     dparticles : dict
         particle data dictionary
     vx : float
-        boost velocity along x
+        boost velocity along x in units of v/va (va is total alfven velocity)
+    beta_s : float
+        species plasma beta (of species to be shifted)
     """
     from copy import deepcopy
 
     dparticlestransform = deepcopy(dparticles)  # deep copy
-    dparticlestransform['p1'] = dparticles['p1'] - vx
+    dparticlestransform['p1'] = dparticles['p1'] - (vx)/np.sqrt(beta_s)
     dparticlestransform['Vframe_relative_to_sim'] = dparticles['Vframe_relative_to_sim'] + vx
 
     return dparticlestransform

@@ -87,12 +87,17 @@ if __name__ == '__main__':
     print("Loading field data...")
     dfields = ddhr.field_loader(path=path_fields,num=numframe,is2d3v=is2d3v)
 
+    #load inputs
+    inputs = ddhr.read_input(path)
+
     #Load all fields along all time slices
     all_dfields = ddhr.all_dfield_loader(path=path_fields, is2d3v=is2d3v)
 
     #check input to make sure box makes sense
+    print("Checking input...")
     if(not(is2d3v)): #TODO: add check_input for 2d3v
         anl.check_input(analysisinputflnm,dfields)
+    print("Done!")
 
     #Load data using normal output files
     if(not(use_restart) and dpar_folder == None):
@@ -165,6 +170,8 @@ if __name__ == '__main__':
     #-------------------------------------------------------------------------------
     # estimate shock vel and lorentz transform
     #-------------------------------------------------------------------------------
+    betaiup = anl.compute_beta_i_upstream_dhybridr(inputs)
+
     print("Lorentz transforming fields...")
     vshock,_ = ft.shock_from_ex_cross(all_dfields,dt=0.01)
 
@@ -175,9 +182,9 @@ if __name__ == '__main__':
         _fields.append(ft.lorentz_transform_vx(all_dfields['dfields'][k],vshock))
     all_dfields['dfields'] = _fields
 
-        #boost particles
+    #boost particles
     if(num_threads == 1):
-        dparticles = ft.shift_particles(dparticles, vshock) #will be handled by the worker if multithreaded
+        dparticles = ft.shift_particles(dparticles, vshock, betaiup) #will be handled by the worker if multithreaded
 
     #-------------------------------------------------------------------------------
     # use fluc if requested
@@ -197,7 +204,7 @@ if __name__ == '__main__':
         CEx, CEy, CEz, x, Hist, vx, vy, vz, num_par = fpc.compute_correlation_over_x(dfields, dparticles, vmax, dv, dx, vshock, xlim, ylim, zlim)
         Histxy,Histxz,Histyz,CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz = fpc.project_CEi_hist(Hist, CEx, CEy, CEz)
     else:
-        CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz,x, Histxy,Histxz,Histyz, vx, vy, vz, num_par = fpc.comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim=xlim, ylim=ylim, zlim=zlim, max_workers=num_threads)
+        CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz,x, Histxy,Histxz,Histyz, vx, vy, vz, num_par = fpc.comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim=xlim, ylim=ylim, zlim=zlim, max_workers=num_threads, betaiup=betaiup)
 
     #-------------------------------------------------------------------------------
     # compute energization

@@ -11,7 +11,6 @@ import os
 def read_particles(path, numframe=None, is2d3v = False):
     """
     Loads dHybridR particle data
-    TODO: rename to read_dhybridr_particles
 
     Parameters
     ----------
@@ -26,7 +25,7 @@ def read_particles(path, numframe=None, is2d3v = False):
     Returns
     -------
     pts : dict
-        dictionary containing particle data
+        dictionary containing particle data (velocity is normalized to v_th,s and position is normalized to d_i)
     """
 
     if(is2d3v):
@@ -57,7 +56,7 @@ def get_dpar_from_bounds(dpar_folder,x1,x2,verbose=False):
     """
     Loads all needed particle data files from dpar_folder which is created by preslicedata.py
 
-    TODO: check inputs
+    TODO: check user inputs to this func
     """
     import os
 
@@ -347,6 +346,14 @@ def field_loader(field_vars='all', components='all', num=None,
                     d[kc] = d[kc][slc]
 
     d['Vframe_relative_to_sim'] = 0.
+
+    #try to figure out normalization
+    try:
+        inputs = read_input(path=path)
+        d['units'] = inputs['units']
+
+    except:
+        pass
 
     return d
 
@@ -774,6 +781,112 @@ def _multi_process_part_mapper(filenum,path):
     _pts = PM.parts_from_num(filenum)
 
     return _pts
+
+#TODO: we have this function twice here. remove one!
+def _auto_cast(k):
+        """
+        Takes an input string and tries to cast it to a real type
+
+        Parameters
+        ----------
+            k : string
+                A string that might be a int, float or bool
+        """
+
+        k = k.replace('"','').replace("'",'')
+
+        for try_type in [int, float]:
+            try:
+                return try_type(k)
+            except:
+                continue
+
+        if k == '.true.':
+            return True
+        if k == '.false.':
+            return False
+
+        return str(k)
+
+#TODO: we have this function twice here. remove one!
+def read_input(path='./'):
+        """
+        Parse dHybrid input file for simulation information
+
+        Parameters
+        ----------
+        path : string
+            path of input file
+
+        Returns
+        -------
+        param : dict
+            simulation parameter dictionary
+        """
+        import os
+
+        path = os.path.join(path, "input/input")
+        inputs = {}
+        repeated_sections = {}
+        # Load in all of the input stuff
+        with open(path) as f:
+            in_bracs = False
+            for line in f:
+                # Clean up string
+                line = line.strip()
+
+                # Remove comment '!'
+                trim_bang = line.find('!')
+                if trim_bang > -1:
+                    line = line[:trim_bang].strip()
+
+                # Is the line not empty?
+                if line:
+                    if not in_bracs:
+                        in_bracs = True
+                        current_key = line
+
+                        # The input has repeated section and keys for different species
+                        # This section tries to deal with that
+                        sp_counter = 1
+                        while current_key in inputs:
+                            inputs[current_key+"_01"] = inputs[current_key]
+                            sp_counter += 1
+                            current_key = "{}_{:02d}".format(line, sp_counter)
+                            repeated_sections[current_key] = sp_counter
+
+                        inputs[current_key] = []
+
+                    else:
+                        if line == '{':
+                            continue
+                        elif line == '}':
+                            in_bracs = False
+                        else:
+                            inputs[current_key].append(line)
+
+        # Parse the input and cast it into usefull types
+        param = {}
+        repeated_keys = {}
+        for key,inp in inputs.items():
+            for sp in inp:
+                k = sp.split('=')
+                k,v = [v.strip(' , ') for v in k]
+
+                _fk = k.find('(')
+                if _fk > 0:
+                    k = k[:_fk]
+
+                if k in param:
+                    param["{}_{}".format(k, key)] = param[k]
+                    k = "{}_{}".format(k, key)
+
+                param[k] = [_auto_cast(c.strip()) for c in v.split(',')]
+
+                if len(param[k]) == 1:
+                    param[k] = param[k][0]
+
+        return param
 
 class PartMapper3D(object):
     """
