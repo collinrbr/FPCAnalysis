@@ -6,7 +6,7 @@ import numpy as np
 
 
 def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
-                            dpar, dfields, fieldkey, directionkey, useBoxFAC = True, altcorfields = None, beta = None, massratio = None, c = None):
+                            dpar, dfields, fieldkey, directionkey = None, useBoxFAC = True, altcorfields = None, beta = None, massratio = None, c = None):
     """
     Computes distribution function and correlation wrt to given field
 
@@ -65,6 +65,16 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
     Cor : 3d array
         velocity space sigature data in box
     """
+
+    if(directionkey == None):
+        if(fieldkey[-1] == 'x' or fieldkey[-1] == 'y' or fieldkey[-1] == 'z'):
+            directionkey=str(fieldkey[-1])
+        elif(fieldkey[1:] == 'par'):
+            directionkey = 'x'
+        elif(fieldkey[1:] == 'perp1'):
+            directionkey = 'y'
+        elif(fieldkey[1:] == 'perp2'):
+            directionkey = 'z'
     
     null_for_debug = False #returns zero array, which saves a lot of time, for debug purposes
     if(null_for_debug):

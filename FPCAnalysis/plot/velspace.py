@@ -36,13 +36,13 @@ def plot_velsig(vx,vy,vz,dv,vmax,CEiproj,fieldkey,planename,ttl=r'$C_{E_i}(v_i,v
     if(computeJdotE):
         JdotE = compute_energization(CEiplot,dv)
         if(fieldkey == 'ex'):
-            plt.gca().set_title(ttl+'$J \cdot E_x$ = ' + "{:.2e}".format(JdotE),loc='left')
+            plt.gca().set_title(ttl+'$J  E_x$ = ' + "{:.2e}".format(JdotE),loc='left')
         elif(fieldkey == 'ey'):
-            plt.gca().set_title(ttl+'$J \cdot E_y$ = ' + "{:.2e}".format(JdotE),loc='left')
+            plt.gca().set_title(ttl+'$J  E_y$ = ' + "{:.2e}".format(JdotE),loc='left')
         elif(fieldkey == 'ez'):
-            plt.gca().set_title(ttl+'$J \cdot E_z$ = ' + "{:.2e}".format(JdotE),loc='left')
+            plt.gca().set_title(ttl+'$J  E_z$ = ' + "{:.2e}".format(JdotE),loc='left')
         else:
-            plt.gca().set_title(ttl+'$J \cdot E_i$ = ' + "{:.2e}".format(JdotE),loc='left')
+            plt.gca().set_title(ttl+'$J  E_i$ = ' + "{:.2e}".format(JdotE),loc='left')
     else:
         plt.gca().set_title(ttl,loc='left')
 
@@ -582,8 +582,8 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         string describing metadata to be shown on plot
     """
     from matplotlib.colors import LogNorm
-    from FPCAnalysis.arrayaux import mesh_3d_to_2d
-    from FPCAnalysis.analysisaux import compute_energization
+    from FPCAnalysis.array_ops import mesh_3d_to_2d
+    from FPCAnalysis.analysis import compute_energization
     import matplotlib.colors as colors
 
     if(normtoN):
@@ -738,28 +738,28 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
             JdotE = compute_energization(CEx_xy,dv)
             if(plotFAC):
                 if(plotAvg):
-                    axs[1,0].set_title('$\overline{j_{||}} \cdot \overline{E_{||}}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    axs[1,0].set_title('$\overline{j_{||}}  \overline{E_{||}}$ = ' + "{:.2e}".format(JdotE),loc='left')
                 elif(plotFluc):
                     if(isLowPass):
-                        axs[1,0].set_title('$\widetilde{j_{||}}^{k_{||} d_i < 15} \cdot \widetilde{E_{||}}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[1,0].set_title('$\widetilde{j_{||}}^{k_{||} d_i < 15}  \widetilde{E_{||}}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
                     elif(isHighPass):
-                        axs[1,0].set_title('$\widetilde{j_{||}}^{k_{||} d_i > 15} \cdot \widetilde{E_{||}}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[1,0].set_title('$\widetilde{j_{||}}^{k_{||} d_i > 15}  \widetilde{E_{||}}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
                     else:
-                        axs[1,0].set_title('$\widetilde{j_{||}} \cdot \widetilde{E_{||}}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[1,0].set_title('$\widetilde{j_{||}}  \widetilde{E_{||}}$ = ' + "{:.2e}".format(JdotE),loc='left')
                 else:
-                    axs[1,0].set_title('$j_{||} \cdot E_{||}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    axs[1,0].set_title('$j_{||}  E_{||}$ = ' + "{:.2e}".format(JdotE),loc='left')
             else:
                 if(plotAvg):
-                    axs[1,0].set_title('$\overline{j_x} \cdot \overline{E_x}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    axs[1,0].set_title('$\overline{j_x}  \overline{E_x}$ = ' + "{:.2e}".format(JdotE),loc='left')
                 elif(plotFluc):
                     if(isLowPass):
-                        axs[1,0].set_title('$\widetilde{j_x}^{k_{||} d_i > 15} \cdot \widetilde{E_x}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[1,0].set_title('$\widetilde{j_x}^{k_{||} d_i > 15}  \widetilde{E_x}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
                     elif(isHighPass):
-                        axs[1,0].set_title('$\widetilde{j_x}^{k_{||} d_i > 15} \cdot \widetilde{E_x}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[1,0].set_title('$\widetilde{j_x}^{k_{||} d_i > 15}  \widetilde{E_x}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
                     else:
-                        axs[1,0].set_title('$\widetilde{j_x} \cdot \widetilde{E_x}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[1,0].set_title('$\widetilde{j_x}  \widetilde{E_x}$ = ' + "{:.2e}".format(JdotE),loc='left')
                 else:
-                    axs[1,0].set_title('$j_x \cdot E_x$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    axs[1,0].set_title('$j_x  E_x$ = ' + "{:.2e}".format(JdotE),loc='left')
     clrbar10 = plt.colorbar(im10, ax=axs[1,0])#,format='%.1e')
     if(not(plotLog)):
         clrbar10.formatter.set_powerlimits((0, 0))
@@ -782,28 +782,28 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
             JdotE = compute_energization(CEx_xz,dv)
             if(plotFAC):
                 if(plotAvg):
-                    axs[1,1].set_title('$\overline{j_{||}} \cdot \overline{E_{||}}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    axs[1,1].set_title('$\overline{j_{||}}  \overline{E_{||}}$ = ' + "{:.2e}".format(JdotE),loc='left')
                 elif(plotFluc):
                     if(isLowPass):
-                        axs[1,1].set_title('$\widetilde{j_{||}}^{k_{||} d_i < 15} \cdot \widetilde{E_{||}}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[1,1].set_title('$\widetilde{j_{||}}^{k_{||} d_i < 15}  \widetilde{E_{||}}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
                     elif(isHighPass):
-                        axs[1,1].set_title('$\widetilde{j_{||}}^{k_{||} d_i > 15} \cdot \widetilde{E_{||}}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[1,1].set_title('$\widetilde{j_{||}}^{k_{||} d_i > 15}  \widetilde{E_{||}}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
                     else:
-                        axs[1,1].set_title('$\widetilde{j_{||}} \cdot \widetilde{E_{||}}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[1,1].set_title('$\widetilde{j_{||}}  \widetilde{E_{||}}$ = ' + "{:.2e}".format(JdotE),loc='left')
                 else:
-                    axs[1,1].set_title('$j_{||} \cdot E_{||}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    axs[1,1].set_title('$j_{||}  E_{||}$ = ' + "{:.2e}".format(JdotE),loc='left')
             else:
                 if(plotAvg):
-                    axs[1,1].set_title('$\overline{j_x} \cdot \overline{E_x}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    axs[1,1].set_title('$\overline{j_x}  \overline{E_x}$ = ' + "{:.2e}".format(JdotE),loc='left')
                 elif(plotFluc):
                     if(isLowPass):
-                        axs[1,1].set_title('$\widetilde{j_x}^{k_{||} d_i > 15} \cdot \widetilde{E_x}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[1,1].set_title('$\widetilde{j_x}^{k_{||} d_i > 15}  \widetilde{E_x}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
                     elif(isHighPass):
-                        axs[1,1].set_title('$\widetilde{j_x}^{k_{||} d_i > 15} \cdot \widetilde{E_x}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[1,1].set_title('$\widetilde{j_x}^{k_{||} d_i > 15}  \widetilde{E_x}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
                     else:
-                        axs[1,1].set_title('$\widetilde{j_x} \cdot \widetilde{E_x}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[1,1].set_title('$\widetilde{j_x}  \widetilde{E_x}$ = ' + "{:.2e}".format(JdotE),loc='left')
                 else:
-                    axs[1,1].set_title('$j_x \cdot E_x$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    axs[1,1].set_title('$j_x  E_x$ = ' + "{:.2e}".format(JdotE),loc='left')
     clrbar11 = plt.colorbar(im11, ax=axs[1,1])#,format='%.1e')
     if(not(plotLog)):
         clrbar11.formatter.set_powerlimits((0, 0))
@@ -826,28 +826,28 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         if(True):
             if(plotFAC):
                 if(plotAvg):
-                    axs[1,2].set_title('$\overline{j_{||}} \cdot \overline{E_{||}}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    axs[1,2].set_title('$\overline{j_{||}}  \overline{E_{||}}$ = ' + "{:.2e}".format(JdotE),loc='left')
                 elif(plotFluc):
                     if(isLowPass):
-                        axs[1,2].set_title('$\widetilde{j_{||}}^{k_{||} d_i < 15} \cdot \widetilde{E_{||}}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[1,2].set_title('$\widetilde{j_{||}}^{k_{||} d_i < 15}  \widetilde{E_{||}}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
                     elif(isHighPass):
-                        axs[1,2].set_title('$\widetilde{j_{||}}^{k_{||} d_i > 15} \cdot \widetilde{E_{||}}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[1,2].set_title('$\widetilde{j_{||}}^{k_{||} d_i > 15}  \widetilde{E_{||}}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
                     else:
-                        axs[1,2].set_title('$\widetilde{j_{||}} \cdot \widetilde{E_{||}}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[1,2].set_title('$\widetilde{j_{||}}  \widetilde{E_{||}}$ = ' + "{:.2e}".format(JdotE),loc='left')
                 else:
-                    axs[1,2].set_title('$j_{||} \cdot E_{||}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    axs[1,2].set_title('$j_{||}  E_{||}$ = ' + "{:.2e}".format(JdotE),loc='left')
             else:
                 if(plotAvg):
-                    axs[1,2].set_title('$\overline{j_x} \cdot \overline{E_x}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    axs[1,2].set_title('$\overline{j_x}  \overline{E_x}$ = ' + "{:.2e}".format(JdotE),loc='left')
                 elif(plotFluc):
                     if(isLowPass):
-                        axs[1,2].set_title('$\widetilde{j_x}^{k_{||} d_i > 15} \cdot \widetilde{E_x}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[1,2].set_title('$\widetilde{j_x}^{k_{||} d_i > 15}  \widetilde{E_x}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
                     elif(isHighPass):
-                        axs[1,2].set_title('$\widetilde{j_x}^{k_{||} d_i > 15} \cdot \widetilde{E_x}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[1,2].set_title('$\widetilde{j_x}^{k_{||} d_i > 15}  \widetilde{E_x}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
                     else:
-                        axs[1,2].set_title('$\widetilde{j_x} \cdot \widetilde{E_x}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[1,2].set_title('$\widetilde{j_x}  \widetilde{E_x}$ = ' + "{:.2e}".format(JdotE),loc='left')
                 else:
-                    axs[1,2].set_title('$j_x \cdot E_x$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    axs[1,2].set_title('$j_x  E_x$ = ' + "{:.2e}".format(JdotE),loc='left')
     clrbar12 = plt.colorbar(im12, ax=axs[1,2])#,format='%.1e')
     if(not(plotLog)):
         clrbar12.formatter.set_powerlimits((0, 0))
@@ -897,28 +897,28 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
             JdotE = compute_energization(CEx_xz,dv)
             if(plotFAC):
                 if(plotAvg):
-                    axs[2,0].set_title('$\overline{j_{\perp,1}} \cdot \overline{E_{\perp,1}}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    axs[2,0].set_title('$\overline{j_{\perp,1}}  \overline{E_{\perp,1}}$ = ' + "{:.2e}".format(JdotE),loc='left')
                 elif(plotFluc):
                     if(isLowPass):
-                        axs[2,0].set_title('$\widetilde{j_{\perp,1}}^{k_{||} d_i < 15} \cdot \widetilde{E_{\perp,1}}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[2,0].set_title('$\widetilde{j_{\perp,1}}^{k_{||} d_i < 15}  \widetilde{E_{\perp,1}}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
                     elif(isHighPass):
-                        axs[2,0].set_title('$\widetilde{j_{\perp,1}}^{k_{||} d_i > 15} \cdot \widetilde{E_{\perp,1}}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[2,0].set_title('$\widetilde{j_{\perp,1}}^{k_{||} d_i > 15}  \widetilde{E_{\perp,1}}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
                     else:
-                        axs[2,0].set_title('$\widetilde{j_{\perp,1}} \cdot \widetilde{E_{\perp,1}}$ = ' + "{:.2e}".format(JdotE),loc='left') 
+                        axs[2,0].set_title('$\widetilde{j_{\perp,1}}  \widetilde{E_{\perp,1}}$ = ' + "{:.2e}".format(JdotE),loc='left') 
                 else:
-                    axs[2,0].set_title('$j_{\perp,1} \cdot E_{\perp,1}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    axs[2,0].set_title('$j_{\perp,1}  E_{\perp,1}$ = ' + "{:.2e}".format(JdotE),loc='left')
             else:
                 if(plotAvg):
-                    axs[2,0].set_title('$\overline{j_y} \cdot \overline{E_y}$ = ' + "{:.2e}".format(JdotE),loc='left')             
+                    axs[2,0].set_title('$\overline{j_y}  \overline{E_y}$ = ' + "{:.2e}".format(JdotE),loc='left')             
                 elif(plotFluc):
                     if(isLowPass):
-                        axs[2,0].set_title('$\widetilde{j_y}^{k_{||} d_i < 15} \cdot \widetilde{E_y}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[2,0].set_title('$\widetilde{j_y}^{k_{||} d_i < 15}  \widetilde{E_y}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
                     elif(isHighPass):
-                        axs[2,0].set_title('$\widetilde{j_y}^{k_{||} d_i > 15} \cdot \widetilde{E_y}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[2,0].set_title('$\widetilde{j_y}^{k_{||} d_i > 15}  \widetilde{E_y}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
                     else:
-                        axs[2,0].set_title('$\widetilde{j_y} \cdot \widetilde{E_y}$ = ' + "{:.2e}".format(JdotE),loc='left')             
+                        axs[2,0].set_title('$\widetilde{j_y}  \widetilde{E_y}$ = ' + "{:.2e}".format(JdotE),loc='left')             
                 else:
-                    axs[2,0].set_title('$j_y \cdot E_y$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    axs[2,0].set_title('$j_y  E_y$ = ' + "{:.2e}".format(JdotE),loc='left')
     
     clrbar20 = plt.colorbar(im20, ax=axs[2,0])#,format='%.1e')
     if(not(plotLog)):
@@ -943,28 +943,28 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
             JdotE = compute_energization(CEy_xz,dv)
             if(plotFAC):
                 if(plotAvg):
-                    axs[2,1].set_title('$\overline{j_{\perp,1}} \cdot \overline{E_{\perp,1}}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    axs[2,1].set_title('$\overline{j_{\perp,1}}  \overline{E_{\perp,1}}$ = ' + "{:.2e}".format(JdotE),loc='left')
                 elif(plotFluc):
                     if(isLowPass):
-                        axs[2,1].set_title('$\widetilde{j_{\perp,1}}^{k_{||} d_i < 15} \cdot \widetilde{E_{\perp,1}}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[2,1].set_title('$\widetilde{j_{\perp,1}}^{k_{||} d_i < 15}  \widetilde{E_{\perp,1}}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
                     elif(isHighPass):
-                        axs[2,1].set_title('$\widetilde{j_{\perp,1}}^{k_{||} d_i > 15} \cdot \widetilde{E_{\perp,1}}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[2,1].set_title('$\widetilde{j_{\perp,1}}^{k_{||} d_i > 15}  \widetilde{E_{\perp,1}}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
                     else:
-                        axs[2,1].set_title('$\widetilde{j_{\perp,1}} \cdot \widetilde{E_{\perp,1}}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[2,1].set_title('$\widetilde{j_{\perp,1}}  \widetilde{E_{\perp,1}}$ = ' + "{:.2e}".format(JdotE),loc='left')
                 else:
-                    axs[2,1].set_title('$j_{\perp,1} \cdot E_{\perp,1}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    axs[2,1].set_title('$j_{\perp,1}  E_{\perp,1}$ = ' + "{:.2e}".format(JdotE),loc='left')
             else:
                 if(plotAvg):
-                    axs[2,1].set_title('$\overline{j_y} \cdot \overline{E_y}$ = ' + "{:.2e}".format(JdotE),loc='left')  
+                    axs[2,1].set_title('$\overline{j_y}  \overline{E_y}$ = ' + "{:.2e}".format(JdotE),loc='left')  
                 elif(plotFluc):
                     if(isLowPass):
-                        axs[2,1].set_title('$\widetilde{j_y}^{k_{||} d_i < 15} \cdot \widetilde{E_y}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[2,1].set_title('$\widetilde{j_y}^{k_{||} d_i < 15}  \widetilde{E_y}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
                     elif(isHighPass):
-                        axs[2,1].set_title('$\widetilde{j_y}^{k_{||} d_i > 15} \cdot \widetilde{E_y}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[2,1].set_title('$\widetilde{j_y}^{k_{||} d_i > 15}  \widetilde{E_y}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
                     else:
-                        axs[2,1].set_title('$\widetilde{j_y} \cdot \widetilde{E_y}$ = ' + "{:.2e}".format(JdotE),loc='left')             
+                        axs[2,1].set_title('$\widetilde{j_y}  \widetilde{E_y}$ = ' + "{:.2e}".format(JdotE),loc='left')             
                 else:
-                    axs[2,1].set_title('$j_y \cdot E_y$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    axs[2,1].set_title('$j_y  E_y$ = ' + "{:.2e}".format(JdotE),loc='left')
 
     clrbar21 = plt.colorbar(im21, ax=axs[2,1])#,format='%.1e')
     if(not(plotLog)):
@@ -988,28 +988,28 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         if(not(plotDiagJEOnly)):
             if(plotFAC):
                 if(plotAvg):
-                    axs[2,2].set_title('$\overline{j_{\perp,1}} \cdot \overline{E_{\perp,1}}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    axs[2,2].set_title('$\overline{j_{\perp,1}}  \overline{E_{\perp,1}}$ = ' + "{:.2e}".format(JdotE),loc='left')
                 elif(plotFluc):
                     if(isLowPass):
-                        axs[2,2].set_title('$\widetilde{j_{\perp,1}}^{k_{||} d_i < 15} \cdot \widetilde{E_{\perp,1}}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[2,2].set_title('$\widetilde{j_{\perp,1}}^{k_{||} d_i < 15}  \widetilde{E_{\perp,1}}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
                     elif(isHighPass):
-                        axs[2,2].set_title('$\widetilde{j_{\perp,1}}^{k_{||} d_i > 15} \cdot \widetilde{E_{\perp,1}}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[2,2].set_title('$\widetilde{j_{\perp,1}}^{k_{||} d_i > 15}  \widetilde{E_{\perp,1}}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
                     else:
-                        axs[2,2].set_title('$\widetilde{j_{\perp,1}} \cdot \widetilde{E_{\perp,1}}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[2,2].set_title('$\widetilde{j_{\perp,1}}  \widetilde{E_{\perp,1}}$ = ' + "{:.2e}".format(JdotE),loc='left')
                 else:
-                    axs[2,2].set_title('$j_{\perp,1} \cdot E_{\perp,1}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    axs[2,2].set_title('$j_{\perp,1}  E_{\perp,1}$ = ' + "{:.2e}".format(JdotE),loc='left')
             else:
                 if(plotAvg):
-                    axs[2,2].set_title('$\overline{j_y} \cdot \overline{E_y}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    axs[2,2].set_title('$\overline{j_y}  \overline{E_y}$ = ' + "{:.2e}".format(JdotE),loc='left')
                 elif(plotFluc):
                     if(isLowPass):
-                        axs[2,2].set_title('$\widetilde{j_y}^{k_{||} d_i < 15} \cdot \widetilde{E_y}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[2,2].set_title('$\widetilde{j_y}^{k_{||} d_i < 15}  \widetilde{E_y}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
                     elif(isHighPass):
-                        axs[2,2].set_title('$\widetilde{j_y}^{k_{||} d_i > 15} \cdot \widetilde{E_y}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[2,2].set_title('$\widetilde{j_y}^{k_{||} d_i > 15}  \widetilde{E_y}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
                     else:
-                        axs[2,2].set_title('$\widetilde{j_y} \cdot \widetilde{E_y}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[2,2].set_title('$\widetilde{j_y}  \widetilde{E_y}$ = ' + "{:.2e}".format(JdotE),loc='left')
                 else:
-                    axs[2,2].set_title('$j_y \cdot E_y$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    axs[2,2].set_title('$j_y  E_y$ = ' + "{:.2e}".format(JdotE),loc='left')
 
     clrbar22 = plt.colorbar(im22, ax=axs[2,2])#,format='%.1e')
     if(not(plotLog)):
@@ -1061,28 +1061,28 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         if(True):
             if(plotFAC):
                 if(plotAvg):
-                    axs[3,0].set_title('$\overline{j_{\perp,2}} \cdot \overline{E_{\perp,2}}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    axs[3,0].set_title('$\overline{j_{\perp,2}}  \overline{E_{\perp,2}}$ = ' + "{:.2e}".format(JdotE),loc='left')
                 elif(plotFluc):
                     if(isLowPass):
-                        axs[3,0].set_title('$\widetilde{j_{\perp,2}}^{k_{||} d_i < 15} \cdot \widetilde{E_{\perp,2}}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[3,0].set_title('$\widetilde{j_{\perp,2}}^{k_{||} d_i < 15}  \widetilde{E_{\perp,2}}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
                     elif(isHighPass):
-                        axs[3,0].set_title('$\widetilde{j_{\perp,2}}^{k_{||} d_i > 15} \cdot \widetilde{E_{\perp,2}}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[3,0].set_title('$\widetilde{j_{\perp,2}}^{k_{||} d_i > 15}  \widetilde{E_{\perp,2}}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
                     else:
-                        axs[3,0].set_title('$\widetilde{j_{\perp,2}} \cdot \widetilde{E_{\perp,2}}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[3,0].set_title('$\widetilde{j_{\perp,2}}  \widetilde{E_{\perp,2}}$ = ' + "{:.2e}".format(JdotE),loc='left')
                 else:
-                    axs[3,0].set_title('$j_{\perp,2} \cdot E_{\perp,2}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    axs[3,0].set_title('$j_{\perp,2}  E_{\perp,2}$ = ' + "{:.2e}".format(JdotE),loc='left')
             else:
                 if(plotAvg):
-                    axs[3,0].set_title('$\overline{j_z} \cdot \overline{E_z}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    axs[3,0].set_title('$\overline{j_z}  \overline{E_z}$ = ' + "{:.2e}".format(JdotE),loc='left')
                 elif(plotFluc):
                     if(isLowPass):
-                        axs[3,0].set_title('$\widetilde{j_z}^{k_{||} d_i < 15} \cdot \widetilde{E_z}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[3,0].set_title('$\widetilde{j_z}^{k_{||} d_i < 15}  \widetilde{E_z}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
                     elif(isHighPass):
-                        axs[3,0].set_title('$\widetilde{j_z}^{k_{||} d_i > 15} \cdot \widetilde{E_z}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[3,0].set_title('$\widetilde{j_z}^{k_{||} d_i > 15}  \widetilde{E_z}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
                     else:
-                        axs[3,0].set_title('$\widetilde{j_z} \cdot \widetilde{E_z}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[3,0].set_title('$\widetilde{j_z}  \widetilde{E_z}$ = ' + "{:.2e}".format(JdotE),loc='left')
                 else:
-                    axs[3,0].set_title('$j_z \cdot E_z$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    axs[3,0].set_title('$j_z  E_z$ = ' + "{:.2e}".format(JdotE),loc='left')
 
     clrbar30 = plt.colorbar(im30, ax=axs[3,0])#,format='%.1e')
     if(not(plotLog)):
@@ -1108,28 +1108,28 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         if(not(plotDiagJEOnly)):
             if(plotFAC):
                 if(plotAvg):
-                    axs[3,1].set_title('$\overline{j_{\perp,2}} \cdot \overline{E_{\perp,2}}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    axs[3,1].set_title('$\overline{j_{\perp,2}}  \overline{E_{\perp,2}}$ = ' + "{:.2e}".format(JdotE),loc='left')
                 elif(plotFluc):
                     if(isLowPass):
-                        axs[3,1].set_title('$\widetilde{j_{\perp,2}}^{k_{||} d_i < 15} \cdot \widetilde{E_{\perp,2}}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[3,1].set_title('$\widetilde{j_{\perp,2}}^{k_{||} d_i < 15}  \widetilde{E_{\perp,2}}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
                     elif(isHighPass):
-                        axs[3,1].set_title('$\widetilde{j_{\perp,2}}^{k_{||} d_i > 15} \cdot \widetilde{E_{\perp,2}}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[3,1].set_title('$\widetilde{j_{\perp,2}}^{k_{||} d_i > 15}  \widetilde{E_{\perp,2}}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
                     else:
-                        axs[3,1].set_title('$\widetilde{j_{\perp,2}} \cdot \widetilde{E_{\perp,2}}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[3,1].set_title('$\widetilde{j_{\perp,2}}  \widetilde{E_{\perp,2}}$ = ' + "{:.2e}".format(JdotE),loc='left')
                 else:
-                    axs[3,1].set_title('$j_{\perp,2} \cdot E_{\perp,2}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    axs[3,1].set_title('$j_{\perp,2}  E_{\perp,2}$ = ' + "{:.2e}".format(JdotE),loc='left')
             else:
                 if(plotAvg):
-                    axs[3,1].set_title('$\overline{j_z} \cdot \overline{E_z}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    axs[3,1].set_title('$\overline{j_z}  \overline{E_z}$ = ' + "{:.2e}".format(JdotE),loc='left')
                 elif(plotFluc):
                     if(isLowPass):
-                        axs[3,1].set_title('$\widetilde{j_z}^{k_{||} d_i < 15} \cdot \widetilde{E_z}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[3,1].set_title('$\widetilde{j_z}^{k_{||} d_i < 15}  \widetilde{E_z}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
                     elif(isHighPass):
-                        axs[3,1].set_title('$\widetilde{j_z}^{k_{||} d_i > 15} \cdot \widetilde{E_z}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[3,1].set_title('$\widetilde{j_z}^{k_{||} d_i > 15}  \widetilde{E_z}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
                     else:
-                        axs[3,1].set_title('$\widetilde{j_z} \cdot \widetilde{E_z}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[3,1].set_title('$\widetilde{j_z}  \widetilde{E_z}$ = ' + "{:.2e}".format(JdotE),loc='left')
                 else:
-                    axs[3,1].set_title('$j_z \cdot E_z$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    axs[3,1].set_title('$j_z  E_z$ = ' + "{:.2e}".format(JdotE),loc='left')
 
     clrbar31 = plt.colorbar(im31, ax=axs[3,1])#,format='%.1e')
     if(not(plotLog)):
@@ -1155,28 +1155,28 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         if(not(plotDiagJEOnly)):
             if(plotFAC):
                 if(plotAvg):
-                    axs[3,2].set_title('$\overline{j_{\perp,2}} \cdot \overline{E_{\perp,2}}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    axs[3,2].set_title('$\overline{j_{\perp,2}}  \overline{E_{\perp,2}}$ = ' + "{:.2e}".format(JdotE),loc='left')
                 elif(plotFluc):
                     if(isLowPass):
-                        axs[3,2].set_title('$\widetilde{j_{\perp,2}}^{k_{||} d_i < 15} \cdot \widetilde{E_{\perp,2}}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[3,2].set_title('$\widetilde{j_{\perp,2}}^{k_{||} d_i < 15}  \widetilde{E_{\perp,2}}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
                     elif(isHighPass):
-                        axs[3,2].set_title('$\widetilde{j_{\perp,2}}^{k_{||} d_i > 15} \cdot \widetilde{E_{\perp,2}}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[3,2].set_title('$\widetilde{j_{\perp,2}}^{k_{||} d_i > 15}  \widetilde{E_{\perp,2}}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
                     else:
-                        axs[3,2].set_title('$\widetilde{j_{\perp,2}} \cdot \widetilde{E_{\perp,2}}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[3,2].set_title('$\widetilde{j_{\perp,2}}  \widetilde{E_{\perp,2}}$ = ' + "{:.2e}".format(JdotE),loc='left')
                 else:
-                    axs[3,2].set_title('$j_{\perp,2} \cdot E_{\perp,2}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    axs[3,2].set_title('$j_{\perp,2}  E_{\perp,2}$ = ' + "{:.2e}".format(JdotE),loc='left')
             else:
                 if(plotAvg):
-                    axs[3,2].set_title('$\overline{j_z} \cdot \overline{E_z}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    axs[3,2].set_title('$\overline{j_z}  \overline{E_z}$ = ' + "{:.2e}".format(JdotE),loc='left')
                 elif(plotFluc):
                     if(isLowPass):
-                        axs[3,2].set_title('$\widetilde{j_z}^{k_{||} d_i < 15} \cdot \widetilde{E_z}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[3,2].set_title('$\widetilde{j_z}^{k_{||} d_i < 15}  \widetilde{E_z}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
                     elif(isHighPass):
-                        axs[3,2].set_title('$\widetilde{j_z}^{k_{||} d_i > 15} \cdot \widetilde{E_z}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[3,2].set_title('$\widetilde{j_z}^{k_{||} d_i > 15}  \widetilde{E_z}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
                     else:
-                        axs[3,2].set_title('$\widetilde{j_z} \cdot \widetilde{E_z}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[3,2].set_title('$\widetilde{j_z}  \widetilde{E_z}$ = ' + "{:.2e}".format(JdotE),loc='left')
                 else:
-                    axs[3,2].set_title('$j_z \cdot E_z$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    axs[3,2].set_title('$j_z  E_z$ = ' + "{:.2e}".format(JdotE),loc='left')
 
     clrbar32 = plt.colorbar(im32, ax=axs[3,2])#,format='%.1e')
     if(not(plotLog)):
@@ -1241,6 +1241,41 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
 
         plt.close('all') #saves RAM
     else:
+        import os
+
+        #for some reason, we have to generate the plot to move the colorpower power elseweher
+        plt.savefig('_tempdelete.png',format='png',dpi=250,bbox_inches='tight')
+        os.remove('_tempdelete.png')
+
+        #must make figure first to grab x10^val on top of color bar- after grabbing it, we can move it- a little wasteful but it was quick solution
+        clrbar10text = str(clrbar10.ax.yaxis.get_offset_text().get_text())
+        clrbar10.ax.yaxis.get_offset_text().set_visible(False)
+        axs[1,0].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar10text, va='bottom', ha='center')
+        clrbar11text = str(clrbar11.ax.yaxis.get_offset_text().get_text())
+        clrbar11.ax.yaxis.get_offset_text().set_visible(False) 
+        axs[1,1].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar11text, va='bottom', ha='center')
+        clrbar12text = str(clrbar12.ax.yaxis.get_offset_text().get_text())
+        clrbar12.ax.yaxis.get_offset_text().set_visible(False)
+        axs[1,2].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar12text, va='bottom', ha='center')
+        clrbar20text = str(clrbar20.ax.yaxis.get_offset_text().get_text())
+        clrbar20.ax.yaxis.get_offset_text().set_visible(False)
+        axs[2,0].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar20text, va='bottom', ha='center')
+        clrbar21text = str(clrbar21.ax.yaxis.get_offset_text().get_text())
+        clrbar21.ax.yaxis.get_offset_text().set_visible(False)
+        axs[2,1].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar21text, va='bottom', ha='center')
+        clrbar22text = str(clrbar22.ax.yaxis.get_offset_text().get_text())
+        clrbar22.ax.yaxis.get_offset_text().set_visible(False)
+        axs[2,2].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar22text, va='bottom', ha='center')
+        clrbar30text = str(clrbar30.ax.yaxis.get_offset_text().get_text())
+        clrbar30.ax.yaxis.get_offset_text().set_visible(False)
+        axs[3,0].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar30text, va='bottom', ha='center')
+        clrbar31text = str(clrbar31.ax.yaxis.get_offset_text().get_text())
+        clrbar31.ax.yaxis.get_offset_text().set_visible(False)
+        axs[3,1].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar31text, va='bottom', ha='center')
+        clrbar32text = str(clrbar32.ax.yaxis.get_offset_text().get_text())
+        clrbar32.ax.yaxis.get_offset_text().set_visible(False)
+        axs[3,2].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar32text, va='bottom', ha='center')
+
         plt.show()
     plt.close()
 
@@ -1530,8 +1565,8 @@ def plot_dist_v_fields_supergrid(vx, vy, vz, vmax,
         string describing metadata to be shown on plot
     """
     from matplotlib.colors import LogNorm
-    from FPCAnalysis.arrayaux import mesh_3d_to_2d
-    from FPCAnalysis.analysisaux import compute_energization
+    from FPCAnalysis.array_ops import mesh_3d_to_2d
+    from FPCAnalysis.analysis import compute_energization
     import matplotlib.colors as colors
 
     if(normtoN):
@@ -1798,27 +1833,27 @@ def plot_gyro(vpar,vperp,corepargyro,coreperpgyro,flnm='',isIon=True,plotLog=Fal
 
         if(plotFluc):
             if(isLowPass):
-                axs[0].text(-vmax*0.85,vmax*0.75,r'$\widetilde{j_{||,'+sval+'}}^{k_{||} d_i < 15} \cdot \widetilde{E}_{||}^{k_{||} d_i < 15} = $'+ "{:.2e}".format(JdotEpar),fontsize=12)
+                axs[0].text(-vmax*0.85,vmax*0.75,r'$\widetilde{j_{||,'+sval+'}}^{k_{||} d_i < 15}  \widetilde{E}_{||}^{k_{||} d_i < 15} = $'+ "{:.2e}".format(JdotEpar),fontsize=12)
             elif(isHighPass):
-                axs[0].text(-vmax*0.85,vmax*0.75,r'$\widetilde{j_{||,'+sval+'}}^{k_{||} d_i < 15} \cdot \widetilde{E}_{||}^{k_{||} d_i > 15} = $'+ "{:.2e}".format(JdotEpar),fontsize=12)
+                axs[0].text(-vmax*0.85,vmax*0.75,r'$\widetilde{j_{||,'+sval+'}}^{k_{||} d_i < 15}  \widetilde{E}_{||}^{k_{||} d_i > 15} = $'+ "{:.2e}".format(JdotEpar),fontsize=12)
             else:
-                axs[0].text(-vmax*0.85,vmax*0.75,r'$\widetilde{j_{||,'+sval+'}} \cdot \widetilde{E}_{||} = $'+ "{:.2e}".format(JdotEpar),fontsize=12)
+                axs[0].text(-vmax*0.85,vmax*0.75,r'$\widetilde{j_{||,'+sval+'}}  \widetilde{E}_{||} = $'+ "{:.2e}".format(JdotEpar),fontsize=12)
         elif(plotAvg):
-            axs[0].text(-vmax*0.85,vmax*0.75,r'$\overline{j_{||,'+sval+'}} \cdot \overline{E}_{||} = $'+ "{:.2e}".format(JdotEpar),fontsize=12)
+            axs[0].text(-vmax*0.85,vmax*0.75,r'$\overline{j_{||,'+sval+'}}  \overline{E}_{||} = $'+ "{:.2e}".format(JdotEpar),fontsize=12)
         else:
-            axs[0].text(-vmax*0.85,vmax*0.75,r'$j_{||,'+sval+'} \cdot E_{||} = $'+ "{:.2e}".format(JdotEpar),fontsize=12)
+            axs[0].text(-vmax*0.85,vmax*0.75,r'$j_{||,'+sval+'}  E_{||} = $'+ "{:.2e}".format(JdotEpar),fontsize=12)
        
         if(plotFluc):
             if(isLowPass):
-                axs[1].text(-vmax*0.85,vmax*0.75,r'$\widetilde{j_{\perp,'+sval+'}}^{k_{||} d_i < 15} \cdot \widetilde{E}_{\perp}^{k_{||} d_i < 15} = $'+ "{:.2e}".format(JdotEperp),fontsize=12)
+                axs[1].text(-vmax*0.85,vmax*0.75,r'$\widetilde{j_{\perp,'+sval+'}}^{k_{||} d_i < 15}  \widetilde{E}_{\perp}^{k_{||} d_i < 15} = $'+ "{:.2e}".format(JdotEperp),fontsize=12)
             elif(isHighPass):
-                axs[1].text(-vmax*0.85,vmax*0.75,r'$\widetilde{j_{\perp,'+sval+'}}^{k_{||} d_i < 15} \cdot \widetilde{E}_{\perp}^{k_{||} d_i > 15} = $'+ "{:.2e}".format(JdotEperp),fontsize=12)
+                axs[1].text(-vmax*0.85,vmax*0.75,r'$\widetilde{j_{\perp,'+sval+'}}^{k_{||} d_i < 15}  \widetilde{E}_{\perp}^{k_{||} d_i > 15} = $'+ "{:.2e}".format(JdotEperp),fontsize=12)
             else:
-                axs[1].text(-vmax*0.85,vmax*0.75,r'$\widetilde{j_{\perp,'+sval+'}} \cdot \widetilde{E}_{\perp} = $'+ "{:.2e}".format(JdotEperp),fontsize=12)
+                axs[1].text(-vmax*0.85,vmax*0.75,r'$\widetilde{j_{\perp,'+sval+'}}  \widetilde{E}_{\perp} = $'+ "{:.2e}".format(JdotEperp),fontsize=12)
         elif(plotAvg):
-            axs[1].text(-vmax*0.85,vmax*0.75,r'$\overline{j_{\perp,'+sval+'}} \cdot \overline{E}_{\perp} = $'+ "{:.2e}".format(JdotEperp),fontsize=12)
+            axs[1].text(-vmax*0.85,vmax*0.75,r'$\overline{j_{\perp,'+sval+'}}  \overline{E}_{\perp} = $'+ "{:.2e}".format(JdotEperp),fontsize=12)
         else:
-            axs[1].text(-vmax*0.85,vmax*0.75,r'$j_{\perp,'+sval+'} \cdot E_{\perp} = $'+ "{:.2e}".format(JdotEperp),fontsize=12)
+            axs[1].text(-vmax*0.85,vmax*0.75,r'$j_{\perp,'+sval+'}  E_{\perp} = $'+ "{:.2e}".format(JdotEperp),fontsize=12)
 
 #     #set ticks
 #     intvl = 1.
@@ -1971,39 +2006,39 @@ def plot_gyro_3comp(vpar,vperp,corepargyro,coreperp1gyro,coreperp2gyro,flnm='',i
 
         if(plotFluc):
             if(isLowPass):
-                axs[0].text(-vmax*0.85,vmax*0.75,r'$\widetilde{j_{||,'+sval+'}}^{k_{||} d_i < 15} \cdot \widetilde{E}_{||}^{k_{||} d_i < 15} = $'+ "{:.2e}".format(JdotEpar),fontsize=12)
+                axs[0].text(-vmax*0.85,vmax*0.75,r'$\widetilde{j_{||,'+sval+'}}^{k_{||} d_i < 15}  \widetilde{E}_{||}^{k_{||} d_i < 15} = $'+ "{:.2e}".format(JdotEpar),fontsize=12)
             elif(isHighPass):
-                axs[0].text(-vmax*0.85,vmax*0.75,r'$\widetilde{j_{||,'+sval+'}}^{k_{||} d_i < 15} \cdot \widetilde{E}_{||}^{k_{||} d_i > 15} = $'+ "{:.2e}".format(JdotEpar),fontsize=12)
+                axs[0].text(-vmax*0.85,vmax*0.75,r'$\widetilde{j_{||,'+sval+'}}^{k_{||} d_i < 15}  \widetilde{E}_{||}^{k_{||} d_i > 15} = $'+ "{:.2e}".format(JdotEpar),fontsize=12)
             else:
-                axs[0].text(-vmax*0.85,vmax*0.75,r'$\widetilde{j_{||,'+sval+'}} \cdot \widetilde{E}_{||} = $'+ "{:.2e}".format(JdotEpar),fontsize=12)
+                axs[0].text(-vmax*0.85,vmax*0.75,r'$\widetilde{j_{||,'+sval+'}}  \widetilde{E}_{||} = $'+ "{:.2e}".format(JdotEpar),fontsize=12)
         elif(plotAvg):
-            axs[0].text(-vmax*0.85,vmax*0.75,r'$\overline{j_{||,'+sval+'}} \cdot \overline{E}_{||} = $'+ "{:.2e}".format(JdotEpar),fontsize=12)
+            axs[0].text(-vmax*0.85,vmax*0.75,r'$\overline{j_{||,'+sval+'}}  \overline{E}_{||} = $'+ "{:.2e}".format(JdotEpar),fontsize=12)
         else:
-            axs[0].text(-vmax*0.85,vmax*0.75,r'$j_{||,'+sval+'} \cdot E_{||} = $'+ "{:.2e}".format(JdotEpar),fontsize=12)
+            axs[0].text(-vmax*0.85,vmax*0.75,r'$j_{||,'+sval+'}  E_{||} = $'+ "{:.2e}".format(JdotEpar),fontsize=12)
 
         if(plotFluc):
             if(isLowPass):
-                axs[1].text(-vmax*0.85,vmax*0.75,r'$\widetilde{j_{\perp,1,'+sval+'}}^{k_{||} d_i < 15} \cdot \widetilde{E}_{\perp,1}^{k_{||} d_i < 15} = $'+ "{:.2e}".format(JdotEperp1),fontsize=12)
+                axs[1].text(-vmax*0.85,vmax*0.75,r'$\widetilde{j_{\perp,1,'+sval+'}}^{k_{||} d_i < 15}  \widetilde{E}_{\perp,1}^{k_{||} d_i < 15} = $'+ "{:.2e}".format(JdotEperp1),fontsize=12)
             elif(isHighPass):
-                axs[1].text(-vmax*0.85,vmax*0.75,r'$\widetilde{j_{\perp,1,'+sval+'}}^{k_{||} d_i < 15} \cdot \widetilde{E}_{\perp,1}^{k_{||} d_i > 15} = $'+ "{:.2e}".format(JdotEperp1),fontsize=12)
+                axs[1].text(-vmax*0.85,vmax*0.75,r'$\widetilde{j_{\perp,1,'+sval+'}}^{k_{||} d_i < 15}  \widetilde{E}_{\perp,1}^{k_{||} d_i > 15} = $'+ "{:.2e}".format(JdotEperp1),fontsize=12)
             else:
-                axs[1].text(-vmax*0.85,vmax*0.75,r'$\widetilde{j_{\perp,1,'+sval+'}} \cdot \widetilde{E}_{\perp,1} = $'+ "{:.2e}".format(JdotEperp1),fontsize=12)
+                axs[1].text(-vmax*0.85,vmax*0.75,r'$\widetilde{j_{\perp,1,'+sval+'}}  \widetilde{E}_{\perp,1} = $'+ "{:.2e}".format(JdotEperp1),fontsize=12)
         elif(plotAvg):
-            axs[1].text(-vmax*0.85,vmax*0.75,r'$\overline{j_{\perp,1,'+sval+'}} \cdot \overline{E}_{\perp,1} = $'+ "{:.2e}".format(JdotEperp1),fontsize=12)
+            axs[1].text(-vmax*0.85,vmax*0.75,r'$\overline{j_{\perp,1,'+sval+'}}  \overline{E}_{\perp,1} = $'+ "{:.2e}".format(JdotEperp1),fontsize=12)
         else:
-            axs[1].text(-vmax*0.85,vmax*0.75,r'$j_{\perp,1,'+sval+'} \cdot E_{\perp,1} = $'+ "{:.2e}".format(JdotEperp1),fontsize=12)
+            axs[1].text(-vmax*0.85,vmax*0.75,r'$j_{\perp,1,'+sval+'}  E_{\perp,1} = $'+ "{:.2e}".format(JdotEperp1),fontsize=12)
 
         if(plotFluc):
             if(isLowPass):
-                axs[2].text(-vmax*0.85,vmax*0.7,r'$\widetilde{j_{\perp,2,'+sval+'}}^{k_{||} d_i < 15} \cdot \widetilde{E}_{\perp,2}^{k_{||} d_i < 15} = $'+ "{:.2e}".format(JdotEperp2),fontsize=12)
+                axs[2].text(-vmax*0.85,vmax*0.7,r'$\widetilde{j_{\perp,2,'+sval+'}}^{k_{||} d_i < 15}  \widetilde{E}_{\perp,2}^{k_{||} d_i < 15} = $'+ "{:.2e}".format(JdotEperp2),fontsize=12)
             elif(isHighPass):
-                axs[2].text(-vmax*0.85,vmax*0.75,r'$\widetilde{j_{\perp,2,'+sval+'}}^{k_{||} d_i < 15} \cdot \widetilde{E}_{\perp,2}^{k_{||} d_i > 15} = $'+ "{:.2e}".format(JdotEperp2),fontsize=12)
+                axs[2].text(-vmax*0.85,vmax*0.75,r'$\widetilde{j_{\perp,2,'+sval+'}}^{k_{||} d_i < 15}  \widetilde{E}_{\perp,2}^{k_{||} d_i > 15} = $'+ "{:.2e}".format(JdotEperp2),fontsize=12)
             else:
-                axs[2].text(-vmax*0.85,vmax*0.75,r'$\widetilde{j_{\perp,2,'+sval+'}} \cdot \widetilde{E}_{\perp,2} = $'+ "{:.2e}".format(JdotEperp2),fontsize=12)
+                axs[2].text(-vmax*0.85,vmax*0.75,r'$\widetilde{j_{\perp,2,'+sval+'}}  \widetilde{E}_{\perp,2} = $'+ "{:.2e}".format(JdotEperp2),fontsize=12)
         elif(plotAvg):
-            axs[2].text(-vmax*0.85,vmax*0.75,r'$\overline{j_{\perp,2,'+sval+'}} \cdot \overline{E}_{\perp,2} = $'+ "{:.2e}".format(JdotEperp2),fontsize=12)
+            axs[2].text(-vmax*0.85,vmax*0.75,r'$\overline{j_{\perp,2,'+sval+'}}  \overline{E}_{\perp,2} = $'+ "{:.2e}".format(JdotEperp2),fontsize=12)
         else:
-            axs[2].text(-vmax*0.85,vmax*0.75,r'$j_{\perp,2,'+sval+'} \cdot E_{\perp,2} = $'+ "{:.2e}".format(JdotEperp2),fontsize=12)
+            axs[2].text(-vmax*0.85,vmax*0.75,r'$j_{\perp,2,'+sval+'}  E_{\perp,2} = $'+ "{:.2e}".format(JdotEperp2),fontsize=12)
 
 #     #set ticks
 #     intvl = 1.
@@ -2052,3 +2087,29 @@ def plot_gyro_3comp(vpar,vperp,corepargyro,coreperp1gyro,coreperp2gyro,flnm='',i
     else:
         plt.show()
     plt.close()
+
+def project_and_plot_supergrid(vx,vy,vz,vmax,hist,corex,corey,corez,flnm,plotFAC=False,plotAvg=False,plotFluc=False,isIon=True,isLowPass=False,isHighPass=False):
+    from FPCAnalysis.array_ops import array_3d_to_2d
+
+    H_xy = array_3d_to_2d(hist, 'xy')
+    H_xz = array_3d_to_2d(hist, 'xz')
+    H_yz = array_3d_to_2d(hist, 'yz')
+
+    CEx_xy = array_3d_to_2d(corex, 'xy')
+    CEx_xz = array_3d_to_2d(corex, 'xz')
+    CEx_yz = array_3d_to_2d(corex, 'yz')
+
+    CEy_xy = array_3d_to_2d(corey, 'xy')
+    CEy_xz = array_3d_to_2d(corey, 'xz')
+    CEy_yz = array_3d_to_2d(corey, 'yz')
+
+    CEz_xy = array_3d_to_2d(corez, 'xy')
+    CEz_xz = array_3d_to_2d(corez, 'xz')
+    CEz_yz = array_3d_to_2d(corez, 'yz')
+
+    plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
+                                H_xy, H_xz, H_yz,
+                                CEx_xy,CEx_xz, CEx_yz,
+                                CEy_xy,CEy_xz, CEy_yz,
+                                CEz_xy,CEz_xz, CEz_yz,
+                                flnm = flnm, computeJdotE = True, plotFAC = plotFAC, plotAvg = plotAvg, plotFluc = plotFluc, isIon = isIon, isLowPass=isLowPass,isHighPass=isHighPass)

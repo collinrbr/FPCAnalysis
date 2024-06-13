@@ -14,11 +14,11 @@ def norm_constants_tristanmp1(params,dt,inputs):
     Parameters
     ----------
     params : dict
-        params dict from load_params in loadaux 
+        params dict from load_params in load
     dt : float
         time step in code units (normally integer fraction of elecrron plasma freq(for TRISTAN 1 this is params['c']/params['comp'])
     inputs : dict
-        input dict from load_input in loadaux
+        input dict from load_input in load
 
 
     returns
@@ -48,11 +48,11 @@ def compute_dflow(dfields, dpar_ion, dpar_elec, is2D=True, debug=False, return_e
     Parameters
     ----------
     dfields : dict
-        field data dictionary from load_fields in loadaux
+        field data dictionary from load_fields in load
     dpar_ion : dict
-        ion data from load_particles in loadaux
+        ion data from load_particles in load
     dpar_elec : dict
-        elec data from load_particles in loadaux
+        elec data from load_particles in load
     is2D : bool (optional)
         specifies if data is 2d- needed as we spoof 2d data into 3d structure for backwards compatability of FPC routines
     debug : bool (optional)
@@ -68,7 +68,7 @@ def compute_dflow(dfields, dpar_ion, dpar_elec, is2D=True, debug=False, return_e
         ion and electron velocity moments
     """
 
-    from FPCAnalysis.arrayaux import find_nearest
+    from FPCAnalysis.array_ops import find_nearest
 
     if(debug): print("Entering compute dflow and initializing arrays...")
 
@@ -169,9 +169,9 @@ def compute_beta0_tristanmp1(params,inputs):
     Parameters
     ----------
     params : dict
-        params dict from load_params in loadaux 
+        params dict from load_params in load
     inputs : dict
-        input dict from load_input in loadaux 
+        input dict from load_input in load
 
     Returns
     -------
@@ -368,7 +368,7 @@ def compute_gain_due_to_jdotE(dflow,xvals,jdotE,isIon,verbose=False):
         total energy acculmulated due to 
     """
 
-    from FPCAnalysis.arrayaux import find_nearest
+    from FPCAnalysis.array_ops import find_nearest
 
     dflowavg = get_average_flow_over_yz(dflow)
 
@@ -441,7 +441,7 @@ def bin_integrate_gyro(x_grid, y_grid, C_vals, rmax, nrbins):
     #TODO: finish!
 
     """
-    from FPCAnalysis.arrayaux import find_nearest
+    from FPCAnalysis.array_ops import find_nearest
 
     drval = float(rmax)/float(nrbins)
     r_bins = np.asarray([itemp*drval for itemp in range(nrbins)])
@@ -1151,7 +1151,7 @@ def wlt(t,data,w=6,klim=None,retstep=1,powerTwoSpace=False):
         wavelet transform data
     """
     from scipy import signal
-    from FPCAnalysis.arrayaux import find_nearest
+    from FPCAnalysis.array_ops import find_nearest
 
     dt = t[1]-t[0]
 
@@ -1868,7 +1868,7 @@ def compute_field_aligned_coord(dfields,xlim,ylim,zlim):
     Parameters
     ----------
     dfields : dict
-        dict returned by field_loader in loadaux
+        dict returned by field_loader by load function
     xlim : array
         xx bounds of analysis (i.e. where the sweep starts and stops)
     ylim : array
@@ -1881,7 +1881,7 @@ def compute_field_aligned_coord(dfields,xlim,ylim,zlim):
     vparbasis/vperp1basis/vperp2basis : [float,float,float]
         field aligned basis (ordered [vx,vy,vz])
     """
-    from FPCAnalysis.arrayaux import find_nearest
+    from FPCAnalysis.array_ops import find_nearest
     from copy import deepcopy
 
     if(np.abs(xlim[1]-xlim[0]) > 4.):
@@ -2012,7 +2012,7 @@ def change_velocity_basis_local(dfields,dpar,loadfrac=1,debug=False):
     changebasismatrixes = []
 
     for _idx in range(0,len(dparnewbasis['x1'])):
-        from FPCAnalysis.fpcaux import weighted_field_average
+        from FPCAnalysis.fpc import weighted_field_average
 
         bx = weighted_field_average(dpar['x1'][_idx], dpar['x2'][_idx], dpar['x3'][_idx], dfields, 'bx')
         by = weighted_field_average(dpar['x1'][_idx], dpar['x2'][_idx], dpar['x3'][_idx], dfields, 'by')
@@ -2675,7 +2675,7 @@ def convert_flow_to_local_par(dfields,dflow):
     Parameters
     ----------
     dfields : dict
-        dict returned by field_loader in loadaux
+        dict returned by field_loader in load
     dflow : dict
         field data dictionary from compute_dflow
 
@@ -2738,7 +2738,7 @@ def convert_flowfluc_to_local_par(dfields,dflow,dflowfluc):
     Parameters
     ----------
     dfields : dict
-        dict returned by field_loader in loadaux
+        dict returned by field_loader in load
     dflow : dict
         field data dictionary from compute_dflow
     dflowfluc : dict
@@ -2758,7 +2758,7 @@ def convert_flow_to_par(dfields,dflow):
     Parameters
     ----------
     dfields : dict
-        dict returned by field_loader in loadaux
+        dict returned by field_loader in load
     dflow : dict
         field data dictionary from compute_dflow
 
@@ -2829,7 +2829,7 @@ def convert_flowfluc_to_par(dfields,dflow,dflowfluc):
     Parameters
     ----------
     dfields : dict
-        dict returned by field_loader in loadaux
+        dict returned by field_loader in load
     dflow : dict
         field data dictionary from compute_dflow
     dflowfluc : dict
@@ -2849,7 +2849,7 @@ def convert_to_par(dfields,detrendfields=None):
     Parameters
     ----------
     dfields : dict
-        dict returned by field_loader in loadaux
+        dict returned by field_loader in load
     detrendfields : dict
         if provided, fac will be computed using this dictionary instead
 
@@ -2903,7 +2903,7 @@ def convert_fluc_to_par(dfields,dfluc):
     Parameters
     ----------
     dfields : dict
-        dict returned by field_loader in loadaux
+        dict returned by field_loader in load
     dfluc : dict
         fluc fields dict
 
@@ -2956,7 +2956,7 @@ def convert_to_local_par(dfields,detrendfields=None):
     Parameters
     ----------
     dfields : dict
-        dict returned by field_loader in loadaux
+        dict returned by field_loader in load
     detrendfields : dict
         if provided, fac will be computed using this dictionary instead
 
@@ -3041,7 +3041,7 @@ def convert_fluc_to_local_par(dfields,dfluc):
     Parameters
     ----------
     dfields : dict
-        dict returned by field_loader in loadaux
+        dict returned by field_loader in load
     dfluc : dict
         fluc fields dict
 
