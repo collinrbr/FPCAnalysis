@@ -1,6 +1,10 @@
-<3 align="center">FPC Analysis</h3>
+<h1 align="center">FPC Analysis</h1>
 
-## Table of Contents
+<div align="center">
+  <img src="https://github.com/collinrbr/FPCAnalysis/blob/tristan/FPC%20Analysis%20Logo.svg" width="25%" height="25%">
+</div>
+
+## Table of Contents <a name = "toc"></a>
 
 - [About](#About)
 - [Setup](#Setup)
@@ -17,9 +21,6 @@
 - [Regression and Unit Testing](docs/regression_unit_test.md)
 - [Development](docs/devnotes.md)
 - [Useful links](#scilinks)
-
-FAC.md			IIM.md			load.md			plots.md		scripts.md
-FPC.md			WLT.md			normalization.md	regression_unit_test.md	shockvel.md
 
 ## About <a name = "about"></a>
 
