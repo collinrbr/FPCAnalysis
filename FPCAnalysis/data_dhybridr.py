@@ -105,6 +105,12 @@ def get_dpar_from_bounds(dpar_folder,x1,x2,verbose=False):
     else:
         rightmostbound_index = leftmostbound_index
 
+    #load one extra to the left and right if possible (sometimes the casting of the string of the presliced data filename causes for a small error that causes for the left and right index finding to be off by one. This is a fix of that. As slices should be thin, its not too wasteful)
+    if(leftmostbound_index > 0):
+        leftmostbound_index -= 1
+    if(rightmostbound_index < len(xbounds)-1):
+        rightmostbound_index += 1
+
     filenames = filenames[leftmostbound_index:rightmostbound_index+1]
 
     if(verbose):
