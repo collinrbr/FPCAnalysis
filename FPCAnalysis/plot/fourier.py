@@ -823,3 +823,110 @@ def plot_spec_2d(WFTdata,dfields,loadflnm='',xxrange=None,flnm='2dspec',key='nor
 
     plt.savefig(flnm+'.png',dpi=300,format='png',bbox_inches='tight')
     plt.close()
+
+
+def plot_wlt_over_field(xx, kx, wlt, fieldvals, ky0 = None, kz0 = None, flnm = '', plotstrongestkx = False, xlim = None, 
+               ylim = None, xxline = None, yyline = None, clrbarlbl = None,axhline=None,
+               Bz2_over_Bz1 = None, xpos_shock = None, xpos_line = None):
+    
+    """
+    (ky kz should be floats if passed (because we commonly take WLT of f(x,ky0,kz0)))
+
+    same as plot_wlt, but shows bz field for reference
+    """
+
+    from FPCAnalysis.array_ops import find_nearest
+    from mpl_toolkits.axes_grid1 import make_axes_locatable
+
+    #fig, ax = plt.subplots(2,1,figsize=(10,6),sharex=True, gridspec_kw={'height_ratios': [10, 3]})
+    fig = plt.figure(figsize=(10,4.5))
+    ax1 = plt.subplot(111)
+    #ax2 = ax[1]
+
+    img1 = ax1.pcolormesh(xx,kx,np.abs(wlt),cmap='Spectral', shading='gouraud')
+    #cbar = plt.colorbar(img1, ax=ax1)
+    #if(clrbarlbl != None):
+    #    cbar.set_label(clrbarlbl,labelpad=25, rotation=270, panchor=False)
+
+    ax1.set_ylabel('$k_x \, \, d_{i,0}$')
+    ax1.grid()
+
+    if(ylim != None):
+        ax1.set_ylim(ylim[0],ylim[1])
+
+    divider = make_axes_locatable(ax1)
+    ax2 = divider.append_axes("bottom", size="27%", pad=0.08)
+    cax = divider.append_axes("right", size="2%", pad=0.08)
+    cbar = plt.colorbar( img1, ax=ax1, cax=cax )
+    if(clrbarlbl != None):
+        cbar.set_label(clrbarlbl,labelpad=25, rotation=270)
+
+    plt.style.use("cb.mplstyle") #sets style parameters for matplotlib plots
+
+    ax2.plot(xx,fieldvals,color='black',linewidth=1)
+
+    print("plotting hand assigned MHD comparison.....")
+    bzmhdrh = np.zeros((len(xx)))
+    bzmhdrh_xx = np.zeros((len(xx)))
+
+    bzupstream = fieldvals[-1]
+
+    ax1.axvline(x=xpos_line,color='black')
+
+    make_instant_jump = True #adds 'extra point' to make jump instananeous
+    if(make_instant_jump):
+        bzmhdrh = np.zeros((len(xx)+1))
+        bzmhdrh_xx = np.zeros((len(xx)+1))
+
+    ij_idx_correction = 0 #used to to 'correct' idx
+    for _mhdrhidx in range(0,len(bzmhdrh[:])):
+        if(xx[_mhdrhidx-ij_idx_correction] <= xpos_shock):
+            bzmhdrh[_mhdrhidx] = bzupstream*Bz2_over_Bz1
+            bzmhdrh_xx[_mhdrhidx] = xx[_mhdrhidx]
+        else:
+            if(make_instant_jump):
+                bzmhdrh[_mhdrhidx] = bzupstream*Bz2_over_Bz1
+                bzmhdrh_xx[_mhdrhidx] = xx[_mhdrhidx-ij_idx_correction]
+                _mhdrhidx+=1
+                make_instant_jump = False
+                ij_idx_correction = 1
+
+            bzmhdrh[_mhdrhidx] = bzupstream
+            bzmhdrh_xx[_mhdrhidx] = xx[_mhdrhidx-ij_idx_correction]
+
+    ax2.plot(bzmhdrh_xx,bzmhdrh,ls=':',color='grey')
+
+    ax2.set_xlabel('$x / d_{i,0}$')
+    ax2.set_ylabel(r'$\overline{B_z}(x)$')
+    ax2.grid()
+
+    ax1.set_xlim(xx[0],xx[-1])
+    ax2.set_xlim(xx[0],xx[-1])
+
+    plt.subplots_adjust(hspace=.05)
+
+    #BELOW IS NOT TESTED and most of it needs to be removed
+    if(ky0 != None and kz0 != None):
+        plt.title('ky='+str(ky0)[0:6]+' kz='+str(kz0)[0:6])
+    if(xxline != None and yyline != None):
+        plt.plot(xxline,yyline)
+    #if(xlim != None):
+        #plt.xlim(xlim[0],xlim[1])
+    #if(ylim != None):
+    #    ax1.set_ylim(ylim[0],ylim[1])
+    if(plotstrongestkx):
+        kxline = []
+        for i in range(0,len(xx)):
+            kxline.append(kx[find_nearest(wlt[:,i],np.max(wlt[:,i]))])
+        plt.plot(xx,kxline)
+    if(axhline != None):
+        plt.axhline(axhline)
+
+    if(flnm == ''):
+        plt.show()
+    else:
+        #flnm='ky='+str(ky0)[0:6]+'kz='+str(kz0)[0:6]+'wlt'
+        plt.savefig(flnm,format='png',dpi=1200,bbox_inches='tight')
+        plt.close('all')#saves RAM
+    plt.close()
+

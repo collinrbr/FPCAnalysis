@@ -2134,7 +2134,7 @@ def take_ifft2(data):
 
     return ifftdata
 
-def transform_field_to_kzkykxxx(ddict,fieldkey,retstep=12):
+def transform_field_to_kzkykxxx(ddict,fieldkey,retstep=1):
     """
     Takes fft in y and z and wavelet transform in x of given field/ flow.
 
