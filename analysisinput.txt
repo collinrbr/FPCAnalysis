@@ -1,0 +1,9 @@
+path='/home/crbrown/M06_th45/'
+resultsdir='testresultsdir_multicore/'
+vmax=5
+dv=1.
+numframe=2000
+dx=0.5
+xlim=28.0,30.
+ylim=0.0,1.
+zlim=0.0,1.
