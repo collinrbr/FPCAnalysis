@@ -81,7 +81,7 @@ def get_dpar_from_bounds(dpar_folder,x1,x2,verbose=False):
     leftmostbound_index = -1 #must lag by one to capture all wanted slices
     testidx = 0
     return_rightmost = False
-    while(float(xbounds[testidx][0])<=x1):
+    while(not(return_rightmost) and float(xbounds[testidx][0])<x1):
         testidx += 1
         leftmostbound_index += 1
 
@@ -90,6 +90,7 @@ def get_dpar_from_bounds(dpar_folder,x1,x2,verbose=False):
             print("Returning rightmost slice!")
             leftmostbound_index -= 1
             return_rightmost = True
+
 
     if(not(return_rightmost)):
         rightmostbound_index = 0
@@ -105,7 +106,7 @@ def get_dpar_from_bounds(dpar_folder,x1,x2,verbose=False):
     else:
         rightmostbound_index = leftmostbound_index
 
-    #load one extra to the left and right if possible (sometimes the casting of the string of the presliced data filename causes for a small error that causes for the left and right index finding to be off by one. This is a fix of that. As slices should be thin, its not too wasteful)
+    #load one extra to the left and right if possible to handle off by 1 in above block
     if(leftmostbound_index > 0):
         leftmostbound_index -= 1
     if(rightmostbound_index < len(xbounds)-1):
