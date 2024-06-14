@@ -80,30 +80,30 @@ def get_dpar_from_bounds(dpar_folder,x1,x2,verbose=False):
 
     leftmostbound_index = -1 #must lag by one to capture all wanted slices
     testidx = 0
+    return_rightmost = False
     while(float(xbounds[testidx][0])<=x1):
         testidx += 1
         leftmostbound_index += 1
 
         if(testidx >= len(xbounds)):
             print("warning, requested x1=",x1,"greater than the upper bound of the domain we are working with...")
-            print("returning single particle with 'x1':[-0.5*(x1+x2)],'x2':[0.404],'x3':[0.404]")#Lazy, but since v1=v2=v3=0, wont impact FPCs and negative x2,x3 means it wont impact distribution function either
-            print("Warning: no files with wanted particle data was found...")
-            pts = {'p1':[0.],'p2':[0.],'p3':[0.],'x1':[-0.5*(x1+x2)],'x2':[0.404],'x3':[0.404],'Vframe_relative_to_sim':0.0}
-            for _ky in ['p1','p2','p3','x1','x2','x3']:
-                pts[_ky] = np.asarray(pts[_ky])
-            pts['q'] = 1.
-            return pts
+            print("Returning rightmost slice!")
+            leftmostbound_index -= 1
+            return_rightmost = True
 
-    rightmostbound_index = 0
-    testidx = 0
-    while(float(xbounds[testidx][1])<x2):
-        testidx += 1
-        rightmostbound_index += 1
-        if(testidx >= len(xbounds)):
-            rightmostbound_index -= 1.
-            print("warning, requested x2 greater than the upper bound of the domain we are working with...")
-            print("returning everything that is in the given domain...")
-            break
+    if(not(return_rightmost)):
+        rightmostbound_index = 0
+        testidx = 0
+        while(float(xbounds[testidx][1])<x2):
+            testidx += 1
+            rightmostbound_index += 1
+            if(testidx >= len(xbounds)):
+                rightmostbound_index -= 1.
+                print("warning, requested x2 greater than the upper bound of the domain we are working with...")
+                print("returning everything that is in the given domain...")
+                break
+    else:
+        rightmostbound_index = leftmostbound_index
 
     filenames = filenames[leftmostbound_index:rightmostbound_index+1]
 
@@ -128,9 +128,9 @@ def get_dpar_from_bounds(dpar_folder,x1,x2,verbose=False):
             pts[key].extend(_pts[key][:])
     for key in pts.keys():
         pts[key]=np.asarray(pts[key])
-    pts['Vframe_relative_to_sim'] = 0. #TODO: track this throughout slicing so we dont have to assume this when loading
+    pts['Vframe_relative_to_sim'] = 0.
 
-    print("Done loading files for x1=",x1," to x2=",x2)
+    print("Done loading files from x1=",x1," to x2=",x2)
 
     if(not('q' in pts.keys())):
         print('Error q was not found in presliced data!')
