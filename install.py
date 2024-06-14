@@ -118,3 +118,6 @@ if __name__ == "__main__":
     
     #If you get "ModuleNotFoundError: No module named 'distutils.util'" try running: 
     #sudo apt-get install --reinstall python3.11-distutils
+
+    #Be sure to have latex installed
+    # 'sudo apt install texlive texlive-latex-extra dvipng' or equivalent for OS

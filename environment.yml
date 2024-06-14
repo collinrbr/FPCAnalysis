@@ -13,3 +13,6 @@ dependencies:
   - python==3.11
   - scipy==1.11.4
   - sympy==1.12
+  - pip
+  - pip:
+    - jupyter
