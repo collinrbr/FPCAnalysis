@@ -55,7 +55,7 @@ This can be done in one of several ways. The most general way is to activate the
 ** ONE MUST NAVIGATE TO THIS DIRECTORY AND REACTIVE THE ENVIRONMENT EVERYTIME A NEW TERMINAL IS OPENED TO USE THIS ENVIRONMENT** 
 Linux/Mac:
 ```
-conda activate FPCAnalysisenv
+conda activate /full/path/to/FPCAnalysisenv
 ```
 ** ONE MUST NAVIGATE TO THIS DIRECTORY AND REACTIVE THE ENVIRONMENT EVERYTIME A NEW TERMINAL IS OPENED TO USE THIS ENVIRONMENT**
 
