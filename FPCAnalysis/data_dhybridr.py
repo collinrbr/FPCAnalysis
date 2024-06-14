@@ -300,7 +300,12 @@ def field_loader(field_vars='all', components='all', num=None,
     if slc is None:
         slc = (np.s_[:],np.s_[:],np.s_[:])
     fpath = path+"Output/Fields/{f}/{T}{c}/{v}fld_{t}.h5"
-    T = '' if field_vars[0] == 'J' else 'Total/'
+    try:
+        T = '' if field_vars[0] == 'J' else 'Total/'
+    except Exception as e:
+        print("Got error: ", e)
+        print("This is likely a result of trying to load the wrong folder. Please check the path you are trying to load.")
+        exit()
     test_path = fpath.format(f = _field_choices_[field_vars[0]],
                              T = T,
                              c = 'x',
