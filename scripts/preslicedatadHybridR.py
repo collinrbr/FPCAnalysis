@@ -39,9 +39,21 @@ except:
 # load data
 #-------------------------------------------------------------------------------
 #load path
-path,resultsdir,vmax,dv,numframe,dx,xlim,ylim,zlim = anl.analysis_input(flnm = analysisinputflnm,make_resultsdir=False)
+anldict = anl.analysis_input(flnm = analysisinputflnm, make_resultsdir=False)
+path = anldict['path']
+resultsdir = anldict['resultsdir']
+vmax = anldict['vmax']
+dv = anldict['dv']
+numframe = anldict['numframe']
+dx = anldict['dx']
+xlim = anldict['xlim']
+ylim = anldict['ylim']
+zlim = anldict['zlim']
+
 path_fields = path
 path_particles = path+"Output/Raw/Sp01/raw_sp01_{:08d}.h5"
+
+is2d3v = False
 
 #load relevant time slice fields
 print("Loading field data (for simulation box dimensions)...") #must load field data to get simulation box dimensions
