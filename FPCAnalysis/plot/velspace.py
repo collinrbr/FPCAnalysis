@@ -2113,3 +2113,43 @@ def project_and_plot_supergrid(vx,vy,vz,vmax,hist,corex,corey,corez,flnm,plotFAC
                                 CEy_xy,CEy_xz, CEy_yz,
                                 CEz_xy,CEz_xz, CEz_yz,
                                 flnm = flnm, computeJdotE = True, plotFAC = plotFAC, plotAvg = plotAvg, plotFluc = plotFluc, isIon = isIon, isLowPass=isLowPass,isHighPass=isHighPass)
+
+
+def plot_phaseposvsvx(dparticles,poskey,velkey,xmin,xmax,dx,vmax,dv,flnm=''):
+    velbins = np.arange(-vmax, vmax+dv, dv)
+    velbins = (velbins[1:] + velbins[:-1])/2.
+    posbins = np.arange(xmin, xmax+dx, dx)
+    posbins = (posbins[1:] + posbins[:-1])/2.
+
+    phaseplothist,_ = np.histogramdd((dparticles[poskey], dparticles[velkey]), bins=[posbins, velbins])
+
+    velbincenters = np.asarray([(velbins[_idx]+velbins[_idx+1])/2. for _idx in range(len(velbins)-1)])
+    posbincenters = np.asarray([(posbins[_idx]+posbins[_idx+1])/2. for _idx in range(len(posbins)-1)])
+    
+    fig = plt.figure(figsize=(12,3.420))
+    im = plt.pcolormesh(posbincenters,velbincenters,phaseplothist.T,shading='gouraud',cmap="plasma")
+    fig.colorbar(im,extend='max')
+
+    plt.grid()
+    plt.style.use("cb.mplstyle") #sets style parameters for matplotlib plots
+    if(poskey == 'x1'):
+        plt.xlabel(r"$x / d_{i,0}$", size=24)
+    elif(poskey == 'x2'):
+        plt.xlabel(r"$y / d_{i,0}$", size=24)
+    elif(poskey == 'x2'):
+        plt.xlabel(r"$z / d_{i,0}$", size=24)
+    else:
+        plt.xlabel(poskey, size=24)
+
+    if(velkey == 'p1'):
+        plt.ylabel(r"$v_x/v_{ti}$", size=24)
+    elif(velkey == 'p2'):
+        plt.ylabel(r"$v_y/v_{ti}$", size=24)
+    elif(velkey == 'p3'):
+        plt.ylabel(r"$v_z/v_{ti}$", size=24)
+        
+    if(flnm == ''):
+        plt.show()
+    else:
+        plt.savefig('histxxvx.png',format='png',dpi=300,facecolor='white', transparent=False,bbox_inches='tight')
+    plt.close()
