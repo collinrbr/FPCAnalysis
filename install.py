@@ -81,6 +81,16 @@ def install_required_libraries(env_name):
 
     print("Done installing FPCAnalysis into env!")
 
+def check_latex_installed():
+    # Check if pdflatex is in the PATH
+    pdflatex_path = shutil.which("pdflatex")
+    if pdflatex_path:
+        print(f"pdflatex is installed at {pdflatex_path}")
+        return True
+    else:
+        print("pdflatex is not installed.")
+        return False
+
 def main():
     env_name = 'FPCAnalysisenv'
     python_version = '3.11'  # Specify the Python version you want here
@@ -94,6 +104,17 @@ if __name__ == "__main__":
     time.sleep(5)
 
     main()
+
+    if not check_latex_installed():
+        print();print();print();print();
+        print();print();print();print();
+        print("LaTeX is required for this script to work with matplotlib.")
+        print("Please install LaTeX. For example, on Ubuntu you can run:")
+        print("  sudo apt-get install texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended")
+        print();print();print();print();
+        print();print();print();print();
+
+        time.sleep(10)
 
     print();print();print();print();
     print("Completed! Installation")
