@@ -551,7 +551,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
                                 CEy_xy,CEy_xz, CEy_yz,
                                 CEz_xy,CEz_xz, CEz_yz,
                                 flnm = '', ttl = '', computeJdotE = True, params = None, metadata = None, xpos = None, plotLog = False, plotLogHist = True,
-                                plotFAC = False, plotFluc = False, plotAvg = False, isIon = True, listpos=False,xposval=None,normtoN = True,isLowPass=False,isHighPass=False,plotDiagJEOnly=True):
+                                plotFAC = False, plotFluc = False, plotAvg = False, isIon = True, listpos=False,xposval=None,normtoN = False,Nval = None, isLowPass=False,isHighPass=False,plotDiagJEOnly=True):
     """
     Makes super figure of distribution and velocity sigantures from all different projections
     i.e. different viewing angles
@@ -587,7 +587,8 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     import matplotlib.colors as colors
 
     if(normtoN):
-        Nval = np.sum(H_xy)
+        if(Nval == None):
+            Nval = np.sum(H_xy)
         CEx_xy/=Nval 
         CEx_xz/=Nval
         CEx_yz/=Nval
@@ -634,14 +635,24 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     clboffset = np.array([vmax*.15,-vmax*.15])
     # title.set_position(ax0label.get_position() + offset)
     # title.set_rotation(90)
-
-    minHxyval = np.min(H_xy[np.nonzero(H_xy)])
-    minHxzval = np.min(H_xz[np.nonzero(H_xz)])
-    minHyzval = np.min(H_yz[np.nonzero(H_yz)])
+    try:
+        minHxyval = np.min(H_xy[np.nonzero(H_xy)])
+        minHxzval = np.min(H_xz[np.nonzero(H_xz)])
+        minHyzval = np.min(H_yz[np.nonzero(H_yz)])
+        maxH_xy = H_xy.max()
+        maxH_xz = H_xz.max()
+        maxH_yz = H_yz.max()
+    except:
+        minHxyval = 0.00000000001
+        minHxzval = 0.00000000001
+        minHyzval = 0.00000000001
+        maxH_xy = 1.
+        maxH_xz = 1.
+        maxH_yz = 1.
 
     #H_xy
     if(plotLogHist):
-        im00= axs[0,0].pcolormesh(vy_xy, vx_xy, H_xy, cmap="plasma", shading="gouraud",norm=LogNorm(vmin=minHxyval, vmax=H_xy.max()))
+        im00= axs[0,0].pcolormesh(vy_xy, vx_xy, H_xy, cmap="plasma", shading="gouraud",norm=LogNorm(vmin=minHxyval, vmax=maxH_xy))
     else:
         im00= axs[0,0].pcolormesh(vy_xy, vx_xy, H_xy, cmap="plasma", shading="gouraud")
     #axs[0,0].set_title(r"$f(v_x, v_y)$")
@@ -664,7 +675,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
 
     #H_xz
     if(plotLogHist):
-        im01 = axs[0,1].pcolormesh(vz_xz, vx_xz, H_xz, cmap="plasma", shading="gouraud",norm=LogNorm(vmin=minHxzval, vmax=H_xz.max()))
+        im01 = axs[0,1].pcolormesh(vz_xz, vx_xz, H_xz, cmap="plasma", shading="gouraud",norm=LogNorm(vmin=minHxzval, vmax=maxH_xz))
     else:
         im01 = axs[0,1].pcolormesh(vz_xz, vx_xz, H_xz, cmap="plasma", shading="gouraud")
     #axs[0,1].set_title(r"$f(v_x, v_z)$")
@@ -680,7 +691,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
 
     #H_yz
     if(plotLogHist):
-        im02 = axs[0,2].pcolormesh(vz_yz, vy_yz, H_yz.T, cmap="plasma", shading="gouraud",norm=LogNorm(vmin=minHyzval, vmax=H_yz.max()))
+        im02 = axs[0,2].pcolormesh(vz_yz, vy_yz, H_yz.T, cmap="plasma", shading="gouraud",norm=LogNorm(vmin=minHyzval, vmax=maxH_yz))
     else:
         im02 = axs[0,2].pcolormesh(vz_yz, vy_yz, H_yz.T, cmap="plasma", shading="gouraud")
     #axs[0,2].set_title(r"$f(v_y, v_z)$")
@@ -1327,16 +1338,12 @@ def make_9panel_sweep_from_2v(Hist_vxvy, Hist_vxvz, Hist_vyvz,
     for i in range(0,len(Hist_vxvy)):
         print('Making plot ' + str(i) + ' of ' + str(len(Hist_vxvy)))
         mdt = str('Metadata = ' + str(metadata[i]))
-        #try: #sometimes netcdf4 will contain bin with no particles, which messes up plotting routine. For now we skip those bins
         plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
                                     Hist_vxvy[i], Hist_vxvz[i], Hist_vyvz[i],
                                     C_Ex_vxvy[i], C_Ex_vxvz[i], C_Ex_vyvz[i],
                                     C_Ey_vxvy[i], C_Ey_vxvz[i], C_Ey_vyvz[i],
                                     C_Ez_vxvy[i], C_Ez_vxvz[i], C_Ez_vyvz[i],
-                                    flnm = directory+str(i).zfill(6), computeJdotE = False, params = params_in, metadata = mdt, xpos = x[i], plotLog=plotLog)
-        # except:
-        #     print("Failed to make plot for this slice!!")
-        #     print("npar:", np.sum(Hist_vxvy))
+                                    flnm = directory+str(i).zfill(7), computeJdotE = False, params = params_in, metadata = mdt, xpos = x[i], plotLog=plotLog)
 
 def make_superplot_gif(vx, vy, vz, vmax, Hist, CEx, CEy, CEz, x, directory):
     """
@@ -1534,7 +1541,7 @@ def plot_dist_v_fields_supergrid(vx, vy, vz, vmax,
                                 CEz_xy,CEz_xz, CEz_yz,
                                 dfavg,xval1,xval2,
                                 flnm = '', ttl = '', computeJdotE = True, params = None, metadata = None, xpos = None, plotLog = False, plotLogHist = True,
-                                plotFAC = False, plotFluc = False, plotAvg = False, isIon = True, listpos=False,xposval=None,normtoN = True,isLowPass=False,isHighPass=False,plotDiagJEOnly=True):
+                                plotFAC = False, plotFluc = False, plotAvg = False, isIon = True, listpos=False,xposval=None,normtoN = False,Nval=None,isLowPass=False,isHighPass=False,plotDiagJEOnly=True):
     """
     Makes super figure of distribution and velocity sigantures from all different projections
     i.e. different viewing angles
@@ -1570,7 +1577,8 @@ def plot_dist_v_fields_supergrid(vx, vy, vz, vmax,
     import matplotlib.colors as colors
 
     if(normtoN):
-        Nval = np.sum(H_xy)
+        if(Nval == None):
+            Nval = np.sum(H_xy)
         CEx_xy/=Nval
         CEx_xz/=Nval
         CEx_yz/=Nval
@@ -1633,13 +1641,24 @@ def plot_dist_v_fields_supergrid(vx, vy, vz, vmax,
     # title.set_position(ax0label.get_position() + offset)
     # title.set_rotation(90)
 
-    minHxyval = np.min(H_xy[np.nonzero(H_xy)])
-    minHxzval = np.min(H_xz[np.nonzero(H_xz)])
-    minHyzval = np.min(H_yz[np.nonzero(H_yz)])
+    try:
+        minHxyval = np.min(H_xy[np.nonzero(H_xy)])
+        minHxzval = np.min(H_xz[np.nonzero(H_xz)])
+        minHyzval = np.min(H_yz[np.nonzero(H_yz)])
+        maxH_xy = H_xy.max()
+        maxH_xz = H_xz.max()
+        maxH_yz = H_yz.max()
+    except:
+        minHxyval = 0.00000000001
+        minHxzval = 0.00000000001
+        minHyzval = 0.00000000001
+        maxH_xy = 1.
+        maxH_xz = 1.
+        maxH_yz = 1.
 
     #H_xy
     if(plotLogHist):
-        im00= axs[0,0].pcolormesh(vy_xy, vx_xy, H_xy, cmap="plasma", shading="gouraud",norm=LogNorm(vmin=minHxyval, vmax=H_xy.max()))
+        im00= axs[0,0].pcolormesh(vy_xy, vx_xy, H_xy, cmap="plasma", shading="gouraud",norm=LogNorm(vmin=minHxyval, vmax=maxH_xy))
     else:
         im00= axs[0,0].pcolormesh(vy_xy, vx_xy, H_xy, cmap="plasma", shading="gouraud",vmin=1,vmax=600)
     #axs[0,0].set_title(r"$f(v_x, v_y)$")
@@ -1662,7 +1681,7 @@ def plot_dist_v_fields_supergrid(vx, vy, vz, vmax,
 
     #H_xz
     if(plotLogHist):
-        im01 = axs[0,1].pcolormesh(vz_xz, vx_xz, H_xz, cmap="plasma", shading="gouraud",norm=LogNorm(vmin=minHxzval, vmax=H_xz.max()))
+        im01 = axs[0,1].pcolormesh(vz_xz, vx_xz, H_xz, cmap="plasma", shading="gouraud",norm=LogNorm(vmin=minHxzval, vmax=maxH_xz))
     else:
         im01 = axs[0,1].pcolormesh(vz_xz, vx_xz, H_xz, cmap="plasma", shading="gouraud",vmin=1,vmax=600)
     #axs[0,1].set_title(r"$f(v_x, v_z)$")
@@ -1678,7 +1697,7 @@ def plot_dist_v_fields_supergrid(vx, vy, vz, vmax,
 
     #H_yz
     if(plotLogHist):
-        im02 = axs[0,2].pcolormesh(vz_yz, vy_yz, H_yz.T, cmap="plasma", shading="gouraud",norm=LogNorm(vmin=minHyzval, vmax=H_yz.max()))
+        im02 = axs[0,2].pcolormesh(vz_yz, vy_yz, H_yz.T, cmap="plasma", shading="gouraud",norm=LogNorm(vmin=minHyzval, vmax=maxH_yz))
     else:
         im02 = axs[0,2].pcolormesh(vz_yz, vy_yz, H_yz.T, cmap="plasma", shading="gouraud",vmin=1,vmax=600)
     #axs[0,2].set_title(r"$f(v_y, v_z)$")
