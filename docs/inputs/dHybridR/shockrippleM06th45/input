@@ -1,0 +1,457 @@
+! ------------------------------------------------------------------------------
+!                                                                             
+!   dHybrid input file v 2.2 (first parallel version)  			   
+!                                                                             
+! 	Run PShock, Started on 2009.10.05	                                   
+! 																			   
+! 	Running a parallel 3D shock 			                   
+!                                                                             
+!   NOTES : - in functions to be parsed, the spacial variables are defined as  
+! 			  "x", "y" and "z". A number of constants up to 16 can be defined  
+! 			  as ct(1), ct(2), ... If the constants name varies from "ct(..)", 
+! 			  it will be expressly indicated. Max nchars for a fparser = 1024                                
+!
+!-------------------------------------------------------------------------------
+
+
+!---------- node configuration -------------------------------------------------
+node_conf
+{
+    node_number(1:3)=28,4,4, ! num of processes in each dimension
+}
+
+!---------- time ---------------------------------------------------------------
+time
+{
+    dt=.01,     ! time step
+    niter=2400  ! number of iterations
+
+    t0=0.,      ! initial time
+    stiter=0,   ! starting iteration number	
+    c=125.,     ! speed of light
+}
+
+!---------- grid and space -----------------------------------------------------
+grid_space
+{
+    ncells(1:3)=384,48,48,    ! Grid size in number of cells in each dimension
+    boxsize(1:3)=96.,12.,12., ! Simulation box size in normalized units
+
+    bdtype="reflect","open","per","per","per","per" !xl, xr, yl, yr, zl, zr
+    Te=1.,
+    gamma=1.66667,
+}
+
+!---------- output -------------------------------------------------------------
+global_output
+{
+    dodump=.true., ! if true -> do dump
+    ndump=20       ! num of iter between dumps
+
+    B0=3.05191d-7, ! B field normalization (T)
+    n0=1.d6,       ! density normalization (m-3)
+
+    units="NORM",  ! "NORM" (normalized) or "IS" (int. sys.) 
+                   ! If NORM B0 n0 above are overwritten
+}
+
+!---------- restart ------------------------------------------------------------
+restart 
+{
+    do_restart=.false.,    ! restarting previous simulation?
+    save_restart=.true.,   ! save restart info on disk?
+    restart_step=1000,     ! num of iter between restart info dumps	
+!   restart_time=85000,    ! time in seconds between restarts (uses restart_time_step)
+!   restart_time_step=100, ! n of iter at which to check time (global sync)
+}
+
+!----------external electromagnetic field---------------------------------------
+ext_emf
+{
+    Bx="0.7071",
+    By="0",
+    Bz="0.7071",
+    Ex="0",
+    Ey="0",
+    Ez="0",
+
+    n_constants=0,
+
+!   Jext(1:3)=0.,0.,0.,	! External J (constant values only, if not present -> 0)
+!   NoiseLevel(1:3)=0.1,0.,0., ! random noise to be added to magnetic field components
+}
+
+!--------------------external force field---------------------------------------
+! way to put gravity in the code
+! types supported: GRAV, MASS, or GRAVMASS (based on actual mass density profile, or both)
+!ext_force
+!{
+!        ftype="GRAV",
+!        center(1:3)=64.,64.,64.,
+!        rmin=5.,
+!        K=180.,
+!		 subcycling_step=500, ! recalculate every ... timesteps (default no recalculation)
+!}
+
+!----------diagnostic for electromagnetic fields and current--------------------
+! (1:4) = self_int, self_vect, total_int, total_vect
+field_diag
+{
+    dmp_efld(1:4)= .false., .false., .true., .true.,
+    dmp_bfld(1:4)= .false., .false., .true., .true.,
+    dmp_jfld(1:2)= .false., .false.,
+}
+
+!-------------------------------algorithm control-------------------------------
+algorithm
+{
+    ifsmooth=.true.,          ! smooth fields? default = true
+
+    ifsmoothextfields=.true., ! smooth external fields? default = true
+    ifsmooth=.true.,
+    filternpass=8,
+    compensate=.true.,        ! use compensator in filter? default = true
+    subniter=8,
+    allowederror=1.,          ! allowederror=1.d-5 by default (for subniter field calculation)
+}
+
+!----------------------------Load Balancing control-----------------------------
+loadbalance
+{
+    loadbalance=.false.,  		  ! do any load balance? default= true
+    ifdynamicloadbalance=.false., ! do dynamic load balance? default = true
+    dynamicloadbalancestep=500,
+}
+
+!----------number of ion species------------------------------------------------
+! note: electrons are a neutralizing fluid in dHybrid
+! 		so no initialization is necessary
+!
+particles 
+{  
+    num_species = 1,    ! number of species
+
+    part_sort_step=25,	! number of steps between sorting
+
+    !XNMIN=0.,  ! if this variable is not defined, no min density will be added to the grid
+}
+
+!@@@@@@@@@@@@@@@@@@@@@@@@ species 1 @@@@@@@@@@@@@@@@@@@@@@@@
+!----------information for species 1--------------------------------------------
+species
+{
+
+    name="H+",
+    dist="THERMAL",        ! type of vel. distribution (THERMAL or ISO)
+
+    num_par(1:3)=10,10,10, ! Number of particles per cell
+    spare_size=.1,         ! % (0 to 1) of unused space in part vector
+
+    ir=1,                  ! ionization ratio
+    rqm=1.,                ! charge to mass ratio (inverse)
+
+    vdrift(1:3)=-6.,0.,0., ! drift velocitty
+    vth=0.7071067812,      ! Thermal velocity (no sqrt(2) in definition)
+
+    kin_push=.true.,       ! true -> kinetic push, false -> MHD
+
+    ion_t=8.0,             ! Ionization time
+
+    ! Species velocity (if defined, ignore vdrift)
+        
+    ! vsp(1:3)="","","",	
+
+    ! velocity autoconsistent with gravity (Fc=Fg) (if defined ignore all others except vth)
+
+    ! match_velocity_to_gravity=.false. ! if true, override previous velocity
+    ! vnorm(1:3)=1.,1.,1.,				! velocity direction  = vnorm x radius
+
+    ! Species number density
+
+    nsp="1.",
+
+    ! density domain - if blank then all the box
+	
+!   nsp_domain="if(sqrt((x-ct(5))^2+(y-ct(6))^2+(z-ct(7))^2)<ct(8),1.,0.)",				
+
+!   domain_boundary=0.,0.,0.,384.,384.,384., ! if not specified then all the box
+
+    n_constants=0,                 ! number of constants in density def.
+    !ct(1:3)= 3.16, 10000., 316.,  ! B0,Lx,w0
+
+!   ct(1:4)=100.,192.,192.,192.,   ! max. dens., x0, y0, z0
+!   ct(5:8)=192., 192., 192., 4.,  ! sphere x0, y0, z0 and radius
+
+    follow=.false.,                ! follow particles? default=false
+}
+
+!----------boundary conditions for species 1------------------------------------
+! (if not specified, assume periodic)
+
+boundary_conditions
+{
+    ! bdtype - per, therm, reflect, open (for each wall)
+
+    bdtype="reflect","open","per","per","per","per", !xl, xr, yl, yr, zl, zr
+
+    !vth=0.,		! for thermal bath - ignored for others	
+}
+
+!----------Plasma injector for species 1----------------------------------------
+! (up to 10 injectors supported. if not specified, assume none)
+! plasma injector uses density distribution info from species
+plasma_injector
+{
+    sttime=0.,              ! start time of injection (def. 0.)
+!   endtime=10.,            ! end time of injection (default max sim time)
+    plane="yz",             ! plane to inject particles from (xy, yz or xz)
+    planepos=96.,           ! position of the injector plane
+    boundary=0.,0.,12.,12., ! boundary of the injection plane st, st, end, end
+
+    num_par(1:3)=10,10,10,  ! number of particles per cell to inject
+
+    vdrift(1:3)=-6.,0.,0.,  ! drift velocity (must be /= 0)
+    vth=0.7071067812,       ! if not specified then = spec vth
+    inj_dens=1.0,           ! density, if not specified use species info
+    nodrift=.false.,        ! zero drift velocity after injecting particles? default=false
+}
+
+!!----------Plasma injector for species 1----------------------------------------
+!! (up to 10 injectors supported. if not specified, assume none)
+!! plasma injector uses density distribution info from species
+!plasma_injector
+!{
+!	
+!	sttime=0.,			  ! start time of injection (def. 0.)
+!!	endtime=10.,		  ! end time of injection (default max sim time)
+!	plane="yz",			  ! plane to inject particles from (xy, yz or xz)
+!	planepos=1200.,		  ! position of the injector plane
+!	boundary=0.,0.,1200.,1200., ! boundary of the injection plane st, st, end, end
+!
+!	num_par(1:3)=1,2,2,	  ! number of particles per cell to inject
+!
+!	vdrift(1:3)=-0.4,0.,0., ! drift velocity (must be /= 0)
+!	vth=1.,				  ! if not specified then = spec vth
+!	inj_dens=1.0, 		  ! density, if not specified use species info
+!	nodrift=.false.,	  ! zero drift velocity after injecting particles? default=false
+!}
+!
+!----------diagnostic for species 1---------------------------------------------
+diag_species 
+{
+    dmp_vfld(1:2)= .true., .true.,
+
+    ! phase spaces - defined by name, if not present then none
+
+    phasespaces="x3x2x1","ptx1","p1x1",
+    !x3x2x1 -> Density
+    !ptx1   -> Plane total momentum, x
+    !p1x1   -> Plane px, x
+    pres(1:3)=512,512,512, ! resolution for p space (defaults to 512)
+    xres(1:3)=384,48,48
+}
+
+!----------raw diagnostic for species 1-----------------------------------------
+raw_diag 
+{
+    raw_dump=.true., ! this turns on or off raw dumps
+
+    raw_ndump=1000,   ! number of iterations between raw dumps
+
+!   raw_volume(1:6)=10,112,112,20,272,272,  ! if not defined, then all all the box
+                                            ! defined -> st point, end point
+
+    raw_volume(1:6)=24,0,0,72,12,12,  ! if not defined, then all all the box
+    raw_dump_fraction=1.,
+
+    v_min=0.,
+
+    ! selective raw dump, if defined follow particles with these indexes
+
+!   n_particles=*     ! maximum is 50
+
+!   raw_index(1:*)=,		
+}
+
+!----------track diagnostic for species 1-----------------------------------------
+track_diag 
+{
+    track_dump=.false.,               ! this turns on or off track dumps (if on, follow=true)
+
+    track_fields=.false.,             ! if these are on, track fields in particle positions
+
+    track_ndump=1000,                 ! number of iterations between track dumps
+
+    track_nstore=5,                   ! values are stored every iteration if =1, every other iter if =2, etc
+
+    track_info_file="./input/H+.tags" ! track information (particle tags to track)
+}
+!C!!@@@@@@@@@@@@@@@@@@@@@@@@ species 2 @@@@@@@@@@@@@@@@@@@@@@@@
+!C!!----------information for species 2--------------------------------------------
+!C!species
+!C!{
+!C!
+!C!	name="CR",
+!C!	dist="ISO",      				! type of vel. distribution (THERMAL or ISO or POWERLAW)
+!C!	pl_slope=-4.,                  ! slope of the power law distribution
+!C!
+!C!	num_par(1:3)=1,2,2,   			! Number of particles per cell
+!C!	spare_size=.1,		 			! % (0 to 1) of unused space in part vector
+!C!	
+!C!	ir=1,							! ionization ratio
+!C!	rqm=1.,							! charge to mass ratio (inverse)
+!C!
+!C!	vdrift(1:3)=100.,0.,0., 		        ! drift velocitty
+!C!!OP Is it speed or momentum?
+!C!
+!C!	vth=0.1,	    	 		  		! Thermal velocity
+!C!!OP vth is unused if POWERLAW right?
+!C!
+!C!	kin_push=.true.,				! true -> kinetic push, false -> MHD
+!C!
+!C!	ion_t=8.0,						! Ionization time
+!C!
+!C!    ! Species velocity (if defined, ignore vdrift)
+!C!        
+!C!    ! vsp(1:3)="","","",	
+!C!
+!C!	! velocity autoconsistent with gravity (Fc=Fg) (if defined ignore all others except vth)
+!C!
+!C!	! match_velocity_to_gravity=.false. ! if true, override previous velocity
+!C!	! vnorm(1:3)=1.,1.,1.,				! velocity direction  = vnorm x radius
+!C!	
+!C!	! Species number density
+!C!
+!C!	nsp="0.0025",		
+!C!
+!C!	! density domain - if blank then all the box
+!C!	
+!C!	nsp_domain="0.25*(1. - htan(x - 0.75))*(1. - htan((y-600)*(y-600)+(z-600)*(z-600) - 150*150))",
+!C!
+!C!!	domain_boundary=0.,0.,0.,384.,384.,384., ! if not specified then all the box
+!C!
+!C!	n_constants=0,					! number of constants in density def.
+!C!
+!C!!	ct(1:4)=100.,192.,192.,192., 	! max. dens., x0, y0, z0
+!C!!	ct(5:8)=192., 192., 192., 4.,	! sphere x0, y0, z0 and radius
+!C!	
+!C!	follow=.false.,					! follow particles? default=false
+!C!	
+!C!}
+!C!
+!C!!----------boundary conditions for species 2------------------------------------
+!C!! (if not specified, assume periodic)
+!C!
+!C!boundary_conditions
+!C!{
+!C!	! bdtype - per, therm, reflect, open (for each wall)
+!C!
+!C!	bdtype="open","open","open","open","open","open", !xl, xr, yl, yr, zl, zr
+!C!	
+!C!	!vth=0.,		! for thermal bath - ignored for others
+!C!	
+!C!}
+!C!
+!C!!----------Plasma injector for species 2----------------------------------------
+!C!! (up to 10 injectors supported. if not specified, assume none)
+!C!! plasma injector uses density distribution info from species
+!C!plasma_injector
+!C!{
+!C!	
+!C!	sttime=0.,			  ! start time of injection (def. 0.)
+!C!!	endtime=10.,		  ! end time of injection (default max sim time)
+!C!	plane="yz",			  ! plane to inject particles from (xy, yz or xz)
+!C!	planepos=0.,	  ! position of the injector plane
+!C!	boundary=525.,525.,675.,675., ! boundary of the injection plane st, st, end, end
+!C!
+!C!	num_par(1:3)=1,2,2,	  ! number of particles per cell to inject
+!C!
+!C!	vdrift(1:3)=100.,0.,0.,   ! drift velocity (must be /= 0)
+!C!	vth=0.1,				  ! if not specified then = spec vth
+!C!	inj_dens=0.0025, 		  ! density, if not specified use species info
+!C!	nodrift=.false.,	  ! zero drift velocity after injecting particles? default=false
+!C!	
+!C!}
+!C!
+!C!!!----------Plasma injector for species 2----------------------------------------
+!C!!! (up to 10 injectors supported. if not specified, assume none)
+!C!!! plasma injector uses density distribution info from species
+!C!!plasma_injector
+!C!!{
+!C!!	
+!C!!	sttime=0.,			  ! start time of injection (def. 0.)
+!C!!!	endtime=10.,		  ! end time of injection (default max sim time)
+!C!!	plane="yz",			  ! plane to inject particles from (xy, yz or xz)
+!C!!	planepos=15000.,	  ! position of the injector plane
+!C!!	boundary=0.,100., ! boundary of the injection plane st, st, end, end
+!C!!
+!C!!	num_par(1:2)=1,1,	  ! number of particles per cell to inject
+!C!!
+!C!!	vdrift(1:3)=-20.,0.,0., ! drift velocity (must be /= 0)
+!C!!	vth=100.,				  ! if not specified then = spec vth
+!C!!	!inj_dens=1.0, 		  ! density, if not specified use species info
+!C!!	nodrift=.false.,	  ! zero drift velocity after injecting particles? default=false
+!C!!	
+!C!!}
+!C!
+!C!!----------diagnostic for species 2---------------------------------------------
+!C!diag_species 
+!C!{
+!C!	dmp_vfld(1:2)= .true., .true.,
+!C!
+!C!	! phase spaces - defined by name, if not present then none
+!C!
+!C!	phasespaces="x3x2x1","ptx1","p1x1","p2x1","p3x1",
+!C!	!phasespaces="x3x2x1","ptx1","p1x1","p2x1","p3x1",
+!C!	pres(1:3)=2048,2048,2048,		! resolution for p space (defaults to 512)
+!C!	xres(1:3)=2000,1000,1000
+!C!}
+!C!
+!C!!----------raw diagnostic for species 2-----------------------------------------
+!C!raw_diag 
+!C!{
+!C!	raw_dump=.false.,				! this turns on or off raw dumps
+!C!
+!C!	raw_ndump=1000,				! number of iterations between raw dumps
+!C!
+!C!!	raw_volume(1:6)=10,112,112,20,272,272,	! if not defined, then all all the box
+!C!!											! defined -> st point, end point
+!C!	raw_dump_fraction=1.,
+!C!	
+!C!	v_min=80.,
+!C!	
+!C!	! selective raw dump, if defined follow particles with these indexes
+!C!	
+!C!!   n_particles=*		! maximum is 50
+!C!
+!C!!	raw_index(1:*)=,				
+!C!
+!C!}
+!C!
+!C!!----------track diagnostic for species 2-----------------------------------------
+!C!track_diag 
+!C!{
+!C!	track_dump=.false.,			! this turns on or off track dumps (if on, follow=true)
+!C!	
+!C!	track_fields=.false., 		! if these are on, track fields in particle positions
+!C!
+!C!	track_ndump=1000,			! number of iterations between track dumps
+!C!	
+!C!	track_nstore=5,				! values are stored every iteration if =1, every other iter if =2, etc
+!C!
+!C!	track_info_file="./input/H+.tags" ! track information (particle tags to track)
+!C!	
+!C!}
+!----------diagnostic for all species-------------------------------------------
+diag_species_total 
+{
+    dmp_vfld(1:2)= .false., .false.,
+
+    ! phase spaces - defined by name, if not present then none
+
+!   phasespaces="x3x2x1","x2x1","x3x1","x3x2","p2p1","p3p1","p3p2",
+!               "p1x1","p2x2","p3x3","p2x1","p3x1","p1x2","p3x2","p1x3","p2x3",
+!               "ptx1","ptx2","ptx3" 
+
+    pres(1:3)=512,512,512		! resolution for p space (defaults to 512)
+}
