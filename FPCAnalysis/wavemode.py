@@ -9,11 +9,11 @@ def compute_wavemodes(xx,dfields,xlim,ylim,zlim,
                      kx,ky,kz,
                      bxkzkykxxx,bykzkykxxx,bzkzkykxxx,
                      exkzkykxxx,eykzkykxxx,ezkzkykxxx,
-                     uxkzkykxxx,uykzkykxxx,uzkzkykxxx,
+                     uxkzkykxxx=None,uykzkykxxx=None,uzkzkykxxx=None,
                      eparlocalkzkykxxx=None,epardetrendkzkykxxx=None,
                      eperp1detrendkzkykxxx=None,eperp2detrendkzkykxxx=None,
                      bpardetrendkzkykxxx=None,bperp1detrendkzkykxxx=None,bperp2detrendkzkykxxx=None,
-                     vth=None,specifyxxidx=-1,verbose=False,is2d=True):
+                     vth=None,specifyxxidx=-1,verbose=False,is2d=False):
 
     """
     #TODO: document new variables
@@ -49,8 +49,8 @@ def compute_wavemodes(xx,dfields,xlim,ylim,zlim,
         wavemode data in frequency/wavenumber space for every
     """
 
-    from FPCAnalysis.analysisaux import compute_field_aligned_coord
-    from FPCAnalysis.arrayaux import find_nearest
+    from FPCAnalysis.analysis import compute_field_aligned_coord
+    from FPCAnalysis.array_ops import find_nearest
 
     dwavemodes = {'wavemodes':[],'sortkey':None}
 
@@ -84,9 +84,11 @@ def compute_wavemodes(xx,dfields,xlim,ylim,zlim,
                 wavemode['Ex'] = exkzkykxxx[k,j,i,xxidx]
                 wavemode['Ey'] = eykzkykxxx[k,j,i,xxidx]
                 wavemode['Ez'] = ezkzkykxxx[k,j,i,xxidx]
-                wavemode['Ux'] = uxkzkykxxx[k,j,i,xxidx]
-                wavemode['Uy'] = uykzkykxxx[k,j,i,xxidx]
-                wavemode['Uz'] = uzkzkykxxx[k,j,i,xxidx]
+                
+                if(uxkzkykxxx != None):
+                    wavemode['Ux'] = uxkzkykxxx[k,j,i,xxidx]
+                    wavemode['Uy'] = uykzkykxxx[k,j,i,xxidx]
+                    wavemode['Uz'] = uzkzkykxxx[k,j,i,xxidx]
 
                 if(eparlocalkzkykxxx is not None):
                     wavemode['Epar_local'] = eparlocalkzkykxxx[k,j,i,xxidx]

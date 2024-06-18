@@ -499,7 +499,7 @@ def get_freq_from_wvmd(wm,tol=0.01, comp_error_prop=False,debug=False):
         omega/Omega_i using different constraints
     """
     if(np.abs(wm['kperp2'])>tol):
-        print("WARNING: not in correct basiss... Please normalize such that kperp2 = 0 (see rotate_and_norm_to_plume_basis())...")
+        print("WARNING: not in correct basis... Please normalize such that kperp2 = 0 (see rotate_and_norm_to_plume_basis())...")
 
     #consistency check using div B = 0
     kdotb=(wm['Bperp1']*wm['kperp1']+wm['Bpar']*wm['kpar'])/(np.linalg.norm([wm['kperp1'],wm['kperp2'],wm['kpar']])*np.linalg.norm([wm['Bperp1'],wm['Bperp2'],wm['Bpar']]))

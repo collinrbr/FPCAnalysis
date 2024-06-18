@@ -253,7 +253,7 @@ def plot_sweep_field(plume_sweep,xaxiskey,xlbl='',xlim=None,ylim=None,flnm='',pl
     plt.close()
 
 #todo: make sure given wavemodes are close to give kpars
-def plot_wavemodes_and_compare_to_sweeps_kperp(kpars,beta_i,tau,wavemodes_matching_kpar,kperplim = [.1,10], flnm = '',delta_beta_i = 0, delta_tau = 0,xlim=[],ylim=[]):
+def plot_wavemodes_and_compare_to_sweeps_kperp(kpars,beta_i,tau,wavemodes_matching_kpar,kperplim = [.1,10], flnm = '',delta_beta_i = 0, delta_tau = 0,xlim=[],ylim=[],ntotlocalovernup=None,btotlocaloverbtotup=None):
     from FPCAnalysis.plume import get_freq_from_wvmd
     from FPCAnalysis.plume import kaw_curve
     from FPCAnalysis.plume import fastmagson_curve
@@ -271,6 +271,10 @@ def plot_wavemodes_and_compare_to_sweeps_kperp(kpars,beta_i,tau,wavemodes_matchi
     whicrv_errors = []
     #plot theoretical curves
     for kpar in kpars:
+        #normalize if using local plasma meausrements
+        if(ntotlocalovernup != None):
+            kpar /= np.sqrt(ntotlocalovernup)
+
         kawcrv = []
         kawcrv_error = []
         fastcrv = []
@@ -326,6 +330,19 @@ def plot_wavemodes_and_compare_to_sweeps_kperp(kpars,beta_i,tau,wavemodes_matchi
             omega2.append(omega_faradayreal2.n)
             omega2_error.append(omega_faradayreal2.s)
 
+        #Normalize if using local measurements
+        if(ntotlocalovernup != None):
+            plotkperp /= np.sqrt(ntotlocalovernup)
+            plotkperp_error /= np.sqrt(ntotlocalovernup)
+
+            #note, both ntotlocal should be initialized if either one is!
+            omega = np.asarray(omega)/btotlocaloverbtotup
+            omega_error = np.asarray(omega_error)/btotlocaloverbtotup
+            omega0 = np.asarray(omega0)/btotlocaloverbtotup
+            omega0_error = np.asarray(omega0_error)/btotlocaloverbtotup
+            omega2 = np.asarray(omega2)/btotlocaloverbtotup
+            omega2_error = np.asarray(omega2_error)/btotlocaloverbtotup
+
         plotkperps.append(plotkperp)
         plotkperp_errors.append(plotkperp_error)
         omegas.append(omega)
@@ -335,18 +352,14 @@ def plot_wavemodes_and_compare_to_sweeps_kperp(kpars,beta_i,tau,wavemodes_matchi
         omegas2.append(omega2)
         omega2_errors.append(omega2_error)
 
-    #if(len(kpars) != 3):
-        #print('Error, this function is set up to plot 3 curves (per wavemode) only... TODO: generalize this')
-        #return
-
     linestyle = ['-',':','--','-.','.',',','-',':','--','-.','.',',','-',':','--','-.','.',',','-',':','--','-.','.',',']
     lnwidth = 1.75
 
     plt.figure(figsize=(8,8))
     for i in range(0,len(kawcrvs)):
-        plt.errorbar(plotkperps[i],np.real(omegas[i]), xerr = plotkperp_errors[i], yerr=omega_errors[i], fmt="o",color='C0')
-        plt.errorbar(plotkperps[i],np.real(omegas0[i]), xerr = plotkperp_errors[i], yerr=omega0_errors[i], fmt="s",color='C1')
-        plt.errorbar(plotkperps[i],np.real(omegas2[i]), xerr = plotkperp_errors[i], yerr=omega2_errors[i], fmt='*',color='C3')
+        plt.errorbar(plotkperps[i],np.abs(np.real(omegas[i])), xerr = plotkperp_errors[i], yerr=omega_errors[i], fmt="o",color='C0')
+        plt.errorbar(plotkperps[i],np.abs(np.real(omegas0[i])), xerr = plotkperp_errors[i], yerr=omega0_errors[i], fmt="s",color='C1')
+        plt.errorbar(plotkperps[i],np.abs(np.real(omegas2[i])), xerr = plotkperp_errors[i], yerr=omega2_errors[i], fmt='*',color='C3')
         plt.plot(kperps,kawcrvs[i],linestyle[i],color='black',linewidth=lnwidth,label='$k_{||}$='+str(format(kpars[i],'.2f')))
         plt.fill_between(kperps,kawcrvs[i]-kawcrv_errors[i],kawcrvs[i]+kawcrv_errors[i],alpha=.2,color='black')
         plt.plot(kperps,fastcrvs[i],linestyle[i],color='blue',linewidth=lnwidth)
@@ -378,7 +391,7 @@ def plot_wavemodes_and_compare_to_sweeps_kperp(kpars,beta_i,tau,wavemodes_matchi
         plt.show()
 
 #TODO: make sure given wavemodes are close to given kperps
-def plot_wavemodes_and_compare_to_sweeps_kpar(kperps,beta_i,tau,wavemodes_matching_kpar,kparlim = [.1,10], flnm = '',delta_beta_i = 0, delta_tau = 0,xlim=[],ylim=[]):
+def plot_wavemodes_and_compare_to_sweeps_kpar(kperps,beta_i,tau,wavemodes_matching_kpar,kparlim = [.1,10], flnm = '',delta_beta_i = 0, delta_tau = 0,xlim=[],ylim=[],ntotlocalovernup=None,btotlocaloverbtotup=None):
     from FPCAnalysis.plume import get_freq_from_wvmd
     from FPCAnalysis.plume import kaw_curve
     from FPCAnalysis.plume import fastmagson_curve
@@ -396,6 +409,10 @@ def plot_wavemodes_and_compare_to_sweeps_kpar(kperps,beta_i,tau,wavemodes_matchi
     whicrv_errors = []
     #plot theoretical curves
     for kperp in kperps:
+        #normalize if using local plasma meausrements
+        if(ntotlocalovernup != None):
+            kperp /= np.sqrt(ntotlocalovernup)
+
         kawcrv = []
         kawcrv_error = []
         fastcrv = []
@@ -451,6 +468,19 @@ def plot_wavemodes_and_compare_to_sweeps_kpar(kperps,beta_i,tau,wavemodes_matchi
             omega2.append(omega_faradayreal2.n)
             omega2_error.append(omega_faradayreal2.s)
 
+        #Normalize if using local measurements
+        if(ntotlocalovernup != None):
+            plotkpar /= np.sqrt(ntotlocalovernup)
+            plotkpar_error /= np.sqrt(ntotlocalovernup)
+
+            #note, both ntotlocal should be initialized if either one is!
+            omega = np.asarray(omega)/btotlocaloverbtotup
+            omega_error = np.asarray(omega_error)/btotlocaloverbtotup
+            omega0 = np.asarray(omega0)/btotlocaloverbtotup
+            omega0_error = np.asarray(omega0_error)/btotlocaloverbtotup
+            omega2 = np.asarray(omega2)/btotlocaloverbtotup
+            omega2_error = np.asarray(omega2_error)/btotlocaloverbtotup
+
         plotkpars.append(plotkpar)
         plotkpar_errors.append(plotkpar_error)
         omegas.append(omega)
@@ -465,9 +495,9 @@ def plot_wavemodes_and_compare_to_sweeps_kpar(kperps,beta_i,tau,wavemodes_matchi
 
     plt.figure(figsize=(8,8))
     for i in range(0,len(kawcrvs)):
-        plt.errorbar(plotkpars[i],np.real(omegas[i]), xerr = plotkpar_errors[i], yerr=omega_errors[i], fmt="o",color='C0')
-        plt.errorbar(plotkpars[i],np.real(omegas0[i]), xerr = plotkpar_errors[i], yerr=omega0_errors[i], fmt="s",color='C1')
-        plt.errorbar(plotkpars[i],np.real(omegas2[i]), xerr = plotkpar_errors[i], yerr=omega2_errors[i], fmt="*",color='C3')
+        plt.errorbar(plotkpars[i],np.abs(np.real(omegas[i])), xerr = plotkpar_errors[i], yerr=omega_errors[i], fmt="o",color='C0')
+        plt.errorbar(plotkpars[i],np.abs(np.real(omegas0[i])), xerr = plotkpar_errors[i], yerr=omega0_errors[i], fmt="s",color='C1')
+        plt.errorbar(plotkpars[i],np.abs(np.real(omegas2[i])), xerr = plotkpar_errors[i], yerr=omega2_errors[i], fmt="*",color='C3')
         plt.plot(kpars,kawcrvs[i],linestyle[i],color='black',linewidth=lnwidth,label='$k_\perp$='+str(format(kperps[i],'.2f')))
         plt.fill_between(kpars,kawcrvs[i]-kawcrv_errors[i],kawcrvs[i]+kawcrv_errors[i],alpha=.2,color='black')
         plt.plot(kpars,fastcrvs[i],linestyle[i],color='blue',linewidth=lnwidth)

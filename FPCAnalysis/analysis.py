@@ -1158,7 +1158,7 @@ def wlt(t,data,w=6,klim=None,retstep=1,powerTwoSpace=False):
     if(powerTwoSpace): #from Torrence et al 1997 (practical guide to wavelet analysis) (suggested to use different spacing)
         s0 = 1.*dt
         J = len(data)
-        delta_j = np.log2(len(data)*dt/s0)/(J) #guess for now
+        delta_j = np.log2(len(data)*dt/s0)/(J) 
         print('delta_j, ', delta_j)
         widths = []
         for _j in range(J-1,-1,-1):
