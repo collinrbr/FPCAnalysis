@@ -109,7 +109,7 @@ if __name__ == "__main__":
         print();print();print();print();
         print();print();print();print();
         print("LaTeX is required for this script to work with matplotlib.")
-        print("Please install LaTeX. For example, on Ubuntu you can run:")
+        print("Please install LaTeX AFTER LOADING CONDA ENV. For example, on Ubuntu you can run:")
         print("  sudo apt-get install texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended")
         print();print();print();print();
         print();print();print();print();
