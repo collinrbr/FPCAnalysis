@@ -98,7 +98,7 @@ def main():
     install_required_libraries(env_name)
 
 if __name__ == "__main__":
-    print("If this has any error, please see the comments at the bottom of setup.py for debugging help!")
+    print("If this has any error, please see the comments at the bottom of install.py for debugging help!")
 
     import time
     time.sleep(5)
