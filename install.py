@@ -130,7 +130,7 @@ if __name__ == "__main__":
     print("Done with install... Please run `conda actiavte /path/to/here/FPCAnalysisenv' to activate the library or add '#!/path/to/here/FPCAnalysisenv/bin/python' (if on linux/mac) to the top of all scripts (and run by calling ./*scriptname.py)!")
     print("When done, use conda deactivate to turn off environemnt,")
     print("If using the environemnt, you will need to reactivate it every time you open a new terminal if you want to use the FPCAnalysis lib.")
-    print("Be sure to activate the environemnt before launching a new jupyter notebook!")
+    print("Be sure to activate the environemnt before launching a new jupyter notebook! Also, if you move the FPCAnalysisenv or FPCAnalysis folder, you may need to delete the FPCAnalysisenv folder and reinstall.")
     print('*');print('*');print('*');print('*');
 
     #General fixes!

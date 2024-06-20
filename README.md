@@ -66,7 +66,7 @@ One can also add the following to the top of anyscripts that is written for this
 
 Now, you can select an example notebook/ script and start running!
 
-To uninstall remove the FPCAnalysisenv folder created by the install script.
+To uninstall remove the FPCAnalysisenv folder created by the install script. You may need to reinstall if you move the environment folder or the library that it is linked too (e.g. the FPCAnalysis lib folder).
 
 To add additional libraries to this environment, activate the environment and then either `pip install' them or `conda install' them.
 
