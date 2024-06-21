@@ -162,6 +162,12 @@ def compute_dflow(dfields, dpar_ion, dpar_elec, is2D=True, debug=False, return_e
         if(is2D):dflow[outkeys[_keyidx]][1,:,:]=dflow[outkeys[_keyidx]][0,:,:]
     return dflow
 
+def get_betai_betae_from_tot_and_ratio(btot,Ti_Te):
+    
+    betai = btot/(1.+(1./Ti_Te))
+    betae = btot-betai
+    return betai,betae
+
 def compute_beta0_tristanmp1(params,inputs):
     """
     Computes beta0, the upstream total plasma beta

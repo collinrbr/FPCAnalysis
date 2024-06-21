@@ -97,7 +97,7 @@ def lorentz_transform_v(dfields, vx, vy, vz, c):
 
     #!!!!!Pressed for time and the magnetic fields aren't used whenever this function is used, so I will implement it later TODO: implement
     dfieldslor['bx'] = dfields['bx']
-    dfieldslor['by'] = gamma*(dfields['by']+vx/c**2*dfields['ez']) #TODO: check these units (i.e. should there be an extra 1/c factor?)
+    dfieldslor['by'] = gamma*(dfields['by']+vx/c**2*dfields['ez'])
     dfieldslor['bz'] = gamma*(dfields['bz']-vx/c**2*dfields['ey'])
 
     return dfieldslor
@@ -149,7 +149,7 @@ def shift_particles(dparticles, vx, beta_s):
 
     return dparticlestransform
 
-def shift_particles_tristan(dparticles, vx, beta, mi_me, isIon, Ti_Te = 1., galileanboost = True, c = None):
+def shift_particles_tristan(dparticles, vx, betai, betae, mi_me, isIon, Ti_Te = 1., galileanboost = True, c = None):
     """
     Transforms velocity frame of particles
 
@@ -160,6 +160,8 @@ def shift_particles_tristan(dparticles, vx, beta, mi_me, isIon, Ti_Te = 1., gali
     TODO: rewrite parameter inputs!
 
     c is in units of va (c_input = c/va (val of 3 means c is 3 times va)
+
+    Assumes mi >> me
 
     Parameters
     ----------
@@ -176,12 +178,13 @@ def shift_particles_tristan(dparticles, vx, beta, mi_me, isIon, Ti_Te = 1., gali
         for key in vxaliases:
             if(key in dparticles.keys()):
                 if(isIon):
-                    dparticlestransform[key] = dparticles[key] - vx / np.sqrt(beta)
+                    dparticlestransform[key] = dparticles[key] - vx np.sqrt(2) / np.sqrt(betai)
                 else:
-                    dparticlestransform[key] = dparticles[key] - vx * (1./(np.sqrt(beta)*(mi_me**0.5)))*(Ti_Te)
+                    dparticlestransform[key] = dparticles[key] - vx * (np.sqrt(2)/(np.sqrt(betae)*(mi_me**0.5)))*(Ti_Te)
         dparticlestransform['Vframe_relative_to_sim'] = dparticles['Vframe_relative_to_sim'] + vx
 
     else:
+        gamma = 1./np.sqrt(1.-(vx/c)**2)
         pass
 
     return dparticlestransform

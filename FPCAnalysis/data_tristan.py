@@ -222,8 +222,8 @@ def load_particles(path, num, normalizeVelocity=False,loaddebugsubset=False):
     if(normalizeVelocity):
 
         params = load_params(path,num)
-        massratio = load_params(path,num)['mi']/load_params(path,num)['me']
-        vti0 = np.sqrt(params['delgam'])#Note: velocity is in units γV_i/c so we do not include '*params['c']'
+        massratio = params['mi']/params['me']
+        vti0 = np.sqrt(params['delgam'])#Note: velocity is in units v_s/c
         vte0 = np.sqrt(params['mi']/params['me'])*vti0 #WARNING: THIS ASSUME Ti/Te = 1, TODO: don't assume Ti/Te = 1
         comp = params['comp']
 

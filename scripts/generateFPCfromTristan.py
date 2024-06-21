@@ -79,6 +79,7 @@ if __name__ == '__main__':
     dt,c = anl.norm_constants_tristanmp1(params,dt,inputs) #in units of wci (\omega_ci) and va respectively- as required by the rest of the scripts
 
     beta0 = anl.compute_beta0_tristanmp1(params,inputs)
+    betai,betae= anl.get_betai_betae_from_tot_and_ratio(beta0,params['temperature_ratio'])
 
     dfields = dtr.load_fields(path,num,normalizeFields=True)
 
@@ -92,7 +93,7 @@ if __name__ == '__main__':
 
     uinj_voverc = inputs['gamma0']
     uinj_vth = uinj_voverc/np.sqrt(params['delgam'])
-    params['MachAlfven'] =  uinj_vth*np.sqrt(beta0)*params['c'] #assumes me << mi
+    params['MachAlfven'] =  uinj_vth*np.sqrt(betai)*params['c'] #assumes me << mi
 
     #-------------------------------------------------------------------------------
     # estimate shock vel and lorentz transform
@@ -113,8 +114,8 @@ if __name__ == '__main__':
     dfields = ft.lorentz_transform_vx_c(dfields,vshock,c) #note: we only boost one frame
 
     if(num_threads == 1):
-        dpar_ion = ft.shift_particles_tristan(dpar_ion, vshock, beta0, params['mi']/params['me'], isIon=True)
-        dpar_elec = ft.shift_particles_tristan(dpar_elec, vshock, beta0, params['mi']/params['me'], isIon=False)
+        dpar_ion = ft.shift_particles_tristan(dpar_ion, vshock, betai, betae, params['mi']/params['me'], isIon=True)
+        dpar_elec = ft.shift_particles_tristan(dpar_elec, vshock, betai, betae, params['mi']/params['me'], isIon=False)
         dpar_ion = dtr.format_par_like_dHybridR(dpar_ion) #For now, we rename the particle data keys too look like the keys we used when processing dHybridR data so this data is compatible with our old routines
         dpar_elec = dtr.format_par_like_dHybridR(dpar_elec)
 
@@ -130,7 +131,7 @@ if __name__ == '__main__':
         CEx, CEy, CEz, x, Hist, vx, vy, vz, num_par = fpc.compute_correlation_over_x(dfields, dpar_ion, vmax, dv, dx, vshock, xlim, ylim, zlim)
         Histxy,Histxz,Histyz,CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz = fpc.project_CEi_hist(Hist, CEx, CEy, CEz)
     else:
-        CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz,x,Histxy,Histxz,Histyz, vx, vy, vz, num_par = fpc.comp_cor_over_x_multithread(dfields, dpar_folder_ion, vmax, dv, dx, vshock, xlim=xlim, ylim=ylim, zlim=zlim, max_workers=num_threads, beta0=beta0, mi_me=params['mi']/params['me'], isIon=True)
+        CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz,x,Histxy,Histxz,Histyz, vx, vy, vz, num_par = fpc.comp_cor_over_x_multithread(dfields, dpar_folder_ion, vmax, dv, dx, vshock, xlim=xlim, ylim=ylim, zlim=zlim, max_workers=num_threads, betai=betai, betae=betae, mi_me=params['mi']/params['me'], isIon=True)
 
     #-------------------------------------------------------------------------------
     # compute energization
@@ -160,7 +161,7 @@ if __name__ == '__main__':
         CEx, CEy, CEz, x, Hist, vx, vy, vz, num_par = fpc.compute_correlation_over_x(dfields, dpar_elec, vmax, dv, dx, vshock, xlim, ylim, zlim)
         Histxy,Histxz,Histyz,CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz = fpc.project_CEi_hist(Hist, CEx, CEy, CEz)
     else:
-        CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz,x, Histxy,Histxz,Histyz, vx, vy, vz, num_par = fpc.comp_cor_over_x_multithread(dfields, dpar_folder_elec, vmax, dv, dx, vshock, xlim=xlim, ylim=ylim, zlim=zlim, max_workers=num_threads, beta0=beta0, mi_me=params['mi']/params['me'], isIon=True)
+        CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz,x, Histxy,Histxz,Histyz, vx, vy, vz, num_par = fpc.comp_cor_over_x_multithread(dfields, dpar_folder_elec, vmax, dv, dx, vshock, xlim=xlim, ylim=ylim, zlim=zlim, max_workers=num_threads, betai=betai, betae=betae, mi_me=params['mi']/params['me'], isIon=True)
 
     #-------------------------------------------------------------------------------
     # compute energization
