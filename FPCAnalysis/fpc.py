@@ -250,7 +250,7 @@ def project_CEi_hist(Hist, CEx, CEy, CEz):
     return Histxy,Histxz,Histyz,CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz
 
 #TODO: carefully document units of inputs everywhere, especially in this file and analysis.py
-def _grab_dpar_and_comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dpar_folder, dfields, vshock, project=False, betaiup=None, betai=None,betae=None mi_me=None, isIon=None):
+def _grab_dpar_and_comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dpar_folder, dfields, vshock, project=False, betaiup=None, betai=None, betae=None, mi_me=None, isIon=None):
     """
     Wrapper function that loads correct particle data from presliced data and computes FPC
 
@@ -298,7 +298,7 @@ def _grab_dpar_and_comp_all_CEi(vmax, dv, x1, x2, y1, y2, z1, z2, dpar_folder, d
         return vx, vy, vz, totalPtcl, Hist, CEx, CEy, CEz
 
 #TODO: update return documentation
-def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim=None, ylim=None, zlim=None, max_workers = 8, betaiup=None, betai=None, betae=None mi_me=None, isIon=None):
+def comp_cor_over_x_multithread(dfields, dpar_folder, vmax, dv, dx, vshock, xlim=None, ylim=None, zlim=None, max_workers = 8, betaiup=None, betai=None, betae=None, mi_me=None, isIon=None):
     """
     Computes distribution function and correlation wrt to given field for every slice in xx using multiprocessing
 

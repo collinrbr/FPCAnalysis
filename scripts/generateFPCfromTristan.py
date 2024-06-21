@@ -79,7 +79,7 @@ if __name__ == '__main__':
     dt,c = anl.norm_constants_tristanmp1(params,dt,inputs) #in units of wci (\omega_ci) and va respectively- as required by the rest of the scripts
 
     beta0 = anl.compute_beta0_tristanmp1(params,inputs)
-    betai,betae= anl.get_betai_betae_from_tot_and_ratio(beta0,params['temperature_ratio'])
+    betai,betae= anl.get_betai_betae_from_tot_and_ratio(beta0,inputs['temperature_ratio'])
 
     dfields = dtr.load_fields(path,num,normalizeFields=True)
 

@@ -178,7 +178,7 @@ def shift_particles_tristan(dparticles, vx, betai, betae, mi_me, isIon, Ti_Te = 
         for key in vxaliases:
             if(key in dparticles.keys()):
                 if(isIon):
-                    dparticlestransform[key] = dparticles[key] - vx np.sqrt(2) / np.sqrt(betai)
+                    dparticlestransform[key] = dparticles[key] - vx * np.sqrt(2) / np.sqrt(betai)
                 else:
                     dparticlestransform[key] = dparticles[key] - vx * (np.sqrt(2)/(np.sqrt(betae)*(mi_me**0.5)))*(Ti_Te)
         dparticlestransform['Vframe_relative_to_sim'] = dparticles['Vframe_relative_to_sim'] + vx
