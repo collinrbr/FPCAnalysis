@@ -1,0 +1,11 @@
+h5py==3.11.0
+matplotlib==3.8.0
+netCDF4==1.6.5
+notebook==6.0.3
+numpy==1.26.4
+scipy==1.11.4
+uncertainties==3.2.0
+click==8.1.7
+msgpack-python==0.5.6
+pytest==7.4.0
+sympy==1.12
