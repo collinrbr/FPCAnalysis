@@ -1,10 +1,10 @@
 # FPC
 
-In this markdown file, we will provide example documentation on what the Field-Particle Correlation (FPC) is, and how compute the FPC using this library.
+The field-partilce correlation, shows the net energy transfer in phase-space between fields and particles over a correlation interval in space/time.
 
 ## What is the FPC?
 
-The FPC computes the energization rate of particles within specified region in phase-space by the electric field component $C_{E_i}(\mathbf{v};\mathbf{x})$. Integrated over veloctiy-space, the FPC metric is equivalent to one one component of $\mathbf{j} \cdot \mathbf{E}$ from Poynting's theorem, $j_i E_i = \int C_{E_i}(\mathbf{v};\mathbf{x} d\mathbf{v}$. Looking into phase-space to analyze energy transfer is advantageous, as the energization rate of a particular particle can depend stiffly not only on it's location in the system, but also it's velocity. Thus, this metric creates unique signatures in velocity-space that are used to identify heating and energization mechanisms.
+The FPC computes the energization rate of particles within specified region in phase-space by the electric field component $C_{E_i}(\mathbf{v};\mathbf{x})$. Integrated over veloctiy-space, the FPC metric is equivalent to one one component of $\mathbf{j} \cdot \mathbf{E}$ from Poynting's theorem, $j_i E_i = \int C_{E_i}(\mathbf{v};\mathbf{x)} d\mathbf{v}$. Looking into phase-space to analyze energy transfer is advantageous, as the energization rate of a particular particle can depend stiffly not only on it's location in the system, but also it's velocity. Thus, this metric creates unique signatures in velocity-space that are used to identify heating and energization mechanisms.
 
 As the name implies, the FPC is a correlation between the distribution function and the electric fields. This correlation can be taken over space and or time. Often in plasmas, there is oscillatory energy transfer than yields not net transfer upon integration over a periodic domain in space or time. As the net-effects of energy transfer are more relevant to most analysis, correlating over a specified space/time region helps simplify analysis and understanding.
 
@@ -16,7 +16,7 @@ Please see the example notebooks on how to load and compute the FPC using simula
 
 ## How to run with scripts
 
-One can compute the correlation as a function of x along thin slices specified by dx by filling out an analysisinput.txt file (see parent directory for example) and running python scripts/generateFPC***.py (be sure to activate the environment first).
+One can compute the correlation as a function of x along thin slices specified by dx by filling out an analysisinput.txt file (see parent directory for example) and running python scripts/generateFPC*simnname*.py (be sure to activate the environment first).
 
 ### Netcdf4 Output
 
@@ -38,7 +38,7 @@ The instability correlation is correlation between the instability fields (defin
 
 ### Field Aligned Coordinate
 
-The correlation can be computed in Field-Aligned coordinates. Note, there are different definitions of field aligned.
+The correlation can be computed in Field-Aligned coordinates. Note, there are different definitions of field aligned as one can consider either the average magnetic field over a region, or the local magnetic field when computing the direction of the magnetic field.
 
 
 

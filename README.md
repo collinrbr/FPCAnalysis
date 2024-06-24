@@ -16,7 +16,7 @@
 - [Wavelet Transform](docs/WLT.md)
 - [Instability Isolation Method](docs/IIM.md)
 - [Example Notebooks](notebooks)
-- [Premade Scripts](docs/scripts)
+- [Premade Scripts](scripts)
 - [Premade Plot Functions](docs/plots.md)
 - [Regression and Unit Testing](docs/regression_unit_test.md)
 - [Development](docs/devnotes.md)
@@ -25,7 +25,7 @@
 ## About <a name = "about"></a>
 
 - This is the documentation for Collin Brown's FPC Analysis Environment, Library and Analysis scripts. Here, we present the code needed to perform FPC analysis on dHybridR, Tristan, and Gkeyll data. While examples are provided that require only trivial alteration to perform the core of most FPC and IIM related analysis, this repo's primary goal is to be a python analysis environment/ library that has functions that one can build upon to perform their own analysis.
-- Major contributions/ Special Thanks: Greg Howes, Jimmy Juno, Colby Haggerty, Andrew McCubbin, 
+- Major contributions/ Special Thanks: Greg Howes, Jimmy Juno, Colby Haggerty, Andrew McCubbin, Alberto Felix, Rui Huang, Emily Lichko
 
 
 ## Setup <a name = "setup"></a>
