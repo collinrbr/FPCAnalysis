@@ -129,7 +129,7 @@ subroutine read_input_user()
 	call inputpar_geti_def("problem","external_fields",0,lextflds)
 
 	if(lextflds .eq. 1) then 
-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	   external_fields =.true.
+	   external_fields =.true.
 	else
 	   external_fields =.false.
 	endif
