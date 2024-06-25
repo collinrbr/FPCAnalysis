@@ -2134,7 +2134,7 @@ def project_and_plot_supergrid(vx,vy,vz,vmax,hist,corex,corey,corez,flnm,plotFAC
                                 flnm = flnm, computeJdotE = True, plotFAC = plotFAC, plotAvg = plotAvg, plotFluc = plotFluc, isIon = isIon, isLowPass=isLowPass,isHighPass=isHighPass)
 
 
-def plot_phaseposvsvx(dparticles,poskey,velkey,xmin,xmax,dx,vmax,dv,flnm=''):
+def plot_phaseposvsvx(dparticles,poskey,velkey,xmin,xmax,dx,vmax,dv,cbarmax=None,flnm=''):
     velbins = np.arange(-vmax, vmax+dv, dv)
     velbins = (velbins[1:] + velbins[:-1])/2.
     posbins = np.arange(xmin, xmax+dx, dx)
@@ -2146,8 +2146,12 @@ def plot_phaseposvsvx(dparticles,poskey,velkey,xmin,xmax,dx,vmax,dv,flnm=''):
     posbincenters = np.asarray([(posbins[_idx]+posbins[_idx+1])/2. for _idx in range(len(posbins)-1)])
     
     fig = plt.figure(figsize=(12,3.420))
-    im = plt.pcolormesh(posbincenters,velbincenters,phaseplothist.T,shading='gouraud',cmap="plasma")
-    fig.colorbar(im,extend='max')
+    if(cbarmax != None):
+        im = plt.pcolormesh(posbincenters,velbincenters,phaseplothist.T,shading='gouraud',cmap="plasma",vmax=cbarmax)
+        fig.colorbar(im,extend='max')
+    else:
+        im = plt.pcolormesh(posbincenters,velbincenters,phaseplothist.T,shading='gouraud',cmap="plasma")
+        fig.colorbar(im)
 
     plt.grid()
     plt.style.use("cb.mplstyle") #sets style parameters for matplotlib plots
