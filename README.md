@@ -70,6 +70,8 @@ To uninstall remove the FPCAnalysisenv folder created by the install script. You
 
 To add additional libraries to this environment, activate the environment and then either `pip install' them or `conda install' them.
 
+After setup, it is recommended to obtain the sample data for dHybridR and go through the example notebooks analyzing this data!
+
 ## Example Data <a name = "exdata"></a>
 
 ### Gkeyll
