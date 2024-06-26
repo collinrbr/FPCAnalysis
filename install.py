@@ -36,17 +36,17 @@ def install_required_libraries(env_name):
         print("Exiting...")
         exit()
 
+    #create string that holds the start of the commands for installing things into environment
+    if os.name == 'nt':  # Windows
+        pip_executable = os.path.join(env_name, 'Scripts', 'pip')
+    else:  # Unix/Linux/MacOS
+        pip_executable = os.path.join(env_name, 'bin', 'pip')
+
+    #Make env
     try:
-        # Activate the virtual environment and install requirements
-        print("Activating the new conda env and installing requirements....")
+        print("Creating the new conda env and installing requirements into env....")
         requirements_file = 'requirements.txt'
-        if os.name == 'nt':  # Windows
-            pip_executable = os.path.join(env_name, 'Scripts', 'pip')
-        else:  # Unix/Linux/MacOS
-            pip_executable = os.path.join(env_name, 'bin', 'pip')
-
         subprocess.run([pip_executable, 'install', '--no-cache-dir', '-r', requirements_file])
-
         print("Packages installed successfully.")
 
     except subprocess.CalledProcessError as e:
@@ -55,12 +55,12 @@ def install_required_libraries(env_name):
         exit()
 
     # Install postgkeyll
-    print("Installing postgkeyll (Warning: we install a specific version- not the most current version!)")
+    print("Installing postgkeyll into env... (Warning: we install a specific version- not the most current version!)")
     script_dir = os.path.dirname(os.path.abspath(__file__))
     os.chdir(os.path.join(script_dir, '..'))
     subprocess.run(['git', 'clone', 'https://github.com/ammarhakim/postgkyl.git'])
     os.chdir('postgkyl')
-    subprocess.run(['git', 'checkout', 'f876908d9e0969e7608100c7b769410e21c56549'])
+    subprocess.run(['git', 'checkout', 'f876908d9e0969e7608100c7b769410e21c56549']) #Comment out this line to get most current version or update third element in arr to desired version
     os.chdir(os.path.join(script_dir, '..'))
     if os.path.exists('FPCAnalysis/postgkyl'):
         confirmation = input("The directory 'FPCAnalysis/postgkyl' already exists. Do you want to overwrite it? (y/n): ")
