@@ -43,9 +43,9 @@ git clone https://github.com/collinrbr/FPCAnalysis.git
 ```
 ./install.py
 ```
-This will create a folder 'FPCAnalysis' that contains the python environment for doing FPCAnalysis with these scripts.
+This will create a folder 'FPCAnalysisenv' that contains the python environment for doing FPCAnalysis with these scripts.
 
-Note, if one wishes to use additional libraries, add them to the requirements.txt file, remove the FPCAnalysis environment folder, and rerun setup.py.
+Note, if one wishes to use additional libraries, add them to the requirements.txt file, remove the FPCAnalysis environment folder, and rerun setup.py or install them using pip/conda while the environment is activated. This can also be used to update libraries although compatability is not guaranteed.
 
 
 3. Use the environment
