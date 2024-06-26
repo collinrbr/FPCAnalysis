@@ -4,16 +4,24 @@ import subprocess
 import sys
 import shutil
 
-def check_python_version(version):
-    python_executable = f"python{version}"  # Modify the prefix as needed
-    if os.system(f"{python_executable} --version > /dev/null 2>&1") != 0:
-        print(f"Python {version} is not installed.")
-        print("Please install python3.11! (Try 'sudo apt install python3.11' for linux and 'brew install python@3.11' for mac (requires brew!)'")
-        print("Note, you may need to update first with 'sudo apt update' then 'sudo apt install software-properties-common' followed by sudo add-apt-repository ppa:deadsnakes/ppa' and 'sudo apt update' to be able to install python 3.11 using command above!")
-        print("To test if install worked, try 'python3.11'")
-        exit()
-    else:
-        print(f"Python {version} is installed.")
+import time
+
+def check_python_version(version_prefix):
+    try:
+        result = subprocess.run([f"python{version_prefix.split('.')[0]}", "--version"], capture_output=True, text=True)
+        installed_version = result.stdout.strip().split()[1]
+        if installed_version.startswith(version_prefix):
+            print(f"Python {installed_version} is installed.")
+        else:
+            raise Exception
+    except Exception:
+        print(f"Python {version_prefix}.* is not installed.")
+        print("It is recommended that you install python3.11! Without it, the install may fail.")
+        print("(Try 'sudo apt install python3.11' for linux and 'brew install python@3.11' for mac (requires brew!)')")
+        print("Note, you may need to update first with 'sudo apt update' then 'sudo apt install software-properties-common' followed by 'sudo add-apt-repository ppa:deadsnakes/ppa' and 'sudo apt update' to be able to install python 3.11 using the command above!")
+        print("To test if the install worked, try 'python3.11'")
+        print("Trying to continue anyways....")
+        time.sleep(5)
 
 def install_required_libraries(env_name):
 
@@ -93,14 +101,12 @@ def check_latex_installed():
 
 def main():
     env_name = 'FPCAnalysisenv'
-    python_version = '3.11'  # Specify the Python version you want here
+    python_version = '3.11.*'  # Specify the Python version you want here
     check_python_version(python_version)
     install_required_libraries(env_name)
 
 if __name__ == "__main__":
     print("If this has any error, please see the comments at the bottom of install.py for debugging help!")
-
-    import time
     time.sleep(5)
 
     main()
