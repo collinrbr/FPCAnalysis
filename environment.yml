@@ -10,9 +10,10 @@ dependencies:
   - numpy==1.26.4
   - pytables==3.9.2
   - pytest==7.4.0
-  - python==3.11.*
+  - python>=3.11,<3.12
   - scipy==1.11.4
   - sympy==1.12
   - pip
   - pip:
     - jupyter
+

@@ -4,16 +4,24 @@ import subprocess
 import sys
 import shutil
 
-def check_python_version(version):
-    python_executable = f"python{version}"  # Modify the prefix as needed
-    if os.system(f"{python_executable} --version > /dev/null 2>&1") != 0:
-        print(f"Python {version} is not installed.")
-        print("Please install python3.11! (Try 'sudo apt install python3.11' for linux and 'brew install python@3.11' for mac (requires brew!)'")
-        print("Note, you may need to update first with 'sudo apt update' then 'sudo apt install software-properties-common' followed by sudo add-apt-repository ppa:deadsnakes/ppa' and 'sudo apt update' to be able to install python 3.11 using command above!")
-        print("To test if install worked, try 'python3.11'")
-        exit()
-    else:
-        print(f"Python {version} is installed.")
+import time
+
+def check_python_version(version_prefix):
+    try:
+        result = subprocess.run([f"python{version_prefix.split('.')[0]}", "--version"], capture_output=True, text=True)
+        installed_version = result.stdout.strip().split()[1]
+        if installed_version.startswith(version_prefix):
+            print(f"Python {installed_version} is installed.")
+        else:
+            raise Exception
+    except Exception:
+        print(f"Python {version_prefix}.* is not installed.")
+        print("It is recommended that you install python3.11! Without it, the install may fail.")
+        print("(Try 'sudo apt install python3.11' for linux and 'brew install python@3.11' for mac (requires brew!)')")
+        print("Note, you may need to update first with 'sudo apt update' then 'sudo apt install software-properties-common' followed by 'sudo add-apt-repository ppa:deadsnakes/ppa' and 'sudo apt update' to be able to install python 3.11 using the command above!")
+        print("To test if the install worked, try 'python3.11'")
+        print("Trying to continue anyways....")
+        time.sleep(5)
 
 def install_required_libraries(env_name):
 
@@ -28,31 +36,36 @@ def install_required_libraries(env_name):
         print("Exiting...")
         exit()
 
+    #create string that holds the start of the commands for installing things into environment
+    if os.name == 'nt':  # Windows
+        pip_executable = os.path.join(env_name, 'Scripts', 'pip')
+    else:  # Unix/Linux/MacOS
+        pip_executable = os.path.join(env_name, 'bin', 'pip')
+
+    #Make env
     try:
-        # Activate the virtual environment and install requirements
-        print("Activating the new conda env and installing requirements....")
+        print("Creating the new conda env and installing requirements into env....")
         requirements_file = 'requirements.txt'
-        if os.name == 'nt':  # Windows
-            pip_executable = os.path.join(env_name, 'Scripts', 'pip')
-        else:  # Unix/Linux/MacOS
-            pip_executable = os.path.join(env_name, 'bin', 'pip')
-
         subprocess.run([pip_executable, 'install', '--no-cache-dir', '-r', requirements_file])
-
         print("Packages installed successfully.")
 
     except subprocess.CalledProcessError as e:
+        print();print()
+        print('----------------------------')
         print(f"Error: {e}")
         print("Exiting...")
         exit()
 
+        print("Please remove FPCAnalysisenv, fix the error, and try again!!!")
+        exit()
+
     # Install postgkeyll
-    print("Installing postgkeyll (Warning: we install a specific version- not the most current version!)")
+    print("Installing postgkeyll into env... (Warning: we install a specific version- not the most current version!)")
     script_dir = os.path.dirname(os.path.abspath(__file__))
     os.chdir(os.path.join(script_dir, '..'))
     subprocess.run(['git', 'clone', 'https://github.com/ammarhakim/postgkyl.git'])
     os.chdir('postgkyl')
-    subprocess.run(['git', 'checkout', 'f876908d9e0969e7608100c7b769410e21c56549'])
+    subprocess.run(['git', 'checkout', 'f876908d9e0969e7608100c7b769410e21c56549']) #Comment out this line to get most current version or update third element in arr to desired version
     os.chdir(os.path.join(script_dir, '..'))
     if os.path.exists('FPCAnalysis/postgkyl'):
         confirmation = input("The directory 'FPCAnalysis/postgkyl' already exists. Do you want to overwrite it? (y/n): ")
@@ -65,8 +78,17 @@ def install_required_libraries(env_name):
     else:
         os.rename('postgkyl', 'FPCAnalysis/postgkyl')
     os.chdir(os.path.join(script_dir, '..', 'FPCAnalysis'))
-    subprocess.run([pip_executable, 'install', '-e', 'postgkyl', '--verbose'])
-    print("Done installing postgkeyll!")
+    try:
+        subprocess.run([pip_executable, 'install', '-e', 'postgkyl', '--verbose'])
+    except subprocess.CalledProcessError as e:
+        print();print()
+        print('----------------------------')
+        print(f"Error: {e}")
+        print("Exiting...")
+        exit()
+
+        print("Please remove FPCAnalysisenv, fix the error, and try again!!!")
+        exit()
 
     #Install FPCAnalysis lib
     print("Installing FPCAnalysis library into env!")
@@ -76,8 +98,13 @@ def install_required_libraries(env_name):
         print(result)
         print("Successfully installed in editable mode.")
     except subprocess.CalledProcessError as e:
+        print();print()
+        print('----------------------------')
         print("An error occurred while installing the package.")
         print(e)
+
+        print("Please remove FPCAnalysisenv, fix the error, and try again!!!")
+        exit()
 
     print("Done installing FPCAnalysis into env!")
 
@@ -99,8 +126,6 @@ def main():
 
 if __name__ == "__main__":
     print("If this has any error, please see the comments at the bottom of install.py for debugging help!")
-
-    import time
     time.sleep(5)
 
     main()

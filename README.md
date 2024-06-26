@@ -43,9 +43,9 @@ git clone https://github.com/collinrbr/FPCAnalysis.git
 ```
 ./install.py
 ```
-This will create a folder 'FPCAnalysis' that contains the python environment for doing FPCAnalysis with these scripts.
+This will create a folder 'FPCAnalysisenv' that contains the python environment for doing FPCAnalysis with these scripts.
 
-Note, if one wishes to use additional libraries, add them to the requirements.txt file, remove the FPCAnalysis environment folder, and rerun setup.py.
+Note, if one wishes to use additional libraries, add them to the requirements.txt file, remove the FPCAnalysis environment folder, and rerun setup.py or install them using pip/conda while the environment is activated. This can also be used to update libraries although compatability is not guaranteed.
 
 
 3. Use the environment
@@ -69,6 +69,8 @@ Now, you can select an example notebook/ script and start running!
 To uninstall remove the FPCAnalysisenv folder created by the install script. You may need to reinstall if you move the environment folder or the library that it is linked too (e.g. the FPCAnalysis lib folder).
 
 To add additional libraries to this environment, activate the environment and then either `pip install' them or `conda install' them.
+
+After setup, it is recommended to obtain the sample data for dHybridR and go through the example notebooks analyzing this data!
 
 ## Example Data <a name = "exdata"></a>
 
