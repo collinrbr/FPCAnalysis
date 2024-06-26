@@ -50,8 +50,13 @@ def install_required_libraries(env_name):
         print("Packages installed successfully.")
 
     except subprocess.CalledProcessError as e:
+        print();print()
+        print('----------------------------')
         print(f"Error: {e}")
         print("Exiting...")
+        exit()
+
+        print("Please remove FPCAnalysisenv, fix the error, and try again!!!")
         exit()
 
     # Install postgkeyll
@@ -73,8 +78,17 @@ def install_required_libraries(env_name):
     else:
         os.rename('postgkyl', 'FPCAnalysis/postgkyl')
     os.chdir(os.path.join(script_dir, '..', 'FPCAnalysis'))
-    subprocess.run([pip_executable, 'install', '-e', 'postgkyl', '--verbose'])
-    print("Done installing postgkeyll!")
+    try:
+        subprocess.run([pip_executable, 'install', '-e', 'postgkyl', '--verbose'])
+    except subprocess.CalledProcessError as e:
+        print();print()
+        print('----------------------------')
+        print(f"Error: {e}")
+        print("Exiting...")
+        exit()
+
+        print("Please remove FPCAnalysisenv, fix the error, and try again!!!")
+        exit()
 
     #Install FPCAnalysis lib
     print("Installing FPCAnalysis library into env!")
@@ -84,8 +98,13 @@ def install_required_libraries(env_name):
         print(result)
         print("Successfully installed in editable mode.")
     except subprocess.CalledProcessError as e:
+        print();print()
+        print('----------------------------')
         print("An error occurred while installing the package.")
         print(e)
+
+        print("Please remove FPCAnalysisenv, fix the error, and try again!!!")
+        exit()
 
     print("Done installing FPCAnalysis into env!")
 
@@ -101,7 +120,7 @@ def check_latex_installed():
 
 def main():
     env_name = 'FPCAnalysisenv'
-    python_version = '3.11.*'  # Specify the Python version you want here
+    python_version = '3.11'  # Specify the Python version you want here
     check_python_version(python_version)
     install_required_libraries(env_name)
 

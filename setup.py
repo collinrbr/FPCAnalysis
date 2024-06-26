@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='FPCAnalysis',
-    version='1.0.0',
+    version='1.0.1',
     author='Collin Brown',
     author_email='collin.crbrown@gmail.com',
     description='A library for computing the FPC',
@@ -25,5 +25,5 @@ setup(
         'Topic :: Scientific/Engineering :: Physics :: Simulation',
         'Topic :: Scientific/Engineering :: Visualization'
     ],
-    python_requires='==3.11'
+    python_requires='>=3.11,<3.12'
 )
