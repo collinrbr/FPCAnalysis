@@ -39,7 +39,7 @@ Here, we walk through how to make an environment that contains this library. Ins
 git clone https://github.com/collinrbr/FPCAnalysis.git
 ```
 
-2. Run setup script to install libraries with correct version. It may be possible for newer versions of the the python libraries to be used, but compatability is not tested. 
+2. Run setup script to install libraries with the correct version. It may be possible for newer versions of the python libraries to be used, but compatibility  is not tested. 
 ```
 ./install.py
 ```
@@ -50,14 +50,14 @@ Note, if one wishes to use additional libraries, add them to the requirements.tx
 
 3. Use the environment
 
-This can be done in one of several ways. The most general way is to activate the enviroment in your terminal.
+This can be done in one of several ways. The most general way is to activate the environment in your terminal.
 
-** ONE MUST NAVIGATE TO THIS DIRECTORY AND REACTIVE THE ENVIRONMENT EVERYTIME A NEW TERMINAL IS OPENED TO USE THIS ENVIRONMENT** 
+** ONE MUST NAVIGATE TO THIS DIRECTORY AND REACTIVE THE ENVIRONMENT EVERY TIME A NEW TERMINAL IS OPENED TO USE THIS ENVIRONMENT** 
 Linux/Mac:
 ```
 conda activate /full/path/to/FPCAnalysisenv
 ```
-** ONE MUST NAVIGATE TO THIS DIRECTORY AND REACTIVE THE ENVIRONMENT EVERYTIME A NEW TERMINAL IS OPENED TO USE THIS ENVIRONMENT**
+** ONE MUST NAVIGATE TO THIS DIRECTORY AND REACTIVE THE ENVIRONMENT EVERY TIME A NEW TERMINAL IS OPENED TO USE THIS ENVIRONMENT**
 
 One can also add the following to the top of anyscripts that is written for this environment, in which case, it is no longer necessary to activate the environment when running any script with the following added to it:
 ```
@@ -66,7 +66,7 @@ One can also add the following to the top of anyscripts that is written for this
 
 Now, you can select an example notebook/ script and start running!
 
-To uninstall remove the FPCAnalysisenv folder created by the install script. You may need to reinstall if you move the environment folder or the library that it is linked too (e.g. the FPCAnalysis lib folder).
+To uninstall remove the FPCAnalysisenv folder created by the install script. You may need to reinstall if you move the environment folder or the library that it is linked to (e.g. the FPCAnalysis lib folder).
 
 To add additional libraries to this environment, activate the environment and then either `pip install' them or `conda install' them.
 
@@ -75,11 +75,11 @@ After setup, it is recommended to obtain the sample data for dHybridR and go thr
 ## Example Data <a name = "exdata"></a>
 
 ### Gkeyll
-Data for Gkeyll can be generated using the example inputs of published simulations at [https://github.com/ammarhakim/gkyl-paper-inp](https://github.com/ammarhakim/gkyl-paper-inp). One simulation of note the is the perpendicular shock simulation at [https://github.com/ammarhakim/gkyl-paper-inp/tree/master/2021_JPP_FPC_Perp_Shock](https://github.com/ammarhakim/gkyl-paper-inp/tree/master/2021_JPP_FPC_Perp_Shock).
+Data for Gkeyll can be generated using the example inputs of published simulations at [https://github.com/ammarhakim/gkyl-paper-inp](https://github.com/ammarhakim/gkyl-paper-inp). One simulation of note is the perpendicular shock simulation at [https://github.com/ammarhakim/gkyl-paper-inp/tree/master/2021_JPP_FPC_Perp_Shock](https://github.com/ammarhakim/gkyl-paper-inp/tree/master/2021_JPP_FPC_Perp_Shock).
 
 
 ### Tristan
-TODO: link data from upcoming paper on nonadiabatic electron heating. Provide example inputs too!
+TODO: Here we will link data from upcoming paper on nonadiabatic electron heating. We will provide example inputs too!
 
 ### dHybridR
 Sample dHybridR data can be found at [https://doi.org/10.5281/zenodo.7901521](https://doi.org/10.5281/zenodo.7901521). Otherwise, as dHybridR is not currently open source, please contact the authors for an executable or to collaborate on a simulation.
@@ -94,8 +94,8 @@ Analysis begins by loading the data. In the first chapter found [here](docs/load
 There are many key features of this analysis environment:
 
 - Most notable is the ability to compute the [Field Particle Correlation](docs/FPC.md), which shows energy transfer between waves and particles.
-- We can also compute the wavelet transform [Wavelet Transform](docs/WLT.md), allowing us to measure the complex coefficients associated with wavenumber and position in a simulation.
-- Finally, we can compute the [Instability Isolation Method](docs/IIM.md), which relates the measurements of the complex coefficients at particular wavenumber and position for each field component to frequency using faradays law assuming plane-wave solutions. This allows for one to meausure (k_x, k_y, k_z, omega) using a single frame of data at a local specified position.
+- We can also compute the [Wavelet Transform](docs/WLT.md), allowing us to measure the complex coefficients associated with wavenumber and position in a simulation.
+- Finally, we can compute the [Instability Isolation Method](docs/IIM.md), which relates the measurements of the complex coefficients at particular wavenumber and position for each field component to frequency using faradays law assuming plane-wave solutions. This allows for one to measure  (k_x, k_y, k_z, omega) using a single frame of data at a local specified position.
 
 We walkthrough how to use many of the functions provided in this library in the [example notebooks](notebooks) folder. But, there are also many [premade scripts](docs/scripts) that you can use.
 There are many [Premade Plot Functions](docs/plots.md), but it is encouraged to implement your own plots too!
