@@ -28,5 +28,5 @@ def version():
 		__version__ = pkg_resources.get_distribution(__name__).version
 	except:
 		print("Error, could not find version (likely because we are using a development version (created by pip install -e .)! Returning hard coded value of version...")
-		__version__ = '1.0.0'
+		__version__ = '1.0.1'
 	return __version__
