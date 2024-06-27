@@ -5,6 +5,49 @@
 import numpy as np
 import math
 
+def save_slice_3V(hist,cex,cey,cez,vx,vy,vz,xpos,flnm,Vframe_relative_to_sim = -404.):
+    """
+    Wrapper that saves correlation data 
+    """
+    Hist_out = [hist]
+    CEx_out = [cex]
+    CEy_out = [cey]
+    CEz_out = [cez]
+
+    x_out = [xpos]
+
+    enerCEx_out = [np.sum(cex)]
+    enerCEy_out = [np.sum(cey)]
+    enerCEz_out = [np.sum(cez)]
+    
+    save3Vdata(Hist_out, CEx_out, CEy_out, CEz_out, vx, vy, vz, x_out, enerCEx_out, enerCEy_out, enerCEz_out, Vframe_relative_to_sim, num_par = [np.sum(hist)], metadata_out = [], params = {}, filename = flnm)
+
+def save_slice_2V(hist,cex,cey,cez,vx,vy,vz,xpos,flnm,Vframe_relative_to_sim = -404.):
+
+    from FPCAnalysis.array_ops import array_3d_to_2d
+
+    enerCEx = [np.sum(cex)]
+    enerCEy = [np.sum(cey)]
+    enerCEz = [np.sum(cez)]
+
+    #Project onto 2d axis
+    Histxy = [array_3d_to_2d(hist,'xy')]
+    Histxz = [array_3d_to_2d(hist,'xz')]
+    Histyz = [array_3d_to_2d(hist,'yz')]
+    CExxy = [array_3d_to_2d(cex,'xy')]
+    CExxz = [array_3d_to_2d(cex,'xz')]
+    CExyz = [array_3d_to_2d(cex,'yz')]
+    CEyxy = [array_3d_to_2d(cey,'xy')]
+    CEyxz = [array_3d_to_2d(cey,'xz')]
+    CEyyz = [array_3d_to_2d(cey,'yz')]
+    CEzxy = [array_3d_to_2d(cez,'xy')]
+    CEzxz = [array_3d_to_2d(cez,'xz')]
+    CEzyz = [array_3d_to_2d(cez,'yz')]
+
+    x = [xpos]
+
+    save2Vdata(Histxy,Histxz,Histyz,CExxy,CExxz,CExyz,CEyxy,CEyxz,CEyyz,CEzxy,CEzxz,CEzyz, vx, vy, vz, x, enerCEx, enerCEy, enerCEz, Vframe_relative_to_sim, num_par = [], metadata = [], params = {}, filename = flnm)
+
 #TODO: make num_par not optional
 def save3Vdata(Hist_out, CEx_out, CEy_out, CEz_out, vx_out, vy_out, vz_out, x_out, enerCEx_out, enerCEy_out, enerCEz_out, Vframe_relative_to_sim_out, num_par = [], metadata_out = [], params = {}, filename = 'full3Vdata.nc' ):
     """
@@ -138,9 +181,6 @@ def save3Vdata(Hist_out, CEx_out, CEy_out, CEz_out, vx_out, vy_out, vz_out, x_ou
 
     Vframe_relative_to_sim = ncout.createVariable('Vframe_relative_to_sim', 'f4')
     Vframe_relative_to_sim[:] = Vframe_relative_to_sim_out
-
-    #Save data into netcdf4 file-----------------------------------------------------
-    print("Saving data into netcdf4 file")
 
     #save file
     ncout.close()
