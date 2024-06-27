@@ -153,7 +153,9 @@ if __name__ == "__main__":
 
     print('*');print('*');print('*');print('*');
     print("Done with install... Please run `conda actiavte /path/to/here/FPCAnalysisenv' to activate the library or add '#!/path/to/here/FPCAnalysisenv/bin/python' (if on linux/mac) to the top of all scripts (and run by calling ./*scriptname.py)!")
-    print("When done, use conda deactivate to turn off environemnt,")
+    print("Optionally, use 'conda config --append envs_dirs /path/to/repo/FPCAnalysis/' (give the path to the parent 'FPCAnalysis', NOT the child/subfolder) to add the alias FPCAnalysisenv to conda for this directory. Then, you can call 'conda activate FPCAnalysisenv' to activate this environemnt")
+    print("Use 'conda config --remove envs_dirs /path/to/repo/FPCAnalysis/' to remove this alias to uninstall or reinstall at a different location")
+    print("When done, use conda deactivate to turn off the environment,")
     print("If using the environemnt, you will need to reactivate it every time you open a new terminal if you want to use the FPCAnalysis lib.")
     print("Be sure to activate the environemnt before launching a new jupyter notebook! Also, if you move the FPCAnalysisenv or FPCAnalysis folder, you may need to delete the FPCAnalysisenv folder and reinstall.")
     print('*');print('*');print('*');print('*');
