@@ -17,11 +17,12 @@ def check_python_version(version_prefix):
     except Exception:
         print(f"Python {version_prefix}.* is not installed.")
         print("It is recommended that you install python3.11! Without it, the install may fail.")
+        print("If you have 3.11.1 to <3.12, please disregard this message.")
         print("(Try 'sudo apt install python3.11' for linux and 'brew install python@3.11' for mac (requires brew!)')")
         print("Note, you may need to update first with 'sudo apt update' then 'sudo apt install software-properties-common' followed by 'sudo add-apt-repository ppa:deadsnakes/ppa' and 'sudo apt update' to be able to install python 3.11 using the command above!")
         print("To test if the install worked, try 'python3.11'")
         print("Trying to continue anyways....")
-        time.sleep(5)
+        time.sleep(2)
 
 def install_required_libraries(env_name):
 
@@ -117,8 +118,86 @@ def check_latex_installed():
     else:
         print("pdflatex is not installed.")
         return False
+    
+import os
+import subprocess
+import sys
 
-def main():
+def get_conda_env_path(env_name):
+    print(f"Finding the path for the conda environment: {env_name}")
+    try:
+        result = subprocess.run(['conda', 'env', 'list'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        if result.returncode != 0:
+            print(f"Error listing conda environments: {result.stderr}", file=sys.stderr)
+            sys.exit(1)
+
+        for line in result.stdout.splitlines():
+            if env_name in line:
+                # Assuming the line format is "env_name    /path/to/env"
+                print(f"Found environment {env_name}.")
+                return line.split()[-1]
+        print(f"Environment {env_name} not found.", file=sys.stderr)
+        sys.exit(1)
+    except Exception as e:
+        print(f"Error finding conda environment: {e}", file=sys.stderr)
+        sys.exit(1)
+
+def get_current_prompt():
+    try:
+        # Use subprocess to fetch the current PS1 prompt string
+        result = subprocess.run(['bash', '-c', 'echo $PS1'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        if result.returncode != 0:
+            print(f"Error fetching current prompt: {result.stderr}", file=sys.stderr)
+            return None
+        return result.stdout.strip()
+    except Exception as e:
+        print(f"Error fetching current prompt: {e}", file=sys.stderr)
+        return None
+
+def create_custom_prompt_scripts(env_path, env_name):
+    activate_dir = os.path.join(env_path, 'etc', 'conda', 'activate.d')
+    deactivate_dir = os.path.join(env_path, 'etc', 'conda', 'deactivate.d')
+    
+    print(f"Creating activate.d directory at: {activate_dir}")
+    os.makedirs(activate_dir, exist_ok=True)
+    print(f"Creating deactivate.d directory at: {deactivate_dir}")
+    os.makedirs(deactivate_dir, exist_ok=True)
+    
+    custom_prompt_activate_script = os.path.join(activate_dir, 'custom_prompt.sh')
+    custom_prompt_deactivate_script = os.path.join(deactivate_dir, 'reset_prompt.sh')
+
+    #TODO: at time that this script is called- the prompt string has been modified and thus OLD_PS1 is not the original
+    # Hence why we just set the the deactivate script to a hard coded prompt string.
+    # We should save the original prompt string earlier on if possible (perhaps during install) and restore it in deactivate script
+    activate_script_content = f"""#!/bin/sh
+export OLD_PS1="$PS1"
+export PS1='({env_name}) \\u@\\h:\\w\\$ '
+"""
+
+    deactivate_script_content = f"""#!/bin/sh
+    export PS1='\\u@\\h:\\w\\$ '
+"""
+
+    try:
+        print(f"Writing custom prompt activate script to: {custom_prompt_activate_script}")
+        with open(custom_prompt_activate_script, 'w') as file:
+            file.write(activate_script_content)
+        print(f"Making the custom prompt activate script executable.")
+        os.chmod(custom_prompt_activate_script, 0o755)  # Make the script executable
+
+        print(f"Writing custom prompt deactivate script to: {custom_prompt_deactivate_script}")
+        with open(custom_prompt_deactivate_script, 'w') as file:
+            file.write(deactivate_script_content)
+        print(f"Making the custom prompt deactivate script executable.")
+        os.chmod(custom_prompt_deactivate_script, 0o755)  # Make the script executable
+
+        print(f"Custom prompt setup complete for environment: {env_name}")
+    except Exception as e:
+        print(f"Error creating custom prompt scripts: {e}", file=sys.stderr)
+        sys.exit(1)
+
+
+def main_install():
     env_name = 'FPCAnalysisenv'
     python_version = '3.11'  # Specify the Python version you want here
     check_python_version(python_version)
@@ -126,9 +205,9 @@ def main():
 
 if __name__ == "__main__":
     print("If this has any error, please see the comments at the bottom of install.py for debugging help!")
-    time.sleep(5)
+    time.sleep(3)
 
-    main()
+    main_install()
 
     if not check_latex_installed():
         print();print();print();print();
@@ -151,13 +230,25 @@ if __name__ == "__main__":
     print("Please activate the new enviroment! 'conda activate /path/to/here/FPCAnalysisenv' for linux/mac")
     print("This will need to be done every time a new terminal is launched!!!")
 
+
+    confirmation = input("Would you like to modify the prompt script (by default, after activating the environment, you will see something like '(/full/path/to/install/FPCAnalysisenv)username@machinename:~/current/directory:' but afterwards you will see '(FPC)FPCAnalysis:' when the environment is activated). (Warning, current the script can not find the original prompt string and thus a terminal restart is required to return to the original prompt string after deactivating (this is annoying but harmless)!) Would you like the script to add a configuration file to your environment to do this?[y/n]: ")
+    if confirmation.lower() == 'y':
+        env_name = 'FPC'
+        print(f"Okay! Starting the setup for custom prompt in environment: {env_name}")
+        env_path = get_conda_env_path(env_name)
+        create_custom_prompt_scripts(env_path, env_name)
+        print(f"Setup complete.")
+    else:
+        print("Okay! Not modifying env config files/ prompt script..")
+
+
     print('*');print('*');print('*');print('*');
     print("Done with install... Please run `conda actiavte /path/to/here/FPCAnalysisenv' to activate the library or add '#!/path/to/here/FPCAnalysisenv/bin/python' (if on linux/mac) to the top of all scripts (and run by calling ./*scriptname.py)!")
-    print("Optionally, use 'conda config --append envs_dirs /path/to/repo/FPCAnalysis/' (give the path to the parent 'FPCAnalysis', NOT the child/subfolder) to add the alias FPCAnalysisenv to conda for this directory. Then, you can call 'conda activate FPCAnalysisenv' to activate this environemnt")
+    print("Optionally, use 'conda config --append envs_dirs /path/to/repo/FPCAnalysis/' (give the path to the parent 'FPCAnalysis', NOT the child/subfolder) to add the alias FPCAnalysisenv to conda for this directory. Then, you can call 'conda activate FPCAnalysisenv' to activate this environment")
     print("Use 'conda config --remove envs_dirs /path/to/repo/FPCAnalysis/' to remove this alias to uninstall or reinstall at a different location")
     print("When done, use conda deactivate to turn off the environment,")
-    print("If using the environemnt, you will need to reactivate it every time you open a new terminal if you want to use the FPCAnalysis lib.")
-    print("Be sure to activate the environemnt before launching a new jupyter notebook! Also, if you move the FPCAnalysisenv or FPCAnalysis folder, you may need to delete the FPCAnalysisenv folder and reinstall.")
+    print("If using the environment, you will need to reactivate it every time you open a new terminal if you want to use the FPCAnalysis lib.")
+    print("Be sure to activate the environment before launching a new jupyter notebook! Also, if you move the FPCAnalysisenv or FPCAnalysis folder, you may need to delete the FPCAnalysisenv folder and reinstall.")
     print('*');print('*');print('*');print('*');
 
     #General fixes!
