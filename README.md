@@ -53,6 +53,7 @@ Note, if one wishes to use additional libraries, add them to the requirements.tx
 This can be done in one of several ways. The most general way is to activate the environment in your terminal.
 
 ** ONE MUST REACTIVATE THE ENVIRONMENT EVERY TIME A NEW TERMINAL IS OPENED TO USE THIS ENVIRONMENT ** 
+
 Linux/Mac:
 ```
 conda activate /full/path/to/FPCAnalysisenv
