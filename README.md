@@ -52,12 +52,12 @@ Note, if one wishes to use additional libraries, add them to the requirements.tx
 
 This can be done in one of several ways. The most general way is to activate the environment in your terminal.
 
-** ONE MUST NAVIGATE TO THIS DIRECTORY AND REACTIVE THE ENVIRONMENT EVERY TIME A NEW TERMINAL IS OPENED TO USE THIS ENVIRONMENT** 
+** ONE MUST REACTIVATE THE ENVIRONMENT EVERY TIME A NEW TERMINAL IS OPENED TO USE THIS ENVIRONMENT ** 
 Linux/Mac:
 ```
 conda activate /full/path/to/FPCAnalysisenv
 ```
-** ONE MUST NAVIGATE TO THIS DIRECTORY AND REACTIVE THE ENVIRONMENT EVERY TIME A NEW TERMINAL IS OPENED TO USE THIS ENVIRONMENT**
+** ONE MUST REACTIVATE THE ENVIRONMENT EVERY TIME A NEW TERMINAL IS OPENED TO USE THIS ENVIRONMENT **
 
 One can also add the following to the top of anyscripts that is written for this environment, in which case, it is no longer necessary to activate the environment when running any script with the following added to it:
 ```
