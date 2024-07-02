@@ -3086,3 +3086,42 @@ def convert_fluc_to_local_par(dfields,dfluc):
     dfluc['eperp1_zz'] = dfields['ex_zz'][:]
 
     return dfluc
+
+def local_pearson_correlation(x, y, positions, window_size):
+    """
+    Computes the local Pearson correlation coefficient for two arrays using a sliding window.
+    
+    Parameters
+    -----------
+    x : 1d array
+        first array
+    y : 1d array
+        second array
+    window_size : int 
+        size of sliding window
+    
+    Returns
+    -------
+    positions : 
+        list of positions corresponding to the start of each window
+    local_corrs : arr
+        pearson correlation coeff at each position
+    """
+    
+    from scipy.stats import pearsonr
+
+    if len(x) != len(y):
+        raise ValueError("Input arrays must have the same length!!!")
+    
+    n = len(x)
+    local_corrs = []
+    positions_out = []
+    
+    for i in range(n - window_size + 1):
+        window_x = x[i:i + window_size]
+        window_y = y[i:i + window_size]
+        corr, _ = pearsonr(window_x, window_y)
+        local_corrs.append(corr)
+        positions_out.append(positions[i+int(np.floor(window_size/2))]) #assumes windowsize is odd (and that int rounds down)
+    
+    return positions_out, local_corrs

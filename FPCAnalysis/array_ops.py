@@ -625,3 +625,19 @@ def find_local_maxima(data, threshold=.05, pltdebug=False):
         plt.show()
 
     return peaks
+
+def interpolate(independent_vars, dependent_vars, locations):
+    independent_vars = np.array(independent_vars)
+    dependent_vars = np.array(dependent_vars)
+    locations = np.array(locations)
+    interpolated_values = np.interp(locations, independent_vars, dependent_vars)
+    return locations, interpolated_values
+
+def split_positive_negative(arr):
+    arr = np.array(arr)
+            
+    positive_array = np.where(arr > 0, arr, 0)
+    negative_array = np.where(arr < 0, arr, 0)
+
+    return positive_array, negative_array
+    
