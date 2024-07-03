@@ -78,30 +78,28 @@ def stack_plot_pos_neg_flux(dfluxes,flnm = '',xlim=[]):
     ionpdotusxs = dfluxes['ionpdotusxs']
     elecpdotusxs = dfluxes['elecpdotusxs']
     poyntxxs = dfluxes['poyntxxs']
-
     interpolxxs = dfluxes['interpolxxs']
-  
-    ionframxpos,ionframxneg = split_positive_negative(ionframx)
-    ionqxspos, ionqxsneg = split_positive_negative(ionqxs)
-    elecqxspos, elecqxsneg = split_positive_negative(elecqxs)
-    ionethxspos, ionethxsneg = split_positive_negative(ionethxs)
-    elecethxspos, elecethxsneg = split_positive_negative(elecethxs)
-    ionpdotusxspos, ionpdotusxsneg = split_positive_negative(ionpdotusxs)
-    elecpdotusxspos, elecpdotusxsneg = split_positive_negative(elecpdotusxs)
-    poyntxxspos, poyntxxsneg = split_positive_negative(poyntxxs)
+    positions = dfluxes['positions']
+
+    #positions_positive, positive_array, positions_negative, negative_array
+    pos, ionframxpos, ionframxneg = split_positive_negative(positions,ionframx,True)
+    pos, ionqxspos, ionqxsneg = split_positive_negative(positions,ionqxs,True)
+    pos, elecqxspos, elecqxsneg = split_positive_negative(positions,elecqxs,True)
+    pos, ionethxspos, ionethxsneg = split_positive_negative(positions,ionethxs,True)
+    pos, elecethxspos, elecethxsneg = split_positive_negative(positions,elecethxs,True)
+    pos, ionpdotusxspos, ionpdotusxsneg = split_positive_negative(positions,ionpdotusxs,True)
+    pos, elecpdotusxspos, elecpdotusxsneg = split_positive_negative(positions,elecpdotusxs,True)
+    pos, poyntxxspos, poyntxxsneg = split_positive_negative(positions,poyntxxs,True)
     
     import matplotlib.patches as mpatches
     
     fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(8, 3), gridspec_kw={'width_ratios': [5, 1]})
-    
-    xx=interpolxxs[0:-1]
+    plt.style.use("cb.mplstyle") #sets style parameters for matplotlib plots
+
+    xx = pos
     runtotpos = np.zeros(len(xx))
     runtotneg = np.zeros(len(xx))
-    
-    plt.style.use("cb.mplstyle") #sets style parameters for matplotlib plots
-    
     normtot = np.abs(ionframx[-2]+ionqxs[-2]+elecqxs[-2]+ionethxs[-2]+elecethxs[-2]+ionpdotusxs[-2]+elecpdotusxs[-2]+poyntxxs[-2])
-    
     alpha = 0.8
     tolfrac = 0.001
     

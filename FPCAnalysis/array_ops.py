@@ -633,11 +633,51 @@ def interpolate(independent_vars, dependent_vars, locations):
     interpolated_values = np.interp(locations, independent_vars, dependent_vars)
     return locations, interpolated_values
 
-def split_positive_negative(arr):
+def split_positive_negative(positions,arr,doublePosForZeros):
+    #assumes positions is evenly spaced
+    import copy
+
     arr = np.array(arr)
-            
+    dx = positions[1]-positions[0]
+    positionsout = copy.deepcopy(positions)
     positive_array = np.where(arr > 0, arr, 0)
     negative_array = np.where(arr < 0, arr, 0)
 
-    return positive_array, negative_array
+    #since matplotlib draws straight lines from val to zero, if you plot the positive_array
+    # and negative_array on the same figure they will overlap by default.
+    # This doubles the length of the position array to prevent that
+    if(doublePosForZeros):
+        positive_array = np.asarray([val for val in positive_array for _ in range(2)]) #doubles length and copys data
+        negative_array = np.asarray([val for val in negative_array for _ in range(2)]) #doubles length and copys data
+
+        positionsout = np.asarray([float(val) for val in positionsout for _ in range(2)])  #doubles length and copys data
+
+        for _i in range(0,len(positionsout)):
+            if (_i % 2 == 1):
+                positionsout[_i] = positionsout[_i] + dx/2
+
+        pos_trimidxes = [] #indexes to make zero to fix overlap
+        for _i in range(1,len(positive_array)):
+            if(positive_array[_i]==0 and positive_array[_i-1] != 0):
+                pos_trimidxes.append(_i-1)
+        for _i in range(len(positive_array)-1):
+            if(positive_array[_i]==0 and positive_array[_i+1] != 0):
+                pos_trimidxes.append(_i+1) 
+
+        for idx in pos_trimidxes:
+            positive_array[idx] = 0
+
+        neg_trimidxes = [] #indexes to make zero to fix overlap
+        for _i in range(1,len(negative_array)):
+            if(negative_array[_i]==0 and negative_array[_i-1] != 0):
+                neg_trimidxes.append(_i-1)
+        for _i in range(len(negative_array)-1):
+            if(negative_array[_i]==0 and negative_array[_i+1] != 0):
+                neg_trimidxes.append(_i+1) 
+        
+        for idx in neg_trimidxes:
+            negative_array[idx] = 0
+
+
+    return positionsout, positive_array, negative_array
     

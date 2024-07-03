@@ -17,9 +17,15 @@ def compute_flux_tristanmp1(interpolxxs,dfields,dpar_ion,dpar_elec,params,inputs
     Assumes dfields and dpar is normalized!
 
     Note, here we technically compute total flux/ energy (rather than densities) for all terms!
+
+    Note, our algorithm assumes that the interpolxxs is aligned with the fields grid! That is each element
+    in interpolxxs should land on some _xx grid point. Otherwise, the computation of the field energy density can be off by up to the 
+    amount containing in one delta x grid spacing.
     """
 
-    
+    if(not(interpolxxs[1]) in dfields['ex_xx']):
+        print("Warning!!!! This function assumes the integration bins are aligned with the fields grid. There will be some potentially significantly impactful `rounding` errors that impact normalization if this is not true. Please align bins with fields grid....")
+
     #get constants
     if(verbose):print('Computing parameters...')
     from FPCAnalysis.analysis import compute_beta0_tristanmp1, get_betai_betae_from_tot_and_ratio, norm_constants_tristanmp1
@@ -72,12 +78,12 @@ def compute_flux_tristanmp1(interpolxxs,dfields,dpar_ion,dpar_elec,params,inputs
     for _i in range(0,len(interpolxxs)-1):
         x1 = interpolxxs[_i]
         x2 = interpolxxs[_i+1]
-        gptsparticleion = (x1 <= dpar_ion['xi']) & (dpar_ion['xi'] <= x2)
+        gptsparticleion = (x1 < dpar_ion['xi']) & (dpar_ion['xi'] <= x2)
         ionvxs = dpar_ion['ui'][gptsparticleion][:]
         ionvys = dpar_ion['vi'][gptsparticleion][:]
         ionvzs = dpar_ion['wi'][gptsparticleion][:]
 
-        gptsparticleelec = (x1 <= dpar_elec['xe']) & (dpar_elec['xe'] <= x2)
+        gptsparticleelec = (x1 < dpar_elec['xe']) & (dpar_elec['xe'] <= x2)
         elecvxs = dpar_elec['ue'][gptsparticleelec][:]*vte0/vti0
         elecvys = dpar_elec['ve'][gptsparticleelec][:]*vte0/vti0
         elecvzs = dpar_elec['we'][gptsparticleelec][:]*vte0/vti0
@@ -232,6 +238,7 @@ def compute_flux_tristanmp1(interpolxxs,dfields,dpar_ion,dpar_elec,params,inputs
         Ethiupindexes = [-1]
         print("Warning, found no bins in the upstream. Consider reducing dx of bins...")
         print("Using rightmost bin as upstream...")
+    if(verbose):print("using ",positions[Ethiupindexes[-1]]-interdx/2,' to ',positions[Ethiupindexes[0]]+interdx/2,' for normalization...')
     for _i in Ethiupindexes:
         bvxi = np.mean(ionvxbins[_i])
         bvyi = np.mean(ionvybins[_i])
@@ -242,23 +249,23 @@ def compute_flux_tristanmp1(interpolxxs,dfields,dpar_ion,dpar_elec,params,inputs
     Evtheup = 0
     Etheupindexes = [-_idx for _idx in range(1,int(0.1*len(positions)))]
     if(Etheupindexes == []):
-        Etheupindexes = [-1]
+        Ethiupindexes = [-1,-2]
         print("Warning, found no bins in the upstream. Consider reducing dx of bins...")
         print("Using rightmost bin as upstream...")
     for _i in Etheupindexes:
         bvxe = np.mean(elecvxbins[_i])
         bvye = np.mean(elecvybins[_i])
-        bvze = np.mean(ionvzbins[_i])
+        bvze = np.mean(elecvzbins[_i])
         Evtheup += 0.5*me*np.sum((elecvxbins[_i]-bvxe)**2+(elecvybins[_i]-bvye)**2+(elecvzbins[_i]-bvze)**2)
     Evtheup = Evtheup / float(len(Etheupindexes))
 
     #compute upstream B field ener for normalization factor
-    x1 = interpolxxs[-(int(0.1*len(positions)))]-interdx/2.
-    x2 = interpolxxs[-1]
+    x1 = positions[-(int(0.1*len(positions)))]-interdx/2.
+    x2 = positions[-1]+interdx/2.
     Bxs = dfields['bx']
     Bys = dfields['by']
     Bzs = dfields['bz']
-    goodfieldpts = (x1 <= dfields['by_xx']) & (dfields['by_xx'] <= x2)
+    goodfieldpts = (x1 < dfields['by_xx']) & (dfields['by_xx'] <= x2)
     Bfieldenerup = np.sum(Bxs[:,:,goodfieldpts]**2+Bys[:,:,goodfieldpts]**2+Bzs[:,:,goodfieldpts]**2)
     Bfieldenerup = Bfieldenerup/((x2-x1)/interdx)
 
@@ -273,45 +280,44 @@ def compute_flux_tristanmp1(interpolxxs,dfields,dpar_ion,dpar_elec,params,inputs
     #compute poynt flux
     if(verbose):print("computing poynting flux....")
     poyntxxs = []
-    for xx in interpolxxs:
-        x1 = xx
-        x2 = xx+interdx
+    for _i in range(0,len(interpolxxs)-1):
+        x1 = interpolxxs[_i]
+        x2 = interpolxxs[_i+1]
         Eys = dfields['ey']
         Ezs = dfields['ez']
         Bys = dfields['by']
         Bzs = dfields['bz']
-        goodfieldpts = (x1 <= dfields['ey_xx']) & (dfields['ey_xx'] <= x2)
+        goodfieldpts = (x1 < dfields['ey_xx']) & (dfields['ey_xx'] <= x2)
         pxx = np.sum(Eys[:,:,goodfieldpts]*Bzs[:,:,goodfieldpts]-Ezs[:,:,goodfieldpts]*Bys[:,:,goodfieldpts])
         poyntxxs.append(pxx)
-    poyntxxs = poyntFluxEfac*np.asarray(poyntxxs[0:-1]) #drop last term as we create one too many! #note: we normalize to correct units later using 'fac'!
-
+    poyntxxs = poyntFluxEfac*np.asarray(poyntxxs) 
 
     #compute W fields
     if(verbose):print("computing W fields....")
     WEfields = []
-    for xx in interpolxxs:
-        x1 = xx
-        x2 = xx+interdx
+    for _i in range(0,len(interpolxxs)-1):
+        x1 = interpolxxs[_i]
+        x2 = interpolxxs[_i+1]
         Exs = dfields['ex']
         Eys = dfields['ey']
         Ezs = dfields['ez']
-        goodfieldpts = (x1 <= dfields['ey_xx']) & (dfields['ey_xx'] <= x2)
+        goodfieldpts = (x1 < dfields['ey_xx']) & (dfields['ey_xx'] <= x2)
         ef = np.sum(Exs[:,:,goodfieldpts]**2+Eys[:,:,goodfieldpts]**2+Ezs[:,:,goodfieldpts]**2)
         WEfields.append(ef)
-    WEfields = fieldEfac*np.asarray(WEfields[0:-1]) #drop last term as we create one too many! #note: we normalize to correct units later using 'fac'!
+    WEfields = fieldEfac*np.asarray(WEfields) 
 
     WBfields = []
-    for xx in interpolxxs:
-        x1 = xx
-        x2 = xx+interdx
+    for _i in range(0,len(interpolxxs)-1):
+        x1 = interpolxxs[_i]
+        x2 = interpolxxs[_i+1]
         Bxs = dfields['bx']
         Bys = dfields['by']
         Bzs = dfields['bz']
-        goodfieldpts = (x1 <= dfields['ey_xx']) & (dfields['ey_xx'] <= x2)
+        goodfieldpts = (x1 < dfields['ey_xx']) & (dfields['ey_xx'] <= x2)
         bf = np.sum(Bxs[:,:,goodfieldpts]**2+Bys[:,:,goodfieldpts]**2+Bzs[:,:,goodfieldpts]**2)
         WBfields.append(bf)
-    WBfields = fieldEfac*np.asarray(WBfields[0:-1]) #drop last term as we create one too many! #note: we normalize to correct units later using 'fac'!
-    
+    WBfields = fieldEfac*np.asarray(WBfields) 
+
     Wfields = WEfields+WBfields
 
     #compute total particle energy
@@ -347,7 +353,7 @@ def compute_flux_tristanmp1(interpolxxs,dfields,dpar_ion,dpar_elec,params,inputs
     for xx in interpolxxs:
         x1 = xx
         x2 = xx+interdx
-        goodfieldpts = (x1 <= dfavg['ey_xx']) & (dfavg['ey_xx'] <= x2)
+        goodfieldpts = (x1 < dfavg['ey_xx']) & (dfavg['ey_xx'] <= x2)
         
         EflucxBflucxx = np.sum(EflucxBfluc_x[:,:,goodfieldpts]) 
         EflucxBflucxx = EflucxBflucxx/float(len(goodfieldpts)) 
@@ -422,5 +428,219 @@ def compute_flux_tristanmp1(interpolxxs,dfields,dpar_ion,dpar_elec,params,inputs
 
     fluxes['positions'] = positions
 
+    fluxes['fieldEfac'] = fieldEfac
+    fluxes['poyntFluxEfac'] = poyntFluxEfac
+    fluxes['valfac'] = valfac
+
+    #re normalize fields
+    fieldkeys = ['ex','ey','ez','bx','by','bz']
+    for fk in fieldkeys:
+        if(fk[0] == 'e'):
+            dfields[fk] /= enorm
+            dfluc[fk] /= enorm
+            dfavg[fk] /= enorm
+        else:
+            dfields[fk] /= bnorm
+            dfluc[fk] /= bnorm
+            dfavg[fk] /= bnorm
+
     return fluxes
+
+
+def compute_diamag_drift(dfields,dpar_elec,dfluxes,interpolxxs,verbose=False):
+    """
+    u_dia = -1/(q_e n_e)\frac{nabla p_{\perp,e} \times \mathbf{B}}{|\mathbf{B}|^2}
+
+    Claim: u_dia is the thing causing the adiabatic heating. That is u_dia is caused
+    by the thing conserving the adiabatic invariant, which we will call adiabatic heating.
+
+    The 'equivalency' of u_dia and adiabatic heating was shown by Juno et al 2021
+
+    Note, the above claim assumes a sufficiently high mass ratio    
+    """
+
+    print("NOTE, there might be a factor of c in the grad b drift part of the diamagnetic drift... TODO: figure out and remove this statement")
+
+
+    #get constants
+    if(verbose):print('Computing parameters...')
+    from FPCAnalysis.analysis import compute_beta0_tristanmp1, get_betai_betae_from_tot_and_ratio, norm_constants_tristanmp1
+    beta0 = compute_beta0_tristanmp1(params,inputs)
+    beta_ion,beta_elc= get_betai_betae_from_tot_and_ratio(beta0,inputs['temperature_ratio'])
+    dt = params['c']/params['comp'] #in units of wpe
+    dt, c_alf = norm_constants_tristanmp1(params,dt,inputs)
+    mi = params['mi']
+    me = params['me']
+    interdx = interpolxxs[1]-interpolxxs[0] #assumes uniform spacing!
+
+    qe = dpar_elec['q']
+
+    #compute fluc and steady state fields
+    if(verbose):print('Computing dfavg and dfluc...')
+    from FPCAnalysis.analysis import get_average_fields_over_yz, remove_average_fields_over_yz
+    dfavg = get_average_fields_over_yz(dfields)
+    dfluc = remove_average_fields_over_yz(dfields)
+
+    positions = np.asarray([(interpolxxs[_i]+interpolxxs[_i+1])/2. for _i in range(len(interpolxxs)-1)])
+    
+    #revert normalization of fields
+    if(verbose):print('Reverting fields normalization...')
+    bnorm = params['c']**2*params['sigma']/params['comp']
+    sigma_ion = params['sigma']*params['me']/params['mi'] #NOTE: this is subtely differetn than what aaron's normalization is- fix it (missingn factor of gamma0 and mi+me)
+    enorm = bnorm*np.sqrt(sigma_ion)*params['c'] #note, there is an extra factor of 'c hat' (c in code units, which is .45 for the main run being analyzed) that we take out
+    fieldkeys = ['ex','ey','ez','bx','by','bz']
+    for fk in fieldkeys:
+        if(fk[0] == 'e'):
+            dfields[fk] *= enorm
+            dfluc[fk] *= enorm
+            dfavg[fk] *= enorm
+        else:
+            dfields[fk] *= bnorm
+            dfluc[fk] *= bnorm
+            dfavg[fk] *= bnorm
+
+     
+    #bin particles
+    if(verbose):print("Binning particles...")
+    ionvxbins = []
+    ionvybins = []
+    ionvzbins = []
+    elecvxbins = []
+    elecvybins = []
+    elecvzbins = []
+
+    massratio = params['mi']/params['me']
+    vti0 = np.sqrt(params['delgam'])
+    vte0 = np.sqrt(params['mi']/params['me'])*vti0 #WARNING: THIS ASSUME Ti/Te = 1, TODO: don't assume Ti/Te = 1
+
+    for _i in range(0,len(interpolxxs)-1):
+        x1 = interpolxxs[_i]
+        x2 = interpolxxs[_i+1]
+        gptsparticleion = (x1 < dpar_ion['xi']) & (dpar_ion['xi'] <= x2)
+        ionvxs = dpar_ion['ui'][gptsparticleion][:]
+        ionvys = dpar_ion['vi'][gptsparticleion][:]
+        ionvzs = dpar_ion['wi'][gptsparticleion][:]
+
+        gptsparticleelec = (x1 < dpar_elec['xe']) & (dpar_elec['xe'] <= x2)
+        elecvxs = dpar_elec['ue'][gptsparticleelec][:]*vte0/vti0
+        elecvys = dpar_elec['ve'][gptsparticleelec][:]*vte0/vti0
+        elecvzs = dpar_elec['we'][gptsparticleelec][:]*vte0/vti0
+
+        ionvxbins.append(ionvxs)
+        ionvybins.append(ionvys)
+        ionvzbins.append(ionvzs)
+
+        elecvxbins.append(elecvxs)
+        elecvybins.append(elecvys)
+        elecvzbins.append(elecvzs)
+    if(verbose):print("done binning particles!")
+
+    #compute bulk v
+    if(verbose):print("computing bulk vel...")
+    ionvx = []
+    ionvy = []
+    ionvz = []
+    elecvx = []
+    elecvy = []
+    elecvz = []
+    for ivxs in ionvxbins:
+        if(len(ivxs) > 0):
+            ionvx.append(np.mean(ivxs))
+        else:
+            ionvx.append(0.)
+    for ivys in ionvybins:
+        if(len(ivys) > 0):
+            ionvy.append(np.mean(ivys))
+        else:
+            ionvy.append(0.)
+    for ivzs in ionvzbins:
+        if(len(ivzs) > 0):
+            ionvz.append(np.mean(ivzs))
+        else:
+            ionvz.append(0.)
+    for evxs in elecvxbins:
+        if(len(evxs) > 0):
+            elecvx.append(np.mean(evxs))
+        else:
+            elecvx.append(0.)
+    for evys in elecvybins:
+        if(len(evys) > 0):
+            elecvy.append(np.mean(evys))
+        else:
+            elecvy.append(0.)
+    for evzs in elecvzbins:
+        if(len(evzs) > 0):
+            elecvz.append(np.mean(evzs))
+        else:
+            elecvz.append(0.)
+
+    #compute perp pressure
+    pperp = []
+    nspec = []
+    for _i in range(0,len(interpolxxs)-1):
+        x1 = interpolxxs[_i]
+        x2 = interpolxxs[_i+1]
+        bvxe = np.mean(elecvxbins[_i])
+        bvye = np.mean(elecvybins[_i])
+        bvze = np.mean(elecvzbins[_i])
+
+        px = np.sum([(evxval-bvxe)**2 for evxval in elecvxbins[_i]])
+        py = np.sum([(evyval-bvxe)**2 for evyval in elecvybins[_i]])
+        pz = np.sum([(evzval-bvxe)**2 for evzval in elecvzbins[_i]])
+
+        #we include the 1/ne factor here!
+        px /= float(len(elecvxbins[_i]))
+        py /= float(len(elecvybins[_i]))
+        pz /= float(len(elecvzbins[_i]))
+
+        nspec.append(float(len(elecvzbins[_i])))
+
+        #Assume that \mathbf{B} = B(x) \hat{y} (or well approximated as such)
+        ppr = py+pz 
+        pperp.append(ppr)
+    pperp = np.asarray(pperp)
+
+    #compute diamagnetic drift
+    udiax = []
+    udiay = []
+    udiaz = []
+    #TODO convert above to FAC? <doesnt matter for our perp simulation that much>
+    gradpperp = np.gradient(pperp)
+    for _i in range(0,len(interpolxxs)-1):
+        x1 = interpolxxs[_i]
+        x2 = interpolxxs[_i+1]
+        Bxs = dfields['bx']
+        Bys = dfields['by']
+        Bzs = dfields['bz']
+
+        goodfieldpts = (x1 < dfields['ey_xx']) & (dfields['ey_xx'] <= x2)
+        Bx = np.mean(Bxs[:,:,goodfieldpts])
+        By = np.mean(Bys[:,:,goodfieldpts])
+        Bz = np.mean(Bzs[:,:,goodfieldpts])
+
+        #TODO: use units here!!!
+        ud = -1/qe*np.cross([0,np.gradpperp[_i],0],[Bx,By,Bz])/np.linalg.norm([Bx,By,Bz])**2
+        udiax.append(ud[0])
+        udiay.append(ud[1])
+        udiaz.append(ud[2])
+    udiax = np.asarray(udiax)
+    udiay = np.asarray(udiay)
+    udiaz = np.asarray(udiaz)
+        
+
+
+
+    #re normalize fields 
+    fieldkeys = ['ex','ey','ez','bx','by','bz']
+    for fk in fieldkeys:
+        if(fk[0] == 'e'):
+            dfields[fk] /= enorm
+            dfluc[fk] /= enorm
+            dfavg[fk] /= enorm
+        else:
+            dfields[fk] /= bnorm
+            dfluc[fk] /= bnorm
+            dfavg[fk] /= bnorm
+
+    return positions, udiax, udiay, udiaz, nspec
 
