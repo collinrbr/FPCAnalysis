@@ -6,7 +6,7 @@ import numpy as np
 import math
 
 
-def compute_flux_tristanmp1(interpolxxs,dfields,dpar_ion,dpar_elec,params,inputs,verbose=False):
+def compute_flux_tristanmp1(interpolxxs,dfields,dpar_ion,dpar_elec,params,inputs,verbose=False,justxcomps=True):
     """
     computes fluxes and normalizes
 
@@ -154,19 +154,49 @@ def compute_flux_tristanmp1(interpolxxs,dfields,dpar_ion,dpar_elec,params,inputs
     #compute qxs (heat flux)
     if(verbose):print("computing heat flux (qx)...")
     ionqxs = []
-    elecqxs = []
     for _i in range(0,len(ionvxbins)):
         ivx = ionvxbins[_i]
         ivy = ionvybins[_i]
         ivz = ionvzbins[_i]
         ionqx = 0.5*mi*np.sum((valx-ionvx[_i])*((valx-ionvx[_i])**2+(valy-ionvy[_i])**2+(valz-ionvz[_i])**2) for valx,valy,valz in zip(ivx,ivy,ivz))
         ionqxs.append(ionqx)
+    if(not(justxcomps)):
+        ionqys = []
+        for _i in range(0,len(ionvxbins)):
+            ivx = ionvxbins[_i]
+            ivy = ionvybins[_i]
+            ivz = ionvzbins[_i]
+            ionqy = 0.5*mi*np.sum((valy-ionvy[_i])*((valx-ionvx[_i])**2+(valy-ionvy[_i])**2+(valz-ionvz[_i])**2) for valx,valy,valz in zip(ivx,ivy,ivz))
+            ionqys.append(ionqy)
+        ionqzs = []
+        for _i in range(0,len(ionvxbins)):
+            ivx = ionvxbins[_i]
+            ivy = ionvybins[_i]
+            ivz = ionvzbins[_i]
+            ionqz = 0.5*mi*np.sum((valz-ionvz[_i])*((valx-ionvx[_i])**2+(valy-ionvy[_i])**2+(valz-ionvz[_i])**2) for valx,valy,valz in zip(ivx,ivy,ivz))
+            ionqzs.append(ionqz)
+    elecqxs = []
     for _i in range(0,len(elecvxbins)):
         evx = elecvxbins[_i]
         evy = elecvybins[_i]
         evz = elecvzbins[_i]
         elecqx = 0.5*me*np.sum((valx-elecvx[_i])*((valx-elecvx[_i])**2+(valy-elecvy[_i])**2+(valz-elecvz[_i])**2) for valx,valy,valz in zip(evx,evy,evz))
         elecqxs.append(elecqx)
+    if(not(justxcomps)):
+        elecqys = []
+        for _i in range(0,len(elecvxbins)):
+            evx = elecvxbins[_i]
+            evy = elecvybins[_i]
+            evz = elecvzbins[_i]
+            elecqy = 0.5*me*np.sum((valy-elecvy[_i])*((valx-elecvx[_i])**2+(valy-elecvy[_i])**2+(valz-elecvz[_i])**2) for valx,valy,valz in zip(evx,evy,evz))
+            elecqys.append(elecqy)
+        elecqzs = []
+        for _i in range(0,len(elecvxbins)):
+            evx = elecvxbins[_i]
+            evy = elecvybins[_i]
+            evz = elecvzbins[_i]
+            elecqz = 0.5*me*np.sum((valz-elecvz[_i])*((valx-elecvx[_i])**2+(valy-elecvy[_i])**2+(valz-elecvz[_i])**2) for valx,valy,valz in zip(evx,evy,evz))
+            elecqzs.append(elecqz)
 
     #compute ram kinetic energy flux (that is this block computes the bulk flow energy, but we call it ram pressure)
     if(verbose):print('compute kinetic energy flux....')
@@ -174,46 +204,124 @@ def compute_flux_tristanmp1(interpolxxs,dfields,dpar_ion,dpar_elec,params,inputs
     for _i, ivxs in enumerate(ionvxbins):
         fx = ionvx[_i]*0.5*(iondens[_i])*mi*(ionvx[_i]**2+ionvy[_i]**2+ionvz[_i]**2)
         ionframx.append(fx)
-
+    if(not(justxcomps)):
+        ionframy = []
+        for _i, ivys in enumerate(ionvybins):
+            fy = ionvy[_i]*0.5*(iondens[_i])*mi*(ionvx[_i]**2+ionvy[_i]**2+ionvz[_i]**2)
+            ionframy.append(fy)
+        ionframz = []
+        for _i, ivzs in enumerate(ionvzbins):
+            fz = ionvz[_i]*0.5*(iondens[_i])*mi*(ionvx[_i]**2+ionvy[_i]**2+ionvz[_i]**2)
+            ionframz.append(fz)
     elecframx = []
-    for _i, ivxs in enumerate(ionvxbins):
+    for _i, ivxs in enumerate(elecvxbins):
         fx = elecvx[_i]*0.5*(iondens[_i])*me*(elecvx[_i]**2+elecvy[_i]**2+elecvz[_i]**2)
         elecframx.append(fx)
+    if(not(justxcomps)):
+        elecframy = []
+        for _i, ivxs in enumerate(elecvybins):
+            fy = elecvy[_i]*0.5*(iondens[_i])*me*(elecvx[_i]**2+elecvy[_i]**2+elecvz[_i]**2)
+            elecframy.append(fy)
+        elecframz = []
+        for _i, ivxs in enumerate(elecvzbins):
+            fz = elecvz[_i]*0.5*(iondens[_i])*me*(elecvx[_i]**2+elecvy[_i]**2+elecvz[_i]**2)
+            elecframz.append(fz)
 
     #compute enthalpy flux first term
     if(verbose):print("compute enthalpy flux....")
     ionethxs = []
-    elecethxs = []
     for _i in range(0,len(ionvxbins)):
         ivx = ionvxbins[_i]
         ivy = ionvybins[_i]
         ivz = ionvzbins[_i]
         ionethx = ionvx[_i]*0.5*mi*np.sum((valx-ionvx[_i])**2+(valy-ionvy[_i])**2+(valz-ionvz[_i])**2 for valx,valy,valz in zip(ivx,ivy,ivz))
         ionethxs.append(ionethx)
+    if(not(justxcomps)):
+        ionethys = []
+        for _i in range(0,len(ionvxbins)):
+            ivx = ionvxbins[_i]
+            ivy = ionvybins[_i]
+            ivz = ionvzbins[_i]
+            ionethy = ionvy[_i]*0.5*mi*np.sum((valx-ionvx[_i])**2+(valy-ionvy[_i])**2+(valz-ionvz[_i])**2 for valx,valy,valz in zip(ivx,ivy,ivz))
+            ionethys.append(ionethy)
+        ionethzs = []
+        for _i in range(0,len(ionvxbins)):
+            ivx = ionvxbins[_i]
+            ivy = ionvybins[_i]
+            ivz = ionvzbins[_i]
+            ionethz = ionvz[_i]*0.5*mi*np.sum((valx-ionvx[_i])**2+(valy-ionvy[_i])**2+(valz-ionvz[_i])**2 for valx,valy,valz in zip(ivx,ivy,ivz))
+            ionethzs.append(ionethz)
+    elecethxs = []
     for _i in range(0,len(elecvxbins)):
         evx = elecvxbins[_i]
         evy = elecvybins[_i]
         evz = elecvzbins[_i]
         elecethx = elecvx[_i]*0.5*me*np.sum((valx-elecvx[_i])**2+(valy-elecvy[_i])**2+(valz-elecvz[_i])**2 for valx,valy,valz in zip(evx,evy,evz))
         elecethxs.append(elecethx)
+    if(not(justxcomps)):
+        elecethys = []
+        for _i in range(0,len(elecvxbins)):
+            evx = elecvxbins[_i]
+            evy = elecvybins[_i]
+            evz = elecvzbins[_i]
+            elecethy = elecvy[_i]*0.5*me*np.sum((valx-elecvx[_i])**2+(valy-elecvy[_i])**2+(valz-elecvz[_i])**2 for valx,valy,valz in zip(evx,evy,evz))
+            elecethys.append(elecethy)
+        elecethzs = []
+        for _i in range(0,len(elecvxbins)):
+            evx = elecvxbins[_i]
+            evy = elecvybins[_i]
+            evz = elecvzbins[_i]
+            elecethz = elecvz[_i]*0.5*me*np.sum((valx-elecvx[_i])**2+(valy-elecvy[_i])**2+(valz-elecvz[_i])**2 for valx,valy,valz in zip(evx,evy,evz))
+            elecethzs.append(elecethz)
 
     #compute enthalpy flux second term
     ionpdotusxs = []
-    elecpdotusxs = []
     for _i in range(0,len(ionvxbins)):
         ibvx = ionvx[_i]  #bulk ion velocity
         ibvy = ionvy[_i]
         ibvz = ionvz[_i]
         ipdu = mi*np.sum((ibvx*(ionvxbins[_i][idx]-ibvx)**2+ibvy*(ionvxbins[_i][idx]-ibvx)*(ionvybins[_i][idx]-ibvy)+ibvz*(ionvxbins[_i][idx]-ibvx)*(ionvzbins[_i][idx]-ibvz) for idx in range(0,len(ionvxbins[_i]))))
         ionpdotusxs.append(ipdu)
+    if(not(justxcomps)):
+        ionpdotusys = []
+        for _i in range(0,len(ionvxbins)):
+            ibvx = ionvx[_i]  #bulk ion velocity
+            ibvy = ionvy[_i]
+            ibvz = ionvz[_i]
+            ipdu = mi*np.sum((ibvx*(ionvybins[_i][idx]-ibvy)*(ionvxbins[_i][idx]-ibvx)+ibvy*(ionvybins[_i][idx]-ibvy)**2+ibvz*(ionvybins[_i][idx]-ibvy)*(ionvzbins[_i][idx]-ibvz) for idx in range(0,len(ionvxbins[_i]))))
+            ionpdotusys.append(ipdu)
+        ionpdotuszs = []
+        for _i in range(0,len(ionvxbins)):
+            ibvx = ionvx[_i]  #bulk ion velocity
+            ibvy = ionvy[_i]
+            ibvz = ionvz[_i]
+            ipdu = mi*np.sum((ibvx*(ionvzbins[_i][idx]-ibvz)*(ionvxbins[_i][idx]-ibvx)+ibvy*(ionvzbins[_i][idx]-ibvz)*(ionvybins[_i][idx]-ibvy)+ibvz*(ionvzbins[_i][idx]-ibvz)**2 for idx in range(0,len(ionvxbins[_i]))))
+            ionpdotuszs.append(ipdu)
+    elecpdotusxs = []
     for _i in range(0,len(elecvxbins)):
         ebvx = elecvx[_i]  #bulk elec velocity
         ebvy = elecvy[_i]
         ebvz = elecvz[_i]
         epdu = me*np.sum((ebvx*(elecvxbins[_i][idx]-ebvx)**2+ebvy*(elecvxbins[_i][idx]-ebvx)*(elecvybins[_i][idx]-ebvy)+ebvz*(elecvxbins[_i][idx]-ebvx)*(elecvzbins[_i][idx]-ebvz) for idx in range(0,len(elecvxbins[_i]))))
         elecpdotusxs.append(epdu)
+    if(not(justxcomps)):
+        elecpdotusys = []
+        for _i in range(0,len(elecvxbins)):
+            ebvx = elecvx[_i]  #bulk elec velocity
+            ebvy = elecvy[_i]
+            ebvz = elecvz[_i]
+            epdu = me*np.sum((ebvx*(elecvybins[_i][idx]-ebvy)*(elecvxbins[_i][idx]-ebvx)+ebvy*(elecvybins[_i][idx]-ebvy)**2+ebvz*(elecvybins[_i][idx]-ebvy)*(elecvzbins[_i][idx]-ebvz) for idx in range(0,len(elecvxbins[_i]))))
+            elecpdotusys.append(epdu)
+        elecpdotuszs = []
+        for _i in range(0,len(elecvxbins)):
+            ebvx = elecvx[_i]  #bulk elec velocity
+            ebvy = elecvy[_i]
+            ebvz = elecvz[_i]
+            epdu = me*np.sum((ebvx*(elecvzbins[_i][idx]-ebvz)*(elecvxbins[_i][idx]-ebvx)+ebvy*(elecvzbins[_i][idx]-ebvz)*(elecvybins[_i][idx]-ebvy)+ebvz*(elecvzbins[_i][idx]-ebvz)**2 for idx in range(0,len(elecvxbins[_i]))))
+            elecpdotuszs.append(epdu)
+    
 
-    #compute total energy flux
+    #compute total energy flux (TODO: Speed up! As there are redundant calculations in this block, but thats fine for now)
     if(verbose):print("compute total energy flux....")
     iontotefluxxs = []
     electotefluxxs = []
@@ -229,6 +337,37 @@ def compute_flux_tristanmp1(interpolxxs,dfields,dpar_ion,dpar_elec,params,inputs
         ebvz = elecvz[_i]
         etfx = me/2.*np.sum((elecvxbins[_i][idx]*(elecvxbins[_i][idx]**2+elecvybins[_i][idx]**2+elecvzbins[_i][idx]**2) for idx in range(0,len(elecvxbins[_i]))))
         electotefluxxs.append(etfx)
+
+    if(not(justxcomps)):
+        iontotefluyys = []
+        electotefluyys = []
+        for _i in range(0,len(ionvybins)):
+            ibvx = ionvx[_i]  #bulk ion velocity
+            ibvy = ionvy[_i]
+            ibvz = ionvz[_i]
+            itfy = mi/2.*np.sum((ionvybins[_i][idx]*(ionvxbins[_i][idx]**2+ionvybins[_i][idx]**2+ionvzbins[_i][idx]**2) for idx in range(0,len(ionvybins[_i]))))
+            iontotefluyys.append(itfy)
+        for _i in range(0,len(elecvybins)):
+            ebvx = elecvx[_i]  #bulk elec velocity
+            ebvy = elecvy[_i]
+            ebvz = elecvz[_i]
+            etfy = me/2.*np.sum((elecvybins[_i][idx]*(elecvxbins[_i][idx]**2+elecvybins[_i][idx]**2+elecvzbins[_i][idx]**2) for idx in range(0,len(elecvybins[_i]))))
+            electotefluyys.append(etfy)
+
+        iontotefluzzs = []
+        electotefluzzs = []
+        for _i in range(0,len(ionvybins)):
+            ibvx = ionvx[_i]  #bulk ion velocity
+            ibvy = ionvy[_i]
+            ibvz = ionvz[_i]
+            itfz = mi/2.*np.sum((ionvzbins[_i][idx]*(ionvxbins[_i][idx]**2+ionvybins[_i][idx]**2+ionvzbins[_i][idx]**2) for idx in range(0,len(ionvzbins[_i]))))
+            iontotefluzzs.append(itfz)
+        for _i in range(0,len(elecvzbins)):
+            ebvx = elecvx[_i]  #bulk elec velocity
+            ebvy = elecvy[_i]
+            ebvz = elecvz[_i]
+            etfz = me/2.*np.sum((elecvzbins[_i][idx]*(elecvxbins[_i][idx]**2+elecvybins[_i][idx]**2+elecvzbins[_i][idx]**2) for idx in range(0,len(elecvzbins[_i]))))
+            electotefluzzs.append(etfz)
 
     #normalization factors--------------------------------------------------------------
     #compute upstream thermal energy for normalization factor
@@ -274,23 +413,32 @@ def compute_flux_tristanmp1(interpolxxs,dfields,dpar_ion,dpar_elec,params,inputs
     # a = Ethviup/betaion*Bfieldeneruup
     valfac = Evthiup/(beta_ion*(1./(8.*np.pi))*Bfieldenerup) #computes factor we need to scale fields^2 by to get in same units as particles
     fieldEfac = (1./(8.*np.pi))*valfac #multiple unnormalized E^2 or B^2 to get total energy in correct units
-    c_thi = c_alf/np.sqrt(beta_ion)
+    c_thi = c_alf*np.sqrt(2.)/np.sqrt(beta_ion)
     poyntFluxEfac = valfac*c_thi/(4.*np.pi) #a normalizes field value squared
 
-    #compute poynt flux
-    if(verbose):print("computing poynting flux....")
+    # if(verbose):print("computing poynting flux....")
     poyntxxs = []
+    poyntyys = []
+    poyntzzs = []
     for _i in range(0,len(interpolxxs)-1):
         x1 = interpolxxs[_i]
         x2 = interpolxxs[_i+1]
+        Exs = dfields['ex']
         Eys = dfields['ey']
         Ezs = dfields['ez']
+        Bxs = dfields['bx']
         Bys = dfields['by']
         Bzs = dfields['bz']
         goodfieldpts = (x1 < dfields['ey_xx']) & (dfields['ey_xx'] <= x2)
         pxx = np.sum(Eys[:,:,goodfieldpts]*Bzs[:,:,goodfieldpts]-Ezs[:,:,goodfieldpts]*Bys[:,:,goodfieldpts])
+        pyy = np.sum(-Exs[:,:,goodfieldpts]*Bzs[:,:,goodfieldpts]+Ezs[:,:,goodfieldpts]*Bxs[:,:,goodfieldpts])
+        pzz = np.sum(Exs[:,:,goodfieldpts]*Bys[:,:,goodfieldpts]-Eys[:,:,goodfieldpts]*Bxs[:,:,goodfieldpts])
         poyntxxs.append(pxx)
+        poyntyys.append(pyy)
+        poyntzzs.append(pzz)
     poyntxxs = poyntFluxEfac*np.asarray(poyntxxs) 
+    poyntyys = poyntFluxEfac*np.asarray(poyntyys) 
+    poyntzzs = poyntFluxEfac*np.asarray(poyntzzs) 
 
     #compute W fields
     if(verbose):print("computing W fields....")
@@ -356,27 +504,27 @@ def compute_flux_tristanmp1(interpolxxs,dfields,dpar_ion,dpar_elec,params,inputs
         goodfieldpts = (x1 < dfavg['ey_xx']) & (dfavg['ey_xx'] <= x2)
         
         EflucxBflucxx = np.sum(EflucxBfluc_x[:,:,goodfieldpts]) 
-        EflucxBflucxx = EflucxBflucxx/float(len(goodfieldpts)) 
+        EflucxBflucxx = EflucxBflucxx 
         EflucxBfluc_x_out.append(EflucxBflucxx)
         EflucxBflucyy = np.sum(EflucxBfluc_y[:,:,goodfieldpts]) 
-        EflucxBflucyy = EflucxBflucyy/float(len(goodfieldpts)) 
+        EflucxBflucyy = EflucxBflucyy
         EflucxBfluc_y_out.append(EflucxBflucyy)
         EflucxBfluczz = np.sum(EflucxBfluc_z[:,:,goodfieldpts]) 
-        EflucxBfluczz = EflucxBfluczz/float(len(goodfieldpts)) 
+        EflucxBfluczz = EflucxBfluczz
         EflucxBfluc_z_out.append(EflucxBfluczz)
 
         EbarxBbarxx = np.sum(EbarxBbar_x[:,:,goodfieldpts]) 
-        EbarxBbarxx = EbarxBbarxx/float(len(goodfieldpts)) 
+        EbarxBbarxx = EbarxBbarxx
         EbarxBbar_x_out.append(EbarxBbarxx)
         EbarxBbaryy = np.sum(EbarxBbar_y[:,:,goodfieldpts]) 
-        EbarxBbaryy = EbarxBbaryy/float(len(goodfieldpts)) 
+        EbarxBbaryy = EbarxBbaryy
         EbarxBbar_y_out.append(EbarxBbaryy)
         EbarxBbarzz = np.sum(EbarxBbar_z[:,:,goodfieldpts]) 
-        EbarxBbarzz = EbarxBbarzz/float(len(goodfieldpts))
+        EbarxBbarzz = EbarxBbarzz
         EbarxBbar_z_out.append(EbarxBbarzz)
         
         Bbar_dot_bbar_temp =  np.sum(Bbar_dot_bbar[:,:,goodfieldpts])
-        Bbar_dot_bbar_temp = Bbar_dot_bbar_temp/float(len(goodfieldpts))
+        Bbar_dot_bbar_temp = Bbar_dot_bbar_temp
         Bbar_dot_bbar_out.append(Bbar_dot_bbar_temp)
         
     EflucxBfluc_x_avg = poyntFluxEfac*np.asarray(EflucxBfluc_x_out[0:-1])
@@ -392,24 +540,59 @@ def compute_flux_tristanmp1(interpolxxs,dfields,dpar_ion,dpar_elec,params,inputs
     fluxes['iondens'] = np.asarray(iondens)
     fluxes['elecdens'] = np.asarray(elecdens)
     fluxes['ionvx'] = np.asarray(ionvx)
-    fluxes['ionvy'] = np.asarray(ionvy)
-    fluxes['ionvz'] = np.asarray(ionvz)
+    if(not(justxcomps)):
+        fluxes['ionvy'] = np.asarray(ionvy)
+        fluxes['ionvz'] = np.asarray(ionvz)
     fluxes['elecvx'] = np.asarray(elecvx)
-    fluxes['elecvy'] = np.asarray(elecvy)
-    fluxes['elecvz'] = np.asarray(elecvz)
+    if(not(justxcomps)):
+        fluxes['elecvy'] = np.asarray(elecvy)
+        fluxes['elecvz'] = np.asarray(elecvz)
 
     fluxes['ionqxs'] = np.asarray(ionqxs)
     fluxes['elecqxs'] = np.asarray(elecqxs)
+    if(not(justxcomps)):
+        fluxes['ionqys'] = np.asarray(ionqys)
+        fluxes['elecqys'] = np.asarray(elecqys)
+        fluxes['ionqzs'] = np.asarray(ionqzs)
+        fluxes['elecqzs'] = np.asarray(elecqzs)
+
     fluxes['ionframx'] = np.asarray(ionframx)
     fluxes['elecframx'] = np.asarray(elecframx)
+    if(not(justxcomps)):
+        fluxes['ionframy'] = np.asarray(ionframy)
+        fluxes['elecframy'] = np.asarray(elecframy)
+        fluxes['ionframz'] = np.asarray(ionframz)
+        fluxes['elecframz'] = np.asarray(elecframz)
+
     fluxes['ionethxs'] = np.asarray(ionethxs)
     fluxes['elecethxs'] = np.asarray(elecethxs)
+    if(not(justxcomps)):
+        fluxes['ionethys'] = np.asarray(ionethys)
+        fluxes['elecethys'] = np.asarray(elecethys)
+        fluxes['ionethzs'] = np.asarray(ionethzs)
+        fluxes['elecethzs'] = np.asarray(elecethzs)
+
     fluxes['ionpdotusxs'] = np.asarray(ionpdotusxs)
+    if(not(justxcomps)):
+        fluxes['ionpdotusys'] = np.asarray(ionpdotusys)
+        fluxes['ionpdotuszs'] = np.asarray(ionpdotuszs)
     fluxes['elecpdotusxs'] = np.asarray(elecpdotusxs)
+    if(not(justxcomps)):
+        fluxes['elecpdotusys'] = np.asarray(elecpdotusys)
+        fluxes['elecpdotuszs'] = np.asarray(elecpdotuszs)
+
     fluxes['iontotefluxxs'] = np.asarray(iontotefluxxs)
     fluxes['electotefluxxs'] = np.asarray(electotefluxxs)
-    
+    if(not(justxcomps)):
+        fluxes['iontotefluyys'] = np.asarray(iontotefluyys)
+        fluxes['electotefluyys'] = np.asarray(electotefluyys)
+        fluxes['iontotefluzzs'] = np.asarray(iontotefluzzs)
+        fluxes['electotefluzzs'] = np.asarray(electotefluzzs)
+        
     fluxes['poyntxxs'] = np.asarray(poyntxxs)
+    fluxes['poyntyys'] = np.asarray(poyntyys)
+    fluxes['poyntzzs'] = np.asarray(poyntzzs)
+
     fluxes['Wfields'] = np.asarray(Wfields)
     fluxes['WEfields'] = np.asarray(WEfields)
     fluxes['WBfields'] = np.asarray(WBfields)
