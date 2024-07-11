@@ -66,7 +66,7 @@ def individual_flux_percents(dfluxes,flnm=''):
         plt.savefig(flnm+'tot'+'.png')
     plt.close()
 
-def stack_plot_pos_neg_flux(dfluxes,flnm = '',xlim=[]):
+def stack_plot_pos_neg_flux(dfluxes,flnm = '',xlim=[],tolfrac = 0.001,split_pos_neg=True):
 
     from FPCAnalysis.array_ops import split_positive_negative
 
@@ -82,14 +82,14 @@ def stack_plot_pos_neg_flux(dfluxes,flnm = '',xlim=[]):
     positions = dfluxes['positions']
 
     #positions_positive, positive_array, positions_negative, negative_array
-    pos, ionframxpos, ionframxneg = split_positive_negative(positions,ionframx,True)
-    pos, ionqxspos, ionqxsneg = split_positive_negative(positions,ionqxs,True)
-    pos, elecqxspos, elecqxsneg = split_positive_negative(positions,elecqxs,True)
-    pos, ionethxspos, ionethxsneg = split_positive_negative(positions,ionethxs,True)
-    pos, elecethxspos, elecethxsneg = split_positive_negative(positions,elecethxs,True)
-    pos, ionpdotusxspos, ionpdotusxsneg = split_positive_negative(positions,ionpdotusxs,True)
-    pos, elecpdotusxspos, elecpdotusxsneg = split_positive_negative(positions,elecpdotusxs,True)
-    pos, poyntxxspos, poyntxxsneg = split_positive_negative(positions,poyntxxs,True)
+    pos, ionframxpos, ionframxneg = split_positive_negative(positions,ionframx,split_pos_neg)
+    pos, ionqxspos, ionqxsneg = split_positive_negative(positions,ionqxs,split_pos_neg)
+    pos, elecqxspos, elecqxsneg = split_positive_negative(positions,elecqxs,split_pos_neg)
+    pos, ionethxspos, ionethxsneg = split_positive_negative(positions,ionethxs,split_pos_neg)
+    pos, elecethxspos, elecethxsneg = split_positive_negative(positions,elecethxs,split_pos_neg)
+    pos, ionpdotusxspos, ionpdotusxsneg = split_positive_negative(positions,ionpdotusxs,split_pos_neg)
+    pos, elecpdotusxspos, elecpdotusxsneg = split_positive_negative(positions,elecpdotusxs,split_pos_neg)
+    pos, poyntxxspos, poyntxxsneg = split_positive_negative(positions,poyntxxs,split_pos_neg)
     
     import matplotlib.patches as mpatches
     
@@ -101,7 +101,6 @@ def stack_plot_pos_neg_flux(dfluxes,flnm = '',xlim=[]):
     runtotneg = np.zeros(len(xx))
     normtot = np.abs(ionframx[-2]+ionqxs[-2]+elecqxs[-2]+ionethxs[-2]+elecethxs[-2]+ionpdotusxs[-2]+elecpdotusxs[-2]+poyntxxs[-2])
     alpha = 0.8
-    tolfrac = 0.001
     
     #we will hide all areas that are too small to impact things, as they create an outline that is larger than the area itself!
     if(np.max(np.abs(ionframxpos)) < np.abs(normtot)*tolfrac):
