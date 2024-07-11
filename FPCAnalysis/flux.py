@@ -601,10 +601,10 @@ def compute_flux_tristanmp1(interpolxxs,dfields,dpar_ion,dpar_elec,params,inputs
     fluxes['EflucxBfluc_x_avg'] = np.asarray(EflucxBfluc_x_avg)
     fluxes['EflucxBfluc_y_avg'] = np.asarray(EflucxBfluc_y_avg)
     fluxes['EflucxBfluc_z_avg'] = np.asarray(EflucxBfluc_z_avg)
-    fluxes['EbarxBbar_x'] = np.asarray(EflucxBfluc_x_avg)
-    fluxes['EbarxBbar_y'] = np.asarray(EflucxBfluc_x_avg)
-    fluxes['EbarxBbar_z'] = np.asarray(EflucxBfluc_x_avg)
-    fluxes['Bbar_dot_bbar'] = np.asarray(EflucxBfluc_x_avg)
+    fluxes['EbarxBbar_x'] = np.asarray(EbarxBbar_x)
+    fluxes['EbarxBbar_y'] = np.asarray(EbarxBbar_y)
+    fluxes['EbarxBbar_z'] = np.asarray(EbarxBbar_z)
+    fluxes['Bbar_dot_bbar'] = np.asarray(Bbar_dot_bbar)
 
     fluxes['interpolxxs'] = interpolxxs
     fluxes['interdx'] = interdx
@@ -630,14 +630,14 @@ def compute_flux_tristanmp1(interpolxxs,dfields,dpar_ion,dpar_elec,params,inputs
     return fluxes
 
 
-def compute_diamag_drift(dfields,dpar_elec,dfluxes,interpolxxs,verbose=False):
+def compute_diamag_drift(dfields,dpar_elec,params,interpolxxs,verbose=False):
     """
     u_dia = -1/(q_e n_e)\frac{nabla p_{\perp,e} \times \mathbf{B}}{|\mathbf{B}|^2}
 
     Claim: u_dia is the thing causing the adiabatic heating. That is u_dia is caused
     by the thing conserving the adiabatic invariant, which we will call adiabatic heating.
 
-    The 'equivalency' of u_dia and adiabatic heating was shown by Juno et al 2021
+    The 'equivalency' of u_dia and adiabatic heating was shown by Juno et al 2021 (assumes no scattering tho!)
 
     Note, the above claim assumes a sufficiently high mass ratio    
     """
@@ -647,14 +647,8 @@ def compute_diamag_drift(dfields,dpar_elec,dfluxes,interpolxxs,verbose=False):
 
     #get constants
     if(verbose):print('Computing parameters...')
-    from FPCAnalysis.analysis import compute_beta0_tristanmp1, get_betai_betae_from_tot_and_ratio, norm_constants_tristanmp1
-    beta0 = compute_beta0_tristanmp1(params,inputs)
-    beta_ion,beta_elc= get_betai_betae_from_tot_and_ratio(beta0,inputs['temperature_ratio'])
-    dt = params['c']/params['comp'] #in units of wpe
-    dt, c_alf = norm_constants_tristanmp1(params,dt,inputs)
-    mi = params['mi']
+
     me = params['me']
-    interdx = interpolxxs[1]-interpolxxs[0] #assumes uniform spacing!
 
     qe = dpar_elec['q']
 
@@ -685,33 +679,21 @@ def compute_diamag_drift(dfields,dpar_elec,dfluxes,interpolxxs,verbose=False):
      
     #bin particles
     if(verbose):print("Binning particles...")
-    ionvxbins = []
-    ionvybins = []
-    ionvzbins = []
     elecvxbins = []
     elecvybins = []
     elecvzbins = []
 
-    massratio = params['mi']/params['me']
     vti0 = np.sqrt(params['delgam'])
     vte0 = np.sqrt(params['mi']/params['me'])*vti0 #WARNING: THIS ASSUME Ti/Te = 1, TODO: don't assume Ti/Te = 1
 
     for _i in range(0,len(interpolxxs)-1):
         x1 = interpolxxs[_i]
         x2 = interpolxxs[_i+1]
-        gptsparticleion = (x1 < dpar_ion['xi']) & (dpar_ion['xi'] <= x2)
-        ionvxs = dpar_ion['ui'][gptsparticleion][:]
-        ionvys = dpar_ion['vi'][gptsparticleion][:]
-        ionvzs = dpar_ion['wi'][gptsparticleion][:]
 
         gptsparticleelec = (x1 < dpar_elec['xe']) & (dpar_elec['xe'] <= x2)
-        elecvxs = dpar_elec['ue'][gptsparticleelec][:]*vte0/vti0
-        elecvys = dpar_elec['ve'][gptsparticleelec][:]*vte0/vti0
-        elecvzs = dpar_elec['we'][gptsparticleelec][:]*vte0/vti0
-
-        ionvxbins.append(ionvxs)
-        ionvybins.append(ionvys)
-        ionvzbins.append(ionvzs)
+        elecvxs = dpar_elec['ue'][gptsparticleelec][:]*vte0
+        elecvys = dpar_elec['ve'][gptsparticleelec][:]*vte0
+        elecvzs = dpar_elec['we'][gptsparticleelec][:]*vte0
 
         elecvxbins.append(elecvxs)
         elecvybins.append(elecvys)
@@ -720,27 +702,9 @@ def compute_diamag_drift(dfields,dpar_elec,dfluxes,interpolxxs,verbose=False):
 
     #compute bulk v
     if(verbose):print("computing bulk vel...")
-    ionvx = []
-    ionvy = []
-    ionvz = []
     elecvx = []
     elecvy = []
     elecvz = []
-    for ivxs in ionvxbins:
-        if(len(ivxs) > 0):
-            ionvx.append(np.mean(ivxs))
-        else:
-            ionvx.append(0.)
-    for ivys in ionvybins:
-        if(len(ivys) > 0):
-            ionvy.append(np.mean(ivys))
-        else:
-            ionvy.append(0.)
-    for ivzs in ionvzbins:
-        if(len(ivzs) > 0):
-            ionvz.append(np.mean(ivzs))
-        else:
-            ionvz.append(0.)
     for evxs in elecvxbins:
         if(len(evxs) > 0):
             elecvx.append(np.mean(evxs))
@@ -767,19 +731,14 @@ def compute_diamag_drift(dfields,dpar_elec,dfluxes,interpolxxs,verbose=False):
         bvye = np.mean(elecvybins[_i])
         bvze = np.mean(elecvzbins[_i])
 
-        px = np.sum([(evxval-bvxe)**2 for evxval in elecvxbins[_i]])
-        py = np.sum([(evyval-bvxe)**2 for evyval in elecvybins[_i]])
-        pz = np.sum([(evzval-bvxe)**2 for evzval in elecvzbins[_i]])
-
-        #we include the 1/ne factor here!
-        px /= float(len(elecvxbins[_i]))
-        py /= float(len(elecvybins[_i]))
-        pz /= float(len(elecvzbins[_i]))
+        px = me*np.sum([(evxval-bvxe)**2 for evxval in elecvxbins[_i]]) 
+        py = me*np.sum([(evyval-bvye)**2 for evyval in elecvybins[_i]])
+        pz = me*np.sum([(evzval-bvze)**2 for evzval in elecvzbins[_i]])
 
         nspec.append(float(len(elecvzbins[_i])))
 
         #Assume that \mathbf{B} = B(x) \hat{y} (or well approximated as such)
-        ppr = py+pz 
+        ppr = (py+pz)/3.
         pperp.append(ppr)
     pperp = np.asarray(pperp)
 
@@ -787,8 +746,10 @@ def compute_diamag_drift(dfields,dpar_elec,dfluxes,interpolxxs,verbose=False):
     udiax = []
     udiay = []
     udiaz = []
-    #TODO convert above to FAC? <doesnt matter for our perp simulation that much>
-    gradpperp = np.gradient(pperp)
+    #TODO convert above to FAC? (if so, re do comments above) <doesnt matter for our perp simulation that much>
+    interdx = interpolxxs[1]-interpolxxs[0]
+    gradnormfac = interdx*params['comp']*np.sqrt(params['mi']/params['me'])
+    gradpperp = np.gradient(pperp)*(1/gradnormfac)
     for _i in range(0,len(interpolxxs)-1):
         x1 = interpolxxs[_i]
         x2 = interpolxxs[_i+1]
@@ -801,17 +762,15 @@ def compute_diamag_drift(dfields,dpar_elec,dfluxes,interpolxxs,verbose=False):
         By = np.mean(Bys[:,:,goodfieldpts])
         Bz = np.mean(Bzs[:,:,goodfieldpts])
 
-        #TODO: use units here!!!
-        ud = -1/qe*np.cross([0,np.gradpperp[_i],0],[Bx,By,Bz])/np.linalg.norm([Bx,By,Bz])**2
+        ne = nspec[_i]
+
+        ud = (-1./(qe*params['c']*ne))*np.cross([gradpperp[_i],0,0],[Bx,By,Bz])/np.linalg.norm([Bx,By,Bz])**2
         udiax.append(ud[0])
         udiay.append(ud[1])
         udiaz.append(ud[2])
     udiax = np.asarray(udiax)
     udiay = np.asarray(udiay)
     udiaz = np.asarray(udiaz)
-        
-
-
 
     #re normalize fields 
     fieldkeys = ['ex','ey','ez','bx','by','bz']
@@ -825,5 +784,5 @@ def compute_diamag_drift(dfields,dpar_elec,dfluxes,interpolxxs,verbose=False):
             dfluc[fk] /= bnorm
             dfavg[fk] /= bnorm
 
-    return positions, udiax, udiay, udiaz, nspec
+    return positions, udiax/vti0, udiay/vti0, udiaz/vti0, nspec, elecvx, elecvy, elecvz #TODO: remove the extra elecvx outputs at end
 
