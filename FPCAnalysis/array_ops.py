@@ -635,6 +635,9 @@ def interpolate(independent_vars, dependent_vars, locations):
 
 def split_positive_negative(positions,arr,doublePosForZeros):
     #assumes positions is evenly spaced
+
+    #conserves total value!
+
     import copy
 
     arr = np.array(arr)
@@ -656,28 +659,37 @@ def split_positive_negative(positions,arr,doublePosForZeros):
             if (_i % 2 == 1):
                 positionsout[_i] = positionsout[_i] + dx/2
 
-        pos_trimidxes = [] #indexes to make zero to fix overlap
-        for _i in range(1,len(positive_array)):
-            if(positive_array[_i]==0 and positive_array[_i-1] != 0):
-                pos_trimidxes.append(_i-1)
+        #find indexes to make zero to fix overlap (arguably, we should find the exact zero rather than assuming its in the middle, but this is close enough for plotting! Array should be dense anyway so the error is small and only visual... (we would also need to align the different intercepts when making the stack plots, which would be hard!))
+        pos_trimidxes = [] 
         for _i in range(len(positive_array)-1):
-            if(positive_array[_i]==0 and positive_array[_i+1] != 0):
-                pos_trimidxes.append(_i+1) 
+            if(_i % 2 == 1):
+                if(positive_array[_i] !=0 and negative_array[_i+1] != 0): #checking the negative array checks to make sure the data wasnt actually zero at this point
+                    pos_trimidxes.append(_i) 
 
-        for idx in pos_trimidxes:
-            positive_array[idx] = 0
-
-        neg_trimidxes = [] #indexes to make zero to fix overlap
-        for _i in range(1,len(negative_array)):
-            if(negative_array[_i]==0 and negative_array[_i-1] != 0):
-                neg_trimidxes.append(_i-1)
+        #find indexes to make zero to fix overlap
+        neg_trimidxes = [] 
         for _i in range(len(negative_array)-1):
-            if(negative_array[_i]==0 and negative_array[_i+1] != 0):
-                neg_trimidxes.append(_i+1) 
-        
+            if(_i % 2 == 1):
+                if(negative_array[_i] !=0 and positive_array[_i+1] != 0): #checking the positive array checks to make sure the data wasnt actually zero at this point
+                    neg_trimidxes.append(_i) 
+
+        #set indexes to make zero to fix overlap
+        for idx in pos_trimidxes:
+            positive_array[idx] = 0.
         for idx in neg_trimidxes:
-            negative_array[idx] = 0
+            negative_array[idx] = 0.
 
+        #interpolate new values
+        for _i in range(1,len(negative_array)-1):
+            if (_i % 2 == 1 and (negative_array[_i-1] != 0 and negative_array[_i+1] != 0)):
+                negative_array[_i] = (negative_array[_i+1]+negative_array[_i-1])/2.
+        for _i in range(1,len(positive_array)-1):
+            if (_i % 2 == 1 and (positive_array[_i-1] != 0 and positive_array[_i+1] != 0)):
+                positive_array[_i] = (positive_array[_i+1]+positive_array[_i-1])/2.
 
-    return positionsout, positive_array, negative_array
+        #divide by two to conserve total value!
+        positive_array /= 2.
+        negative_array /= 2.
+
+    return positionsout, positive_array, negative_array,
     
