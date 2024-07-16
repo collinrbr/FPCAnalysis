@@ -475,7 +475,7 @@ def compute_gyro_fpc_from_cart_fpc(vx,vy,vz,corez,corey,corex,vmax,nrbins):
     """
     Note: x<-> perp1, y<->perp2, z<->par
 
-    However! the index structure of corei[perp1,perp2,par]
+    However! the index structure of output is corei[perp1,perp2,par]
     """
     coreperp = corey+corez
 
@@ -486,9 +486,25 @@ def compute_gyro_fpc_from_cart_fpc(vx,vy,vz,corez,corey,corex,vmax,nrbins):
     for _vparidx in range(len(corex)):
         vperpgyro[_vparidx], corepargyro[_vparidx] = bin_integrate_gyro(vx[_vparidx], vy[_vparidx], corex[:,:,_vparidx], vmax, nrbins)
         vperpgyro[_vparidx], coreperpgyro[_vparidx] = bin_integrate_gyro(vx[_vparidx], vy[_vparidx], coreperp[:,:,_vparidx], vmax, nrbins)
-        vpargyro[_vparidx][:]=vz[_vparidx,0,0]
+        vpargyro[_vparidx][:] = vz[_vparidx,0,0]
 
     return vpargyro,vperpgyro,corepargyro,coreperpgyro
+
+def compute_gyro_fpc_from_cart_fpc_single(vx,vy,vz,arr,vmax,nrbins):
+    """
+    Note: x<-> perp1, y<->perp2, z<->par
+
+    However! the index structure of output is arr[perp1,perp2,par]
+    """
+
+    vpargyro = np.zeros((len(arr),nrbins)) #assumes symmetry in shape of corex
+    vperpgyro = np.zeros((len(arr),nrbins))
+    arrgyro = np.zeros((len(arr),nrbins))
+    for _vparidx in range(len(arr)):
+        vperpgyro[_vparidx], arrgyro[_vparidx] = bin_integrate_gyro(vx[_vparidx], vy[_vparidx], arr[:,:,_vparidx], vmax, nrbins)
+        vpargyro[_vparidx][:] = vz[_vparidx,0,0]
+
+    return vpargyro,vperpgyro,arrgyro
 
 def compute_compgyro_fpc_from_cart_fpc(vx,vy,vz,corez,corey,corex,vmax,nrbins):
     """

@@ -73,13 +73,13 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
     if(fieldkey == 'etot'):
         #recursive calls to compute 'etot'
         vx, vy, vz, totalPtcl, hist, cor = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
-                            dpar, dfields, 'ex', useBoxFAC = useBoxFAC, altcorfields = altcorfields, beta = beta, massratio = massratio, c = c)
+                            dpar, dfields, 'epar', useBoxFAC = useBoxFAC, altcorfields = altcorfields, beta = beta, massratio = massratio, c = c)
         _, _, _, _, _hist, _cor = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
-                            dpar, dfields, 'ey', useBoxFAC = useBoxFAC, altcorfields = altcorfields, beta = beta, massratio = massratio, c = c)
+                            dpar, dfields, 'eperp1', useBoxFAC = useBoxFAC, altcorfields = altcorfields, beta = beta, massratio = massratio, c = c)
         hist = hist+_hist
         cor = cor+_cor
         _, _, _, _, _hist, _cor = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
-                            dpar, dfields, 'ez', useBoxFAC = useBoxFAC, altcorfields = altcorfields, beta = beta, massratio = massratio, c = c)
+                            dpar, dfields, 'eperp2', useBoxFAC = useBoxFAC, altcorfields = altcorfields, beta = beta, massratio = massratio, c = c)
         hist = hist+_hist
         cor = cor+_cor
 

@@ -1321,15 +1321,17 @@ def plot_cor_and_dist_supergrid_row(vx, vy, vz, vmax,
 
     plt.style.use("cb.mplstyle") #sets style parameters for matplotlib plots
 
-    fig, axs = plt.subplots(1,3,figsize=(1*5,3*5))
+    fig, axs = plt.subplots(1,3,figsize=(1*15,3*15))
     axs = np.reshape(axs, (1, 3)) #Reshape so we can more easily reuse old code
+
+    cbarshrink = .075 #controls size of colorbar
 
     plt.rcParams['axes.titlepad'] = 8  # pad is in points
 
-    _hspace = .15
-    _wspace = -.15
+    _hspace = 0
+    _wspace = .4
     if(computeJdotE):
-        _hspace+=.275
+        _hspace+=0
     if(plotLog):
         _wspace+=.175
     fig.subplots_adjust(hspace=_hspace,wspace=_wspace)
@@ -1337,6 +1339,8 @@ def plot_cor_and_dist_supergrid_row(vx, vy, vz, vmax,
     vx_xy, vy_xy = mesh_3d_to_2d(vx,vy,vz,'xy')
     vx_xz, vz_xz = mesh_3d_to_2d(vx,vy,vz,'xz')
     vy_yz, vz_yz = mesh_3d_to_2d(vx,vy,vz,'yz')
+
+    maxplotvval = np.max(vz_yz) #Assumes square grid of even size
 
     dv = vy_yz[1][1]-vy_yz[0][0] #assumes square velocity grid
 
@@ -1379,15 +1383,15 @@ def plot_cor_and_dist_supergrid_row(vx, vy, vz, vmax,
             axs[0,0].set_ylabel(r"$v_y/"+vnormstr+"$")
         axs[0,0].set_aspect('equal', 'box')
         axs[0,0].grid()
-        clrbar00 = plt.colorbar(im00, ax=axs[0,0])#,format='%.1e')
+        clrbar10 = plt.colorbar(im00, ax=axs[0,0],shrink = cbarshrink)#,format='%.1e')
         if(not(plotLogHist)):
-            clrbar00.formatter.set_powerlimits((0, 0))
+            clrbar10.formatter.set_powerlimits((0, 0))
         axs[0,0].text(-vmax*2.2,0, r"$f$", ha='center', rotation=90, wrap=False)
         if(params != None):
-            axs[0,0].text(-vmax*2.6,0, '$M_A = $ ' + str(abs(params['MachAlfven'])), ha='center', rotation=90, wrap=False)
+            axs[0,0].text(-vmax*2.9,0, '$M_A = $ ' + str(abs(params['MachAlfven'])), ha='center', rotation=90, wrap=False)
 
         if(listpos):
-            axs[0,0].text(-vmax*2.6,0, '$x / d_i = $ ' + str("{:.4f}".format(xposval)), ha='center', rotation=90, wrap=False)
+            axs[0,0].text(-vmax*2.9,0, '$x / d_i = $ ' + str("{:.4f}".format(xposval)), ha='center', rotation=90, wrap=False)
 
 
         #H_xz
@@ -1402,9 +1406,9 @@ def plot_cor_and_dist_supergrid_row(vx, vy, vz, vmax,
             axs[0,1].set_ylabel(r"$v_z/"+vnormstr+"$")
         axs[0,1].set_aspect('equal', 'box')
         axs[0,1].grid()
-        clrbar01 = plt.colorbar(im01, ax=axs[0,1])#,format='%.1e')
+        clrbar11 = plt.colorbar(im01, ax=axs[0,1],shrink = cbarshrink)#,format='%.1e')
         if(not(plotLogHist)):
-            clrbar01.formatter.set_powerlimits((0, 0))
+            clrbar11.formatter.set_powerlimits((0, 0))
 
         #H_yz
         if(plotLogHist):
@@ -1418,9 +1422,9 @@ def plot_cor_and_dist_supergrid_row(vx, vy, vz, vmax,
             axs[0,2].set_ylabel(r"$v_y/"+vnormstr+"$")
         axs[0,2].set_aspect('equal', 'box')
         axs[0,2].grid()
-        clrbar02 = plt.colorbar(im02, ax=axs[0,2])#,format='%.1e')
+        clrbar12 = plt.colorbar(im02, ax=axs[0,2], shrink = cbarshrink)#,format='%.1e')
         if(not(plotLogHist)):
-            clrbar02.formatter.set_powerlimits((0, 0))
+            clrbar12.formatter.set_powerlimits((0, 0))
 
     if(arrtype in ['CEx','CEpar']):
         CEx_xy = arr_xy
@@ -1462,7 +1466,7 @@ def plot_cor_and_dist_supergrid_row(vx, vy, vz, vmax,
             else:
                 axs[0,0].text(-vmax*2.2,0, r"$C_{E_{x}}$", ha='center', rotation=90, wrap=False)
         if(params != None):
-            axs[0,0].text(-vmax*2.6,0, '$\Theta_{Bn} = $ ' + str(params['thetaBn']), ha='center', rotation=90, wrap=False)
+            axs[0,0].text(-vmax*2.9,0, '$\Theta_{Bn} = $ ' + str(params['thetaBn']), ha='center', rotation=90, wrap=False)
         if(computeJdotE):
             if(not(plotDiagJEOnly)):
                 JdotE = compute_energization(CEx_xy,dv)
@@ -1490,7 +1494,7 @@ def plot_cor_and_dist_supergrid_row(vx, vy, vz, vmax,
                             axs[0,0].set_title('$\widetilde{j_x}  \widetilde{E_x}$ = ' + "{:.2e}".format(JdotE),loc='left')
                     else:
                         axs[0,0].set_title('$j_x  E_x$ = ' + "{:.2e}".format(JdotE),loc='left')
-        clrbar10 = plt.colorbar(im10, ax=axs[1,0])#,format='%.1e')
+        clrbar10 = plt.colorbar(im10, ax=axs[1,0], shrink = cbarshrink)#,format='%.1e')
         if(not(plotLog)):
             clrbar10.formatter.set_powerlimits((0, 0))
 
@@ -1534,7 +1538,7 @@ def plot_cor_and_dist_supergrid_row(vx, vy, vz, vmax,
                             axs[0,1].set_title('$\widetilde{j_x}  \widetilde{E_x}$ = ' + "{:.2e}".format(JdotE),loc='left')
                     else:
                         axs[0,1].set_title('$j_x  E_x$ = ' + "{:.2e}".format(JdotE),loc='left')
-        clrbar11 = plt.colorbar(im11, ax=axs[1,1])#,format='%.1e')
+        clrbar11 = plt.colorbar(im11, ax=axs[1,1], shrink = cbarshrink)#,format='%.1e')
         if(not(plotLog)):
             clrbar11.formatter.set_powerlimits((0, 0))
 
@@ -1578,7 +1582,7 @@ def plot_cor_and_dist_supergrid_row(vx, vy, vz, vmax,
                             axs[0,2].set_title('$\widetilde{j_x}  \widetilde{E_x}$ = ' + "{:.2e}".format(JdotE),loc='left')
                     else:
                         axs[0,2].set_title('$j_x  E_x$ = ' + "{:.2e}".format(JdotE),loc='left')
-        clrbar12 = plt.colorbar(im12, ax=axs[1,2])#,format='%.1e')
+        clrbar12 = plt.colorbar(im12, ax=axs[1,2], shrink = cbarshrink)#,format='%.1e')
         if(not(plotLog)):
             clrbar12.formatter.set_powerlimits((0, 0))
     if(arrtype in ['CEy','CEperp1']):
@@ -1624,7 +1628,7 @@ def plot_cor_and_dist_supergrid_row(vx, vy, vz, vmax,
                 axs[0,0].text(-vmax*2.2,0, r"$C_{E_{y}}$", ha='center', rotation=90, wrap=False)
         axs[0,0].grid()
         if(xpos != None):
-            axs[0,0].text(-vmax*2.6,0,'$x/d_i = $' + str(xpos), ha='center', rotation=90, wrap=False)
+            axs[0,0].text(-vmax*2.2,0,'$x/d_i = $' + str(xpos), ha='center', rotation=90, wrap=False)
         if(computeJdotE):
             JdotE = compute_energization(CEy_xy,dv)
             if(not(plotDiagJEOnly)):
@@ -1654,9 +1658,9 @@ def plot_cor_and_dist_supergrid_row(vx, vy, vz, vmax,
                     else:
                         axs[0,0].set_title('$j_y  E_y$ = ' + "{:.2e}".format(JdotE),loc='left')
         
-        clrbar20 = plt.colorbar(im20, ax=axs[0,0])#,format='%.1e')
+        clrbar10 = plt.colorbar(im20, ax=axs[0,0], shrink = cbarshrink)#,format='%.1e')
         if(not(plotLog)):
-            clrbar20.formatter.set_powerlimits((0, 0))
+            clrbar10.formatter.set_powerlimits((0, 0))
 
         #CEy_xz
         maxCe = max(np.max(CEy_xz),abs(np.min(CEy_xz)))
@@ -1700,9 +1704,9 @@ def plot_cor_and_dist_supergrid_row(vx, vy, vz, vmax,
                     else:
                         axs[0,1].set_title('$j_y  E_y$ = ' + "{:.2e}".format(JdotE),loc='left')
 
-        clrbar21 = plt.colorbar(im21, ax=axs[0,1])#,format='%.1e')
+        clrbar11 = plt.colorbar(im21, ax=axs[0,1], shrink = cbarshrink)#,format='%.1e')
         if(not(plotLog)):
-            clrbar21.formatter.set_powerlimits((0, 0))
+            clrbar11.formatter.set_powerlimits((0, 0))
 
         #CEy_yz
         maxCe = max(np.max(CEy_yz),abs(np.min(CEy_yz)))
@@ -1745,9 +1749,9 @@ def plot_cor_and_dist_supergrid_row(vx, vy, vz, vmax,
                     else:
                         axs[0,2].set_title('$j_y  E_y$ = ' + "{:.2e}".format(JdotE),loc='left')
 
-        clrbar22 = plt.colorbar(im22, ax=axs[2,2])#,format='%.1e')
+        clrbar12 = plt.colorbar(im22, ax=axs[2,2], shrink = cbarshrink)#,format='%.1e')
         if(not(plotLog)):
-            clrbar22.formatter.set_powerlimits((0, 0))
+            clrbar12.formatter.set_powerlimits((0, 0))
     
     if(arrtype in ['CEz','CEperp2']):
         CEz_xy = arr_xy
@@ -1788,7 +1792,7 @@ def plot_cor_and_dist_supergrid_row(vx, vy, vz, vmax,
                 axs[0,0].text(-vmax*2.2,0, r"$C_{E_{z}}$", ha='center', rotation=90, wrap=False)
         axs[0,0].grid()
         if(metadata != None):
-            axs[0,0].text(-vmax*2.6,0, metadata, ha='center', rotation=90, wrap=False)
+            axs[0,0].text(-vmax*2.2,0, metadata, ha='center', rotation=90, wrap=False)
         if(computeJdotE):
             JdotE = compute_energization(CEz_xy,dv)
             if(True):
@@ -1817,9 +1821,9 @@ def plot_cor_and_dist_supergrid_row(vx, vy, vz, vmax,
                     else:
                         axs[0,0].set_title('$j_z  E_z$ = ' + "{:.2e}".format(JdotE),loc='left')
 
-        clrbar30 = plt.colorbar(im30, ax=axs[0,0])#,format='%.1e')
+        clrbar10 = plt.colorbar(im30, ax=axs[0,0], shrink = cbarshrink)#,format='%.1e')
         if(not(plotLog)):
-            clrbar30.formatter.set_powerlimits((0, 0))
+            clrbar10.formatter.set_powerlimits((0, 0))
 
         #CEz_xz
         maxCe = max(np.max(CEz_xz),abs(np.min(CEz_xz)))
@@ -1859,9 +1863,9 @@ def plot_cor_and_dist_supergrid_row(vx, vy, vz, vmax,
                     else:
                         axs[0,1].set_title('$j_z  E_z$ = ' + "{:.2e}".format(JdotE),loc='left')
 
-        clrbar31 = plt.colorbar(im31, ax=axs[0,1])#,format='%.1e')
+        clrbar11 = plt.colorbar(im31, ax=axs[0,1], shrink = cbarshrink)#,format='%.1e')
         if(not(plotLog)):
-            clrbar31.formatter.set_powerlimits((0, 0))
+            clrbar11.formatter.set_powerlimits((0, 0))
 
         #CEz_yz
         maxCe = max(np.max(CEz_yz),abs(np.min(CEz_yz)))
@@ -1900,11 +1904,11 @@ def plot_cor_and_dist_supergrid_row(vx, vy, vz, vmax,
                     else:
                         axs[0,2].set_title('$j_z  E_z$ = ' + "{:.2e}".format(JdotE),loc='left')
 
-        clrbar32 = plt.colorbar(im32, ax=axs[0,2])#,format='%.1e')
+        clrbar12 = plt.colorbar(im32, ax=axs[0,2], shrink = cbarshrink)#,format='%.1e')
         if(not(plotLog)):
-            clrbar32.formatter.set_powerlimits((0, 0))
+            clrbar12.formatter.set_powerlimits((0, 0))
 
-    if(arrtype in ['CEtot']):
+    if(arrtype in ['Ctot']):
         CEtot_xy = arr_xy
         CEtot_xz = arr_xz
         CEtot_yz = arr_yz
@@ -1943,9 +1947,9 @@ def plot_cor_and_dist_supergrid_row(vx, vy, vz, vmax,
                 axs[0,0].text(-vmax*2.2,0, r"$C_{E_{tot}}$", ha='center', rotation=90, wrap=False)
         axs[0,0].grid()
         if(metadata != None):
-            axs[0,0].text(-vmax*2.6,0, metadata, ha='center', rotation=90, wrap=False)
+            axs[0,0].text(-vmax*2.2,0, metadata, ha='center', rotation=90, wrap=False)
         if(computeJdotE):
-            JdotE = compute_energization(CEto_xy,dv)
+            JdotE = compute_energization(CEtot_xy,dv)
             if(True):
                 if(plotFAC):
                     if(plotAvg):
@@ -1961,7 +1965,7 @@ def plot_cor_and_dist_supergrid_row(vx, vy, vz, vmax,
                         axs[0,0].set_title('$\mathbf{j} \cdot  \mathbf{E}$ = ' + "{:.2e}".format(JdotE),loc='left')
                 else:
                     if(plotAvg):
-                        axs[0,0].set_title('$\overline{\mathbf{j}}  \overline{\mathbf{E}}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        axs[0,0].set_title('$\overline{\mathbf{j}}  \cdot \overline{\mathbf{E}}$ = ' + "{:.2e}".format(JdotE),loc='left')
                     elif(plotFluc):
                         if(isLowPass):
                             axs[0,0].set_title('$\widetilde{\mathbf{j}}^{k_{||} d_i < 15} \cdot \widetilde{\mathbf{E}}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
@@ -1972,9 +1976,9 @@ def plot_cor_and_dist_supergrid_row(vx, vy, vz, vmax,
                     else:
                         axs[0,0].set_title('$\mathbf{j} \cdot  \mathbf{E}$ = ' + "{:.2e}".format(JdotE),loc='left')
 
-        clrbar30 = plt.colorbar(im30, ax=axs[0,0])#,format='%.1e')
+        clrbar10 = plt.colorbar(im30, ax=axs[0,0], shrink = cbarshrink)#,format='%.1e')
         if(not(plotLog)):
-            clrbar30.formatter.set_powerlimits((0, 0))
+            clrbar10.formatter.set_powerlimits((0, 0))
 
         #CEtot_xz
         maxCe = max(np.max(CEtot_xz),abs(np.min(CEtot_xz)))
@@ -2014,9 +2018,9 @@ def plot_cor_and_dist_supergrid_row(vx, vy, vz, vmax,
                     else:
                         axs[0,1].set_title('$j_z  E_z$ = ' + "{:.2e}".format(JdotE),loc='left')
 
-        clrbar31 = plt.colorbar(im31, ax=axs[0,1])#,format='%.1e')
+        clrbar11 = plt.colorbar(im31, ax=axs[0,1], shrink = cbarshrink)#,format='%.1e')
         if(not(plotLog)):
-            clrbar31.formatter.set_powerlimits((0, 0))
+            clrbar11.formatter.set_powerlimits((0, 0))
 
         #CEtot_yz
         maxCe = max(np.max(CEtot_yz),abs(np.min(CEtot_yz)))
@@ -2055,15 +2059,14 @@ def plot_cor_and_dist_supergrid_row(vx, vy, vz, vmax,
                     else:
                         axs[0,2].set_title('$\mathbf{j} \cdot  \mathbf{E}$ = ' + "{:.2e}".format(JdotE),loc='left')
 
-        clrbar32 = plt.colorbar(im32, ax=axs[0,2])#,format='%.1e')
+        clrbar12 = plt.colorbar(im32, ax=axs[0,2], shrink = cbarshrink)#,format='%.1e')
         if(not(plotLog)):
-            clrbar32.formatter.set_powerlimits((0, 0))
+            clrbar12.formatter.set_powerlimits((0, 0))
 
 
-    for _i in range(0,4):
-        for _j in range(0,3):
-            axs[_i,_j].set_xlim(-vmax,vmax)
-            axs[_i,_j].set_ylim(-vmax,vmax)
+    for _j in range(0,3):
+        axs[0,_j].set_xlim(-vmax,vmax)
+        axs[0,_j].set_ylim(-vmax,vmax)
 
 
     if(plotFAC):
@@ -2095,12 +2098,29 @@ def plot_cor_and_dist_supergrid_row(vx, vy, vz, vmax,
         intvl = 10.
     tcks = np.arange(0,vmax,intvl)
     tcks = np.concatenate((-1*np.flip(tcks),tcks))
-    for _i in range(0,4):
-        for _j in range(0,3):
-            axs[_i,_j].set_xticks(tcks)
-            axs[_i,_j].set_yticks(tcks)
 
-    plt.savefig(flnm+'.png',format='png',dpi=250,bbox_inches='tight')
+    for _j in range(0,3):
+        axs[0,_j].set_xticks(tcks)
+        axs[0,_j].set_yticks(tcks)
+
+
+    if(flnm != ''):
+        plt.savefig(flnm+'.png',format='png',dpi=250,bbox_inches='tight')
+            
+        #must make figure first to grab x10^val on top of color bar- after grabbing it, we can move it- a little wasteful but it was quick solution
+        clrbar10text = str(clrbar10.ax.yaxis.get_offset_text().get_text())
+        clrbar10.ax.yaxis.get_offset_text().set_visible(False)
+        axs[0,0].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar10text, va='bottom', ha='center')
+        clrbar11text = str(clrbar11.ax.yaxis.get_offset_text().get_text())
+        clrbar11.ax.yaxis.get_offset_text().set_visible(False) 
+        axs[0,1].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar11text, va='bottom', ha='center')
+        clrbar12text = str(clrbar12.ax.yaxis.get_offset_text().get_text())
+        clrbar12.ax.yaxis.get_offset_text().set_visible(False)
+        axs[0,2].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar12text, va='bottom', ha='center')
+ 
+        plt.savefig(flnm+'.png',format='png',dpi=250,bbox_inches='tight')
+    else:
+        plt.show()
     plt.close('all') #saves RAM
 
 def make_9panel_sweep_from_2v(Hist_vxvy, Hist_vxvz, Hist_vyvz,
@@ -2732,6 +2752,111 @@ def plot_gyro(vpar,vperp,corepargyro,coreperpgyro,flnm='',isIon=True,plotLog=Fal
         plt.show()
     plt.close()
 
+def plot_gyro_single(vpar,vperp,coregyro,flnm='',coresubscript='tot',isIon=True,plotLog=False,computeJdotE=True,npar=None,plotAvg = False, plotFluc = False,isLowPass=False,isHighPass=False):
+    """
+
+    """
+    if(npar != None):
+        corepargyro /= npar
+        coreperpgyro /= npar
+
+    plt.style.use("cb.mplstyle") #sets style parameters for matplotlib plots
+
+    fig, axs = plt.subplots(1,1,figsize=(2*5,4*5),sharey=True)
+
+    vmax = np.max(vpar)
+
+    if(isIon):
+        vnormstr = 'v_{ti}'
+    else:
+        vnormstr = 'v_{te}'
+
+    clboffset = np.array([vmax*.15,-vmax*.15])
+
+    maxCe = np.max(coregyro)
+    if(plotLog):
+        im11 = axs.pcolormesh(vpar,vperp,coregyro, cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
+    else:
+        im11 = axs.pcolormesh(vpar,vperp,coregyro,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
+    axs.set_xlabel(r"$v_{||}/"+vnormstr+"$")
+    axs.set_ylabel(r"$v_{\perp}/"+vnormstr+"$")
+    axs.set_aspect('equal', 'box')
+    axs.grid()
+    if(plotFluc):
+        if(isLowPass):
+            axs.set_title(r'$\widetilde{C_{E_{'+coresubscript+'}}}^{k_{||} d_i < 15}(v_{||},v_{\perp})$', loc='right')
+        elif(isHighPass):
+            axs.set_title(r'$\widetilde{C_{E_{'+coresubscript+'}}}^{k_{||} d_i > 15}(v_{||},v_{\perp})$', loc='right')
+        else:
+            axs.set_title(r'$\widetilde{C_{E_{'+coresubscript+'}}}(v_{||},v_{\perp})$', loc='right')
+    elif(plotAvg):
+        axs.set_title(r'$\overline{C_{E_{'+coresubscript+'}}}(v_{||},v_{\perp})$', loc='right')
+    else:
+        axs.set_title(r'$C_{E_{'+coresubscript+'}}(v_{||},v_{\perp})$', loc='right')
+
+    if(computeJdotE):
+        JdotE = np.sum(coregyro)
+
+        sval = 'e'
+        if(isIon):
+            sval = 'i'
+
+            if(coresubscript=='tot'):
+                if(plotFluc):
+                    if(isLowPass):
+                        axs.text(-vmax*0.85,vmax*0.75,r'$\widetilde{\mathbf{j}_{'+sval+'}}^{k_{||} d_i < 15}  \cdot \widetilde{\mathbf{E}}^{k_{||} d_i < 15} = $'+ "{:.2e}".format(JdotE),fontsize=24)
+                    elif(isHighPass):
+                        axs.text(-vmax*0.85,vmax*0.75,r'$\widetilde{\mathbf{j}_{'+sval+'}}^{k_{||} d_i < 15} \cdot \widetilde{\mathbf{E}}^{k_{||} d_i > 15} = $'+ "{:.2e}".format(JdotE),fontsize=24)
+                    else:
+                        axs.text(-vmax*0.85,vmax*0.75,r'$\widetilde{\mathbf{j}_{'+sval+'}} \cdot \widetilde{\mathbf{E}} = $'+ "{:.2e}".format(JdotE),fontsize=24)
+                elif(plotAvg):
+                    axs.text(-vmax*0.85,vmax*0.75,r'$\overline{\mathbf{j}_{'+sval+'}} \cdot \overline{\mathbf{E}} = $'+ "{:.2e}".format(JdotE),fontsize=24)
+                else:
+                    axs.text(-vmax*0.85,vmax*0.75,r'$\mathbf{j}_{'+sval+'} \cdot \mathbf{E} = $'+ "{:.2e}".format(JdotE),fontsize=12)
+            else:
+                if(plotFluc):
+                    if(isLowPass):
+                        axs.text(-vmax*0.85,vmax*0.75,r'$\widetilde{j_{'+coresubscript+','+sval+'}}^{k_{||} d_i < 15}  \widetilde{E}_{'+coresubscript+'}^{k_{||} d_i < 15} = $'+ "{:.2e}".format(JdotE),fontsize=24)
+                    elif(isHighPass):
+                        axs.text(-vmax*0.85,vmax*0.75,r'$\widetilde{j_{'+coresubscript+','+sval+'}}^{k_{||} d_i < 15}  \widetilde{E}_{'+coresubscript+'}^{k_{||} d_i > 15} = $'+ "{:.2e}".format(JdotE),fontsize=24)
+                    else:
+                        axs.text(-vmax*0.85,vmax*0.75,r'$\widetilde{j_{'+coresubscript+','+sval+'}}  \widetilde{E}_{'+coresubscript+'} = $'+ "{:.2e}".format(JdotE),fontsize=24)
+                elif(plotAvg):
+                    axs.text(-vmax*0.85,vmax*0.75,r'$\overline{j_{'+coresubscript+','+sval+'}}  \overline{E}_{'+coresubscript+'} = $'+ "{:.2e}".format(JdotE),fontsize=24)
+                else:
+                    axs.text(-vmax*0.85,vmax*0.75,r'$j_{'+coresubscript+','+sval+'}  E_{'+coresubscript+'} = $'+ "{:.2e}".format(JdotE),fontsize=24)
+
+    # #set ticks
+    # intvl = 1.
+    # if(vmax > 5):
+    #     intvl = 5.
+    # if(vmax > 10):
+    #     intvl = 10.
+    # tcks = np.arange(0,vmax,intvl)
+    # tcks = np.concatenate((-1*np.flip(tcks),tcks))
+    # axs[0].set_xticks(tcks)
+    # axs[0].set_yticks(tcks)
+
+    clrbar11 = plt.colorbar(im11, ax=axs,fraction=0.024, pad=0.04)
+    if(not(plotLog)):
+        clrbar11.formatter.set_powerlimits((0, 0))
+
+    maxplotvval = np.max(vpar) #Assumes square grid of even size
+
+    if(flnm != ''):
+        plt.savefig(flnm+'.png',format='png',dpi=250,bbox_inches='tight') #for some reason this needs to be done to get the following lines to work...
+   
+        clrbar11text = str(clrbar11.ax.yaxis.get_offset_text().get_text())
+        clrbar11.ax.yaxis.get_offset_text().set_visible(False)
+        axs.text(1.25*maxplotvval,-0.175*maxplotvval,clrbar11text, va='bottom', ha='center')
+        
+        plt.savefig(flnm+'.png',format='png',dpi=250,bbox_inches='tight')
+        plt.close('all') #saves RAM
+    else:
+        plt.show()
+    plt.close()
+
+
 
 def plot_gyro_3comp(vpar,vperp,corepargyro,coreperp1gyro,coreperp2gyro,flnm='',isIon=True,plotLog=False,computeJdotE=True,npar=None,plotAvg = False, plotFluc = False,isLowPass=False,isHighPass=False):
     """
@@ -2882,6 +3007,7 @@ def plot_gyro_3comp(vpar,vperp,corepargyro,coreperp1gyro,coreperp2gyro,flnm='',i
 #             axs[_i].set_xticks(tcks)
 #             axs[_i].set_yticks(tcks)
 
+
     clrbar11 = plt.colorbar(im11, ax=axs[0],fraction=0.024, pad=0.04)
     if(not(plotLog)):
         clrbar11.formatter.set_powerlimits((0, 0))
@@ -2948,7 +3074,8 @@ def project_and_plot_supergrid(vx,vy,vz,vmax,hist,corex,corey,corez,flnm,plotFAC
                                 CEz_xy,CEz_xz, CEz_yz,
                                 flnm = flnm, computeJdotE = True, plotFAC = plotFAC, plotAvg = plotAvg, plotFluc = plotFluc, isIon = isIon, isLowPass=isLowPass,isHighPass=isHighPass)
 
-def project_and_plot_supergrid(vx,vy,vz,vmax,arr,arrtype,flnm,plotFAC=False,plotAvg=False,plotFluc=False,isIon=True,isLowPass=False,isHighPass=False):
+def project_and_plot_supergrid_row(vx,vy,vz,vmax,arr,arrtype,flnm,plotFAC=False,plotAvg=False,plotFluc=False,isIon=True,isLowPass=False,isHighPass=False):
+    
     from FPCAnalysis.array_ops import array_3d_to_2d
 
     arr_xy = array_3d_to_2d(arr, 'xy')
