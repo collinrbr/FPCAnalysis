@@ -38,7 +38,9 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
         field data dictionary from field_loader
     fieldkey : str
         name of the field you want to correlate with
-        ex,ey,ez,bx,by, or bz
+        ex,ey,ez,bx,by, or bz for simulation aligned
+        epar, eperp1, eperp2 for field aligned (will using average value across box unless altcorfields are specified)
+        etot for total fields
     directionkey : str
         name of direction you want to take the derivative with respect to
         x,y,or z
@@ -49,6 +51,8 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
     altcorfields : dict, opt
         if not None, then all calculations will be performed using dfields except for the correlation. Used when computing
         fluct correlation in field aligned coordinates
+    beta, massratio, c : floats, not inteded for user use!
+        variables that have information to transform frames when using multicore. Not intended to be used by end user. (should leave as default value)
 
     Returns
     -------
@@ -58,13 +62,29 @@ def compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
         vy velocity grid
     vz : 3d array
         vz velocity grid
-    totalPtcl : float
+    totalPtcl : floats
         total number of particles in the correlation box
     Hist : 3d array
         distribution function in box
     Cor : 3d array
         velocity space sigature data in box
     """
+
+    if(fieldkey == 'etot'):
+        #recursive calls to compute 'etot'
+        vx, vy, vz, totalPtcl, hist, cor = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
+                            dpar, dfields, 'ex', useBoxFAC = useBoxFAC, altcorfields = altcorfields, beta = beta, massratio = massratio, c = c)
+        _, _, _, _, _hist, _cor = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
+                            dpar, dfields, 'ey', useBoxFAC = useBoxFAC, altcorfields = altcorfields, beta = beta, massratio = massratio, c = c)
+        hist = hist+_hist
+        cor = cor+_cor
+        _, _, _, _, _hist, _cor = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
+                            dpar, dfields, 'ez', useBoxFAC = useBoxFAC, altcorfields = altcorfields, beta = beta, massratio = massratio, c = c)
+        hist = hist+_hist
+        cor = cor+_cor
+
+        return vx, vy, vz, totalPtcl, hist, cor
+        
 
     if(directionkey == None):
         if(fieldkey[-1] == 'x' or fieldkey[-1] == 'y' or fieldkey[-1] == 'z'):
@@ -828,7 +848,7 @@ def _weighted_field_average(xx, yy, zz, dfields, fieldkey):
 
     return fieldaverage
 
-#TODO: finish documentation
+#TODO: finish documentation for this func...
 def compute_cprime_hist(dparticles, dfields, fieldkey, vmax, dv, useBoxFAC=True, altcorfields=None, beta=None, massratio=None, c = None, vxdown=None,vydown=None,vzdown=None):
     """
     Computes cprime for all particles passed to it
