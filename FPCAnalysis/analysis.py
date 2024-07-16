@@ -1943,9 +1943,6 @@ def change_velocity_basis(dfields,dpar,xlim,ylim,zlim,debug=False):
     """
     from copy import deepcopy
 
-    if(dfields['Vframe_relative_to_sim'] != dpar['Vframe_relative_to_sim']):
-        print("Warning, field data is not in the same frame as particle data...")
-
     vparbasis, vperp1basis, vperp2basis = compute_field_aligned_coord(dfields,xlim,ylim,zlim)
     #check orthogonality of these vectors
     if(debug):
@@ -1998,9 +1995,6 @@ def change_velocity_basis_local(dfields,dpar,loadfrac=1,debug=False):
         particle dictionary in new basis
     """
     from copy import deepcopy
-
-    if(dfields['Vframe_relative_to_sim'] != dpar['Vframe_relative_to_sim']):
-        print("Warning, field data is not in the same frame as particle data...")
 
     dparnewbasis = {}
     dparnewbasis['x1'] = deepcopy(dpar['x1'][::loadfrac])
