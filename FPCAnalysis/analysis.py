@@ -1464,6 +1464,31 @@ def yz_fft_filter(dfields,ky0,kz0):
 
     return dfieldsfiltered
 
+def yz_fft_filter_range(dfields,kycutoff,filterabove,dontfilter=False,verbose=False,keys=['ex','ey','ez','bx','by','bz']):
+
+    import copy
+    filteredfields = copy.deepcopy(dfields)
+
+    for _key in keys:
+        if(verbose):print("yz_fft_filter is on key: ", _key)
+        kz, ky, filteredfields[_key] = _ffttransform_in_yz(filteredfields,_key) #compute A(x,kz,ky) 
+        
+        if(not(dontfilter)):
+            for _i in range(0,len(ky)):
+                if(filterabove):
+                    if(np.abs(ky[_i]) > kycutoff):
+                        filteredfields[_key][:,:,_i] = 0.
+                else:   
+                    if(np.abs(ky[_i]) <= kycutoff):
+                        filteredfields[_key][:,:,_i] = 0.
+
+        filteredfields[_key] = _iffttransform_in_yz(filteredfields,_key) #returns as A(x,z,y)
+        filteredfields[_key] = np.swapaxes(filteredfields[_key], 0, 1) #returns as A(z,x,y)
+        filteredfields[_key] = np.swapaxes(filteredfields[_key], 1, 2) #returns as A(z,y,x)
+        filteredfields[_key] = np.real(filteredfields[_key])
+
+    return filteredfields
+
 def xyz_wlt_fft_filter(kz,ky,kx,xx,bxkzkykxxx,bykzkykxxx,bzkzkykxxx,
                 exkzkykxxx,eykzkykxxx,ezkzkykxxx,
                 kx_center0,kx_width0,ky0,kz0,dontfilter=False):
