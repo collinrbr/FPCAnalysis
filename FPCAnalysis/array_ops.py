@@ -737,7 +737,6 @@ def deposit_interpolate(xposes,yvals,newxposes,renormalize=False):
 
                     #Give other proportion to yvals - 1
                     if(_i != 0):
-                        print("test",yvals[_j]*(1.-proportion_in_bin))
                         newyvals[_i-1] += yvals[_j]*(1.-proportion_in_bin)
 
             
@@ -760,7 +759,6 @@ def deposit_interpolate(xposes,yvals,newxposes,renormalize=False):
     ghostrightbin_rightside = newxposes_rightside[-1] + newdeltaxposes
 
     for _j in range(0,len(xposes)):
-        print(abs(xposes[_j]-ghostrightbin_leftside) > abs(xposes[_j]-ghostrightbin_rightside))
         if ((xposes[_j] >= ghostleftbin_leftside and xposes[_j] < ghostleftbin_rightside) and abs(xposes[_j]-ghostleftbin_leftside) > abs(xposes[_j]-ghostleftbin_rightside)):
             proportion_in_bin = 1.-((deltaxposes/2.-abs(xposes[_j]-ghostleftbin_rightside))/(deltaxposes))
 
