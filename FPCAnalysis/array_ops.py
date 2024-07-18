@@ -693,3 +693,88 @@ def split_positive_negative(positions,arr,doublePosForZeros):
 
     return positionsout, positive_array, negative_array,
     
+def deposit_interpolate(xposes,yvals,newxposes,renormalize=False):
+    #xposes and newxposes are bin centers of arrays
+    #xposes in indep array and yvals is dependent array
+
+    #Assumes arrays are evenly spaced!!!
+
+    #Assumes old xposes has smaller and more dense grids
+
+    if(len(xposes) < len(newxposes)):
+        print("Error, this function assumes that the original array was more dense than the new one!")
+        return
+
+    xposes = np.asarray(xposes)
+    deltaxposes = xposes[1]-xposes[0] #assumes uniform spacing
+    xposes_leftside = xposes-deltaxposes/2.
+    xposes_rightside =  xposes+deltaxposes/2.
+
+    newxposes = np.asarray(newxposes)
+    newdeltaxposes = newxposes[1]-newxposes[0] #assumes uniform spacing
+    newxposes_leftside = newxposes-newdeltaxposes/2.
+    newxposes_rightside =  newxposes+newdeltaxposes/2.
+
+    if(newdeltaxposes <= deltaxposes):
+        print("Error, this function assumes that the original array was more dense than the new one!")
+        return
+
+    newyvals = np.zeros(newxposes.shape)
+
+    #loop through each new bin, and find value that belongs in it
+    for _i in range(0,len(newxposes)): #We really don't need two imbedded loops assuming the array is ordered, but its find for our relatively small arrays
+        for _j in range(0,len(xposes)):
+
+            #if entirely in bin, simply put into bin
+            if(xposes_leftside[_j] >= newxposes_leftside[_i] and xposes_rightside[_j] <= newxposes_rightside[_i]):
+                newyvals[_i] += yvals[_j]
+                
+            #if shared with bin to left
+            elif((xposes[_j] >= newxposes_leftside[_i] and xposes[_j] < newxposes_rightside[_i]) and abs(xposes[_j]-newxposes_leftside[_i]) <= abs(xposes[_j]-newxposes_rightside[_i])): #>= in rightmost conditional is critical as we must favor left or right if it falls on wall!
+                    #Find proportion in this array and add to yvals
+                    proportion_in_bin = 1-((deltaxposes/2.-abs(xposes[_j]-newxposes_leftside[_i]))/(deltaxposes))
+                    newyvals[_i] += yvals[_j]*proportion_in_bin
+
+                    #Give other proportion to yvals - 1
+                    if(_i != 0):
+                        print("test",yvals[_j]*(1.-proportion_in_bin))
+                        newyvals[_i-1] += yvals[_j]*(1.-proportion_in_bin)
+
+            
+            #if shared with bin to right
+            elif((xposes[_j] >= newxposes_leftside[_i] and xposes[_j] < newxposes_rightside[_i]) and abs(xposes[_j]-newxposes_leftside[_i]) > abs(xposes[_j]-newxposes_rightside[_i])): #if within bin and closer to right
+                    #Find proportion in this array and add to yvals
+                    proportion_in_bin = 1-((deltaxposes/2.-abs(xposes[_j]-newxposes_rightside[_i]))/(deltaxposes))
+                    newyvals[_i] += yvals[_j]*proportion_in_bin
+                
+                    #Give other proportion to yvals +1 1
+                    if(_i != len(newyvals)-1):
+                        newyvals[_i+1] += yvals[_j]*(1.-proportion_in_bin)
+
+
+    #---deposit any values that were skipped because they were not any bin center, but still overlap with final bins-------
+    #make `ghostbins' just outside the domain of interest
+    ghostleftbin_leftside = newxposes_leftside[0] - newdeltaxposes
+    ghostleftbin_rightside = newxposes_leftside[0]
+    ghostrightbin_leftside = newxposes_rightside[-1]
+    ghostrightbin_rightside = newxposes_rightside[-1] + newdeltaxposes
+
+    for _j in range(0,len(xposes)):
+        print(abs(xposes[_j]-ghostrightbin_leftside) > abs(xposes[_j]-ghostrightbin_rightside))
+        if ((xposes[_j] >= ghostleftbin_leftside and xposes[_j] < ghostleftbin_rightside) and abs(xposes[_j]-ghostleftbin_leftside) > abs(xposes[_j]-ghostleftbin_rightside)):
+            proportion_in_bin = 1.-((deltaxposes/2.-abs(xposes[_j]-ghostleftbin_rightside))/(deltaxposes))
+
+            #Give other proportion to leftmost yvals
+            if(abs(proportion_in_bin) < 1.): #unless it does not overlap
+                newyvals[0]+=yvals[_j]*(1-proportion_in_bin)
+        elif((xposes[_j] >= ghostrightbin_leftside and xposes[_j] < ghostrightbin_rightside) and abs(xposes[_j]-ghostrightbin_leftside) <= abs(xposes[_j]-ghostrightbin_rightside)):
+            proportion_in_bin = 1-((deltaxposes/2.-abs(xposes[_j]-ghostrightbin_leftside))/(deltaxposes))
+            
+            #Give other proportion to leftmost yvals
+            if(abs(proportion_in_bin) < 1.): #unless it does not overlap
+                newyvals[-1]+=yvals[_j]*(1-proportion_in_bin)
+
+    #renormalize the density! (note: for our flux analysis, we don't technically look at ener density, we look at ener density * volume, and let the volume terms 'cancel', hence why default is false as this function was written for use with the energy conservation/flux analysis
+    if(renormalize):newyvals = newyvals*deltaxposes/newdeltaxposes
+        
+    return newxposes, newyvals
