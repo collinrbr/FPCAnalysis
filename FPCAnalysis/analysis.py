@@ -345,7 +345,7 @@ def compute_energization_over_x(Cor_array,dv):
 
     return np.asarray(C_E_out)
 
-def compute_gain_due_to_jdotE(dflow,xvals,jdotE,isIon,verbose=False):
+def compute_gain_due_to_jdotE(dflowavg,xvals,jdotE,isIon,verbose=False):
     """
     xvals and jdotE are parallel 1D arrays
     
@@ -359,8 +359,8 @@ def compute_gain_due_to_jdotE(dflow,xvals,jdotE,isIon,verbose=False):
 
     Parameters
     ----------
-    dflow : dict
-        flow dic
+    dflowavg : dict
+        yz avg flow dic
     xvals : array
         position data parallel to jdotE
     jdotE : array
@@ -377,8 +377,6 @@ def compute_gain_due_to_jdotE(dflow,xvals,jdotE,isIon,verbose=False):
     """
 
     from FPCAnalysis.array_ops import find_nearest
-
-    dflowavg = get_average_flow_over_yz(dflow)
 
     if(not(isIon)):
         flowcoordkey = 'ue_xx'
@@ -404,7 +402,7 @@ def compute_gain_due_to_jdotE(dflow,xvals,jdotE,isIon,verbose=False):
         leftidx = find_nearest(xvals[_i+1],dflowavg[flowcoordkey])
         rightidx = find_nearest(xvals[_i],dflowavg[flowcoordkey])
 
-        xvelocity = np.mean(dflowavg[flowvalkeyx][0,0,leftidx:rightidx+1])  #NOTE: if v varies a lot over the full box, this will be incorrect if the edges of this box don't fall on the edges of cells, as the edge cells will contribute more than they should. We assume this is small for simplicity 
+        xvelocity = np.mean(dflowavg[flowvalkeyx][0,0,leftidx:rightidx+1])  #NOTE: if v varies a lot over the range, this will be incorrect if the edges of this box don't fall on the edges of cells, as the edge cells will contribute more than they should. We assume this is small for simplicity 
 
         if(delta_x < 0):
             if(xvelocity >= 0):
@@ -1040,7 +1038,7 @@ def get_average_fields_over_yz(dfields, Efield_only = False):
 
     return dfieldavg
 
-def get_average_flow_over_yz(dflow):
+def get_average_flow_over_yz(dflow,verbose=False):
     """
     Gets yz average from flow data i.e. flow_avg(x,y,z) = <flow(x,y,z)>_(y,z)
 
@@ -1055,19 +1053,37 @@ def get_average_flow_over_yz(dflow):
         delta flow data dictionary
     """
     from copy import deepcopy
+    if(verbose):print("making copy ...")
     dflowavg = deepcopy(dflow)
 
+    # for key in dflowavg.keys():
+    #     if(verbose):print("computing ",key)
+    #     if(not('_xx' in key) and not('_yy' in key) and not('_zz' in key)):
+    #         for _idx in range(0,len(dflowavg[key][0,0,:])):
+    #             if(verbose):print('xx _idx:',_idx,' of ', len(dflowavg[key][0,0,:]))
+    #             for _jdx in range(0,len(dflowavg[key][0,:,_idx])):
+    #                 for _kdx in range(0,len(dflowavg[key][:,_jdx,_idx])):
+    #                     if('i' in key and not('num' in key)):
+    #                         dflowavg[key][_kdx,_jdx,_idx] = np.sum(dflowavg[key][:,:,_idx]*dflow['numi'][:,:,_idx])/np.sum(dflow['numi'][:,:,_idx])
+    #                     elif('e' in key and not('num' in key)):
+    #                         dflowavg[key][_kdx,_jdx,_idx] = np.sum(dflowavg[key][:,:,_idx]*dflow['nume'][:,:,_idx])/np.sum(dflow['nume'][:,:,_idx])
+    #                     elif('num' in key):
+    #                         dflowavg[key][_kdx,_jdx,_idx] = np.mean(dflow['nume'][:,:,_idx])
+
     for key in dflowavg.keys():
-        if(not('_xx' in key) and not('_yy' in key) and not('_zz' in key)):
-            for _idx in range(0,len(dflowavg[key][0,0,:])):
-                for _jdx in range(0,len(dflowavg[key][0,:,_idx])):
-                    for _kdx in range(0,len(dflowavg[key][:,_jdx,_idx])):
-                        if('i' in key and not('num' in key)):
-                            dflowavg[key][_kdx,_jdx,_idx] = np.sum(dflowavg[key][:,:,_idx]*dflow['numi'][:,:,_idx])/np.sum(dflow['numi'][:,:,_idx])
-                        elif('e' in key and not('num' in key)):
-                            dflowavg[key][_kdx,_jdx,_idx] = np.sum(dflowavg[key][:,:,_idx]*dflow['nume'][:,:,_idx])/np.sum(dflow['nume'][:,:,_idx])
-                        elif('num' in key):
-                            dflowavg[key][_kdx,_jdx,_idx] = np.mean(dflow['nume'][:,:,_idx])
+        if verbose:
+            print("computing ", key)
+        if not('_xx' in key or '_yy' in key or '_zz' in key):
+            if('i' in key and not('num' in key)):
+                for _idx in range(dflowavg[key].shape[2]):
+                    dflowavg[key][:, :, _idx] = np.sum(dflowavg[key][:, :, _idx] * dflow['numi'][:, :, _idx], axis=(0, 1)) / np.sum(dflow['numi'][:, :, _idx])
+            elif('e' in key and not('num' in key)):
+                for _idx in range(dflowavg[key].shape[2]):
+                    dflowavg[key][:, :, _idx] = np.sum(dflowavg[key][:, :, _idx] * dflow['nume'][:, :, _idx], axis=(0, 1)) / np.sum(dflow['nume'][:, :, _idx])
+            elif('num' in key):
+                for _idx in range(dflowavg[key].shape[2]):
+                    dflowavg[key][:, :, _idx] = np.mean(dflow['nume'][:, :, _idx])
+
 
     return dflowavg
 
@@ -2038,19 +2054,14 @@ def change_velocity_basis_local(dfields,dpar,loadfrac=1,debug=False):
     from copy import deepcopy
 
     dparnewbasis = {}
-    dparnewbasis['x1'] = deepcopy(dpar['x1'][::loadfrac])
-    dparnewbasis['x2'] = deepcopy(dpar['x2'][::loadfrac])
-    dparnewbasis['x3'] = deepcopy(dpar['x3'][::loadfrac])
     dparnewbasis['ppar'] = np.zeros((len(dpar['x1'][::loadfrac])))
     dparnewbasis['pperp1'] = np.zeros((len(dpar['x1'][::loadfrac])))
     dparnewbasis['pperp2'] = np.zeros((len(dpar['x1'][::loadfrac])))
     dparnewbasis['q'] = dpar['q']
 
     for _ky in dpar.keys():
-        try:
+        if(_ky in ['ue','ui','ve','vi','we','wi','p1','p2','p3','x1','x2','x3','xi','yi','zi','xe','ye','ze']):
             dparnewbasis[_ky] = deepcopy(dpar[_ky][::loadfrac])
-        except:
-            pass
 
     changebasismatrixes = []
 
@@ -2078,7 +2089,7 @@ def change_velocity_basis_local(dfields,dpar,loadfrac=1,debug=False):
         _ = np.asarray([vparbasis,vperp1basis,vperp2basis]).T
         changebasismatrix = np.linalg.inv(_)
 
-        _ppar,_pperp1,_pperp2 = np.matmul(changebasismatrix,[dpar['p1'][_idx],dpar['p2'][_idx],dpar['p3'][_idx]])
+        _ppar,_pperp1,_pperp2 = np.matmul(changebasismatrix,[dparnewbasis['p1'][_idx],dparnewbasis['p2'][_idx],dparnewbasis['p3'][_idx]])
 
         dparnewbasis['ppar'][_idx] = _ppar
         dparnewbasis['pperp1'][_idx] = _pperp1
