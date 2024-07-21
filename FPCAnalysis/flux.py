@@ -642,9 +642,6 @@ def compute_diamag_drift(dfields,dpar_elec,params,interpolxxs,verbose=False):
     Note, the above claim assumes a sufficiently high mass ratio    
     """
 
-    print("NOTE, there might be a factor of c in the grad b drift part of the diamagnetic drift... TODO: figure out and remove this statement")
-
-
     #get constants
     if(verbose):print('Computing parameters...')
 
@@ -675,7 +672,6 @@ def compute_diamag_drift(dfields,dpar_elec,params,interpolxxs,verbose=False):
             dfields[fk] *= bnorm
             dfluc[fk] *= bnorm
             dfavg[fk] *= bnorm
-
      
     #bin particles
     if(verbose):print("Binning particles...")
@@ -738,7 +734,7 @@ def compute_diamag_drift(dfields,dpar_elec,params,interpolxxs,verbose=False):
         nspec.append(float(len(elecvzbins[_i])))
 
         #Assume that \mathbf{B} = B(x) \hat{y} (or well approximated as such)
-        ppr = (py+pz)/3.
+        ppr = (px+pz)/3.
         pperp.append(ppr)
     pperp = np.asarray(pperp)
 
@@ -746,10 +742,11 @@ def compute_diamag_drift(dfields,dpar_elec,params,interpolxxs,verbose=False):
     udiax = []
     udiay = []
     udiaz = []
+
     #TODO convert above to FAC? (if so, re do comments above) <doesnt matter for our perp simulation that much>
     interdx = interpolxxs[1]-interpolxxs[0]
-    gradnormfac = interdx*params['comp']*np.sqrt(params['mi']/params['me'])
-    gradpperp = np.gradient(pperp)*(1/gradnormfac)
+    gradnormfac = params['comp']*np.sqrt(params['mi']/params['me'])/interdx
+    gradpperp = np.gradient(pperp)*(gradnormfac)
     for _i in range(0,len(interpolxxs)-1):
         x1 = interpolxxs[_i]
         x2 = interpolxxs[_i+1]
@@ -764,7 +761,7 @@ def compute_diamag_drift(dfields,dpar_elec,params,interpolxxs,verbose=False):
 
         ne = nspec[_i]
 
-        ud = (-1./(qe*params['c']*ne))*np.cross([gradpperp[_i],0,0],[Bx,By,Bz])/np.linalg.norm([Bx,By,Bz])**2
+        ud = (-params['c']/(qe*ne))*np.cross([gradpperp[_i],0,0],[Bx,By,Bz])/np.linalg.norm([Bx,By,Bz])**2
         udiax.append(ud[0])
         udiay.append(ud[1])
         udiaz.append(ud[2])

@@ -219,8 +219,8 @@ def stack_plot_pos_neg_flux(dfluxes,flnm = '',xlim=[],tolfrac = 0.001,split_pos_
         ax1.set_xlim(xlim[0],xlim[1])
     #ax1.set_ylim(0,2.0)
     ax2.set_axis_off()
-    if(flnm == ''):
-        plt.show()
+    if(flnm != ''):
+        plt.savefig(flnm,format='png',dpi=300)
     else:
         plt.show()
     plt.close()
