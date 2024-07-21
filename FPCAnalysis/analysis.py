@@ -397,7 +397,7 @@ def compute_gain_due_to_jdotE(dflowavg,xvals,jdotE,isIon,verbose=False):
 
     for _i in range(0,len(Ener_due_to_jdotE)-1):
         delta_x = xvals[_i+1]-xvals[_i]
-        xcoord_Ener_due_to_jdotE[_i] = xvals[_i+1]
+        xcoord_Ener_due_to_jdotE[_i] = xvals[_i+1]-delta_x/2.
     
         leftidx = find_nearest(xvals[_i+1],dflowavg[flowcoordkey])
         rightidx = find_nearest(xvals[_i],dflowavg[flowcoordkey])
