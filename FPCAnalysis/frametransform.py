@@ -47,6 +47,8 @@ def lorentz_transform_vx_c(dfields, vx, c):
         field data dictionary from field_loader
     vx : float
         boost velocity along x in Ma (aka v / va)
+    c : float
+        speed of light in va
     """
 
     from copy import deepcopy

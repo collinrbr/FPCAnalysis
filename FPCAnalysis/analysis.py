@@ -35,7 +35,7 @@ def norm_constants_tristanmp1(params,dt,inputs):
     wpe_over_wce = 1./(np.sqrt(sigma_ion)*np.sqrt(params['mi']/params['me']))
     wce_over_wci = params['mi']/params['me']
 
-    c = 1./np.sqrt(sigma_ion) #Assumes me << mi; returns c in unit of va #Assumes (gamma0-1) factor is neglible
+    c = 1./np.sqrt(sigma_ion) #Assumes me << mi; returns c in unit of va
 
     dt = stride*dt/(wpe_over_wce*wce_over_wci) #originally in wpe, now in units of wci
 

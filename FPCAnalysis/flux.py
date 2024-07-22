@@ -413,7 +413,7 @@ def compute_flux_tristanmp1(interpolxxs,dfields,dpar_ion,dpar_elec,params,inputs
     # a = Ethviup/betaion*Bfieldeneruup
     valfac = Evthiup/(beta_ion*(1./(8.*np.pi))*Bfieldenerup) #computes factor we need to scale fields^2 by to get in same units as particles
     fieldEfac = (1./(8.*np.pi))*valfac #multiple unnormalized E^2 or B^2 to get total energy in correct units
-    c_thi = c_alf*np.sqrt(2.)/np.sqrt(beta_ion)
+    c_thi = c_alf/np.sqrt(beta_ion)
     poyntFluxEfac = valfac*c_thi/(4.*np.pi) #a normalizes field value squared
 
     # if(verbose):print("computing poynting flux....")
