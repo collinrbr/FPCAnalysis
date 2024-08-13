@@ -797,13 +797,13 @@ def weighted_field_average(xx, yy, zz, dfields, fieldkey, changebasismatrix = No
         return _weighted_field_average(xx, yy, zz, dfields, fieldkey)
 
 
-def _weighted_field_average(xx, yy, zz, dfields, fieldkey):
+def _weighted_field_average(xx, yy, zz, dfields, fieldkey, use_original_routine = False): #TODO: after new routine has been well tested, remove old routine (it works! it's just slower than the new one!)
     """
     Uses trilinear interpolation to estimate field value at given test location
 
     Assumes the sides of the box are all in either the xy, xz, or yz plane
 
-    Parameters
+    Parameterss
     ----------
     xx : float
         test xx position
@@ -823,28 +823,58 @@ def _weighted_field_average(xx, yy, zz, dfields, fieldkey):
         field value at given test location found using trilinear interpolation
     """
 
-    from FPCAnalysis.array_ops import find_two_nearest
+    if(use_original_routine):
+        from FPCAnalysis.array_ops import find_two_nearest
 
-    idxxx1, idxxx2 = find_two_nearest(dfields[fieldkey+'_xx'],xx)
-    idxyy1, idxyy2 = find_two_nearest(dfields[fieldkey+'_yy'],yy)
-    idxzz1, idxzz2 = find_two_nearest(dfields[fieldkey+'_zz'],zz)
+        idxxx1, idxxx2 = find_two_nearest(dfields[fieldkey+'_xx'],xx)
+        idxyy1, idxyy2 = find_two_nearest(dfields[fieldkey+'_yy'],yy)
+        idxzz1, idxzz2 = find_two_nearest(dfields[fieldkey+'_zz'],zz)
 
-    # find weights
-    w1, w2, w3, w4, w5, w6, w7, w8 = get_3d_weights(xx, yy, zz, idxxx1, idxxx2,
-                                    idxyy1, idxyy2, idxzz1, idxzz2, dfields, fieldkey)
+        # find weights
+        w1, w2, w3, w4, w5, w6, w7, w8 = get_3d_weights(xx, yy, zz, idxxx1, idxxx2,
+                                        idxyy1, idxyy2, idxzz1, idxzz2, dfields, fieldkey)
 
-    # take average of field
-    tolerance = 0.001
-    if(abs(w1+w2+w3+w4+w5+w6+w7+w8-1.0) >= tolerance):
-        print("Warning: sum of weights in trilinear interpolation was not close enought to 1. Value was: " + str(w1+w2+w3+w4+w5+w6+w7+w8))
-    fieldaverage = w1 * dfields[fieldkey][idxzz1][idxyy1][idxxx1]
-    fieldaverage += w2 * dfields[fieldkey][idxzz1][idxyy1][idxxx2]
-    fieldaverage += w3 * dfields[fieldkey][idxzz1][idxyy2][idxxx1]
-    fieldaverage += w4 * dfields[fieldkey][idxzz2][idxyy1][idxxx1]
-    fieldaverage += w5 * dfields[fieldkey][idxzz1][idxyy2][idxxx2]
-    fieldaverage += w6 * dfields[fieldkey][idxzz2][idxyy2][idxxx2]
-    fieldaverage += w7 * dfields[fieldkey][idxzz2][idxyy2][idxxx1]
-    fieldaverage += w8 * dfields[fieldkey][idxzz2][idxyy1][idxxx2]
+        # take average of field
+        tolerance = 0.001
+        if(abs(w1+w2+w3+w4+w5+w6+w7+w8-1.0) >= tolerance):
+            print("Warning: sum of weights in trilinear interpolation was not close enought to 1. Value was: " + str(w1+w2+w3+w4+w5+w6+w7+w8))
+        fieldaverage = w1 * dfields[fieldkey][idxzz1][idxyy1][idxxx1]
+        fieldaverage += w2 * dfields[fieldkey][idxzz1][idxyy1][idxxx2]
+        fieldaverage += w3 * dfields[fieldkey][idxzz1][idxyy2][idxxx1]
+        fieldaverage += w4 * dfields[fieldkey][idxzz2][idxyy1][idxxx1]
+        fieldaverage += w5 * dfields[fieldkey][idxzz1][idxyy2][idxxx2]
+        fieldaverage += w6 * dfields[fieldkey][idxzz2][idxyy2][idxxx2]
+        fieldaverage += w7 * dfields[fieldkey][idxzz2][idxyy2][idxxx1]
+        fieldaverage += w8 * dfields[fieldkey][idxzz2][idxyy1][idxxx2]
+    else:
+        x0 = np.searchsorted(dfields[fieldkey+'_xx'], xx) - 1
+        y0 = np.searchsorted(dfields[fieldkey+'_yy'], yy) - 1
+        z0 = np.searchsorted(dfields[fieldkey+'_zz'], zz) - 1
+
+        x0 = np.clip(x0, 0, len(dfields[fieldkey+'_xx']) - 2)
+        y0 = np.clip(y0, 0, len(dfields[fieldkey+'_yy']) - 2)
+        z0 = np.clip(z0, 0, len(dfields[fieldkey+'_zz']) - 2)
+
+        x1 = x0 + 1
+        y1 = y0 + 1
+        z1 = z0 + 1
+
+        # find weights
+        w1, w2, w3, w4, w5, w6, w7, w8 = get_3d_weights(xx, yy, zz, x0, x1,
+                                        y0, y1, z0, z1, dfields, fieldkey)
+
+        # take average of field
+        tolerance = 0.001
+        if(abs(w1+w2+w3+w4+w5+w6+w7+w8-1.0) >= tolerance):
+            print("Warning: sum of weights in trilinear interpolation was not close enought to 1. Value was: " + str(w1+w2+w3+w4+w5+w6+w7+w8))
+        fieldaverage = w1 * dfields[fieldkey][z0][y0][x0]
+        fieldaverage += w2 * dfields[fieldkey][z0][y0][x1]
+        fieldaverage += w3 * dfields[fieldkey][z0][y1][x0]
+        fieldaverage += w4 * dfields[fieldkey][z1][y0][x0]
+        fieldaverage += w5 * dfields[fieldkey][z0][y1][x1]
+        fieldaverage += w6 * dfields[fieldkey][z1][y1][x1]
+        fieldaverage += w7 * dfields[fieldkey][z1][y1][x0]
+        fieldaverage += w8 * dfields[fieldkey][z1][y0][x1]
 
     return fieldaverage
 
