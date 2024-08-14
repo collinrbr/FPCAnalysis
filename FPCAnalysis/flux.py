@@ -783,3 +783,350 @@ def compute_diamag_drift(dfields,dpar_elec,params,interpolxxs,verbose=False):
 
     return positions, udiax/vti0, udiay/vti0, udiaz/vti0, nspec, elecvx, elecvy, elecvz #TODO: remove the extra elecvx outputs at end
 
+def compute_gradb_drift(dfields,dpar_elec,params,interpolxxs,verbose=False):
+    """
+    u_gradb = (1/qe ne)pperpe/Bz^2 par B/par x (for perp shock ONLY) yhat
+
+    TODO: generalize this func  
+    """
+
+    #get constants
+    if(verbose):print('Computing parameters...')
+
+    me = params['me']
+
+    qe = dpar_elec['q']
+
+    #compute fluc and steady state fields
+    if(verbose):print('Computing dfavg and dfluc...')
+    from FPCAnalysis.analysis import get_average_fields_over_yz, remove_average_fields_over_yz
+    dfavg = get_average_fields_over_yz(dfields)
+    dfluc = remove_average_fields_over_yz(dfields)
+
+    positions = np.asarray([(interpolxxs[_i]+interpolxxs[_i+1])/2. for _i in range(len(interpolxxs)-1)])
+    
+    #revert normalization of fields
+    if(verbose):print('Reverting fields normalization...')
+    bnorm = params['c']**2*params['sigma']/params['comp']
+    sigma_ion = params['sigma']*params['me']/params['mi'] #NOTE: this is subtely differetn than what aaron's normalization is- fix it (missingn factor of gamma0 and mi+me)
+    enorm = bnorm*np.sqrt(sigma_ion)*params['c'] #note, there is an extra factor of 'c hat' (c in code units, which is .45 for the main run being analyzed) that we take out
+    fieldkeys = ['ex','ey','ez','bx','by','bz']
+    for fk in fieldkeys:
+        if(fk[0] == 'e'):
+            dfields[fk] *= enorm
+            dfluc[fk] *= enorm
+            dfavg[fk] *= enorm
+        else:
+            dfields[fk] *= bnorm
+            dfluc[fk] *= bnorm
+            dfavg[fk] *= bnorm
+     
+    #bin particles
+    if(verbose):print("Binning particles...")
+    elecvxbins = []
+    elecvybins = []
+    elecvzbins = []
+
+    vti0 = np.sqrt(params['delgam'])
+    vte0 = np.sqrt(params['mi']/params['me'])*vti0 #WARNING: THIS ASSUME Ti/Te = 1, TODO: don't assume Ti/Te = 1
+
+    for _i in range(0,len(interpolxxs)-1):
+        x1 = interpolxxs[_i]
+        x2 = interpolxxs[_i+1]
+
+        gptsparticleelec = (x1 < dpar_elec['xe']) & (dpar_elec['xe'] <= x2)
+        elecvxs = dpar_elec['ue'][gptsparticleelec][:]*vte0
+        elecvys = dpar_elec['ve'][gptsparticleelec][:]*vte0
+        elecvzs = dpar_elec['we'][gptsparticleelec][:]*vte0
+
+        elecvxbins.append(elecvxs)
+        elecvybins.append(elecvys)
+        elecvzbins.append(elecvzs)
+    if(verbose):print("done binning particles!")
+
+    #compute bulk v
+    if(verbose):print("computing bulk vel...")
+    elecvx = []
+    elecvy = []
+    elecvz = []
+    for evxs in elecvxbins:
+        if(len(evxs) > 0):
+            elecvx.append(np.mean(evxs))
+        else:
+            elecvx.append(0.)
+    for evys in elecvybins:
+        if(len(evys) > 0):
+            elecvy.append(np.mean(evys))
+        else:
+            elecvy.append(0.)
+    for evzs in elecvzbins:
+        if(len(evzs) > 0):
+            elecvz.append(np.mean(evzs))
+        else:
+            elecvz.append(0.)
+
+    #compute perp pressure
+    pperp = []
+    nspec = []
+    for _i in range(0,len(interpolxxs)-1):
+        x1 = interpolxxs[_i]
+        x2 = interpolxxs[_i+1]
+        bvxe = np.mean(elecvxbins[_i])
+        bvye = np.mean(elecvybins[_i])
+        bvze = np.mean(elecvzbins[_i])
+
+        px = me*np.sum([(evxval-bvxe)**2 for evxval in elecvxbins[_i]]) 
+        py = me*np.sum([(evyval-bvye)**2 for evyval in elecvybins[_i]])
+        pz = me*np.sum([(evzval-bvze)**2 for evzval in elecvzbins[_i]])
+
+        nspec.append(float(len(elecvzbins[_i])))
+
+        #Assume that \mathbf{B} = B(x) \hat{y} (or well approximated as such)
+        ppr = (px+pz)/3.
+        pperp.append(ppr)
+    pperp = np.asarray(pperp)
+
+    bxlist = []
+    bylist = []
+    bzlist = []
+    for _i in range(0,len(interpolxxs)-1):
+        x1 = interpolxxs[_i]
+        x2 = interpolxxs[_i+1]
+        goodfieldpts = (x1 < dfields['ey_xx']) & (dfields['ey_xx'] <= x2)
+        Bxs = dfields['bx']
+        Bys = dfields['by']
+        Bzs = dfields['bz']
+
+        Bx = np.mean(Bxs[:,:,goodfieldpts])
+        By = np.mean(Bys[:,:,goodfieldpts])
+        Bz = np.mean(Bzs[:,:,goodfieldpts])
+
+        bxlist.append(Bx)
+        bylist.append(By)
+        bzlist.append(Bz)
+    bxlist = np.asarray(bxlist)
+    bylist = np.asarray(bylist)
+    bzlist = np.asarray(bzlist)
+    
+    #compute diamagnetic drift
+    ugradx = []
+    ugrady = []
+    ugradz = []
+
+    #TODO convert above to FAC? (if so, re do comments above) <doesnt matter for our perp simulation that much>
+    interdx = interpolxxs[1]-interpolxxs[0]
+    gradnormfac = params['comp']*np.sqrt(params['mi']/params['me'])/interdx
+    grad_by_wrt_x = np.gradient(bylist)*(gradnormfac)
+    for _i in range(0,len(interpolxxs)-1):
+        x1 = interpolxxs[_i]
+        x2 = interpolxxs[_i+1]
+        Bxs = dfields['bx']
+        Bys = dfields['by']
+        Bzs = dfields['bz']
+
+        goodfieldpts = (x1 < dfields['ey_xx']) & (dfields['ey_xx'] <= x2)
+        Bx = np.mean(Bxs[:,:,goodfieldpts])
+        By = np.mean(Bys[:,:,goodfieldpts])
+        Bz = np.mean(Bzs[:,:,goodfieldpts])
+
+        ne = nspec[_i]
+
+
+        ugb = [0,0,(-params['c']/(qe*ne))*(pperp[_i]/np.linalg.norm([0,By,0])**2)*grad_by_wrt_x[_i]] #TODO: generalize this whole function!!!
+
+        print('debug ',ugb,grad_by_wrt_x[_i],pperp[_i],bylist[_i])
+
+        ugradx.append(ugb[0])
+        ugrady.append(ugb[1])
+        ugradz.append(ugb[2])
+    ugradx = np.asarray(ugradx)
+    ugrady = np.asarray(ugrady)
+    ugradz = np.asarray(ugradz)
+
+    #re normalize fields 
+    fieldkeys = ['ex','ey','ez','bx','by','bz']
+    for fk in fieldkeys:
+        if(fk[0] == 'e'):
+            dfields[fk] /= enorm
+            dfluc[fk] /= enorm
+            dfavg[fk] /= enorm
+        else:
+            dfields[fk] /= bnorm
+            dfluc[fk] /= bnorm
+            dfavg[fk] /= bnorm
+
+    return positions, ugradx/vti0, ugrady/vti0, ugradz/vti0, nspec, elecvx, elecvy, elecvz
+
+def compute_mag_drift(dfields,dpar_elec,params,interpolxxs,verbose=False):
+    """
+    u_mag = (1/qe ne) partial/partial x (pperpe/Bz) yhat
+
+    TODO: generalize this func  
+    """
+
+    #get constants
+    if(verbose):print('Computing parameters...')
+
+    me = params['me']
+
+    qe = dpar_elec['q']
+
+    #compute fluc and steady state fields
+    if(verbose):print('Computing dfavg and dfluc...')
+    from FPCAnalysis.analysis import get_average_fields_over_yz, remove_average_fields_over_yz
+    dfavg = get_average_fields_over_yz(dfields)
+    dfluc = remove_average_fields_over_yz(dfields)
+
+    positions = np.asarray([(interpolxxs[_i]+interpolxxs[_i+1])/2. for _i in range(len(interpolxxs)-1)])
+    
+    #revert normalization of fields
+    if(verbose):print('Reverting fields normalization...')
+    bnorm = params['c']**2*params['sigma']/params['comp']
+    sigma_ion = params['sigma']*params['me']/params['mi'] #NOTE: this is subtely differetn than what aaron's normalization is- fix it (missingn factor of gamma0 and mi+me)
+    enorm = bnorm*np.sqrt(sigma_ion)*params['c'] #note, there is an extra factor of 'c hat' (c in code units, which is .45 for the main run being analyzed) that we take out
+    fieldkeys = ['ex','ey','ez','bx','by','bz']
+    for fk in fieldkeys:
+        if(fk[0] == 'e'):
+            dfields[fk] *= enorm
+            dfluc[fk] *= enorm
+            dfavg[fk] *= enorm
+        else:
+            dfields[fk] *= bnorm
+            dfluc[fk] *= bnorm
+            dfavg[fk] *= bnorm
+     
+    #bin particles
+    if(verbose):print("Binning particles...")
+    elecvxbins = []
+    elecvybins = []
+    elecvzbins = []
+
+    vti0 = np.sqrt(params['delgam'])
+    vte0 = np.sqrt(params['mi']/params['me'])*vti0 #WARNING: THIS ASSUME Ti/Te = 1, TODO: don't assume Ti/Te = 1
+
+    for _i in range(0,len(interpolxxs)-1):
+        x1 = interpolxxs[_i]
+        x2 = interpolxxs[_i+1]
+
+        gptsparticleelec = (x1 < dpar_elec['xe']) & (dpar_elec['xe'] <= x2)
+        elecvxs = dpar_elec['ue'][gptsparticleelec][:]*vte0
+        elecvys = dpar_elec['ve'][gptsparticleelec][:]*vte0
+        elecvzs = dpar_elec['we'][gptsparticleelec][:]*vte0
+
+        elecvxbins.append(elecvxs)
+        elecvybins.append(elecvys)
+        elecvzbins.append(elecvzs)
+    if(verbose):print("done binning particles!")
+
+    #compute bulk v
+    if(verbose):print("computing bulk vel...")
+    elecvx = []
+    elecvy = []
+    elecvz = []
+    for evxs in elecvxbins:
+        if(len(evxs) > 0):
+            elecvx.append(np.mean(evxs))
+        else:
+            elecvx.append(0.)
+    for evys in elecvybins:
+        if(len(evys) > 0):
+            elecvy.append(np.mean(evys))
+        else:
+            elecvy.append(0.)
+    for evzs in elecvzbins:
+        if(len(evzs) > 0):
+            elecvz.append(np.mean(evzs))
+        else:
+            elecvz.append(0.)
+
+    #compute perp pressure
+    pperp = []
+    nspec = []
+    for _i in range(0,len(interpolxxs)-1):
+        x1 = interpolxxs[_i]
+        x2 = interpolxxs[_i+1]
+        bvxe = np.mean(elecvxbins[_i])
+        bvye = np.mean(elecvybins[_i])
+        bvze = np.mean(elecvzbins[_i])
+
+        px = me*np.sum([(evxval-bvxe)**2 for evxval in elecvxbins[_i]]) 
+        py = me*np.sum([(evyval-bvye)**2 for evyval in elecvybins[_i]])
+        pz = me*np.sum([(evzval-bvze)**2 for evzval in elecvzbins[_i]])
+
+        nspec.append(float(len(elecvzbins[_i])))
+
+        #Assume that \mathbf{B} = B(x) \hat{y} (or well approximated as such)
+        ppr = (px+pz)/3.
+        pperp.append(ppr)
+    pperp = np.asarray(pperp)
+
+    bxlist = []
+    bylist = []
+    bzlist = []
+    for _i in range(0,len(interpolxxs)-1):
+        x1 = interpolxxs[_i]
+        x2 = interpolxxs[_i+1]
+        goodfieldpts = (x1 < dfields['ey_xx']) & (dfields['ey_xx'] <= x2)
+        Bxs = dfields['bx']
+        Bys = dfields['by']
+        Bzs = dfields['bz']
+
+        Bx = np.mean(Bxs[:,:,goodfieldpts])
+        By = np.mean(Bys[:,:,goodfieldpts])
+        Bz = np.mean(Bzs[:,:,goodfieldpts])
+
+        bxlist.append(Bx)
+        bylist.append(By)
+        bzlist.append(Bz)
+    bxlist = np.asarray(bxlist)
+    bylist = np.asarray(bylist)
+    bzlist = np.asarray(bzlist)
+    
+    #compute diamagnetic drift
+    umagx = []
+    umagy = []
+    umagz = []
+
+    #TODO convert above to FAC? (if so, re do comments above) <doesnt matter for our perp simulation that much>
+    interdx = interpolxxs[1]-interpolxxs[0]
+    gradnormfac = params['comp']*np.sqrt(params['mi']/params['me'])/interdx
+    grad_pperp_over_by_wrt_x = np.gradient(pperp/bylist)*(gradnormfac)
+    for _i in range(0,len(interpolxxs)-1):
+        x1 = interpolxxs[_i]
+        x2 = interpolxxs[_i+1]
+        Bxs = dfields['bx']
+        Bys = dfields['by']
+        Bzs = dfields['bz']
+
+        goodfieldpts = (x1 < dfields['ey_xx']) & (dfields['ey_xx'] <= x2)
+        Bx = np.mean(Bxs[:,:,goodfieldpts])
+        By = np.mean(Bys[:,:,goodfieldpts])
+        Bz = np.mean(Bzs[:,:,goodfieldpts])
+
+        ne = nspec[_i]
+
+        umg = [0,0,(-params['c']/(qe*ne))*grad_pperp_over_by_wrt_x[_i]]
+        
+        #[0,(-params['c']/(qe*ne))*(pperp[_i]/np.linalg.norm([0,0,Bz])**2)*grad_bz_wrt_x[_i],0] #TODO: generalize this whole function!!!
+
+        umagx.append(umg[0])
+        umagy.append(umg[1])
+        umagz.append(umg[2])
+    umagx = np.asarray(umagx)
+    umagy = np.asarray(umagy)
+    umagz = np.asarray(umagz)
+
+    #re normalize fields 
+    fieldkeys = ['ex','ey','ez','bx','by','bz']
+    for fk in fieldkeys:
+        if(fk[0] == 'e'):
+            dfields[fk] /= enorm
+            dfluc[fk] /= enorm
+            dfavg[fk] /= enorm
+        else:
+            dfields[fk] /= bnorm
+            dfluc[fk] /= bnorm
+            dfavg[fk] /= bnorm
+
+    return positions, umagx/vti0, umagy/vti0, umagz/vti0, nspec, elecvx, elecvy, elecvz
+
