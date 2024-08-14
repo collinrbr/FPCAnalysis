@@ -5,6 +5,8 @@
 import numpy as np
 import math
 
+from numba import jit
+
 def norm_constants_tristanmp1(params,dt,inputs):
     """
     Normalizes time to inverse ion cyclotron and length to d_i
@@ -2029,6 +2031,62 @@ def change_velocity_basis(dfields,dpar,xlim,ylim,zlim,debug=False):
 
     return dparnewbasis
 
+@jit(nopython=True)
+def _jitaux_linalgnorm(vec):
+    return (vec[0]**2+vec[1]**2+vec[2]**2)**(.5)
+
+from FPCAnalysis.fpc import weighted_field_average
+@jit(nopython=True)
+def _change_vel_basis_local_jitaux(dparnewbasisp1,dparnewbasisp2,dparnewbasisp3,dparx1,dparx2,dparx3,dfieldsbxfield,dfieldsbyfield,dfieldbzfield,dfieldsfieldxx,dfieldsfieldyy,dfieldsfieldzz):
+
+    dparnewbasisppar = np.zeros((len(dparnewbasisp1)))
+    dparnewbasispperp1 = np.zeros((len(dparnewbasisp1)))
+    dparnewbasispperp2 = np.zeros((len(dparnewbasisp1)))
+
+    changebasismatrixes = np.zeros((len(dparnewbasisp1), 3, 3), dtype=np.float64)
+    
+    for _idx in range(0,len(dparx1)):
+
+        bx = float(weighted_field_average(dparx1[_idx], dparx2[_idx], dparx3[_idx], 'bx', dfieldsbxfield, dfieldsbyfield, dfieldbzfield, dfieldsfieldxx,dfieldsfieldyy,dfieldsfieldzz, None))
+        by = float(weighted_field_average(dparx1[_idx], dparx2[_idx], dparx3[_idx], 'by', dfieldsbxfield, dfieldsbyfield, dfieldbzfield, dfieldsfieldxx,dfieldsfieldyy,dfieldsfieldzz, None))
+        bz = float(weighted_field_average(dparx1[_idx], dparx2[_idx], dparx3[_idx], 'bz', dfieldsbxfield, dfieldsbyfield, dfieldbzfield, dfieldsfieldxx,dfieldsfieldyy,dfieldsfieldzz, None))
+
+        #FROM COMPUTE FIELD ALIGNED
+        B0 = np.array([bx,by,bz], dtype=np.float64)
+
+        #this if statement prevents weird division by small number issues
+        tol = 0.005
+        _B0 = B0 / _jitaux_linalgnorm(B0)
+        if(np.abs(_jitaux_linalgnorm(np.cross([_B0[0],_B0[1],_B0[2]],[1.,0.,0.]))) < tol):
+            vparbasis = np.asarray([1.,0,0])
+            vperp1basis = np.asarray([0,1.,0])
+            vperp2basis = np.asarray([0,0,1.])
+        else:
+            #get normalized basis vectors
+            vparbasis = B0
+            vparbasis /= _jitaux_linalgnorm(vparbasis)
+            vperp2basis = np.cross([1.,0,0],B0) #x hat cross B0
+            
+            vperp2basis /= _jitaux_linalgnorm(vperp2basis)
+            vperp1basis = np.cross(vparbasis,vperp2basis)
+            vperp1basis /= _jitaux_linalgnorm(vperp1basis)
+
+        #_ = np.array([vparbasis,vperp1basis,vperp2basis]).T #doesn't work with jit
+        _ = np.array([[vparbasis[0],vperp1basis[0],vperp1basis[0]],[vparbasis[1],vperp1basis[1],vperp2basis[1]],[vparbasis[2],vperp1basis[2],vperp2basis[2]]])
+        changebasismatrix = np.linalg.inv(_)
+        _tempvector = np.array([dparnewbasisp1[_idx],dparnewbasisp2[_idx],dparnewbasisp3[_idx]], dtype=np.float64) #this is needed for jit typinga
+        _ppar,_pperp1,_pperp2 = np.dot(changebasismatrix,_tempvector)
+
+        dparnewbasisppar[_idx] = _ppar
+        dparnewbasispperp1[_idx] = _pperp1
+        dparnewbasispperp2[_idx] =_pperp2
+
+        print('this test',changebasismatrix,changebasismatrixes[_idx])
+        
+        changebasismatrixes[_idx] = changebasismatrix
+
+        return dparnewbasisppar, dparnewbasispperp1, dparnewbasispperp2, changebasismatrixes
+
 def change_velocity_basis_local(dfields,dpar,loadfrac=1,debug=False):
     """
     Converts to field aligned coordinate system
@@ -2063,39 +2121,7 @@ def change_velocity_basis_local(dfields,dpar,loadfrac=1,debug=False):
         if(_ky in ['ue','ui','ve','vi','we','wi','p1','p2','p3','x1','x2','x3','xi','yi','zi','xe','ye','ze']):
             dparnewbasis[_ky] = deepcopy(dpar[_ky][::loadfrac])
 
-    changebasismatrixes = []
-
-    for _idx in range(0,len(dparnewbasis['x1'])):
-        from FPCAnalysis.fpc import weighted_field_average
-
-        bx = weighted_field_average(dpar['x1'][_idx], dpar['x2'][_idx], dpar['x3'][_idx], dfields, 'bx')
-        by = weighted_field_average(dpar['x1'][_idx], dpar['x2'][_idx], dpar['x3'][_idx], dfields, 'by')
-        bz = weighted_field_average(dpar['x1'][_idx], dpar['x2'][_idx], dpar['x3'][_idx], dfields, 'bz')
-
-        #FROM COMPUTE FIELD ALIGNED
-        B0 = [bx,by,bz]
-
-        #get normalized basis vectors
-        vparbasis = deepcopy(B0)
-        vparbasis /= np.linalg.norm(vparbasis)
-        vperp2basis = np.cross([1.,0,0],B0) #x hat cross B0
-        tol = 0.005
-        _B0 = B0 / np.linalg.norm(B0)
-        
-        vperp2basis /= np.linalg.norm(vperp2basis)
-        vperp1basis = np.cross(vparbasis,vperp2basis)
-        vperp1basis /= np.linalg.norm(vperp1basis)
-
-        _ = np.asarray([vparbasis,vperp1basis,vperp2basis]).T
-        changebasismatrix = np.linalg.inv(_)
-
-        _ppar,_pperp1,_pperp2 = np.matmul(changebasismatrix,[dparnewbasis['p1'][_idx],dparnewbasis['p2'][_idx],dparnewbasis['p3'][_idx]])
-
-        dparnewbasis['ppar'][_idx] = _ppar
-        dparnewbasis['pperp1'][_idx] = _pperp1
-        dparnewbasis['pperp2'][_idx] =_pperp2
-
-        changebasismatrixes.append(changebasismatrix)
+    dparnewbasis['ppar'], dparnewbasis['pperp1'], dparnewbasis['pperp2'], changebasismatrixes = _change_vel_basis_local_jitaux(dparnewbasis['p1'],dparnewbasis['p2'],dparnewbasis['p3'],dpar['x1'],dpar['x2'],dpar['x3'],dfields['bx'],dfields['by'],dfields['bz'],dfields['bx_xx'],dfields['bx_yy'],dfields['bx_zz'])
 
     #check v^2 for both basis to make sure everything matches
     if(debug):
