@@ -782,7 +782,7 @@ def weighted_field_average(xx, yy, zz, fieldkey, dfieldsxfield, dfieldsyfield, d
             if(fieldkey == 'eperp2'):
                 return eperp2
 
-        elif(fieldkey[0] == 'b' and changebasismatrix != None):
+        elif(fieldkey[0] == 'b'):
             #grab vals in standard coordinates
             bxval = _weighted_field_average(xx, yy, zz, dfieldsxfield, dfieldsfieldxx, dfieldsfieldyy, dfieldsfieldzz)
             byval = _weighted_field_average(xx, yy, zz, dfieldsyfield, dfieldsfieldxx, dfieldsfieldyy, dfieldsfieldzz)
@@ -808,6 +808,12 @@ def weighted_field_average(xx, yy, zz, fieldkey, dfieldsxfield, dfieldsyfield, d
         elif(fieldkey == 'ey'):
             dfieldsfield = dfieldsyfield
         elif(fieldkey == 'ez'):
+            dfieldsfield = dfieldszfield
+        elif(fieldkey == 'bx'):
+            dfieldsfield = dfieldsxfield
+        elif(fieldkey == 'by'):
+            dfieldsfield = dfieldsyfield
+        elif(fieldkey == 'bz'):
             dfieldsfield = dfieldszfield
         
         return _weighted_field_average(xx, yy, zz, dfieldsfield, dfieldsfieldxx, dfieldsfieldyy, dfieldsfieldzz)
@@ -879,9 +885,9 @@ def _weighted_field_average(xx, yy, zz, dfieldsfield, dfieldsfieldxx, dfieldsfie
 
     return fieldaverage
 
+
 @jit(nopython=True)
 def compute_cprimew(dparticlesx1,dparticlesx2,dparticlesx3,dparticlesvvkey,q,nparticles,fieldkey, dfieldsexfield, dfieldseyfield, dfieldsezfield, dfieldsfieldxx, dfieldsfieldyy, dfieldsfieldzz, altdfieldsexfield, altdfieldseyfield, altdfieldsezfield, changebasismatrixes, useBoxFAC):
-    print('debug starting!')
     cprimew = np.zeros(len(dparticlesx1))
     for i in range(0, nparticles):
         if(changebasismatrixes != None):
@@ -989,7 +995,7 @@ def compute_cprime_hist(dparticles, dfields, fieldkey, vmax, dv, useBoxFAC=True,
             vparbasis, vperp1basis, vperp2basis = compute_field_aligned_coord(dfields,[_x1,_x2],[dfields['ex_yy'][0],dfields['ex_yy'][-1]],[dfields['ex_zz'][0],dfields['ex_zz'][-1]])
             _ = np.asarray([vparbasis,vperp1basis,vperp2basis]).T
             changebasismatrix = np.linalg.inv(_)
-            changebasismatrixes = [changebasismatrix for _temp in range(0,len(dparticles['x1']))]
+            changebasismatrixes = np.asarray([changebasismatrix for _temp in range(0,len(dparticles['x1']))])
 
         #use local coordinates for field aligned
         else:
@@ -1005,7 +1011,6 @@ def compute_cprime_hist(dparticles, dfields, fieldkey, vmax, dv, useBoxFAC=True,
         q = dparticles['q'] 
     else:
         q = 1.
-    print("TODO JIT IS WIP: FIX FAC, AND FAC LOCAL IN MANY SPOTS (handle using many vs 1 changebasismatrix and handle passing everything around to do FAC interpolation!!!!)")
 
     if(altcorfields == None):
         altdfieldsexfield = None

@@ -2074,18 +2074,16 @@ def _change_vel_basis_local_jitaux(dparnewbasisp1,dparnewbasisp2,dparnewbasisp3,
         #_ = np.array([vparbasis,vperp1basis,vperp2basis]).T #doesn't work with jit
         _ = np.array([[vparbasis[0],vperp1basis[0],vperp1basis[0]],[vparbasis[1],vperp1basis[1],vperp2basis[1]],[vparbasis[2],vperp1basis[2],vperp2basis[2]]])
         changebasismatrix = np.linalg.inv(_)
-        _tempvector = np.array([dparnewbasisp1[_idx],dparnewbasisp2[_idx],dparnewbasisp3[_idx]], dtype=np.float64) #this is needed for jit typinga
+        _tempvector = np.array([dparnewbasisp1[_idx],dparnewbasisp2[_idx],dparnewbasisp3[_idx]], dtype=np.float64) #this is needed for jit typing
         _ppar,_pperp1,_pperp2 = np.dot(changebasismatrix,_tempvector)
 
         dparnewbasisppar[_idx] = _ppar
         dparnewbasispperp1[_idx] = _pperp1
         dparnewbasispperp2[_idx] =_pperp2
 
-        print('this test',changebasismatrix,changebasismatrixes[_idx])
-        
         changebasismatrixes[_idx] = changebasismatrix
 
-        return dparnewbasisppar, dparnewbasispperp1, dparnewbasispperp2, changebasismatrixes
+    return dparnewbasisppar, dparnewbasispperp1, dparnewbasispperp2, changebasismatrixes
 
 def change_velocity_basis_local(dfields,dpar,loadfrac=1,debug=False):
     """
@@ -2284,8 +2282,6 @@ def compute_vrms(dpar,vmax,dv,x1,x2,y1,y2,z1,z2):
     vzdrift = np.mean(dpar['p1'][gptsparticle])
     vydrift = np.mean(dpar['p2'][gptsparticle])
     vxdrift = np.mean(dpar['p3'][gptsparticle])
-
-    print('debug', vxdrift,vydrift,vzdrift)
 
     vxs = dpar['p1'][gptsparticle]-vxdrift
     vys = dpar['p2'][gptsparticle]-vydrift
@@ -2724,7 +2720,7 @@ def get_path_of_particle(datapath,ind,proc,startframenum,endframenum,spec='ion',
             dpar = dpar_elec
             del dpar_ion
         else:
-            print("Spec is either ion or elec")
+            print("Spec must be either ion or elec")
             return
         
         candidate_inds = [ i for i, e in enumerate(dpar[indkey]) if (ind == e)] #find index of matches
