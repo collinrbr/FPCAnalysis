@@ -1121,7 +1121,6 @@ def compute_diamag_drift2D(dfields,temperaturedata2D,params,computefluc=False,co
     
     if(computefluc):
         elecperpboxfac = elecperpboxfac - elecperpboxfac.mean(axis=(1), keepdims=True)
-        elecperpboxfac = np.repeat(elecperpboxfac, len(temperaturedata2D['elecxxs']), axis=1)
         dfluc = FPCAnalysis.anl.remove_average_fields_over_yz(dfields)
         bxvals = copy.deepcopy(dfluc['bx'])
         byvals = copy.deepcopy(dfluc['by'])
