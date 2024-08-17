@@ -651,17 +651,17 @@ def compute_diamag_drift(dfields,dpar_elec,params,interpolxxs,verbose=False):
 
     positions = np.asarray([(interpolxxs[_i]+interpolxxs[_i+1])/2. for _i in range(len(interpolxxs)-1)])
     
-    # #revert normalization of fields
-    # if(verbose):print('Reverting fields normalization...')
-    # bnorm = params['c']**2*params['sigma']/params['comp']
-    # sigma_ion = params['sigma']*params['me']/params['mi'] #NOTE: this is subtely differetn than what aaron's normalization is- fix it (missingn factor of gamma0 and mi+me)
-    # enorm = bnorm*np.sqrt(sigma_ion)*params['c'] #note, there is an extra factor of 'c hat' (c in code units, which is .45 for the main run being analyzed) that we take out
-    # fieldkeys = ['ex','ey','ez','bx','by','bz']
-    # for fk in fieldkeys:
-    #     if(fk[0] == 'e'):
-    #         dfields[fk] *= enorm
-    #     else:
-    #         dfields[fk] *= bnorm
+    #revert normalization of fields
+    if(verbose):print('Reverting fields normalization...')
+    bnorm = params['c']**2*params['sigma']/params['comp']
+    sigma_ion = params['sigma']*params['me']/params['mi'] #NOTE: this is subtely differetn than what aaron's normalization is- fix it (missingn factor of gamma0 and mi+me)
+    enorm = bnorm*np.sqrt(sigma_ion)*params['c'] #note, there is an extra factor of 'c hat' (c in code units, which is .45 for the main run being analyzed) that we take out
+    fieldkeys = ['ex','ey','ez','bx','by','bz']
+    for fk in fieldkeys:
+        if(fk[0] == 'e'):
+            dfields[fk] *= enorm
+        else:
+            dfields[fk] *= bnorm
 
     #bin particles
     if(verbose):print("Binning particles...")
@@ -759,13 +759,13 @@ def compute_diamag_drift(dfields,dpar_elec,params,interpolxxs,verbose=False):
     udiay = np.asarray(udiay)
     udiaz = np.asarray(udiaz)
 
-    # #re normalize fields 
-    # fieldkeys = ['ex','ey','ez','bx','by','bz']
-    # for fk in fieldkeys:
-    #     if(fk[0] == 'e'):
-    #         dfields[fk] /= enorm
-    #     else:
-    #         dfields[fk] /= bnorm
+    #re normalize fields 
+    fieldkeys = ['ex','ey','ez','bx','by','bz']
+    for fk in fieldkeys:
+        if(fk[0] == 'e'):
+            dfields[fk] /= enorm
+        else:
+            dfields[fk] /= bnorm
 
     return positions, udiax/vti0, udiay/vti0, udiaz/vti0, nspec, elecvx, elecvy, elecvz #TODO: remove the extra elecvx outputs at end
 
@@ -785,16 +785,16 @@ def compute_gradb_drift(dfields,dpar_elec,params,interpolxxs,verbose=False):
     positions = np.asarray([(interpolxxs[_i]+interpolxxs[_i+1])/2. for _i in range(len(interpolxxs)-1)])
     
     #revert normalization of fields
-    # if(verbose):print('Reverting fields normalization...')
-    # bnorm = params['c']**2*params['sigma']/params['comp']
-    # sigma_ion = params['sigma']*params['me']/params['mi'] #NOTE: this is subtely differetn than what aaron's normalization is- fix it (missingn factor of gamma0 and mi+me)
-    # enorm = bnorm*np.sqrt(sigma_ion)*params['c'] #note, there is an extra factor of 'c hat' (c in code units, which is .45 for the main run being analyzed) that we take out
-    # fieldkeys = ['ex','ey','ez','bx','by','bz']
-    # for fk in fieldkeys:
-    #     if(fk[0] == 'e'):
-    #         dfields[fk] *= enorm
-    #     else:
-    #         dfields[fk] *= bnorm
+    if(verbose):print('Reverting fields normalization...')
+    bnorm = params['c']**2*params['sigma']/params['comp']
+    sigma_ion = params['sigma']*params['me']/params['mi'] #NOTE: this is subtely differetn than what aaron's normalization is- fix it (missingn factor of gamma0 and mi+me)
+    enorm = bnorm*np.sqrt(sigma_ion)*params['c'] #note, there is an extra factor of 'c hat' (c in code units, which is .45 for the main run being analyzed) that we take out
+    fieldkeys = ['ex','ey','ez','bx','by','bz']
+    for fk in fieldkeys:
+        if(fk[0] == 'e'):
+            dfields[fk] *= enorm
+        else:
+            dfields[fk] *= bnorm
      
     #bin particles
     if(verbose):print("Binning particles...")
@@ -916,13 +916,13 @@ def compute_gradb_drift(dfields,dpar_elec,params,interpolxxs,verbose=False):
     ugrady = np.asarray(ugrady)
     ugradz = np.asarray(ugradz)
 
-    # #re normalize fields 
-    # fieldkeys = ['ex','ey','ez','bx','by','bz']
-    # for fk in fieldkeys:
-    #     if(fk[0] == 'e'):
-    #         dfields[fk] /= enorm
-    #     else:
-    #         dfields[fk] /= bnorm
+    #re normalize fields 
+    fieldkeys = ['ex','ey','ez','bx','by','bz']
+    for fk in fieldkeys:
+        if(fk[0] == 'e'):
+            dfields[fk] /= enorm
+        else:
+            dfields[fk] /= bnorm
 
     return positions, ugradx/vti0, ugrady/vti0, ugradz/vti0, nspec, elecvx, elecvy, elecvz
 
@@ -940,17 +940,17 @@ def compute_mag_drift(dfields,dpar_elec,params,interpolxxs,verbose=False):
 
     positions = np.asarray([(interpolxxs[_i]+interpolxxs[_i+1])/2. for _i in range(len(interpolxxs)-1)])
     
-    # #revert normalization of fields
-    # if(verbose):print('Reverting fields normalization...')
-    # bnorm = params['c']**2*params['sigma']/params['comp']
-    # sigma_ion = params['sigma']*params['me']/params['mi'] #NOTE: this is subtely differetn than what aaron's normalization is- fix it (missingn factor of gamma0 and mi+me)
-    # enorm = bnorm*np.sqrt(sigma_ion)*params['c'] #note, there is an extra factor of 'c hat' (c in code units, which is .45 for the main run being analyzed) that we take out
-    # fieldkeys = ['ex','ey','ez','bx','by','bz']
-    # for fk in fieldkeys:
-    #     if(fk[0] == 'e'):
-    #         dfields[fk] *= enorm
-    #     else:
-    #         dfields[fk] *= bnorm
+    #revert normalization of fields
+    if(verbose):print('Reverting fields normalization...')
+    bnorm = params['c']**2*params['sigma']/params['comp']
+    sigma_ion = params['sigma']*params['me']/params['mi'] #NOTE: this is subtely differetn than what aaron's normalization is- fix it (missingn factor of gamma0 and mi+me)
+    enorm = bnorm*np.sqrt(sigma_ion)*params['c'] #note, there is an extra factor of 'c hat' (c in code units, which is .45 for the main run being analyzed) that we take out
+    fieldkeys = ['ex','ey','ez','bx','by','bz']
+    for fk in fieldkeys:
+        if(fk[0] == 'e'):
+            dfields[fk] *= enorm
+        else:
+            dfields[fk] *= bnorm
      
     #bin particles
     if(verbose):print("Binning particles...")
@@ -1072,13 +1072,13 @@ def compute_mag_drift(dfields,dpar_elec,params,interpolxxs,verbose=False):
     umagy = np.asarray(umagy)
     umagz = np.asarray(umagz)
 
-    # #re normalize fields 
-    # fieldkeys = ['ex','ey','ez','bx','by','bz']
-    # for fk in fieldkeys:
-    #     if(fk[0] == 'e'):
-    #         dfields[fk] /= enorm
-    #     else:
-    #         dfields[fk] /= bnorm
+    #re normalize fields 
+    fieldkeys = ['ex','ey','ez','bx','by','bz']
+    for fk in fieldkeys:
+        if(fk[0] == 'e'):
+            dfields[fk] /= enorm
+        else:
+            dfields[fk] /= bnorm
 
     return positions, umagx/vti0, umagy/vti0, umagz/vti0, nspec, elecvx, elecvy, elecvz
 
