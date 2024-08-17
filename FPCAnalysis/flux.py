@@ -649,30 +649,20 @@ def compute_diamag_drift(dfields,dpar_elec,params,interpolxxs,verbose=False):
 
     qe = dpar_elec['q']
 
-    #compute fluc and steady state fields
-    if(verbose):print('Computing dfavg and dfluc...')
-    from FPCAnalysis.analysis import get_average_fields_over_yz, remove_average_fields_over_yz
-    dfavg = get_average_fields_over_yz(dfields)
-    dfluc = remove_average_fields_over_yz(dfields)
-
     positions = np.asarray([(interpolxxs[_i]+interpolxxs[_i+1])/2. for _i in range(len(interpolxxs)-1)])
     
-    #revert normalization of fields
-    if(verbose):print('Reverting fields normalization...')
-    bnorm = params['c']**2*params['sigma']/params['comp']
-    sigma_ion = params['sigma']*params['me']/params['mi'] #NOTE: this is subtely differetn than what aaron's normalization is- fix it (missingn factor of gamma0 and mi+me)
-    enorm = bnorm*np.sqrt(sigma_ion)*params['c'] #note, there is an extra factor of 'c hat' (c in code units, which is .45 for the main run being analyzed) that we take out
-    fieldkeys = ['ex','ey','ez','bx','by','bz']
-    for fk in fieldkeys:
-        if(fk[0] == 'e'):
-            dfields[fk] *= enorm
-            dfluc[fk] *= enorm
-            dfavg[fk] *= enorm
-        else:
-            dfields[fk] *= bnorm
-            dfluc[fk] *= bnorm
-            dfavg[fk] *= bnorm
-     
+    # #revert normalization of fields
+    # if(verbose):print('Reverting fields normalization...')
+    # bnorm = params['c']**2*params['sigma']/params['comp']
+    # sigma_ion = params['sigma']*params['me']/params['mi'] #NOTE: this is subtely differetn than what aaron's normalization is- fix it (missingn factor of gamma0 and mi+me)
+    # enorm = bnorm*np.sqrt(sigma_ion)*params['c'] #note, there is an extra factor of 'c hat' (c in code units, which is .45 for the main run being analyzed) that we take out
+    # fieldkeys = ['ex','ey','ez','bx','by','bz']
+    # for fk in fieldkeys:
+    #     if(fk[0] == 'e'):
+    #         dfields[fk] *= enorm
+    #     else:
+    #         dfields[fk] *= bnorm
+
     #bin particles
     if(verbose):print("Binning particles...")
     elecvxbins = []
@@ -728,7 +718,7 @@ def compute_diamag_drift(dfields,dpar_elec,params,interpolxxs,verbose=False):
         bvze = np.mean(elecvzbins[_i])
 
         px = me*np.sum([(evxval-bvxe)**2 for evxval in elecvxbins[_i]]) 
-        py = me*np.sum([(evyval-bvye)**2 for evyval in elecvybins[_i]])
+        # py = me*np.sum([(evyval-bvye)**2 for evyval in elecvybins[_i]]) #not used here so commented out
         pz = me*np.sum([(evzval-bvze)**2 for evzval in elecvzbins[_i]])
 
         nspec.append(float(len(elecvzbins[_i])))
@@ -769,25 +759,19 @@ def compute_diamag_drift(dfields,dpar_elec,params,interpolxxs,verbose=False):
     udiay = np.asarray(udiay)
     udiaz = np.asarray(udiaz)
 
-    #re normalize fields 
-    fieldkeys = ['ex','ey','ez','bx','by','bz']
-    for fk in fieldkeys:
-        if(fk[0] == 'e'):
-            dfields[fk] /= enorm
-            dfluc[fk] /= enorm
-            dfavg[fk] /= enorm
-        else:
-            dfields[fk] /= bnorm
-            dfluc[fk] /= bnorm
-            dfavg[fk] /= bnorm
+    # #re normalize fields 
+    # fieldkeys = ['ex','ey','ez','bx','by','bz']
+    # for fk in fieldkeys:
+    #     if(fk[0] == 'e'):
+    #         dfields[fk] /= enorm
+    #     else:
+    #         dfields[fk] /= bnorm
 
     return positions, udiax/vti0, udiay/vti0, udiaz/vti0, nspec, elecvx, elecvy, elecvz #TODO: remove the extra elecvx outputs at end
 
 def compute_gradb_drift(dfields,dpar_elec,params,interpolxxs,verbose=False):
     """
-    u_gradb = (1/qe ne)pperpe/Bz^2 par B/par x (for perp shock ONLY) yhat
 
-    TODO: generalize this func  
     """
 
     #get constants
@@ -798,28 +782,19 @@ def compute_gradb_drift(dfields,dpar_elec,params,interpolxxs,verbose=False):
     qe = dpar_elec['q']
 
     #compute fluc and steady state fields
-    if(verbose):print('Computing dfavg and dfluc...')
-    from FPCAnalysis.analysis import get_average_fields_over_yz, remove_average_fields_over_yz
-    dfavg = get_average_fields_over_yz(dfields)
-    dfluc = remove_average_fields_over_yz(dfields)
-
     positions = np.asarray([(interpolxxs[_i]+interpolxxs[_i+1])/2. for _i in range(len(interpolxxs)-1)])
     
     #revert normalization of fields
-    if(verbose):print('Reverting fields normalization...')
-    bnorm = params['c']**2*params['sigma']/params['comp']
-    sigma_ion = params['sigma']*params['me']/params['mi'] #NOTE: this is subtely differetn than what aaron's normalization is- fix it (missingn factor of gamma0 and mi+me)
-    enorm = bnorm*np.sqrt(sigma_ion)*params['c'] #note, there is an extra factor of 'c hat' (c in code units, which is .45 for the main run being analyzed) that we take out
-    fieldkeys = ['ex','ey','ez','bx','by','bz']
-    for fk in fieldkeys:
-        if(fk[0] == 'e'):
-            dfields[fk] *= enorm
-            dfluc[fk] *= enorm
-            dfavg[fk] *= enorm
-        else:
-            dfields[fk] *= bnorm
-            dfluc[fk] *= bnorm
-            dfavg[fk] *= bnorm
+    # if(verbose):print('Reverting fields normalization...')
+    # bnorm = params['c']**2*params['sigma']/params['comp']
+    # sigma_ion = params['sigma']*params['me']/params['mi'] #NOTE: this is subtely differetn than what aaron's normalization is- fix it (missingn factor of gamma0 and mi+me)
+    # enorm = bnorm*np.sqrt(sigma_ion)*params['c'] #note, there is an extra factor of 'c hat' (c in code units, which is .45 for the main run being analyzed) that we take out
+    # fieldkeys = ['ex','ey','ez','bx','by','bz']
+    # for fk in fieldkeys:
+    #     if(fk[0] == 'e'):
+    #         dfields[fk] *= enorm
+    #     else:
+    #         dfields[fk] *= bnorm
      
     #bin particles
     if(verbose):print("Binning particles...")
@@ -908,7 +883,7 @@ def compute_gradb_drift(dfields,dpar_elec,params,interpolxxs,verbose=False):
     bylist = np.asarray(bylist)
     bzlist = np.asarray(bzlist)
     
-    #compute diamagnetic drift
+    #compute gradb drift
     ugradx = []
     ugrady = []
     ugradz = []
@@ -931,10 +906,8 @@ def compute_gradb_drift(dfields,dpar_elec,params,interpolxxs,verbose=False):
 
         ne = nspec[_i]
 
+        ugb = (params['c']/(qe*ne))*pperp[_i]/np.linalg.norm([Bx,By,Bz])**3*np.cross([Bx,By,Bz],[grad_by_wrt_x[_i],0,0])
 
-        ugb = [0,0,(-params['c']/(qe*ne))*(pperp[_i]/np.linalg.norm([0,By,0])**2)*grad_by_wrt_x[_i]] #TODO: generalize this whole function!!!
-
-        print('debug ',ugb,grad_by_wrt_x[_i],pperp[_i],bylist[_i])
 
         ugradx.append(ugb[0])
         ugrady.append(ugb[1])
@@ -943,25 +916,19 @@ def compute_gradb_drift(dfields,dpar_elec,params,interpolxxs,verbose=False):
     ugrady = np.asarray(ugrady)
     ugradz = np.asarray(ugradz)
 
-    #re normalize fields 
-    fieldkeys = ['ex','ey','ez','bx','by','bz']
-    for fk in fieldkeys:
-        if(fk[0] == 'e'):
-            dfields[fk] /= enorm
-            dfluc[fk] /= enorm
-            dfavg[fk] /= enorm
-        else:
-            dfields[fk] /= bnorm
-            dfluc[fk] /= bnorm
-            dfavg[fk] /= bnorm
+    # #re normalize fields 
+    # fieldkeys = ['ex','ey','ez','bx','by','bz']
+    # for fk in fieldkeys:
+    #     if(fk[0] == 'e'):
+    #         dfields[fk] /= enorm
+    #     else:
+    #         dfields[fk] /= bnorm
 
     return positions, ugradx/vti0, ugrady/vti0, ugradz/vti0, nspec, elecvx, elecvy, elecvz
 
 def compute_mag_drift(dfields,dpar_elec,params,interpolxxs,verbose=False):
     """
-    u_mag = (1/qe ne) partial/partial x (pperpe/Bz) yhat
 
-    TODO: generalize this func  
     """
 
     #get constants
@@ -971,29 +938,19 @@ def compute_mag_drift(dfields,dpar_elec,params,interpolxxs,verbose=False):
 
     qe = dpar_elec['q']
 
-    #compute fluc and steady state fields
-    if(verbose):print('Computing dfavg and dfluc...')
-    from FPCAnalysis.analysis import get_average_fields_over_yz, remove_average_fields_over_yz
-    dfavg = get_average_fields_over_yz(dfields)
-    dfluc = remove_average_fields_over_yz(dfields)
-
     positions = np.asarray([(interpolxxs[_i]+interpolxxs[_i+1])/2. for _i in range(len(interpolxxs)-1)])
     
-    #revert normalization of fields
-    if(verbose):print('Reverting fields normalization...')
-    bnorm = params['c']**2*params['sigma']/params['comp']
-    sigma_ion = params['sigma']*params['me']/params['mi'] #NOTE: this is subtely differetn than what aaron's normalization is- fix it (missingn factor of gamma0 and mi+me)
-    enorm = bnorm*np.sqrt(sigma_ion)*params['c'] #note, there is an extra factor of 'c hat' (c in code units, which is .45 for the main run being analyzed) that we take out
-    fieldkeys = ['ex','ey','ez','bx','by','bz']
-    for fk in fieldkeys:
-        if(fk[0] == 'e'):
-            dfields[fk] *= enorm
-            dfluc[fk] *= enorm
-            dfavg[fk] *= enorm
-        else:
-            dfields[fk] *= bnorm
-            dfluc[fk] *= bnorm
-            dfavg[fk] *= bnorm
+    # #revert normalization of fields
+    # if(verbose):print('Reverting fields normalization...')
+    # bnorm = params['c']**2*params['sigma']/params['comp']
+    # sigma_ion = params['sigma']*params['me']/params['mi'] #NOTE: this is subtely differetn than what aaron's normalization is- fix it (missingn factor of gamma0 and mi+me)
+    # enorm = bnorm*np.sqrt(sigma_ion)*params['c'] #note, there is an extra factor of 'c hat' (c in code units, which is .45 for the main run being analyzed) that we take out
+    # fieldkeys = ['ex','ey','ez','bx','by','bz']
+    # for fk in fieldkeys:
+    #     if(fk[0] == 'e'):
+    #         dfields[fk] *= enorm
+    #     else:
+    #         dfields[fk] *= bnorm
      
     #bin particles
     if(verbose):print("Binning particles...")
@@ -1075,14 +1032,14 @@ def compute_mag_drift(dfields,dpar_elec,params,interpolxxs,verbose=False):
         By = np.mean(Bys[:,:,goodfieldpts])
         Bz = np.mean(Bzs[:,:,goodfieldpts])
 
-        bxlist.append(Bx)
-        bylist.append(By)
-        bzlist.append(Bz)
+        bxlist.append(-Bx/np.linalg.norm([Bx,By,Bz])**2)
+        bylist.append(-By/np.linalg.norm([Bx,By,Bz])**2)
+        bzlist.append(-Bz/np.linalg.norm([Bx,By,Bz])**2)
     bxlist = np.asarray(bxlist)
     bylist = np.asarray(bylist)
     bzlist = np.asarray(bzlist)
     
-    #compute diamagnetic drift
+    #compute mag drift
     umagx = []
     umagy = []
     umagz = []
@@ -1090,7 +1047,8 @@ def compute_mag_drift(dfields,dpar_elec,params,interpolxxs,verbose=False):
     #TODO convert above to FAC? (if so, re do comments above) <doesnt matter for our perp simulation that much>
     interdx = interpolxxs[1]-interpolxxs[0]
     gradnormfac = params['comp']*np.sqrt(params['mi']/params['me'])/interdx
-    grad_pperp_over_by_wrt_x = np.gradient(pperp/bylist)*(gradnormfac)
+    grad_pperp_over_by_wrt_x = -np.gradient(pperp*bylist)*(gradnormfac)
+    grad_pperp_over_bz_wrt_x = np.gradient(pperp*bzlist)*(gradnormfac)
     for _i in range(0,len(interpolxxs)-1):
         x1 = interpolxxs[_i]
         x2 = interpolxxs[_i+1]
@@ -1105,10 +1063,8 @@ def compute_mag_drift(dfields,dpar_elec,params,interpolxxs,verbose=False):
 
         ne = nspec[_i]
 
-        umg = [0,0,(-params['c']/(qe*ne))*grad_pperp_over_by_wrt_x[_i]]
+        umg = (-params['c']/(qe*ne))*np.array([0,grad_pperp_over_bz_wrt_x[_i],grad_pperp_over_by_wrt_x[_i]])
         
-        #[0,(-params['c']/(qe*ne))*(pperp[_i]/np.linalg.norm([0,0,Bz])**2)*grad_bz_wrt_x[_i],0] #TODO: generalize this whole function!!!
-
         umagx.append(umg[0])
         umagy.append(umg[1])
         umagz.append(umg[2])
@@ -1116,17 +1072,105 @@ def compute_mag_drift(dfields,dpar_elec,params,interpolxxs,verbose=False):
     umagy = np.asarray(umagy)
     umagz = np.asarray(umagz)
 
-    #re normalize fields 
-    fieldkeys = ['ex','ey','ez','bx','by','bz']
-    for fk in fieldkeys:
-        if(fk[0] == 'e'):
-            dfields[fk] /= enorm
-            dfluc[fk] /= enorm
-            dfavg[fk] /= enorm
-        else:
-            dfields[fk] /= bnorm
-            dfluc[fk] /= bnorm
-            dfavg[fk] /= bnorm
+    # #re normalize fields 
+    # fieldkeys = ['ex','ey','ez','bx','by','bz']
+    # for fk in fieldkeys:
+    #     if(fk[0] == 'e'):
+    #         dfields[fk] /= enorm
+    #     else:
+    #         dfields[fk] /= bnorm
 
     return positions, umagx/vti0, umagy/vti0, umagz/vti0, nspec, elecvx, elecvy, elecvz
 
+def compute_diamag_drift2D(dfields,temperaturedata2D,params,computefluc=False,computebar=False,verbose=False):
+    """
+    u_dia = -1/(q_e n_e)\frac{nabla p_{\perp,e} \times \mathbf{B}}{|\mathbf{B}|^2}
+
+    Claim: u_dia is the thing causing the adiabatic heating. That is u_dia is caused
+    by the thing conserving the adiabatic invariant, which we will call adiabatic heating.
+
+    The 'equivalency' of u_dia and adiabatic heating was shown by Juno et al 2021 (assumes no scattering tho!)
+
+    Note, the above claim assumes a sufficiently high mass ratio   
+
+    This function has been tested and agrees with the 1d version
+    """
+
+    #get constants
+    if(verbose):print('Computing parameters...')
+
+    vti0 = 1.
+
+    qe = -1
+
+    ny = len(temperaturedata2D['elecyys'])
+    nx = len(temperaturedata2D['elecxxs'])
+
+    positionsxx = temperaturedata2D['elecxxs']
+    positionsyy = temperaturedata2D['elecyys']
+    
+    udiax = np.zeros((nx,ny))
+    udiay = np.zeros((nx,ny))
+    udiaz = np.zeros((nx,ny))
+
+    elecperpboxfac = np.asarray(temperaturedata2D['elecperpboxfac'])
+    import copy 
+    bxvals = copy.deepcopy(dfields['bx'])
+    byvals = copy.deepcopy(dfields['by'])
+    bzvals = copy.deepcopy(dfields['bz'])
+    
+    if(computefluc):
+        elecperpboxfac = elecperpboxfac - elecperpboxfac.mean(axis=(1), keepdims=True)
+        elecperpboxfac = np.repeat(elecperpboxfac, len(temperaturedata2D['elecxxs']), axis=1)
+        dfluc = FPCAnalysis.anl.remove_average_fields_over_yz(dfields)
+        bxvals = copy.deepcopy(dfluc['bx'])
+        byvals = copy.deepcopy(dfluc['by'])
+        bzvals = copy.deepcopy(dfluc['bz'])
+    elif(computebar):
+        elecperpboxfac = elecperpboxfac.mean(axis=(1), keepdims=True)
+        elecperpboxfac = np.repeat(elecperpboxfac, len(temperaturedata2D['elecxxs']), axis=1)
+        dfavg = FPCAnalysis.anl.get_average_fields_over_yz(dfields)
+        bxvals = copy.deepcopy(dfavg['bx'])
+        byvals = copy.deepcopy(dfavg['by'])
+        bzvals = copy.deepcopy(dfavg['bz'])
+        
+    gradelecperpboxfacx = np.gradient(elecperpboxfac,axis=1)
+    gradelecperpboxfacy = np.gradient(elecperpboxfac,axis=0)
+    edens = temperaturedata2D['elecdens']
+    elecxxs = temperaturedata2D['elecxxs']
+    elecyys = temperaturedata2D['elecyys']
+    dx = elecxxs[1]-elecxxs[0]
+    dy = elecyys[1]-elecyys[0]
+
+    elecxxs = temperaturedata2D['elecxxs']
+    elecyys = temperaturedata2D['elecyys']
+    facdx = elecxxs[1]-elecxxs[0]
+    facdy = elecyys[1]-elecyys[0]
+    gradnormfacxx = params['comp']*np.sqrt(params['mi']/params['me'])/facdx
+    gradnormfacyy = params['comp']*np.sqrt(params['mi']/params['me'])/facdy
+    gradelecperpboxfacx *= gradnormfacxx
+    gradelecperpboxfacy *= gradnormfacyy
+
+    for _i in range(0,len(elecxxs)):
+        if(verbose):print(_i, " of ", len(elecxxs))
+        for _j in range(0,len(elecyys)):
+            x1 = elecxxs[_i] - dx/2.
+            x2 = elecxxs[_i] + dx/2.
+            y1 = elecyys[_j] - dy/2.
+            y2 = elecyys[_j] + dy/2.
+
+            goodfieldptsxx = (x1 < dfields['ey_xx']) & (dfields['ey_xx'] <= x2) 
+            goodfieldptsyy = (y1 < dfields['ey_yy']) & (dfields['ey_yy'] <= y2)
+            Bx = np.mean(bxvals[:,goodfieldptsyy,:][:, :,goodfieldptsxx], axis=(1,2))[0]
+            By = np.mean(byvals[:,goodfieldptsyy,:][:, :,goodfieldptsxx], axis=(1,2))[0]
+            Bz = np.mean(bzvals[:,goodfieldptsyy,:][:, :,goodfieldptsxx], axis=(1,2))[0]
+
+            ne = edens[_j,_i]
+            qe = -1
+            udiaxtemp = (-params['c']/(qe*ne))*np.cross(np.array([gradelecperpboxfacx[_j,_i]*edens[_j,_i],gradelecperpboxfacy[_j,_i]*edens[_j,_i],0]),np.array([Bx,By,Bz]))/np.linalg.norm(np.array([Bx,By,Bz]))**2
+            udiax[_i,_j] = udiaxtemp[0]
+            udiay[_i,_j] = udiaxtemp[1]
+            udiaz[_i,_j] = udiaxtemp[2]
+
+    
+    return positionsxx, positionsyy, udiax/vti0, udiay/vti0, udiaz/vti0
