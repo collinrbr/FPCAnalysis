@@ -66,7 +66,7 @@ def individual_flux_percents(dfluxes,flnm=''):
         plt.savefig(flnm+'tot'+'.png')
     plt.close()
 
-def stack_plot_pos_neg_flux(dfluxes,flnm = '',xlim=[],tolfrac = 0.001,split_pos_neg=True):
+def stack_plot_pos_neg_flux(dfluxes,flnm = '',xlim=[],tolfrac = 0.001,use_bar_fluc_poynt=False,split_pos_neg=True):
 
     from FPCAnalysis.array_ops import split_positive_negative
 
@@ -90,7 +90,13 @@ def stack_plot_pos_neg_flux(dfluxes,flnm = '',xlim=[],tolfrac = 0.001,split_pos_
     pos, ionpdotusxspos, ionpdotusxsneg = split_positive_negative(positions,ionpdotusxs,split_pos_neg)
     pos, elecpdotusxspos, elecpdotusxsneg = split_positive_negative(positions,elecpdotusxs,split_pos_neg)
     pos, poyntxxspos, poyntxxsneg = split_positive_negative(positions,poyntxxs,split_pos_neg)
-    
+
+    if(use_bar_fluc_poynt):
+        EbarxBbar_x = dfluxes['EbarxBbar_x']
+        EflucxBfluc_x_avg = dfluxes['EflucxBfluc_x_avg']
+        pos, EbarxBbar_xpos, EbarxBbar_xneg = split_positive_negative(positions,EbarxBbar_x,split_pos_neg)
+        pos, EflucxBfluc_x_avgpos, EflucxBfluc_x_avgneg = split_positive_negative(positions,EflucxBfluc_x_avg,split_pos_neg)
+
     import matplotlib.patches as mpatches
     
     fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(8, 3), gridspec_kw={'width_ratios': [5, 1]})
@@ -161,12 +167,27 @@ def stack_plot_pos_neg_flux(dfluxes,flnm = '',xlim=[],tolfrac = 0.001,split_pos_
     runtotpos += elecpdotusxspos
     
     #we will hide all areas that are too small to impact things, as they create an outline that is larger than the area itself!
-    if(np.max(np.abs(poyntxxspos)) < np.abs(normtot)*tolfrac):
-        alpha = 0.
+    if(use_bar_fluc_poynt):
+        if(np.max(np.abs(EbarxBbar_xpos)) < np.abs(normtot)*tolfrac):
+            alpha = 0.
+        else:
+            alpha = 0.8
+        fill_patchEbarxBbar_xpos = ax1.fill_between(xx, runtotpos/normtot, (runtotpos+EbarxBbar_xpos)/normtot, hatch='///', color='black', alpha=alpha)
+        runtotpos += EbarxBbar_xpos
+
+        if(np.max(np.abs(EbarxBbar_xpos)) < np.abs(normtot)*tolfrac):
+            alpha = 0.
+        else:
+            alpha = 0.8
+        fill_patchEflucxBfluc_x_avgpos = ax1.fill_between(xx, runtotpos/normtot, (runtotpos+EflucxBfluc_x_avgpos)/normtot, hatch='///', color='olive', alpha=alpha)
+        runtotpos += EflucxBfluc_x_avgpos
     else:
-        alpha = 0.8
-    fill_patchpoyntxxspos = ax1.fill_between(xx, runtotpos/normtot, (runtotpos+poyntxxspos)/normtot, hatch='///', color='black', alpha=alpha)
-    runtotpos += poyntxxspos
+        if(np.max(np.abs(poyntxxspos)) < np.abs(normtot)*tolfrac):
+            alpha = 0.
+        else:
+            alpha = 0.8
+        fill_patchpoyntxxspos = ax1.fill_between(xx, runtotpos/normtot, (runtotpos+poyntxxspos)/normtot, hatch='///', color='black', alpha=alpha)
+        runtotpos += poyntxxspos
     
     #note: we only hide small positive areas since in this specific case, it only creates the illusion of positive contributions for the positive areas
     alpha = 0.8
@@ -192,16 +213,33 @@ def stack_plot_pos_neg_flux(dfluxes,flnm = '',xlim=[],tolfrac = 0.001,split_pos_
     fill_patchelecpdotusxsneg = ax1.fill_between(xx, runtotneg/normtot, (runtotneg+elecpdotusxsneg)/normtot, hatch='|', color='pink', alpha=alpha)
     runtotneg += elecpdotusxsneg
     
-    fill_patchpoyntxxsneg = ax1.fill_between(xx, runtotneg/normtot, (runtotneg+poyntxxsneg)/normtot, hatch='///', color='black', alpha=alpha)
-    runtotneg += poyntxxsneg
+    if(use_bar_fluc_poynt):
+        fill_patchEbarxBbar_xneg = ax1.fill_between(xx, runtotneg/normtot, (runtotneg+EbarxBbar_xneg)/normtot, hatch='///', color='black', alpha=alpha)
+        runtotneg += EbarxBbar_xneg
+
+        mask = np.abs(EflucxBfluc_x_avgneg) > np.abs(normtot)*.003
+        fill_patchEflucxBfluc_x_avgneg = ax1.fill_between(xx, runtotneg/normtot, (runtotneg+EflucxBfluc_x_avgneg)/normtot, where=mask, hatch='///', color='olive', alpha=alpha)
+        runtotneg += EflucxBfluc_x_avgneg
+    else:
+        fill_patchpoyntxxsneg = ax1.fill_between(xx, runtotneg/normtot, (runtotneg+poyntxxsneg)/normtot, hatch='///', color='black', alpha=alpha)
+        runtotneg += poyntxxsneg
     
     # Create a legend for the fill_between plot on the second subplot
     legend_elements = []
     
     _idx = 0
-    plabels = [r'$S_x$',r'$(\mathcal{P}_e \cdot \mathbf{U}_e)_x$',r'$3/2 p_e  U_{x,e}$',r'$q_{x,e}$',r'$(\mathcal{P}_i \cdot \mathbf{U}_i)_x$',r'$3/2 p_i  U_{x,i}$',r'$q_{x,i}$',r'$F_{x,ram,i}$']
+    if(use_bar_fluc_poynt):
+        plabels = [r'$<\widetilde{S_x}>$',r'$\overline{S_x}$',r'$(\mathcal{P}_e \cdot \mathbf{U}_e)_x$',r'$3/2 p_e  U_{x,e}$',r'$q_{x,e}$',r'$(\mathcal{P}_i \cdot \mathbf{U}_i)_x$',r'$3/2 p_i  U_{x,i}$',r'$q_{x,i}$',r'$F_{x,ram,i}$']
+    else:
+        plabels = [r'$S_x$',r'$(\mathcal{P}_e \cdot \mathbf{U}_e)_x$',r'$3/2 p_e  U_{x,e}$',r'$q_{x,e}$',r'$(\mathcal{P}_i \cdot \mathbf{U}_i)_x$',r'$3/2 p_i  U_{x,i}$',r'$q_{x,i}$',r'$F_{x,ram,i}$']
     plabels.reverse()
-    for fp in [fill_patchionframxneg,fill_patchionqxsneg,fill_patchionethxsneg,fill_patchionpdotusxsneg,fill_patchelecqxsneg,fill_patchelecethxsneg,fill_patchelecpdotusxsneg,fill_patchpoyntxxsneg]:
+
+    if(use_bar_fluc_poynt):
+        fparr = [fill_patchionframxneg,fill_patchionqxsneg,fill_patchionethxsneg,fill_patchionpdotusxsneg,fill_patchelecqxsneg,fill_patchelecethxsneg,fill_patchelecpdotusxsneg,fill_patchEbarxBbar_xneg,fill_patchEflucxBfluc_x_avgneg]
+    else:
+        fparr = [fill_patchionframxneg,fill_patchionqxsneg,fill_patchionethxsneg,fill_patchionpdotusxsneg,fill_patchelecqxsneg,fill_patchelecethxsneg,fill_patchelecpdotusxsneg,fill_patchpoyntxxsneg]
+    
+    for fp in fparr:
         facecolor = fp.get_facecolor()
         alpha = fp.get_alpha()
         hatch = fp.get_hatch()
