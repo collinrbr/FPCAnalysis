@@ -2218,6 +2218,8 @@ def transform_field_to_kzkykxxx(ddict,fieldkey,retstep=1):
 
     E.g. takes B(z,y,x) and computes B(kz,ky,kx;x)
 
+    Note- at one point, this was converted to use JIT, but there was practically no increase in speed, and the code lost a lot of flexibility.... So we reverted back
+
     Parameters
     ----------
     ddict : dict
@@ -3193,3 +3195,317 @@ def local_pearson_correlation(x, y, positions, window_size):
         positions_out.append(positions[i+int(np.floor(window_size/2))]) #assumes windowsize is odd (and that int rounds down)
     
     return positions_out, local_corrs
+
+#TODO: test this function (have only used load=True in this form)
+def compute_temp_1d(interpolxxs,params,dfields,dpar_ion,dpar_elec,vmaxion,vmaxelec,dvion,dvelec, pckname = 'temperaturedata.pickle' ,load=True):
+    """
+    Note, if pckname is true, we can pass none to everthing else!
+    """
+
+    import pickle
+
+    if(not(load)):
+        #TODO: clean this func up!
+        import FPCAnalysis
+
+        vti0 = np.sqrt(params['delgam'])
+        vte0 = np.sqrt(params['mi']/params['me'])*vti0 #WARNING: THIS ASSUME Ti/Te = 1, TODO: don't assume Ti/Te = 1
+        vte0_vti0 = vte0/vti0
+
+
+        #TODO: there is a lot of unused stuff in this block- delete or save somehow!
+        vmaxion = 12.
+        vmaxelec = 12.*vte0_vti0
+        dvion = 1.
+        dvelec = .1*vte0_vti0
+
+        verbose = True
+        loadfrac = 1 # =1 loads all particles, = N loads every nth particles
+        
+        me = params['me']
+        mi = params['mi']
+            
+        vti0 = np.sqrt(params['delgam'])
+        vte0 = np.sqrt(params['mi']/params['me'])*vti0 #WARNING: THIS ASSUME Ti/Te = 1, TODO: don't assume Ti/Te = 1
+        vte0_vti0 = vte0/vti0
+
+        oldkeysion = ['ui','vi','wi','xi','yi','zi']
+        oldkeyselec = ['ue','ve','we','xe','ye','ze']
+        newkeys = ['p1','p2','p3','x1','x2','x3'] #convert to legacy key names
+        for _tidx in range(len(oldkeysion)):
+            dpar_ion[newkeys[_tidx]] = dpar_ion[oldkeysion[_tidx]] 
+            dpar_elec[newkeys[_tidx]] = dpar_elec[oldkeyselec[_tidx]]
+
+
+        if(verbose):print("computing local fac for ions...")
+        dpar_ion,_ = FPCAnalysis.anl.change_velocity_basis_local(dfields,dpar_ion,loadfrac=loadfrac)
+        if(verbose):print("computing local fac for elecs...")
+        dpar_elec,_  = FPCAnalysis.anl.change_velocity_basis_local(dfields,dpar_elec,loadfrac=loadfrac)
+
+        #bin particles
+        nx = len(interpolxxs)-1
+        ion_bins = [[] for _ in range(nx)]
+        elec_bins = [[] for _ in range(nx)]
+
+        boxcenters = np.asarray([(interpolxxs[_index]+interpolxxs[_index+1])/2 for _index in range(nx)])
+
+        #compute matricies to transpose particles using box avg FAC
+        if(verbose):print("Computing box FACs")
+        boxavg_change_matricies = []
+        for _fidx in range(0,nx):
+            zlim = [-9999999,9999999]
+            ylim = [-9999999,9999999]
+            xlim = [interpolxxs[_fidx],interpolxxs[_fidx+1]]
+            vparbasis, vperp1basis, vperp2basis = FPCAnalysis.anl.compute_field_aligned_coord(dfields,xlim,ylim,zlim)
+            
+            #make change of basis matrix
+            _ = np.asarray([vparbasis,vperp1basis,vperp2basis]).T
+            changebasismatrix = np.linalg.inv(_)
+            boxavg_change_matricies.append(changebasismatrix)
+
+        ionxxs = []
+        if(verbose):print('changing vel basis and binning...')
+        for _i in range(0,int(len(dpar_ion['xi']))): 
+            if(verbose and _i % 100000 == 0): print("Binned: ", _i," ions of ", len(dpar_ion['xi']))
+            xx = dpar_ion['xi'][_i]
+            xidx = FPCAnalysis.ao.find_nearest(boxcenters, xx)
+            pparboxfac,pperp1boxfac,pperp2boxfac = np.matmul(boxavg_change_matricies[xidx],[dpar_ion['ui'][_i],dpar_ion['vi'][_i],dpar_ion['wi'][_i]])
+            ion_bins[xidx].append({'ui':dpar_ion['ui'][_i] ,'vi':dpar_ion['vi'][_i] ,'wi':dpar_ion['wi'][_i], 'pari':dpar_ion['ppar'][_i], 'perp1i':dpar_ion['pperp1'][_i], 'perp2i':dpar_ion['pperp2'][_i], 'pparboxfaci':pparboxfac, 'pperp1boxfaci':pperp1boxfac, 'pperp2boxfaci':pperp2boxfac})
+        ionxxs = boxcenters
+
+        elecxxs = []
+        for _i in range(0,int(len(dpar_elec['xe']))):
+            if(verbose and _i % 100000 == 0): print("Binned: ", _i," elecs of ", len(dpar_elec['xe']))
+            xx = dpar_elec['xe'][_i]
+            xidx = FPCAnalysis.ao.find_nearest(boxcenters, xx)
+            pparboxfac,pperp1boxfac,pperp2boxfac = np.matmul(boxavg_change_matricies[xidx],[dpar_elec['ue'][_i],dpar_elec['ve'][_i],dpar_elec['we'][_i]])
+            elec_bins[xidx].append({'ue':dpar_elec['ue'][_i]*vte0_vti0,'ve':dpar_elec['ve'][_i]*vte0_vti0,'we':dpar_elec['we'][_i]*vte0_vti0, 'pare':dpar_elec['ppar'][_i]*vte0_vti0, 'perp1e':dpar_elec['pperp1'][_i]*vte0_vti0, 'perp2e':dpar_elec['pperp2'][_i]*vte0_vti0,'pparboxface':pparboxfac*vte0_vti0, 'pperp1boxface':pperp1boxfac*vte0_vti0, 'pperp2boxface':pperp2boxfac*vte0_vti0})
+        elecxxs = boxcenters
+
+        vxbins = np.arange(-vmaxion, vmaxion+dvion, dvion)
+        vx = (vxbins[1:] + vxbins[:-1])/2.
+        vybins = np.arange(-vmaxion, vmaxion+dvion, dvion)
+        vy = (vybins[1:] + vybins[:-1])/2.
+        vzbins = np.arange(-vmaxion, vmaxion+dvion, dvion)
+        vz = (vzbins[1:] + vzbins[:-1])/2.
+        ionhists = [[] for _ in range(nx)]
+        ionhistfac = [[] for _ in range(nx)] 
+        ionhistboxfac = [[] for _ in range(nx)]
+        for _idx in range(0,len(ion_bins)):
+            if(verbose):print('binning ',_idx, 'of ',len(ion_bins),' ion')
+            tempuxs = np.asarray([ion_bins[_idx][_jdx]['ui'] for _jdx in range(0,len(ion_bins[_idx]))])
+            tempuys = np.asarray([ion_bins[_idx][_jdx]['wi'] for _jdx in range(0,len(ion_bins[_idx]))])
+            tempuzs = np.asarray([ion_bins[_idx][_jdx]['vi'] for _jdx in range(0,len(ion_bins[_idx]))])
+            hist,_ = np.histogramdd((tempuzs,tempuys,tempuxs), bins=[vzbins, vybins, vxbins]) #Index order is [_vz,_vy,_vx]
+            ionhists[_idx]=hist
+
+            tempuxs = np.asarray([ion_bins[_idx][_jdx]['perp1i'] for _jdx in range(0,len(ion_bins[_idx]))])
+            tempuys = np.asarray([ion_bins[_idx][_jdx]['perp2i'] for _jdx in range(0,len(ion_bins[_idx]))])
+            tempuzs = np.asarray([ion_bins[_idx][_jdx]['pari'] for _jdx in range(0,len(ion_bins[_idx]))])
+            hist,_ = np.histogramdd((tempuzs,tempuys,tempuxs), bins=[vzbins, vybins, vxbins]) #Index order is [_par,_perp2,_perp1]
+            ionhistfac[_idx]=hist
+
+            tempuxs = np.asarray([ion_bins[_idx][_jdx]['pperp1boxfaci'] for _jdx in range(0,len(ion_bins[_idx]))])
+            tempuys = np.asarray([ion_bins[_idx][_jdx]['pperp2boxfaci'] for _jdx in range(0,len(ion_bins[_idx]))])
+            tempuzs = np.asarray([ion_bins[_idx][_jdx]['pparboxfaci'] for _jdx in range(0,len(ion_bins[_idx]))])
+            hist,_ = np.histogramdd((tempuzs,tempuys,tempuxs), bins=[vzbins, vybins, vxbins]) #Index order is [_par,_perp2,_perp1]
+            ionhistboxfac[_idx]=hist
+        vxion = vx[:]
+        vyion = vy[:]
+        vzion = vz[:]
+        if(verbose):print("done binning ions into hists")
+
+
+        vxbins = np.arange(-vmaxelec, vmaxelec+dvelec, dvelec)
+        vx = (vxbins[1:] + vxbins[:-1])/2.
+        vybins = np.arange(-vmaxelec, vmaxelec+dvelec, dvelec)
+        vy = (vybins[1:] + vybins[:-1])/2.
+        vzbins = np.arange(-vmaxelec, vmaxelec+dvelec, dvelec)
+        vz = (vzbins[1:] + vzbins[:-1])/2.
+        elechists = [[] for _ in range(nx)] 
+        elechistfac = [[] for _ in range(nx)]
+        elechistboxfac = [[] for _ in range(nx)]
+        for _idx in range(0,len(elec_bins)):
+            if(verbose):print('binning ',_idx, 'of ',len(elec_bins),' elec')
+            tempuxs = [elec_bins[_idx][_jdx]['ue'] for _jdx in range(0,len(elec_bins[_idx]))]
+            tempuys = [elec_bins[_idx][_jdx]['we'] for _jdx in range(0,len(elec_bins[_idx]))]
+            tempuzs = [elec_bins[_idx][_jdx]['ve'] for _jdx in range(0,len(elec_bins[_idx]))]
+            hist,_ = np.histogramdd((tempuzs, tempuys, tempuxs), bins=[vzbins, vybins, vxbins])
+            elechists[_idx]=hist
+
+            tempuxs = [elec_bins[_idx][_jdx]['perp1e'] for _jdx in range(0,len(elec_bins[_idx]))]
+            tempuys = [elec_bins[_idx][_jdx]['perp2e'] for _jdx in range(0,len(elec_bins[_idx]))]
+            tempuzs = [elec_bins[_idx][_jdx]['pare'] for _jdx in range(0,len(elec_bins[_idx]))]
+            hist,_ = np.histogramdd((tempuzs, tempuys, tempuxs), bins=[vzbins, vybins, vxbins]) #Index order is [_par,_perp2,_perp1]
+            elechistfac[_idx]=hist
+
+            tempuxs = [elec_bins[_idx][_jdx]['pperp1boxface'] for _jdx in range(0,len(elec_bins[_idx]))]
+            tempuys = [elec_bins[_idx][_jdx]['pperp2boxface'] for _jdx in range(0,len(elec_bins[_idx]))]
+            tempuzs = [elec_bins[_idx][_jdx]['pparboxface'] for _jdx in range(0,len(elec_bins[_idx]))]
+            hist,_ = np.histogramdd((tempuzs, tempuys, tempuxs), bins=[vzbins, vybins, vxbins]) #Index order is [_par,_perp2,_perp1]
+            elechistboxfac[_idx]=hist
+        vxelec = vx[:]
+        vyelec = vy[:]
+        vzelec = vz[:]
+        
+        #TODO: remove!
+        distdata = {'elecxxs':elecxxs,'elechists':elechists,'elechistfac':elechistfac,'elechistboxfac':elechistboxfac,'vxelec':vxelec,'vyelec':vyelec,'vzelec':vzelec,'nx':nx,
+                'ionxxs':ionxxs,'ionhists':ionhists,'ionhistfac':ionhistfac,'ionhistboxfac':ionhistboxfac,'vxion':vxion,'vyion':vyion,'vzion':vzion}
+
+        vx_in = distdata['vxelec']
+        vy_in = distdata['vyelec']
+        vz_in = distdata['vzelec']
+        _vx = np.zeros((len(vz_in),len(vy_in),len(vx_in)))
+        _vy = np.zeros((len(vz_in),len(vy_in),len(vx_in)))
+        _vz = np.zeros((len(vz_in),len(vy_in),len(vx_in)))
+        for i in range(0,len(vx_in)):
+            for j in range(0,len(vy_in)):
+                for k in range(0,len(vz_in)):
+                    _vx[k][j][i] = vx_in[i]
+        for i in range(0,len(vx_in)):
+            for j in range(0,len(vy_in)):
+                for k in range(0,len(vz_in)):
+                    _vy[k][j][i] = vy_in[j]
+        for i in range(0,len(vx_in)):
+            for j in range(0,len(vy_in)):
+                for k in range(0,len(vz_in)):
+                    _vz[k][j][i] = vz_in[k]
+        vxelec = np.asarray(_vx)
+        vyelec = np.asarray(_vy)
+        vzelec = np.asarray(_vz)
+        #Note: vz<->vpar vy<->vperp2 vx<->vperp1
+
+
+        #compute 1D quants
+        if(verbose):print('computing 1d quants...')
+        ionparlocalfac = []
+        ionparboxfac = []
+        ionperplocalfac = []
+        ionperpboxfac = []
+        elecparlocalfac = []
+        elecparboxfac = []
+        elecperplocalfac = []
+        elecperpboxfac = []
+        iondens = []
+        elecdens = []
+        Tion_pred_idealadia = []
+        Tion_pred_doubleadia = []
+        Telec_pred_idealadia = []
+        Telec_pred_doubleadia = []
+        Btot = []
+        for _xidx in range(len(distdata['elecxxs'])):
+            if(verbose):print('computing 1d quants idx: ',_xidx,' of ',len(distdata['elecxxs']))
+            #grab wanted data
+            ionhist1d = np.sum(distdata['ionhists'][_xidx],axis=0)
+            elechist1d = distdata['elechists'][_xidx]
+            ionhistlocalfac1d = np.sum(distdata['ionhistfac'][_xidx],axis=0)
+            elechistlocalfac1d = distdata['elechistfac'][_xidx]
+            ionhistboxfac1d = np.sum(distdata['ionhistboxfac'][_xidx],axis=0)
+            elechistboxfac1d = distdata['elechistboxfac'][_xidx]
+        
+            idens = np.sum(ionhist1d)
+            edens = np.sum(elechist1d)
+            iondens.append(idens)
+            elecdens.append(edens)
+        
+            if(edens != 0):
+                vximeanlocal = np.sum(vxion*ionhistlocalfac1d)/idens
+                vyimeanlocal = np.sum(vyion*ionhistlocalfac1d)/idens
+                vzimeanlocal = np.sum(vzion*ionhistlocalfac1d)/idens
+        
+                vximeanbox = np.sum(vxion*ionhistboxfac1d)/idens
+                vyimeanbox = np.sum(vyion*ionhistboxfac1d)/idens
+                vzimeanbox = np.sum(vzion*ionhistboxfac1d)/idens
+        
+                vxemeanlocal = np.sum(vxelec*elechistlocalfac1d)/edens
+                vyemeanlocal = np.sum(vyelec*elechistlocalfac1d)/edens
+                vzemeanlocal = np.sum(vzelec*elechistlocalfac1d)/edens
+        
+                vxemeanbox = np.sum(vxelec*elechistboxfac1d)/edens
+                vyemeanbox = np.sum(vyelec*elechistboxfac1d)/edens
+                vzemeanbox = np.sum(vzelec*elechistboxfac1d)/edens
+            
+                ionparboxfac.append(mi*np.sum(((vzion-vzimeanbox)**2)*ionhistboxfac1d)/idens)
+                perpboxtemp = mi*np.sum(((vxion-vximeanbox)**2)*ionhistboxfac1d/idens)
+                perpboxtemp += mi*np.sum(((vyion-vyimeanbox)**2)*ionhistboxfac1d/idens) 
+                ionperpboxfac.append(perpboxtemp/2.) #TODO: remove this factor of 1/2!
+
+                ionparlocalfac.append(mi*np.sum((vzion-vzimeanlocal)**2*ionhistlocalfac1d)/idens)
+                perplocaltemp = mi*np.sum(((vxion-vximeanlocal)**2)*ionhistlocalfac1d/idens)
+                perplocaltemp += mi*np.sum(((vyion-vyimeanlocal)**2)*ionhistlocalfac1d/idens)
+                ionperplocalfac.append(perplocaltemp/2.) #TODO: remove this factor of 1/2!
+            else:
+                ionparboxfac.append(0)
+                ionparlocalfac.append(0)
+                ionperpboxfac.append(0)
+                ionperplocalfac.append(0)
+
+
+            if(edens != 0):
+                elecparboxfac.append(me*np.sum((vzelec-vzemeanbox)**2*elechistboxfac1d)/edens)
+                perpboxtemp = me*np.sum(((vxelec-vxemeanbox)**2)*elechistboxfac1d/edens)
+                perpboxtemp += me*np.sum(((vyelec-vyemeanbox)**2)*elechistboxfac1d/edens) 
+                elecperpboxfac.append(perpboxtemp) 
+
+                elecparlocalfac.append(me*np.sum(((vzelec-vzemeanlocal)**2)*elechistlocalfac1d/edens))
+                perplocaltemp = me*np.sum(((vxelec-vxemeanlocal)**2)*elechistlocalfac1d/edens)
+                perplocaltemp += me*np.sum(((vyelec-vyemeanlocal)**2)*elechistlocalfac1d/edens)
+                elecperplocalfac.append(perplocaltemp)
+            else:
+                elecparboxfac.append(0.)
+                elecparlocalfac.append(0.)
+                elecperpboxfac.append(0.)
+                elecperplocalfac.append(0.)
+
+        
+            _xidxbval = FPCAnalysis.ao.find_nearest(dfields['bx_xx'],distdata['elecxxs'][_xidx]) #Note: the input to ao.avg_dict should match the input used to create the loaded dataset, this is a quick approximate fix in case that is not true (but it's generally fine since this is just used for plotting
+            btotval = np.mean(np.sqrt(dfields['bx'][:,:,_xidxbval]**2+dfields['by'][:,:,_xidxbval]**2+dfields['bz'][:,:,_xidxbval]**2))
+            Btot.append(btotval)
+        
+            T0ion = 1.
+            T0elec = 1.
+            gammaval = 5./3.
+            Tion_pred_idealadia.append(T0ion*(idens)**(5./3.-1.))
+            Telec_pred_idealadia.append(T0elec*(edens)**(5./3.-1.))
+        
+            Tion_pred_doubleadia.append(btotval)
+            Telec_pred_doubleadia.append(btotval)
+
+        ionparlocalfac = np.asarray(ionparlocalfac)/3.#*dvion**3 WARNING: no dvion**3 factor as it cancels with dvion**3 factor when computing edens
+        ionparboxfac = np.asarray(ionparboxfac)/3.#*dvion**3
+        ionperplocalfac = np.asarray(ionperplocalfac)/3.#*dvion**3
+        ionperpboxfac = np.asarray(ionperpboxfac)/3.#*dvion**3
+
+        elecparlocalfac = np.asarray(elecparlocalfac)/3.#*dvelec**3
+        elecparboxfac = np.asarray(elecparboxfac)/3.#*dvelec**3
+        elecperplocalfac = np.asarray(elecperplocalfac)/3.#*dvelec**3
+        elecperpboxfac = np.asarray(elecperpboxfac)/3.#*dvelec**3
+
+        #TODO: rename output?
+        temperaturedata = {'ionparlocalfac': ionparlocalfac,
+                    'ionparboxfac': ionparboxfac,
+                    'ionperplocalfac':ionperplocalfac,
+                    'ionperpboxfac':ionperpboxfac,
+                    'elecparlocalfac':elecparlocalfac,
+                    'elecparboxfac':elecparboxfac,
+                    'elecperplocalfac':elecperplocalfac,
+                    'elecperpboxfac':elecperpboxfac,
+                    'iondens':iondens,
+                    'elecdens':elecdens,
+                    'Tion_pred_idealadia':Tion_pred_idealadia,
+                    'Tion_pred_doubleadia':Tion_pred_doubleadia,
+                    'Telec_pred_idealadia':Telec_pred_idealadia,
+                    'Telec_pred_doubleadia':Telec_pred_doubleadia,
+                    'Btot':Btot,
+                    'elecxxs':distdata['elecxxs'],
+                    'loadfrac':loadfrac}
+
+        with open(pckname, 'wb') as f:
+            pickle.dump(temperaturedata, f) 
+        
+    else:
+        filein = open(pckname, 'rb')
+        temperaturedata = pickle.load(filein)
+        filein.close()
+
+    return temperaturedata
