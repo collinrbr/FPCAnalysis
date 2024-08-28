@@ -93,6 +93,10 @@ def compute_dflow(dfields, dpar_ion, dpar_elec, is2D=True, debug=False, return_e
     ion_bins = [[[ [] for _ in range(nx)] for _ in range(ny)] for _ in range(nz)]
     elec_bins = [[[ [] for _ in range(nx)] for _ in range(ny)] for _ in range(nz)]
 
+    if(is2D):
+        if(nz != 2 and nz != 1):
+            print("Warning: function was called with expectation that the simulation was 2D in the xy plane, but this seems to be false as nz != 1 or 2.")
+
     for _i in range(0,len(dpar_ion['xi'])):
         if(debug and _i % 100000 == 0): print("Binned: ", _i," ions of ", len(dpar_ion['xi']))
         xx = dpar_ion['xi'][_i]
@@ -142,6 +146,8 @@ def compute_dflow(dfields, dpar_ion, dpar_elec, is2D=True, debug=False, return_e
                     else:
                         if(debug):print("Warning: no particles found in bin...")
                         dflow[outkeys[_keyidx]][_k,_j,_i] = 0.
+        if(is2D):dflow[outkeys[_keyidx]][1,:,:]=dflow[outkeys[_keyidx]][0,:,:]
+
     outkeys = 'numi nume'.split()
     for _keyidx in range(0,len(outkeys)):
         if(debug): print("Computing dens for key: ", outkeys[_keyidx])
@@ -1038,6 +1044,9 @@ def get_average_fields_over_yz(dfields, Efield_only = False):
         dfieldavg['by'][:] = dfieldavg['by'].mean(axis=(0,1))
         dfieldavg['bz'][:] = dfieldavg['bz'].mean(axis=(0,1))
 
+    if('dens' in dfieldavg.keys()):
+        dfieldavg['dens'][:] = dfieldavg['dens'].mean(axis=(0,1))
+
     return dfieldavg
 
 def get_average_flow_over_yz(dflow,verbose=False):
@@ -1084,7 +1093,7 @@ def get_average_flow_over_yz(dflow,verbose=False):
                     dflowavg[key][:, :, _idx] = np.sum(dflowavg[key][:, :, _idx] * dflow['nume'][:, :, _idx], axis=(0, 1)) / np.sum(dflow['nume'][:, :, _idx])
             elif('num' in key):
                 for _idx in range(dflowavg[key].shape[2]):
-                    dflowavg[key][:, :, _idx] = np.mean(dflow['nume'][:, :, _idx])
+                    dflowavg[key][:, :, _idx] = np.mean(dflow[key][:, :, _idx])
 
 
     return dflowavg
