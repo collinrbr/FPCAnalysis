@@ -1033,7 +1033,7 @@ def compute_cprime_hist(dparticles, dfields, fieldkey, vmax, dv, useBoxFAC=True,
     vzbins = np.arange(-vmax, vmax+dv, dv)
     vz = (vzbins[1:] + vzbins[:-1])/2.
 
-    #TODO: this is redundant, fix with numpy and jit to save time
+    #TODO: this is redundant (that is we compute the bins of particles twice, one with and one without the weight), fix with numpy and jit to save time
     if(vvkey in ['p1','p2','p3']):
         hist,_ = np.histogramdd((dparticles['p3'], dparticles['p2'], dparticles['p1']), bins=[vzbins, vybins, vxbins])
         cprimebinned,_ = np.histogramdd((dparticles['p3'], dparticles['p2'], dparticles['p1']), bins=[vzbins, vybins, vxbins], weights=cprimew)
@@ -1066,6 +1066,87 @@ def compute_cprime_hist(dparticles, dfields, fieldkey, vmax, dv, useBoxFAC=True,
     vz = _vz
 
     return cprimebinned, hist, vx, vy, vz
+
+def compute_hist(dparticles, dfields, vmax, dv, useFAC, useBoxFAC=True):
+    """
+    TODO: a lot of this code is identical to above, TODO: have above code call this function
+    """
+
+    #change to field aligned basis if needed
+    fieldaligned_keys = ['epar','eperp1','eperp2','bpar','bperp1','bperp2']
+    if(useFAC):
+        #we assume particle data is passed in standard basis and would need to be converted to field aligned
+        from FPCAnalysis.analysis import change_velocity_basis
+        from FPCAnalysis.analysis import change_velocity_basis_local
+        from FPCAnalysis.array_ops import find_nearest
+        from FPCAnalysis.analysis import compute_field_aligned_coord
+
+        #get smallest box that contains all particles (assumes using full yz domain)
+        xx = np.min(dparticles['x1'][:])
+        _xxidx = find_nearest(dfields['ex_xx'],xx)
+        _x1 = dfields['ex_xx'][_xxidx]#get xx cell edge 1
+        if(dfields['ex_xx'][_xxidx] > xx):
+            _x1 = dfields['ex_xx'][_xxidx-1]
+        xx = np.max(dparticles['x1'][:])
+        _xxidx = find_nearest(dfields['ex_xx'],xx)
+        _x2 = dfields['ex_xx'][_xxidx]#get xx cell edge 2
+        if(dfields['ex_xx'][_xxidx] < xx):
+            _x2 = dfields['ex_xx'][_xxidx+1]
+
+        #use whole transverse box when computing field aligned
+        if(useBoxFAC):
+            dparticles = change_velocity_basis(dfields,dparticles,[_x1,_x2],[dfields['ex_yy'][0],dfields['ex_yy'][-1]],[dfields['ex_zz'][0],dfields['ex_zz'][-1]]) #WARNING: we also assume field aligned coordinates uses full yz domain in weighted field average!!!
+
+            vparbasis, vperp1basis, vperp2basis = compute_field_aligned_coord(dfields,[_x1,_x2],[dfields['ex_yy'][0],dfields['ex_yy'][-1]],[dfields['ex_zz'][0],dfields['ex_zz'][-1]])
+            _ = np.asarray([vparbasis,vperp1basis,vperp2basis]).T
+            changebasismatrix = np.linalg.inv(_)
+            changebasismatrixes = np.asarray([changebasismatrix for _temp in range(0,len(dparticles['x1']))])
+
+        #use local coordinates for field aligned
+        else:
+            dparticles, changebasismatrixes = change_velocity_basis_local(dfields,dparticles)
+            pass
+
+    else:
+        changebasismatrix = None
+        changebasismatrixes = None
+
+    vxbins = np.arange(-vmax, vmax+dv, dv)
+    vx = (vxbins[1:] + vxbins[:-1])/2.
+    vybins = np.arange(-vmax, vmax+dv, dv)
+    vy = (vybins[1:] + vybins[:-1])/2.
+    vzbins = np.arange(-vmax, vmax+dv, dv)
+    vz = (vzbins[1:] + vzbins[:-1])/2.
+
+    if(not(useFAC)):
+        hist,_ = np.histogramdd((dparticles['p3'], dparticles['p2'], dparticles['p1']), bins=[vzbins, vybins, vxbins])
+    else:
+        hist,_ = np.histogramdd((dparticles['pperp2'], dparticles['pperp1'], dparticles['ppar']), bins=[vzbins, vybins, vxbins])
+
+    # make the bins 3d arrays
+    _vx = np.zeros((len(vz), len(vy), len(vx)))
+    _vy = np.zeros((len(vz), len(vy), len(vx)))
+    _vz = np.zeros((len(vz), len(vy), len(vx)))
+    for i in range(0, len(vx)):
+        for j in range(0, len(vy)):
+            for k in range(0, len(vz)):
+                _vx[k][j][i] = vx[i]
+
+    for i in range(0, len(vx)):
+        for j in range(0, len(vy)):
+            for k in range(0, len(vz)):
+                _vy[k][j][i] = vy[j]
+
+    for i in range(0, len(vx)):
+        for j in range(0, len(vy)):
+            for k in range(0, len(vz)):
+                _vz[k][j][i] = vz[k]
+
+    vx = _vx
+    vy = _vy
+    vz = _vz
+
+    return hist, vx, vy, vz
 
 #TODO: add and track charge!!!
 #TODO: rename vx, vy, vz to make sense irregardless of if data is in standard basis or field aligned basis
