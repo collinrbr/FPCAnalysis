@@ -304,6 +304,33 @@ def compute_flux_tristanmp1(interpolxxs,dfields,dpar_ion,dpar_elec,params,inputs
         ebvz = elecvz[_i]
         epdu = me*np.sum((ebvx*(elecvxbins[_i][idx]-ebvx)**2+ebvy*(elecvxbins[_i][idx]-ebvx)*(elecvybins[_i][idx]-ebvy)+ebvz*(elecvxbins[_i][idx]-ebvx)*(elecvzbins[_i][idx]-ebvz) for idx in range(0,len(elecvxbins[_i]))))
         elecpdotusxs.append(epdu)
+
+    #TODO: remove this if this metric doesn't isolate compressive heating in this system like we hoped
+    elecpdotusxsxx = []
+    for _i in range(0,len(elecvxbins)):
+        ebvx = elecvx[_i]  #bulk elec velocity
+        ebvy = elecvy[_i]
+        ebvz = elecvz[_i]
+        epdu = me*np.sum((ebvx*(elecvxbins[_i][idx]-ebvx)**2 for idx in range(0,len(elecvxbins[_i]))))
+        elecpdotusxsxx.append(epdu)
+
+    elecpdotusxsxy = []
+    for _i in range(0,len(elecvxbins)):
+        ebvx = elecvx[_i]  #bulk elec velocity
+        ebvy = elecvy[_i]
+        ebvz = elecvz[_i]
+        epdu = me*np.sum((ebvy*(elecvxbins[_i][idx]-ebvx)*(elecvybins[_i][idx]-ebvy) for idx in range(0,len(elecvxbins[_i]))))
+        elecpdotusxsxy.append(epdu)
+    
+    elecpdotusxsxz = []
+    for _i in range(0,len(elecvxbins)):
+        ebvx = elecvx[_i]  #bulk elec velocity
+        ebvy = elecvy[_i]
+        ebvz = elecvz[_i]
+        epdu = me*np.sum((ebvz*(elecvxbins[_i][idx]-ebvx)*(elecvzbins[_i][idx]-ebvz) for idx in range(0,len(elecvxbins[_i]))))
+        elecpdotusxsxz.append(epdu)
+
+
     if(not(justxcomps)):
         elecpdotusys = []
         for _i in range(0,len(elecvxbins)):
@@ -577,6 +604,8 @@ def compute_flux_tristanmp1(interpolxxs,dfields,dpar_ion,dpar_elec,params,inputs
         fluxes['ionpdotusys'] = np.asarray(ionpdotusys)
         fluxes['ionpdotuszs'] = np.asarray(ionpdotuszs)
     fluxes['elecpdotusxs'] = np.asarray(elecpdotusxs)
+    fluxes['elecpdotusxsxy'] = np.asarray(elecpdotusxsxy) #TODO: remove this if this doesnt isolate heating like desired
+    fluxes['elecpdotusxsxz'] = np.asarray(elecpdotusxsxz) #TODO: remove this if this doesnt isolate heating like desired
     if(not(justxcomps)):
         fluxes['elecpdotusys'] = np.asarray(elecpdotusys)
         fluxes['elecpdotuszs'] = np.asarray(elecpdotuszs)
