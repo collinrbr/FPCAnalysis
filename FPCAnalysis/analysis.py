@@ -1596,6 +1596,33 @@ def xyz_wlt_fft_filter(kz,ky,kx,xx,bxkzkykxxx,bykzkykxxx,bzkzkykxxx,
 
     return filteredfields
 
+def compute_morletwlt_error(k,w):
+    """
+    Computes equation 3 (second one in line) from Najimi and Sadowsky 1997- the 'error' in the k measurement of the wlt
+    """
+
+    from scipy.integrate import quad
+
+    def window(x): #morlet window function (only shown here for reference)
+        return np.exp(-0.5 * (x * k / w)**2)
+    
+    def ft_of_window(f): #fourier transform of window functions
+        return np.sqrt(2 * np.pi) * w / k * np.exp(-2 * (np.pi * f * w / k)**2)
+    
+    def integrand_top(f):
+        return f**2 * ft_of_window(f)**2
+
+    def integrand_bot(f):
+        return ft_of_window(f)**2
+    
+    top, _ = quad(integrand_top, -np.inf, np.inf)
+    bot, _ = quad(integrand_bot, -np.inf, np.inf)
+    
+    # Compute the final result
+    err = 2*np.pi*np.sqrt(top / bot) #note: this extra 2pi is necessary due to the different definitions of the fourier transform
+
+    return err
+
 # def find_potential_wavemodes(dfields,fieldkey,xpos,cutoffconst=.1):
 #     """
 #     This function didnt lead to useful results, and is no longer used...
