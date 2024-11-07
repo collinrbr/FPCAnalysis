@@ -19,7 +19,7 @@ def plot_velsig(vx,vy,vz,dv,vmax,CEiproj,fieldkey,planename,ttl=r'$C_{E_i}(v_i,v
     CEiplot = CEiproj
     yplot, xplot = mesh_3d_to_2d(vx,vy,vz,planename)
 
-    plt.style.use('postgkyl.mplstyle')
+    plt.style.use('cb.mplstyle')
 
     if(maxCe == None):
         maxCe = max(np.max(CEiplot),abs(np.max(CEiplot)))
@@ -93,7 +93,7 @@ def plot_velsig_old(vx,vy,vmax,Ce,fieldkey,flnm = '',ttl=''):
     ttl : str, optional
         title of plot
     """
-    plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
+    plt.style.use("cb.mplstyle") #sets style parameters for matplotlib plots
 
     maxCe = max(np.max(Ce),abs(np.max(Ce)))
 
@@ -203,7 +203,7 @@ def plot_velsig_wEcrossB(vx,vy,vmax,Ce,ExBvx,ExBvy,fieldkey,flnm = '',ttl=''):
         title of plot
     """
 
-    plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
+    plt.style.use("cb.mplstyle") #sets style parameters for matplotlib plots
 
     maxCe = max(np.max(Ce),abs(np.min(Ce)))
 
@@ -346,7 +346,7 @@ def plot_dist(vx, vy, vmax, H,flnm = '',ttl=''):
     H : 2d array
         distribution data
     """
-    plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
+    plt.style.use("cb.mplstyle") #sets style parameters for matplotlib plots
 
     plt.figure(figsize=(6.5,6))
     plt.figure(figsize=(6.5,6))
@@ -397,7 +397,7 @@ def dist_log_plot_3dir(vx, vy, vz, vmax, H_in, flnm = '',ttl='',xlbl=r"$v_x/v_{t
         if true, will plot 'negative and positive logarithmic' with linear scale near zero
     """
 
-    plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
+    plt.style.use("cb.mplstyle") #sets style parameters for matplotlib plots
     from FPCAnalysis.array_ops import mesh_3d_to_2d
     import matplotlib
     from matplotlib.colors import LogNorm
@@ -446,7 +446,7 @@ def dist_log_plot_3dir_2v(vx, vy, vz, vmax, H_xy, H_xz, H_yz, flnm = '',ttl='',x
         if true, will plot 'negative and positive logarithmic' with linear scale near zero
     """
 
-    plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
+    plt.style.use("cb.mplstyle") #sets style parameters for matplotlib plots
     from FPCAnalysis.array_ops import mesh_3d_to_2d
     import matplotlib
     from matplotlib.colors import LogNorm
@@ -518,10 +518,10 @@ def dist_log_plot_3dir_2v(vx, vy, vz, vmax, H_xy, H_xz, H_yz, flnm = '',ttl='',x
 
     if(plotSymLog):
         _vmax = np.max([-1*np.min(H_yz),np.max(H_yz)])
-        pcm2 = axs[2].pcolormesh(vz_yz, vy_yz, H_yz, cmap='PiYG', shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-1*_vmax, vmax=_vmax))
+        pcm2 = axs[2].pcolormesh(vz_yz, vy_yz, H_yz.T, cmap='PiYG', shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-1*_vmax, vmax=_vmax))
     else:
         axs[2].set_facecolor(bkgcolor)
-        pcm2 = axs[2].pcolormesh(vz_yz,vy_yz,H_yz, cmap=cmap, shading="gouraud",norm=LogNorm(vmin=minval, vmax=maxval))
+        pcm2 = axs[2].pcolormesh(vz_yz,vy_yz,H_yz.T, cmap=cmap, shading="gouraud",norm=LogNorm(vmin=minval, vmax=maxval))
     axs[2].set_xlim(-vmax, vmax)
     axs[2].set_ylim(-vmax, vmax)
     axs[2].set_xticks(np.linspace(-vmax, vmax, numtks))

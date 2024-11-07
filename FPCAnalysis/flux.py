@@ -215,16 +215,16 @@ def compute_flux_tristanmp1(interpolxxs,dfields,dpar_ion,dpar_elec,params,inputs
             ionframz.append(fz)
     elecframx = []
     for _i, ivxs in enumerate(elecvxbins):
-        fx = elecvx[_i]*0.5*(iondens[_i])*me*(elecvx[_i]**2+elecvy[_i]**2+elecvz[_i]**2)
+        fx = elecvx[_i]*0.5*(elecdens[_i])*me*(elecvx[_i]**2+elecvy[_i]**2+elecvz[_i]**2)
         elecframx.append(fx)
     if(not(justxcomps)):
         elecframy = []
         for _i, ivxs in enumerate(elecvybins):
-            fy = elecvy[_i]*0.5*(iondens[_i])*me*(elecvx[_i]**2+elecvy[_i]**2+elecvz[_i]**2)
+            fy = elecvy[_i]*0.5*(elecdens[_i])*me*(elecvx[_i]**2+elecvy[_i]**2+elecvz[_i]**2)
             elecframy.append(fy)
         elecframz = []
         for _i, ivxs in enumerate(elecvzbins):
-            fz = elecvz[_i]*0.5*(iondens[_i])*me*(elecvx[_i]**2+elecvy[_i]**2+elecvz[_i]**2)
+            fz = elecvz[_i]*0.5*(elecdens[_i])*me*(elecvx[_i]**2+elecvy[_i]**2+elecvz[_i]**2)
             elecframz.append(fz)
 
     #compute enthalpy flux first term
@@ -500,6 +500,14 @@ def compute_flux_tristanmp1(interpolxxs,dfields,dpar_ion,dpar_elec,params,inputs
     Wion = np.asarray([0.5*mi*(np.sum((valx)**2+(valy)**2+(valz)**2 for valx,valy,valz in zip(vx,vy,vz))) for vx,vy,vz in zip(ionvxbins,ionvybins,ionvzbins)])
     Welec = np.asarray([0.5*me*(np.sum((valx)**2+(valy)**2+(valz)**2 for valx,valy,valz in zip(vx,vy,vz))) for vx,vy,vz in zip(elecvxbins,elecvybins,elecvzbins)])
 
+    #compute KE particle energy
+    WionKE = np.asarray([0.5*mi*iondens[_i]*((ionvx[_i])**2+(ionvy[_i])**2+(ionvz[_i])**2) for _i in range(0,len(ionvxbins))])
+    WelecKE = np.asarray([0.5*me*elecdens[_i]*((elecvx[_i])**2+(elecvy[_i])**2+(elecvz[_i])**2) for _i in range(0,len(elecvxbins))])
+
+    #compute thermal particle energy
+    WionT = np.asarray([0.5*mi*(np.sum((valx - ionvx[i])**2 + (valy - ionvy[i])**2 + (valz - ionvz[i])**2 for valx, valy, valz in zip(vx, vy, vz))) for i, (vx, vy, vz) in enumerate(zip(ionvxbins, ionvybins, ionvzbins))])
+    WelecT = np.asarray([0.5*me*(np.sum((valx - elecvx[i])**2 + (valy - elecvy[i])**2 + (valz - elecvz[i])**2 for valx, valy, valz in zip(vx, vy, vz))) for i, (vx, vy, vz) in enumerate(zip(elecvxbins, elecvybins, elecvzbins))])
+    
     #compute steady and fluc fluxes
     if(verbose):print("computing steady and fluc fluxes...")
     Ebar = np.stack((dfavg['ex'], dfavg['ey'], dfavg['ez']), axis=-1)
@@ -604,8 +612,8 @@ def compute_flux_tristanmp1(interpolxxs,dfields,dpar_ion,dpar_elec,params,inputs
         fluxes['ionpdotusys'] = np.asarray(ionpdotusys)
         fluxes['ionpdotuszs'] = np.asarray(ionpdotuszs)
     fluxes['elecpdotusxs'] = np.asarray(elecpdotusxs)
-    fluxes['elecpdotusxsxy'] = np.asarray(elecpdotusxsxy) #TODO: remove this if this doesnt isolate heating like desired
-    fluxes['elecpdotusxsxz'] = np.asarray(elecpdotusxsxz) #TODO: remove this if this doesnt isolate heating like desired
+    fluxes['elecpdotusxsxy'] = np.asarray(elecpdotusxsxy) 
+    fluxes['elecpdotusxsxz'] = np.asarray(elecpdotusxsxz)
     if(not(justxcomps)):
         fluxes['elecpdotusys'] = np.asarray(elecpdotusys)
         fluxes['elecpdotuszs'] = np.asarray(elecpdotuszs)
@@ -627,6 +635,10 @@ def compute_flux_tristanmp1(interpolxxs,dfields,dpar_ion,dpar_elec,params,inputs
     fluxes['WBfields'] = np.asarray(WBfields)
     fluxes['Wion'] = np.asarray(Wion)
     fluxes['Welec'] = np.asarray(Welec)
+    fluxes['WionKE'] = np.asarray(WionKE)
+    fluxes['WelecKE'] = np.asarray(WelecKE)
+    fluxes['WionT'] = np.asarray(WionT)
+    fluxes['WelecT'] = np.asarray(WelecT)
     fluxes['EflucxBfluc_x_avg'] = np.asarray(EflucxBfluc_x_avg)
     fluxes['EflucxBfluc_y_avg'] = np.asarray(EflucxBfluc_y_avg)
     fluxes['EflucxBfluc_z_avg'] = np.asarray(EflucxBfluc_z_avg)

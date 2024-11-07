@@ -45,7 +45,7 @@ def norm_constants_tristanmp1(params,dt,inputs):
 
 def compute_dflow(dfields, dpar_ion, dpar_elec, is2D=True, debug=False, return_empty=False, return_bins=True):
     """
-    Compues velocity fluid moment for ions and electrons
+    Computes velocity fluid moment for ions and electrons
 
     Bins and then takes average velocity in each bin. Grid will match dfields
     
@@ -1121,9 +1121,11 @@ def get_average_den_over_yz(dden):
 
     return ddenavg
 
-def remove_average_flow_over_yz(dflow):
+def remove_average_flow_over_yz(dflow,verbose=False):
     """
     Removes yz average from flow data i.e. delta_flow(x,y,z) = flow(x,y,z)-<flow(x,y,z)>_(y,z)
+
+    Warning: for use with dict from compute_dflow
 
     Parameters
     ----------
@@ -1137,9 +1139,20 @@ def remove_average_flow_over_yz(dflow):
     """
     from copy import deepcopy
     dflowfluc = deepcopy(dflow)
-    dflowfluc['ux'] = dflowfluc['ux']-dflowfluc['ux'].mean(axis=(0,1))
-    dflowfluc['uy'] = dflowfluc['uy']-dflowfluc['uy'].mean(axis=(0,1))
-    dflowfluc['uz'] = dflowfluc['uz']-dflowfluc['uz'].mean(axis=(0,1))
+
+    for key in dflowfluc.keys():
+        if verbose:
+            print("computing ", key)
+        if not('_xx' in key or '_yy' in key or '_zz' in key):
+            if('i' in key and not('num' in key)):
+                for _idx in range(dflowfluc[key].shape[2]):
+                    dflowfluc[key][:, :, _idx] = dflowfluc[key][:, :, _idx]-np.sum(dflow[key][:, :, _idx] * dflow['numi'][:, :, _idx], axis=(0, 1)) / np.sum(dflow['numi'][:, :, _idx])
+            elif('e' in key and not('num' in key)):
+                for _idx in range(dflowfluc[key].shape[2]):
+                    dflowfluc[key][:, :, _idx] = dflowfluc[key][:, :, _idx]-np.sum(dflow[key][:, :, _idx] * dflow['nume'][:, :, _idx], axis=(0, 1)) / np.sum(dflow['nume'][:, :, _idx])
+            elif('num' in key):
+                for _idx in range(dflowfluc[key].shape[2]):
+                    dflowfluc[key][:, :, _idx] = dflowfluc[key][:, :, _idx]-np.mean(dflow[key][:, :, _idx])
 
     return dflowfluc
 
@@ -1619,7 +1632,7 @@ def compute_morletwlt_error(k,w):
     bot, _ = quad(integrand_bot, -np.inf, np.inf)
     
     # Compute the final result
-    err = 2*np.pi*np.sqrt(top / bot) #note: this extra 2pi is necessary due to the different definitions of the fourier transform
+    err = 2*np.pi*np.sqrt(top / bot) / 2 #note: this extra 2pi is necessary due to the different definitions of the fourier transform-> when then divide by two as this computes the total range that delta K can be but we want to have +-delta k / 2 as it represents the error
 
     return err
 
@@ -2530,6 +2543,62 @@ def compute_tau(dpar,dden,vmax,dv,x1,x2,y1,y2,z1,z2):
 
     return tau
 
+def compute_local_temp(dpar,dfields,params,x1,x2,y1,y2,z1,z2,vmax,dv,masspar):
+    """
+    Warning, we do not include any 1/2 or 3/2 factors here!!!
+    """
+
+    from FPCAnalysis.fpc import compute_hist
+
+    #TODO: convert to same v normalization!!!!
+
+    #change keys for backwards compat
+    if('xi' in dpar.keys()):
+        dpar['x1'] = dpar['xi']
+        dpar['x2'] = dpar['yi']
+        dpar['x3'] = dpar['zi']
+        dpar['p1'] = dpar['ui']
+        dpar['p2'] = dpar['vi']
+        dpar['p3'] = dpar['wi']
+
+        conversionfac = 1.
+    if('xe' in dpar.keys()):
+        dpar['x1'] = dpar['xe']
+        dpar['x2'] = dpar['ye']
+        dpar['x3'] = dpar['ze']
+        dpar['p1'] = dpar['ue']
+        dpar['p2'] = dpar['ve']
+        dpar['p3'] = dpar['we']
+
+        vti0 = np.sqrt(params['delgam'])#Note: velocity is in units v_s/c
+        vte0 = np.sqrt(params['mi']/params['me'])*vti0 #WARNING: THIS ASSUME Ti/Te = 1, TODO: don't assume Ti/Te = 1
+        conversionfac = vte0/vti0
+
+    gptsparticle = (x1 <= dpar['x1']) & (dpar['x1'] <= x2) & (y1 <= dpar['x2']) & (dpar['x2'] <= y2) & (z1 <= dpar['x3']) & (dpar['x3'] <= z2)
+    import copy
+    dparsubset = {
+        'q': dpar['q'],
+        'p1': copy.deepcopy(np.asarray(dpar['p1'][gptsparticle][:]))*conversionfac,
+        'p2': copy.deepcopy(np.asarray(dpar['p2'][gptsparticle][:]))*conversionfac,
+        'p3': copy.deepcopy(np.asarray(dpar['p3'][gptsparticle][:]))*conversionfac,
+        'x1': dpar['x1'][gptsparticle][:],
+        'x2': dpar['x2'][gptsparticle][:],
+        'x3': dpar['x3'][gptsparticle][:],
+        'Vframe_relative_to_sim': dpar['Vframe_relative_to_sim']
+    }
+
+    useFAC=False
+    hist,vx,vy,vz = compute_hist(dparsubset, dfields, vmax, dv, useFAC)
+    
+    pardens = np.sum(hist)
+    vxmean = np.sum(vx*hist)/pardens
+    vymean = np.sum(vy*hist)/pardens
+    vzmean = np.sum(vz*hist)/pardens
+    
+    localtemp = masspar*np.sum((((vx-vxmean)**2+(vy-vymean)**2+(vz-vzmean)**2)*hist)/pardens)
+
+    return localtemp
+
 def va_norm_to_vi_norm(dpar, v_w_anorm, vmax, x1, x2, y1, y2, z1, z2, vti = None):
     """
     Given some velocity normalized to v_{a,ref} (defined in dHybridR input), this
@@ -3409,6 +3478,28 @@ def compute_temp_1d(interpolxxs,params,dfields,dpar_ion,dpar_elec,vmaxion,vmaxel
         vxelec = np.asarray(_vx)
         vyelec = np.asarray(_vy)
         vzelec = np.asarray(_vz)
+
+        vx_in = distdata['vxion']
+        vy_in = distdata['vyion']
+        vz_in = distdata['vzion']
+        _vx = np.zeros((len(vz_in),len(vy_in),len(vx_in)))
+        _vy = np.zeros((len(vz_in),len(vy_in),len(vx_in)))
+        _vz = np.zeros((len(vz_in),len(vy_in),len(vx_in)))
+        for i in range(0,len(vx_in)):
+            for j in range(0,len(vy_in)):
+                for k in range(0,len(vz_in)):
+                    _vx[k][j][i] = vx_in[i]
+        for i in range(0,len(vx_in)):
+            for j in range(0,len(vy_in)):
+                for k in range(0,len(vz_in)):
+                    _vy[k][j][i] = vy_in[j]
+        for i in range(0,len(vx_in)):
+            for j in range(0,len(vy_in)):
+                for k in range(0,len(vz_in)):
+                    _vz[k][j][i] = vz_in[k]
+        vxion = np.asarray(_vx)
+        vyion = np.asarray(_vy)
+        vzion = np.asarray(_vz)
         #Note: vz<->vpar vy<->vperp2 vx<->vperp1
 
 

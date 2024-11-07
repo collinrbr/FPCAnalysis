@@ -13,7 +13,7 @@ def compute_wavemodes(xx,dfields,xlim,ylim,zlim,
                      eparlocalkzkykxxx=None,epardetrendkzkykxxx=None,
                      eperp1detrendkzkykxxx=None,eperp2detrendkzkykxxx=None,
                      bpardetrendkzkykxxx=None,bperp1detrendkzkykxxx=None,bperp2detrendkzkykxxx=None,
-                     vth=None,specifyxxidx=-1,verbose=False,is2d=False):
+                     vth=None,specifyxxidx=-1,verbose=False,is2d=False,morletw=6):
 
     """
     #TODO: document new variables
@@ -42,6 +42,8 @@ def compute_wavemodes(xx,dfields,xlim,ylim,zlim,
     **kzkykxxx : 4d array
         fields/flow that have been transformed using fft in yy,zz and wlt in xx
         e.g. bxkzkykxxx <=> B_x(kz,ky,kx;xx)
+    morletw : float
+        value of the free tuning parameter in the morlet wavelet used to compute the wlt
 
     Returns
     -------
@@ -51,6 +53,7 @@ def compute_wavemodes(xx,dfields,xlim,ylim,zlim,
 
     from FPCAnalysis.analysis import compute_field_aligned_coord
     from FPCAnalysis.array_ops import find_nearest
+    from FPCAnalysis.analysis import compute_morletwlt_error
 
     dwavemodes = {'wavemodes':[],'sortkey':None}
 
@@ -119,6 +122,8 @@ def compute_wavemodes(xx,dfields,xlim,ylim,zlim,
                 wavemode['kperp1'] = np.dot(eperp1,_k)
                 wavemode['kperp2'] = np.dot(eperp2,_k)
                 wavemode['kperp'] = math.sqrt(wavemode['kperp1']**2+wavemode['kperp2']**2)
+
+                wavemode['delta_kx'] = compute_morletwlt_error(wavemode['kx'],morletw)
 
                 wavemode['Epar'] = np.dot(epar,_E)
                 wavemode['Eperp1'] = np.dot(eperp1,_E)
