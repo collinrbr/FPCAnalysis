@@ -551,7 +551,8 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
                                 CEy_xy,CEy_xz, CEy_yz,
                                 CEz_xy,CEz_xz, CEz_yz,
                                 flnm = '', ttl = '', computeJdotE = True, params = None, metadata = None, xpos = None, plotLog = False, plotLogHist = True,
-                                plotFAC = False, plotFluc = False, plotAvg = False, isIon = True, listpos=False,xposval=None,normtoN = False,Nval = None, isLowPass=False,isHighPass=False,plotDiagJEOnly=True):
+                                plotFAC = False, plotFluc = False, plotAvg = False, isIon = True, listpos=False,xposval=None,normtoN = False,Nval = None, isLowPass=False,isHighPass=False,plotDiagJEOnly=True,
+				vxmin=None, vxmax=None, vymin=None, vymax=None, vzmin=None, vzmax=None):
     """
     Makes super figure of distribution and velocity sigantures from all different projections
     i.e. different viewing angles
@@ -601,7 +602,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
 
     plt.style.use("cb.mplstyle") #sets style parameters for matplotlib plots
 
-    fig, axs = plt.subplots(4,3,figsize=(4*5,3*5),sharex=True)
+    fig, axs = plt.subplots(4,3,figsize=(4*5,3*5),sharex=False)
 
     plt.rcParams['axes.titlepad'] = 8  # pad is in points...
 
@@ -660,17 +661,26 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         axs[0,0].set_ylabel(r"$v_{\perp,1}/"+vnormstr+"$")
     else:
         axs[0,0].set_ylabel(r"$v_y/"+vnormstr+"$")
-    axs[0,0].set_aspect('equal', 'box')
     axs[0,0].grid()
     clrbar00 = plt.colorbar(im00, ax=axs[0,0])#,format='%.1e')
     if(not(plotLogHist)):
         clrbar00.formatter.set_powerlimits((0, 0))
-    axs[0,0].text(-vmax*2.2,0, r"$f$", ha='center', rotation=90, wrap=False)
+    if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+        axs[0,0].text(-vmax*2.2,0, r"$f$", ha='center', rotation=90, wrap=False)
+    else:
+    	axs[0,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$f$", ha='center', rotation=90, wrap=False)
+    
     if(params != None):
-        axs[0,0].text(-vmax*2.6,0, '$M_A = $ ' + str(abs(params['MachAlfven'])), ha='center', rotation=90, wrap=False)
-
+        if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None): 
+            axs[0,0].text(-vmax*2.6,0, '$M_A = $ ' + str(abs(params['MachAlfven'])), ha='center', rotation=90, wrap=False)
+        else:
+            axs[0,0].text(-((np.abs(vxmax-vxmin)/2.))*2.6,0, '$M_A = $ ' + str(abs(params['MachAlfven'])), ha='center', rotation=90, wrap=False)
+	
     if(listpos):
-        axs[0,0].text(-vmax*2.6,0, '$x / d_i = $ ' + str("{:.4f}".format(xposval)), ha='center', rotation=90, wrap=False)
+        if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+            axs[0,0].text(-vmax*2.6,0, '$x / d_i = $ ' + str("{:.4f}".format(xposval)), ha='center', rotation=90, wrap=False)
+        else:
+            axs[0,0].text(-((np.abs(vxmax-vxmin)/2.))*2.6,0, '$x / d_i = $ ' + str("{:.4f}".format(xposval)), ha='center', rotation=90, wrap=False)
 
 
     #H_xz
@@ -683,7 +693,6 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         axs[0,1].set_ylabel(r"$v_{\perp,2}/"+vnormstr+"$")
     else:
         axs[0,1].set_ylabel(r"$v_z/"+vnormstr+"$")
-    axs[0,1].set_aspect('equal', 'box')
     axs[0,1].grid()
     clrbar01 = plt.colorbar(im01, ax=axs[0,1])#,format='%.1e')
     if(not(plotLogHist)):
@@ -699,7 +708,6 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         axs[0,2].set_ylabel(r"$v_{\perp,1}/"+vnormstr+"$")
     else:
         axs[0,2].set_ylabel(r"$v_y/"+vnormstr+"$")
-    axs[0,2].set_aspect('equal', 'box')
     axs[0,2].grid()
     clrbar02 = plt.colorbar(im02, ax=axs[0,2])#,format='%.1e')
     if(not(plotLogHist)):
@@ -716,32 +724,65 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         axs[1,0].set_ylabel(r"$v_{\perp,1}/"+vnormstr+"$")
     else:
         axs[1,0].set_ylabel(r"$v_y/"+vnormstr+"$")
-    axs[1,0].set_aspect('equal', 'box')
     axs[1,0].grid()
     if(plotFAC):
         if(plotAvg):
-            axs[1,0].text(-vmax*2.2,0, r"$\overline{C_{E_{||}}}$", ha='center', rotation=90, wrap=False)
+            if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                axs[1,0].text(-vmax*2.2,0, r"$\overline{C_{E_{||}}}$", ha='center', rotation=90, wrap=False)
+            else:
+                axs[1,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\overline{C_{E_{||}}}$", ha='center', rotation=90, wrap=False)
         elif(plotFluc):
             if(isLowPass):
-                axs[1,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{||}}}^{k_{||} d_i < 15}$", ha='center', rotation=90, wrap=False)
+                if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                    axs[1,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{||}}}^{k_{||} d_i < 15}$", ha='center', rotation=90, wrap=False)
+                else:
+                    axs[1,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\widetilde{C_{E_{||}}}^{k_{||} d_i < 15}$", ha='center', rotation=90, wrap=False)
+            
             elif(isHighPass):
-                axs[1,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{||}}}^{k_{||} d_i > 15}$", ha='center', rotation=90, wrap=False)
+                if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                    axs[1,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{||}}}^{k_{||} d_i > 15}$", ha='center', rotation=90, wrap=False)
+                else:
+                    axs[1,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\widetilde{C_{E_{||}}}^{k_{||} d_i > 15}$", ha='center', rotation=90, wrap=False)
+            
             else:
-                axs[1,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{||}}}$", ha='center', rotation=90, wrap=False)
+                if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                    axs[1,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{||}}}$", ha='center', rotation=90, wrap=False)
+                else:
+                    axs[1,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\widetilde{C_{E_{||}}}$", ha='center', rotation=90, wrap=False)
+
         else:
-            axs[1,0].text(-vmax*2.2,0, r"$C_{E_{||}}$", ha='center', rotation=90, wrap=False)
+            if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                axs[1,0].text(-vmax*2.2,0, r"$C_{E_{||}}$", ha='center', rotation=90, wrap=False)
+            else:
+                axs[1,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$C_{E_{||}}$", ha='center', rotation=90, wrap=False)
     else:
         if(plotAvg):
-            axs[1,0].text(-vmax*2.2,0, r"$\overline{C_{E_{x}}}$", ha='center', rotation=90, wrap=False)
+            if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                axs[1,0].text(-vmax*2.2,0, r"$\overline{C_{E_{x}}}$", ha='center', rotation=90, wrap=False)
+            else:
+                axs[1,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\overline{C_{E_{x}}}$", ha='center', rotation=90, wrap=False)
         elif(plotFluc):
             if(isLowPass):
-                axs[1,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{x}}}^{k_{||} d_i < 15}$", ha='center', rotation=90, wrap=False)
+                if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                    axs[1,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{x}}}^{k_{||} d_i < 15}$", ha='center', rotation=90, wrap=False)
+                else:
+                    axs[1,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\widetilde{C_{E_{x}}}^{k_{||} d_i < 15}$", ha='center', rotation=90, wrap=False)
             elif(isHighPass):
-                axs[1,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{x}}}^{k_{||} d_i > 15}$", ha='center', rotation=90, wrap=False)
+                if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                    axs[1,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{x}}}^{k_{||} d_i > 15}$", ha='center', rotation=90, wrap=False)
+                else:
+                    axs[1,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\widetilde{C_{E_{x}}}^{k_{||} d_i > 15}$", ha='center', rotation=90, wrap=False)
             else:
-                axs[1,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{x}}}$", ha='center', rotation=90, wrap=False)
+                if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                    axs[1,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{x}}}$", ha='center', rotation=90, wrap=False)
+                else:
+                    axs[1,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\widetilde{C_{E_{x}}}$", ha='center', rotation=90, wrap=False)
         else:
-            axs[1,0].text(-vmax*2.2,0, r"$C_{E_{x}}$", ha='center', rotation=90, wrap=False)
+            if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                axs[1,0].text(-vmax*2.2,0, r"$C_{E_{x}}$", ha='center', rotation=90, wrap=False)
+            else:
+                axs[1,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$C_{E_{x}}$", ha='center', rotation=90, wrap=False)
+
     if(params != None):
         axs[1,0].text(-vmax*2.6,0, '$\Theta_{Bn} = $ ' + str(params['thetaBn']), ha='center', rotation=90, wrap=False)
     if(computeJdotE):
@@ -786,7 +827,6 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         axs[1,1].set_ylabel(r"$v_{\perp,2}/"+vnormstr+"$")
     else:
         axs[1,1].set_ylabel(r"$v_z/"+vnormstr+"$")
-    axs[1,1].set_aspect('equal', 'box')
     axs[1,1].grid()
     if(computeJdotE):
         if(not(plotDiagJEOnly)):
@@ -830,7 +870,6 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         axs[1,2].set_ylabel(r"$v_{\perp,1}/"+vnormstr+"$")
     else:
         axs[1,2].set_ylabel(r"$v_y/"+vnormstr+"$")
-    axs[1,2].set_aspect('equal', 'box')
     axs[1,2].grid()
     if(computeJdotE):
         JdotE = compute_energization(CEx_yz.T,dv)
@@ -874,31 +913,60 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         axs[2,0].set_ylabel(r"$v_{\perp,1}/"+vnormstr+"$")
     else:
         axs[2,0].set_ylabel(r"$v_y/"+vnormstr+"$")
-    axs[2,0].set_aspect('equal', 'box')
     if(plotFAC):
-        if(plotAvg):
-            axs[2,0].text(-vmax*2.2,0, r"$\overline{C_{E_{\perp,1}}}$", ha='center', rotation=90, wrap=False)
+        if(plotAvg):          
+            if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                axs[2,0].text(-vmax*2.2,0, r"$\overline{C_{E_{\perp,1}}}$", ha='center', rotation=90, wrap=False)
+            else:
+                axs[2,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\overline{C_{E_{\perp,1}}}$", ha='center', rotation=90, wrap=False)
         elif(plotFluc):
             if(isLowPass):
-                axs[2,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{\perp,1}}}^{k_{||} d_i < 15}$", ha='center', rotation=90, wrap=False)
+                if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                    axs[2,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{\perp,1}}}^{k_{||} d_i < 15}$", ha='center', rotation=90, wrap=False)
+                else:
+                    axs[2,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\widetilde{C_{E_{\perp,1}}}^{k_{||} d_i < 15}$", ha='center', rotation=90, wrap=False)
             elif(isHighPass):
-                axs[2,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{\perp,1}}}^{k_{||} d_i > 15}$", ha='center', rotation=90, wrap=False)
+                if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                    axs[2,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{\perp,1}}}^{k_{||} d_i > 15}$", ha='center', rotation=90, wrap=False)
+                else:
+                    axs[2,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\widetilde{C_{E_{\perp,1}}}^{k_{||} d_i > 15}$", ha='center', rotation=90, wrap=False)
             else:
-                axs[2,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{\perp,1}}}$", ha='center', rotation=90, wrap=False)
+                if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                    axs[2,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{\perp,1}}}$", ha='center', rotation=90, wrap=False)
+                else:
+                    axs[2,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\widetilde{C_{E_{\perp,1}}}$", ha='center', rotation=90, wrap=False)
         else:
-            axs[2,0].text(-vmax*2.2,0, r"$C_{E_{\perp,1}}$", ha='center', rotation=90, wrap=False)
+            if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                axs[2,0].text(-vmax*2.2,0, r"$C_{E_{\perp,1}}$", ha='center', rotation=90, wrap=False)
+            else:
+                axs[2,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$C_{E_{\perp,1}}$", ha='center', rotation=90, wrap=False)
     else:
         if(plotAvg):
-            axs[2,0].text(-vmax*2.2,0, r"$\overline{C_{E_{y}}}$", ha='center', rotation=90, wrap=False)
+            if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                axs[2,0].text(-vmax*2.2,0, r"$\overline{C_{E_{y}}}$", ha='center', rotation=90, wrap=False)
+            else:
+                axs[2,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\overline{C_{E_{y}}}$", ha='center', rotation=90, wrap=False)
         elif(plotFluc):
             if(isLowPass):
-                 axs[2,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{y}}}^{k_{||} d_i < 15}$", ha='center', rotation=90, wrap=False)
+                if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                    axs[2,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{y}}}^{k_{||} d_i < 15}$", ha='center', rotation=90, wrap=False)
+                else:
+                    axs[2,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\widetilde{C_{E_{y}}}^{k_{||} d_i < 15}$", ha='center', rotation=90, wrap=False)
             elif(isHighPass):
-                axs[2,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{y}}}^{k_{||} d_i > 15}$", ha='center', rotation=90, wrap=False)
+                if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                    axs[2,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{y}}}^{k_{||} d_i > 15}$", ha='center', rotation=90, wrap=False)
+                else:
+                    axs[2,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\widetilde{C_{E_{y}}}^{k_{||} d_i > 15}$", ha='center', rotation=90, wrap=False)
             else:
-                axs[2,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{y}}}$", ha='center', rotation=90, wrap=False)
+                if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                    axs[2,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{y}}}$", ha='center', rotation=90, wrap=False)
+                else:
+                    axs[2,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\widetilde{C_{E_{y}}}$", ha='center', rotation=90, wrap=False)
         else:
-            axs[2,0].text(-vmax*2.2,0, r"$C_{E_{y}}$", ha='center', rotation=90, wrap=False)
+            if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                axs[2,0].text(-vmax*2.2,0, r"$C_{E_{y}}$", ha='center', rotation=90, wrap=False)
+            else:
+                axs[2,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$C_{E_{y}}$", ha='center', rotation=90, wrap=False)
     axs[2,0].grid()
     if(xpos != None):
         axs[2,0].text(-vmax*2.6,0,'$x/d_i = $' + str(xpos), ha='center', rotation=90, wrap=False)
@@ -946,7 +1014,6 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         axs[2,1].set_ylabel(r"$v_{\perp,2}/"+vnormstr+"$")
     else:
         axs[2,1].set_ylabel(r"$v_z/"+vnormstr+"$")
-    axs[2,1].set_aspect('equal', 'box')
     axs[2,1].grid()
     if(computeJdotE):
         JdotE = compute_energization(CEy_xz,dv)
@@ -992,7 +1059,6 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         axs[2,2].set_ylabel(r"$v_{\perp,1}/"+vnormstr+"$")
     else:
         axs[2,2].set_ylabel(r"$v_y/"+vnormstr+"$")
-    axs[2,2].set_aspect('equal', 'box')
     axs[2,2].grid()
     if(computeJdotE):
         JdotE = compute_energization(CEy_yz.T,dv)
@@ -1039,31 +1105,60 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     else:
         axs[3,0].set_xlabel(r"$v_x/"+vnormstr+"$")
         axs[3,0].set_ylabel(r"$v_y/"+vnormstr+"$")
-    axs[3,0].set_aspect('equal', 'box')
     if(plotFAC):
         if(plotAvg):
-            axs[3,0].text(-vmax*2.2,0, r"$\overline{C_{E_{\perp,2}}}$", ha='center', rotation=90, wrap=False)
+            if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                axs[3,0].text(-vmax*2.2,0, r"$\overline{C_{E_{\perp,2}}}$", ha='center', rotation=90, wrap=False)
+            else:
+                axs[3,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\overline{C_{E_{\perp,2}}}$", ha='center', rotation=90, wrap=False)
         elif(plotFluc):
             if(isLowPass):
-                axs[3,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{\perp,2}}}^{k_{||} d_i < 15}$", ha='center', rotation=90, wrap=False)
+                if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                    axs[3,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{\perp,2}}}^{k_{||} d_i < 15}$", ha='center', rotation=90, wrap=False)
+                else:
+                    axs[3,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\widetilde{C_{E_{\perp,2}}}^{k_{||} d_i < 15}$", ha='center', rotation=90, wrap=False)
             elif(isHighPass):
-                axs[3,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{\perp,2}}}^{k_{||} d_i > 15}$", ha='center', rotation=90, wrap=False)
+                if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                    axs[3,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{\perp,2}}}^{k_{||} d_i > 15}$", ha='center', rotation=90, wrap=False)
+                else:
+                    axs[3,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\widetilde{C_{E_{\perp,2}}}^{k_{||} d_i > 15}$", ha='center', rotation=90, wrap=False)
             else:
-                axs[3,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{\perp,2}}}$", ha='center', rotation=90, wrap=False)
+                if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                    axs[3,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{\perp,2}}}$", ha='center', rotation=90, wrap=False)
+                else:
+                    axs[3,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\widetilde{C_{E_{\perp,2}}}$", ha='center', rotation=90, wrap=False)
         else:
-            axs[3,0].text(-vmax*2.2,0, r"$C_{E_{\perp,2}}$", ha='center', rotation=90, wrap=False)
+            if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                axs[3,0].text(-vmax*2.2,0, r"$C_{E_{\perp,2}}$", ha='center', rotation=90, wrap=False)
+            else:
+                axs[3,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$C_{E_{\perp,2}}$", ha='center', rotation=90, wrap=False)
     else:
         if(plotAvg):
-            axs[3,0].text(-vmax*2.2,0, r"$\overline{C_{E_{z}}}$", ha='center', rotation=90, wrap=False)
+            if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                axs[3,0].text(-vmax*2.2,0, r"$\overline{C_{E_{z}}}$", ha='center', rotation=90, wrap=False)
+            else:
+                axs[3,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\overline{C_{E_{z}}}$", ha='center', rotation=90, wrap=False)
         elif(plotFluc):
             if(isLowPass):
-                axs[3,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{z}}}^{k_{||} d_i < 15}$", ha='center', rotation=90, wrap=False)
+                if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                    axs[3,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{z}}}^{k_{||} d_i < 15}$", ha='center', rotation=90, wrap=False)
+                else:
+                    axs[3,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\widetilde{C_{E_{z}}}^{k_{||} d_i < 15}$", ha='center', rotation=90, wrap=False)
             elif(isHighPass):
-                axs[3,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{z}}}^{k_{||} d_i > 15}$", ha='center', rotation=90, wrap=False)
+                if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                    axs[3,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{z}}}^{k_{||} d_i > 15}$", ha='center', rotation=90, wrap=False)
+                else:
+                    axs[3,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\widetilde{C_{E_{z}}}^{k_{||} d_i > 15}$", ha='center', rotation=90, wrap=False)
             else:
-                axs[3,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{z}}}$", ha='center', rotation=90, wrap=False)
+                if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                    axs[3,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{z}}}$", ha='center', rotation=90, wrap=False)
+                else:
+                    axs[3,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\widetilde{C_{E_{z}}}$", ha='center', rotation=90, wrap=False)
         else:
-            axs[3,0].text(-vmax*2.2,0, r"$C_{E_{z}}$", ha='center', rotation=90, wrap=False)
+                if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                    axs[3,0].text(-vmax*2.2,0, r"$C_{E_{z}}$", ha='center', rotation=90, wrap=False)
+                else:
+                    axs[3,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$C_{E_{z}}$", ha='center', rotation=90, wrap=False)
     axs[3,0].grid()
     if(metadata != None):
         axs[3,0].text(-vmax*2.6,0, metadata, ha='center', rotation=90, wrap=False)
@@ -1112,7 +1207,6 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     else:
         axs[3,1].set_xlabel(r"$v_x/"+vnormstr+"$")
         axs[3,1].set_ylabel(r"$v_z/"+vnormstr+"$")
-    axs[3,1].set_aspect('equal', 'box')
     axs[3,1].grid()
     if(computeJdotE):
         JdotE = compute_energization(CEz_xz,dv)
@@ -1159,7 +1253,6 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     else:
         axs[3,2].set_xlabel(r"$v_z/"+vnormstr+"$")
         axs[3,2].set_ylabel(r"$v_y/"+vnormstr+"$")
-    axs[3,2].set_aspect('equal', 'box')
     axs[3,2].grid()
     if(computeJdotE):
         JdotE = compute_energization(CEz_yz.T,dv)
@@ -1195,8 +1288,27 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
 
     for _i in range(0,4):
         for _j in range(0,3):
-            axs[_i,_j].set_xlim(-vmax,vmax)
-            axs[_i,_j].set_ylim(-vmax,vmax)
+            if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                axs[_i,_j].set_aspect('equal', 'box')
+            else:
+                axs[_i,_j].set_box_aspect(1) 
+                axs[_i,_j].set_aspect('auto')
+
+    for _i in range(0,4):
+        for _j in range(0,3):
+            if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                axs[_i,_j].set_xlim(-vmax,vmax)
+                axs[_i,_j].set_ylim(-vmax,vmax)
+            else:
+                if(_j == 0):
+                    axs[_i,_j].set_xlim(vxmin,vxmax)
+                    axs[_i,_j].set_ylim(vymin,vymax)
+                elif(_j == 1):
+                    axs[_i,_j].set_xlim(vxmin,vxmax)
+                    axs[_i,_j].set_ylim(vzmin,vzmax)
+                elif(_j == 2):
+                    axs[_i,_j].set_xlim(vzmin,vzmax)
+                    axs[_i,_j].set_ylim(vymin,vymax)
 
     #set ticks
     intvl = 1.
@@ -1204,48 +1316,94 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         intvl = 5.
     if(vmax > 10):
         intvl = 10.
-    tcks = np.arange(0,vmax,intvl)
-    tcks = np.concatenate((-1*np.flip(tcks),tcks))
-    for _i in range(0,4):
-        for _j in range(0,3):
-            axs[_i,_j].set_xticks(tcks)
-            axs[_i,_j].set_yticks(tcks)
+    if(vmax > 20):
+        intvl = 15.
 
+    if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+        tcks = np.arange(0,vmax,intvl)
+        tcks = np.concatenate((-1*np.flip(tcks),tcks))
+        for _i in range(0,4):
+            for _j in range(0,3):
+                axs[_i,_j].set_xticks(tcks)
+                axs[_i,_j].set_yticks(tcks)
+    else:
+        intvlxx = 1.
+        if(np.abs(vxmax-vxmin)>5):intvlxx=5.
+        elif(np.abs(vxmax-vxmin)>10):intvlxx=10.
+        elif(np.abs(vxmax-vxmin)>20):intvlxx=15.
+        intvlyy = 1.
+        if(np.abs(vymax-vymin)>5):intvlyy=5.
+        elif(np.abs(vymax-vymin)>10):intvlyy=10.
+        elif(np.abs(vymax-vymin)>20):intvlxx=15.
+        intvlzz = 1.
+        if(np.abs(vzmax-vzmin)>5):intvlzz=5.
+        elif(np.abs(vzmax-vzmin)>10):intvlzz=10.
+        elif(np.abs(vzmax-vzmin)>20):intvlxx=15.
+
+        tcksxx = np.arange(vxmin,vxmax+intvlxx,intvlxx)
+        tcksyy = np.arange(vymin,vymax+intvlyy,intvlyy)
+        tckszz = np.arange(vzmin,vzmax+intvlzz,intvlzz)
+
+        for _i in range(0,4):
+             for _j in range(0,3):
+                 if(_j == 0):
+                     axs[_i,_j].set_xticks(tcksxx)
+                     axs[_i,_j].set_yticks(tcksyy)
+                 if(_j == 1):
+                     axs[_i,_j].set_xticks(tcksxx)
+                     axs[_i,_j].set_yticks(tckszz)
+                 if(_j == 2):
+                     axs[_i,_j].set_xticks(tckszz)
+                     axs[_i,_j].set_yticks(tcksyy)
+    
     #plt.subplots_adjust(hspace=.5,wspace=-.3)
 
 
-    maxplotvval = np.max(vz_yz) #Assumes square grid of even size
+    if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None): 
+        maxplotvvalxx = np.max(vz_yz) #Assumes square grid of even size
+        maxplotvvalyy = np.max(vz_yz) #Assumes square grid of even size
+        maxplotvvalzz = np.max(vz_yz) #Assumes square grid of even size
+        centerplotxx = 0.
+        centerplotyy = 0.
+        centerplotzz = 0.
+    else:
+        #TODO: rename this variable
+        maxplotvvalxx = vxmax-((vxmax+vxmin)/2.)
+        maxplotvvalyy = vymax-((vymax+vymin)/2.)
+        maxplotvvalzz = vzmax-((vzmax+vzmin)/2.)
+        centerplotxx = (vxmax+vxmin)/2.
+        centerplotyy = (vymax+vymin)/2.
+        centerplotzz = (vzmax+vzmin)/2.
     if(flnm != ''):
         plt.savefig(flnm+'.png',format='png',dpi=250,bbox_inches='tight')
-        
         #must make figure first to grab x10^val on top of color bar- after grabbing it, we can move it- a little wasteful but it was quick solution
         clrbar10text = str(clrbar10.ax.yaxis.get_offset_text().get_text())
         clrbar10.ax.yaxis.get_offset_text().set_visible(False)
-        axs[1,0].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar10text, va='bottom', ha='center')
+        axs[1,0].text(1.63*maxplotvvalxx+centerplotxx,-1.27*maxplotvvalyy+centerplotyy,clrbar10text, va='bottom', ha='center')
         clrbar11text = str(clrbar11.ax.yaxis.get_offset_text().get_text())
         clrbar11.ax.yaxis.get_offset_text().set_visible(False) 
-        axs[1,1].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar11text, va='bottom', ha='center')
+        axs[1,1].text(1.63*maxplotvvalxx+centerplotxx,-1.27*maxplotvvalzz+centerplotzz,clrbar11text, va='bottom', ha='center')
         clrbar12text = str(clrbar12.ax.yaxis.get_offset_text().get_text())
         clrbar12.ax.yaxis.get_offset_text().set_visible(False)
-        axs[1,2].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar12text, va='bottom', ha='center')
+        axs[1,2].text(1.63*maxplotvvalzz+centerplotzz,-1.27*maxplotvvalyy+centerplotyy,clrbar12text, va='bottom', ha='center')
         clrbar20text = str(clrbar20.ax.yaxis.get_offset_text().get_text())
         clrbar20.ax.yaxis.get_offset_text().set_visible(False)
-        axs[2,0].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar20text, va='bottom', ha='center')
+        axs[2,0].text(1.63*maxplotvvalxx+centerplotxx,-1.27*maxplotvvalyy+centerplotyy,clrbar20text, va='bottom', ha='center')
         clrbar21text = str(clrbar21.ax.yaxis.get_offset_text().get_text())
         clrbar21.ax.yaxis.get_offset_text().set_visible(False)
-        axs[2,1].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar21text, va='bottom', ha='center')
+        axs[2,1].text(1.63*maxplotvvalxx+centerplotxx,-1.27*maxplotvvalzz+centerplotzz,clrbar21text, va='bottom', ha='center')
         clrbar22text = str(clrbar22.ax.yaxis.get_offset_text().get_text())
         clrbar22.ax.yaxis.get_offset_text().set_visible(False)
-        axs[2,2].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar22text, va='bottom', ha='center')
+        axs[2,2].text(1.63*maxplotvvalzz+centerplotzz,-1.27*maxplotvvalyy+centerplotyy,clrbar22text, va='bottom', ha='center')
         clrbar30text = str(clrbar30.ax.yaxis.get_offset_text().get_text())
         clrbar30.ax.yaxis.get_offset_text().set_visible(False)
-        axs[3,0].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar30text, va='bottom', ha='center')
+        axs[3,0].text(1.63*maxplotvvalxx+centerplotxx,-1.27*maxplotvvalyy+centerplotyy,clrbar30text, va='bottom', ha='center')
         clrbar31text = str(clrbar31.ax.yaxis.get_offset_text().get_text())
         clrbar31.ax.yaxis.get_offset_text().set_visible(False)
-        axs[3,1].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar31text, va='bottom', ha='center')
+        axs[3,1].text(1.63*maxplotvvalxx+centerplotxx,-1.27*maxplotvvalzz+centerplotzz,clrbar31text, va='bottom', ha='center')
         clrbar32text = str(clrbar32.ax.yaxis.get_offset_text().get_text())
         clrbar32.ax.yaxis.get_offset_text().set_visible(False)
-        axs[3,2].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar32text, va='bottom', ha='center')
+        axs[3,2].text(1.63*maxplotvvalzz+centerplotzz,-1.27*maxplotvvalyy+centerplotyy,clrbar32text, va='bottom', ha='center')
 
         plt.savefig(flnm+'.png',format='png',dpi=250,bbox_inches='tight')
 
@@ -1254,40 +1412,41 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     else:
         import os
 
-        #for some reason, we have to generate the plot to move the colorpower power elseweher
+        #for some reason, we have to generate the plot to move the colorpower power elsewhere for some unknown reason
         plt.savefig('_tempdelete.png',format='png',dpi=250,bbox_inches='tight')
         os.remove('_tempdelete.png')
 
         #must make figure first to grab x10^val on top of color bar- after grabbing it, we can move it- a little wasteful but it was quick solution
         clrbar10text = str(clrbar10.ax.yaxis.get_offset_text().get_text())
         clrbar10.ax.yaxis.get_offset_text().set_visible(False)
-        axs[1,0].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar10text, va='bottom', ha='center')
+        axs[1,0].text(1.63*maxplotvvalxx,-1.27*maxplotvvalyy,clrbar10text, va='bottom', ha='center')
         clrbar11text = str(clrbar11.ax.yaxis.get_offset_text().get_text())
         clrbar11.ax.yaxis.get_offset_text().set_visible(False) 
-        axs[1,1].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar11text, va='bottom', ha='center')
+        axs[1,1].text(1.63*maxplotvvalxx,-1.27*maxplotvvalzz,clrbar11text, va='bottom', ha='center')
         clrbar12text = str(clrbar12.ax.yaxis.get_offset_text().get_text())
         clrbar12.ax.yaxis.get_offset_text().set_visible(False)
-        axs[1,2].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar12text, va='bottom', ha='center')
+        axs[1,2].text(1.63*maxplotvvalzz,-1.27*maxplotvvalyy,clrbar12text, va='bottom', ha='center')
         clrbar20text = str(clrbar20.ax.yaxis.get_offset_text().get_text())
         clrbar20.ax.yaxis.get_offset_text().set_visible(False)
-        axs[2,0].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar20text, va='bottom', ha='center')
+        axs[2,0].text(1.63*maxplotvvalxx,-1.27*maxplotvvalyy,clrbar20text, va='bottom', ha='center')
         clrbar21text = str(clrbar21.ax.yaxis.get_offset_text().get_text())
         clrbar21.ax.yaxis.get_offset_text().set_visible(False)
-        axs[2,1].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar21text, va='bottom', ha='center')
+        axs[2,1].text(1.63*maxplotvvalxx,-1.27*maxplotvvalzz,clrbar21text, va='bottom', ha='center')
         clrbar22text = str(clrbar22.ax.yaxis.get_offset_text().get_text())
         clrbar22.ax.yaxis.get_offset_text().set_visible(False)
-        axs[2,2].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar22text, va='bottom', ha='center')
+        axs[2,2].text(1.63*maxplotvvalzz,-1.27*maxplotvvalyy,clrbar22text, va='bottom', ha='center')
         clrbar30text = str(clrbar30.ax.yaxis.get_offset_text().get_text())
         clrbar30.ax.yaxis.get_offset_text().set_visible(False)
-        axs[3,0].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar30text, va='bottom', ha='center')
+        axs[3,0].text(1.63*maxplotvvalxx,-1.27*maxplotvvalyy,clrbar30text, va='bottom', ha='center')
         clrbar31text = str(clrbar31.ax.yaxis.get_offset_text().get_text())
         clrbar31.ax.yaxis.get_offset_text().set_visible(False)
-        axs[3,1].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar31text, va='bottom', ha='center')
+        axs[3,1].text(1.63*maxplotvvalxx,-1.27*maxplotvvalzz,clrbar31text, va='bottom', ha='center')
         clrbar32text = str(clrbar32.ax.yaxis.get_offset_text().get_text())
         clrbar32.ax.yaxis.get_offset_text().set_visible(False)
-        axs[3,2].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar32text, va='bottom', ha='center')
+        axs[3,2].text(1.63*maxplotvvalzz,-1.27*maxplotvvalyy,clrbar32text, va='bottom', ha='center')
 
         plt.show()
+    
     plt.close()
 
 def plot_cor_and_dist_supergrid_row(vx, vy, vz, vmax,
@@ -2110,13 +2269,13 @@ def plot_cor_and_dist_supergrid_row(vx, vy, vz, vmax,
         #must make figure first to grab x10^val on top of color bar- after grabbing it, we can move it- a little wasteful but it was quick solution
         clrbar10text = str(clrbar10.ax.yaxis.get_offset_text().get_text())
         clrbar10.ax.yaxis.get_offset_text().set_visible(False)
-        axs[0,0].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar10text, va='bottom', ha='center')
+        axs[0,0].text(1.63*maxplotvval,-1.27*maxplotvval,clrbar10text, va='bottom', ha='center')
         clrbar11text = str(clrbar11.ax.yaxis.get_offset_text().get_text())
         clrbar11.ax.yaxis.get_offset_text().set_visible(False) 
-        axs[0,1].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar11text, va='bottom', ha='center')
+        axs[0,1].text(1.63*maxplotvval,-1.27*maxplotvval,clrbar11text, va='bottom', ha='center')
         clrbar12text = str(clrbar12.ax.yaxis.get_offset_text().get_text())
         clrbar12.ax.yaxis.get_offset_text().set_visible(False)
-        axs[0,2].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar12text, va='bottom', ha='center')
+        axs[0,2].text(1.63*maxplotvval,-1.27*maxplotvval,clrbar12text, va='bottom', ha='center')
  
         plt.savefig(flnm+'.png',format='png',dpi=250,bbox_inches='tight')
     else:
@@ -3048,7 +3207,7 @@ def plot_gyro_3comp(vpar,vperp,corepargyro,coreperp1gyro,coreperp2gyro,flnm='',i
         plt.show()
     plt.close()
 
-def project_and_plot_supergrid(vx,vy,vz,vmax,hist,corex,corey,corez,flnm,plotFAC=False,plotAvg=False,plotFluc=False,isIon=True,isLowPass=False,isHighPass=False):
+def project_and_plot_supergrid(vx,vy,vz,vmax,hist,corex,corey,corez,flnm,plotFAC=False,plotAvg=False,plotFluc=False,isIon=True,isLowPass=False,isHighPass=False,vxmin=None,vxmax=None,vymin=None,vymax=None,vzmin=None,vzmax=None):
     from FPCAnalysis.array_ops import array_3d_to_2d
 
     H_xy = array_3d_to_2d(hist, 'xy')
@@ -3072,7 +3231,7 @@ def project_and_plot_supergrid(vx,vy,vz,vmax,hist,corex,corey,corez,flnm,plotFAC
                                 CEx_xy,CEx_xz, CEx_yz,
                                 CEy_xy,CEy_xz, CEy_yz,
                                 CEz_xy,CEz_xz, CEz_yz,
-                                flnm = flnm, computeJdotE = True, plotFAC = plotFAC, plotAvg = plotAvg, plotFluc = plotFluc, isIon = isIon, isLowPass=isLowPass,isHighPass=isHighPass)
+                                flnm = flnm, computeJdotE = True, plotFAC = plotFAC, plotAvg = plotAvg, plotFluc = plotFluc, isIon = isIon, isLowPass=isLowPass,isHighPass=isHighPass,vxmin=vxmin,vxmax=vxmax,vymin=vymin,vymax=vymax,vzmin=vzmin,vzmax=vzmax)
 
 def project_and_plot_supergrid_row(vx,vy,vz,vmax,arr,arrtype,flnm,plotFAC=False,plotAvg=False,plotFluc=False,isIon=True,isLowPass=False,isHighPass=False):
     
