@@ -3635,4 +3635,54 @@ def compute_temp_1d(interpolxxs,params,dfields,dpar_ion,dpar_elec,vmaxion,vmaxel
         temperaturedata = pickle.load(filein)
         filein.close()
 
-    return temperaturedata
+    return 
+
+def split_by_speed(dpar,speed,vkeys=None,verbose=False):
+    keys = dpar.keys()
+
+    dpar_main = {}
+    dpar_ring = {}
+
+    #copy non-particle keys and create arrays for particle keys
+    pardatakeys = []
+    for ky in keys:
+        try:
+            if(len(dpar[ky]) < 2):
+                dpar_main[ky] = dpar[ky]
+                dpar_ring[ky] = dpar[ky]
+            else:
+                dpar_main[ky] = np.asarray([])
+                dpar_ring[ky] = np.asarray([])
+                pardatakeys.append(ky)
+        except:
+            dpar_main[ky] = dpar[ky]
+            dpar_ring[ky] = dpar[ky]
+
+    if(vkeys == None):
+        #figure out velocity keys
+        vkeys = []
+        for pky in pardatakeys:
+            if('u' in pky):
+                vkeys.append(pky)
+            elif('v' in pky):
+                vkeys.append(pky)
+            elif('w' in pky):
+                vkeys.append(pky)
+    if(len(vkeys) != 3):
+        print("Error, was not able to determine velocity keys automatically... Please specifiy velocity keys as optional parameter vkey=[vkey1,vkey2,vkey3]")
+        print("Found vkeys: ",vkeys)
+        return
+        
+    #split by speed
+    for _pidx in range(0,len(dpar[vkeys[0]])):
+        if(_pidx % 10000 == 1 and verbose):print('debug',_pidx,' of ',len(dpar[vkeys[0]]))
+        spd = np.sqrt(dpar[vkeys[0]][_pidx]**2+dpar[vkeys[1]][_pidx]**2+dpar[vkeys[2]][_pidx]**2)
+        
+        for pkey in pardatakeys:
+            if(spd < speed):
+                dpar_main[pkey] = np.append(dpar_main[pkey],dpar[pkey][_pidx])
+            else:
+                dpar_ring[pkey] = np.append(dpar_ring[pkey],dpar[pkey][_pidx])
+
+    return dpar_main, dpar_ring
+    
