@@ -1973,7 +1973,7 @@ def _get_perp_component(x1,y1):
 #     #TODO: consider cleaning up computing delB (maybe move to own function)
 #     return results, kxexpected, delBlist, delElist
 
-def compute_field_aligned_coord(dfields,xlim,ylim,zlim):
+def compute_field_aligned_coord(dfields,xlim,ylim,zlim,verbose=False):
     """
     Computes field aligned coordinate basis using average B0 in provided box
 
@@ -2000,7 +2000,7 @@ def compute_field_aligned_coord(dfields,xlim,ylim,zlim):
     from FPCAnalysis.array_ops import find_nearest
     from copy import deepcopy
 
-    if(np.abs(xlim[1]-xlim[0]) > 4.):
+    if(np.abs(xlim[1]-xlim[0]) > 4. and verbose):
         print("Warning, when computing field aligned coordinates, we found that xlim[1]-xlim[0] is large. Consider reducing size...")
 
     xavg = (xlim[1]+xlim[0])/2.
@@ -2013,8 +2013,8 @@ def compute_field_aligned_coord(dfields,xlim,ylim,zlim):
     eperp2basis = np.cross([1.,0,0],B0) #x hat cross B0
     tol = 0.005
     _B0 = B0 / np.linalg.norm(B0)
-    if(np.abs(np.linalg.norm(np.cross([_B0[0],_B0[1],_B0[2]],[1.,0.,0.]))) < tol):
-        print("Warning, it seems B0 is parallel to xhat (typically the shock normal)...")
+    if(np.abs(np.linalg.norm(np.cross([_B0[0],_B0[1],_B0[2]],[1.,0.,0.]))) < tol and verbose):
+        print("Warning, it seems B0 is parallel to xhat..")
         print("(Bx,By,Bz): ", _B0[0],_B0[1],_B0[2])
         print("xhat: 1,0,0")
         return np.asarray([1.,0,0]),np.asarray([0,1.,0]),np.asarray([0,0,1.])
@@ -3637,52 +3637,54 @@ def compute_temp_1d(interpolxxs,params,dfields,dpar_ion,dpar_elec,vmaxion,vmaxel
 
     return 
 
-def split_by_speed(dpar,speed,vkeys=None,verbose=False):
+import numpy as np
+
+def split_by_speed(dpar, speed, vkeys=None, verbose=False):
     keys = dpar.keys()
 
     dpar_main = {}
     dpar_ring = {}
 
-    #copy non-particle keys and create arrays for particle keys
+    # Copy non-particle keys and pre-allocate arrays for particle keys
     pardatakeys = []
     for ky in keys:
         try:
-            if(len(dpar[ky]) < 2):
+            if len(dpar[ky]) < 2:
                 dpar_main[ky] = dpar[ky]
                 dpar_ring[ky] = dpar[ky]
             else:
-                dpar_main[ky] = np.asarray([])
-                dpar_ring[ky] = np.asarray([])
+                dpar_main[ky] = np.empty_like(dpar[ky])
+                dpar_ring[ky] = np.empty_like(dpar[ky])
                 pardatakeys.append(ky)
         except:
             dpar_main[ky] = dpar[ky]
             dpar_ring[ky] = dpar[ky]
 
-    if(vkeys == None):
-        #figure out velocity keys
+    if vkeys is None:
+        # Figure out velocity keys
         vkeys = []
         for pky in pardatakeys:
-            if('u' in pky):
+            if 'u' in pky:
                 vkeys.append(pky)
-            elif('v' in pky):
+            elif 'v' in pky:
                 vkeys.append(pky)
-            elif('w' in pky):
+            elif 'w' in pky:
                 vkeys.append(pky)
-    if(len(vkeys) != 3):
-        print("Error, was not able to determine velocity keys automatically... Please specifiy velocity keys as optional parameter vkey=[vkey1,vkey2,vkey3]")
-        print("Found vkeys: ",vkeys)
+    if len(vkeys) != 3:
+        print("Error, was not able to determine velocity keys automatically... Please specify velocity keys as optional parameter vkey=[vkey1,vkey2,vkey3]")
+        print("Found vkeys: ", vkeys)
         return
-        
-    #split by speed
-    for _pidx in range(0,len(dpar[vkeys[0]])):
-        if(_pidx % 10000 == 1 and verbose):print('debug',_pidx,' of ',len(dpar[vkeys[0]]))
-        spd = np.sqrt(dpar[vkeys[0]][_pidx]**2+dpar[vkeys[1]][_pidx]**2+dpar[vkeys[2]][_pidx]**2)
-        
-        for pkey in pardatakeys:
-            if(spd < speed):
-                dpar_main[pkey] = np.append(dpar_main[pkey],dpar[pkey][_pidx])
-            else:
-                dpar_ring[pkey] = np.append(dpar_ring[pkey],dpar[pkey][_pidx])
+
+    # Calculate speeds
+    speeds = np.sqrt(dpar[vkeys[0]]**2 + dpar[vkeys[1]]**2 + dpar[vkeys[2]]**2)
+
+    # Create masks for main and ring particles
+    main_mask = speeds < speed
+    ring_mask = speeds >= speed
+
+    # Split data
+    for pkey in pardatakeys:
+        dpar_main[pkey] = dpar[pkey][main_mask]
+        dpar_ring[pkey] = dpar[pkey][ring_mask]
 
     return dpar_main, dpar_ring
-    
