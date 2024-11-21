@@ -28,11 +28,15 @@ def load_params(path,num,debug=False):
         params['mi'] = paramfl['mi'][0]
         params['me'] = paramfl['me'][0]
         params['ppc'] = paramfl['ppc0'][0]
+        params['delgam'] = paramfl['delgam'][0]
         try:
             params['sizex'] = paramfl['sizex'][0]
         except:
             params['sizex'] = paramfl['sizey'][0]
-        params['delgam'] = paramfl['delgam'][0]
+        try:
+            params['time'] = paramfl['time'][0]
+        except:
+            pass
 
     return params
 
