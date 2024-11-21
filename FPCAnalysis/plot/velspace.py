@@ -1317,7 +1317,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     if(vmax > 10):
         intvl = 10.
     if(vmax > 20):
-        intvl = 15.
+        intvl = 20.
 
     if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
         tcks = np.arange(0,vmax,intvl)
@@ -3207,7 +3207,7 @@ def plot_gyro_3comp(vpar,vperp,corepargyro,coreperp1gyro,coreperp2gyro,flnm='',i
         plt.show()
     plt.close()
 
-def project_and_plot_supergrid(vx,vy,vz,vmax,hist,corex,corey,corez,flnm,plotFAC=False,plotAvg=False,plotFluc=False,isIon=True,isLowPass=False,isHighPass=False,vxmin=None,vxmax=None,vymin=None,vymax=None,vzmin=None,vzmax=None):
+def project_and_plot_supergrid(vx,vy,vz,vmax,hist,corex,corey,corez,flnm,title=None,plotFAC=False,plotAvg=False,plotFluc=False,isIon=True,isLowPass=False,isHighPass=False,vxmin=None,vxmax=None,vymin=None,vymax=None,vzmin=None,vzmax=None):
     from FPCAnalysis.array_ops import array_3d_to_2d
 
     H_xy = array_3d_to_2d(hist, 'xy')
@@ -3231,7 +3231,7 @@ def project_and_plot_supergrid(vx,vy,vz,vmax,hist,corex,corey,corez,flnm,plotFAC
                                 CEx_xy,CEx_xz, CEx_yz,
                                 CEy_xy,CEy_xz, CEy_yz,
                                 CEz_xy,CEz_xz, CEz_yz,
-                                flnm = flnm, computeJdotE = True, plotFAC = plotFAC, plotAvg = plotAvg, plotFluc = plotFluc, isIon = isIon, isLowPass=isLowPass,isHighPass=isHighPass,vxmin=vxmin,vxmax=vxmax,vymin=vymin,vymax=vymax,vzmin=vzmin,vzmax=vzmax)
+                                flnm = flnm, ttl=title, computeJdotE = True, plotFAC = plotFAC, plotAvg = plotAvg, plotFluc = plotFluc, isIon = isIon, isLowPass=isLowPass,isHighPass=isHighPass,vxmin=vxmin,vxmax=vxmax,vymin=vymin,vymax=vymax,vzmin=vzmin,vzmax=vzmax)
 
 def project_and_plot_supergrid_row(vx,vy,vz,vmax,arr,arrtype,flnm,plotFAC=False,plotAvg=False,plotFluc=False,isIon=True,isLowPass=False,isHighPass=False):
     
