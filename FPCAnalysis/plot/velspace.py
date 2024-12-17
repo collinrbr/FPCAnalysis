@@ -621,9 +621,9 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     dv = vy_yz[1][1]-vy_yz[0][0] #assumes square velocity grid
 
     if(isIon):
-        vnormstr = 'v_{ti}'
+        vnormstr = 'v_{ti,0}'
     else:
-        vnormstr = 'v_{te}'
+        vnormstr = 'v_{te,0}'
 
     fig.suptitle(ttl)
 
@@ -3207,7 +3207,7 @@ def plot_gyro_3comp(vpar,vperp,corepargyro,coreperp1gyro,coreperp2gyro,flnm='',i
         plt.show()
     plt.close()
 
-def project_and_plot_supergrid(vx,vy,vz,vmax,hist,corex,corey,corez,flnm,title=None,plotFAC=False,plotAvg=False,plotFluc=False,isIon=True,isLowPass=False,isHighPass=False,vxmin=None,vxmax=None,vymin=None,vymax=None,vzmin=None,vzmax=None):
+def project_and_plot_supergrid(vx,vy,vz,vmax,hist,corex,corey,corez,flnm,title=None,plotLog=False,plotFAC=False,plotAvg=False,plotFluc=False,isIon=True,isLowPass=False,isHighPass=False,vxmin=None,vxmax=None,vymin=None,vymax=None,vzmin=None,vzmax=None):
     from FPCAnalysis.array_ops import array_3d_to_2d
 
     H_xy = array_3d_to_2d(hist, 'xy')
@@ -3231,9 +3231,9 @@ def project_and_plot_supergrid(vx,vy,vz,vmax,hist,corex,corey,corez,flnm,title=N
                                 CEx_xy,CEx_xz, CEx_yz,
                                 CEy_xy,CEy_xz, CEy_yz,
                                 CEz_xy,CEz_xz, CEz_yz,
-                                flnm = flnm, ttl=title, computeJdotE = True, plotFAC = plotFAC, plotAvg = plotAvg, plotFluc = plotFluc, isIon = isIon, isLowPass=isLowPass,isHighPass=isHighPass,vxmin=vxmin,vxmax=vxmax,vymin=vymin,vymax=vymax,vzmin=vzmin,vzmax=vzmax)
+                                flnm = flnm, ttl=title, computeJdotE = True, plotLog=plotLog, plotFAC = plotFAC, plotAvg = plotAvg, plotFluc = plotFluc, isIon = isIon, isLowPass=isLowPass,isHighPass=isHighPass,vxmin=vxmin,vxmax=vxmax,vymin=vymin,vymax=vymax,vzmin=vzmin,vzmax=vzmax)
 
-def project_and_plot_supergrid_row(vx,vy,vz,vmax,arr,arrtype,flnm,plotFAC=False,plotAvg=False,plotFluc=False,isIon=True,isLowPass=False,isHighPass=False):
+def project_and_plot_supergrid_row(vx,vy,vz,vmax,arr,arrtype,flnm,plotFAC=False,plotAvg=False,plotLog=False,plotFluc=False,isIon=True,isLowPass=False,isHighPass=False):
     
     from FPCAnalysis.array_ops import array_3d_to_2d
 
@@ -3244,7 +3244,7 @@ def project_and_plot_supergrid_row(vx,vy,vz,vmax,arr,arrtype,flnm,plotFAC=False,
     plot_cor_and_dist_supergrid_row(vx, vy, vz, vmax,
                                 arr_xy,arr_xz, arr_yz,
                                 arrtype,
-                                flnm = flnm, ttl = '', computeJdotE = True, params = None, metadata = None, xpos = None, plotLog = False, plotLogHist = True,
+                                flnm = flnm, ttl = '', computeJdotE = True, params = None, metadata = None, xpos = None, plotLog = plotLog, plotLogHist = True,
                                 plotFAC = plotFAC, plotFluc = plotFluc, plotAvg = plotAvg, isIon = isIon, listpos=False,xposval=None,normtoN = False,Nval = None, isLowPass=isLowPass,isHighPass=isHighPass,plotDiagJEOnly=True)
     
 def plot_phaseposvsvx(dparticles,poskey,velkey,xmin,xmax,dx,vmax,dv,cbarmax=None,flnm=''):
