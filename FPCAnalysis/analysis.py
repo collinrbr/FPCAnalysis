@@ -444,95 +444,94 @@ def compute_gain_due_to_jdotE(dflowavg,xvals,jdotE,isIon,verbose=False):
 def bin_integrate_gyro(x_grid, y_grid, C_vals, rmax, nrbins):
     """
     Integrates along curves of constant radius along 360 degrees of angle.
-
-    For simplicity, we place value into bins based on bin center. If bin center is within r_n and r_n+dr, it goes into the nth bin. 
-    This most easily conserves total energization rate. (Otherwise, we would need to carefully interpolate and divide each our square grid!)
-
-    Bins based on location of bin center
-
-    Parameters
-    ----------
-    #TODO: finish!
-
+    Bins are determined based on the location of the bin center.
     """
-    from FPCAnalysis.array_ops import find_nearest
+    drval = float(rmax) / float(nrbins)
+    r_bins = np.arange(0, rmax, drval)  # Vectorized bin creation
+    dr = r_bins[1] - r_bins[0]
+    dx = x_grid[1, 1] - x_grid[0, 0]
 
-    drval = float(rmax)/float(nrbins)
-    r_bins = np.asarray([itemp*drval for itemp in range(nrbins)])
-    
-    dr = r_bins[1]-r_bins[0]
-    dx = x_grid[1][1]-x_grid[0][0]
-    
-    if(dr < dx):
-        print("Warning, probably should reduce nrbins")
-    
-    C_binned_out = np.zeros(r_bins.shape)
-    
-    for _idx in range(0,len(x_grid)):
-        for _jdx in range(0,len(x_grid[_idx])):
-            rpos =  np.sqrt(x_grid[_idx][_jdx]**2+y_grid[_idx][_jdx]**2)   
-            ridx = find_nearest(r_bins,rpos)  
-            C_binned_out[ridx] += C_vals[_idx][_jdx]
-    r_grid_out = np.zeros
-    
+    if dr < dx:
+        print(f"Warning: dr ({dr}) is smaller than dx ({dx}). Reduce nrbins for better accuracy.")
+
+    C_binned_out = np.zeros_like(r_bins)
+
+    # Vectorized calculation of radial positions
+    rpos = np.sqrt(x_grid**2 + y_grid**2)
+    ridx = np.digitize(rpos, r_bins) - 1  # Find bin indices
+
+    # Accumulate values into bins
+    np.add.at(C_binned_out, ridx.ravel(), C_vals.ravel())
+
     return r_bins, C_binned_out
 
-def compute_gyro_fpc_from_cart_fpc(vx,vy,vz,corez,corey,corex,vmax,nrbins):
+def compute_gyro_fpc_from_cart_fpc(vx, vy, vz, corez, corey, corex, vmax, nrbins):
     """
-    Note: x<-> perp1, y<->perp2, z<->par
-
-    However! the index structure of output is corei[perp1,perp2,par]
+    Converts Cartesian FPC components into gyro-binned components.
     """
-    coreperp = corey+corez
+    coreperp = corey + corez
+    shape = (len(corex), nrbins)
 
-    vpargyro = np.zeros((len(corex),nrbins)) #assumes symmetry in shape of corex
-    vperpgyro = np.zeros((len(corex),nrbins))
-    corepargyro = np.zeros((len(corex),nrbins))
-    coreperpgyro = np.zeros((len(corex),nrbins))
+    vpargyro = np.zeros(shape)
+    vperpgyro = np.zeros(shape)
+    corepargyro = np.zeros(shape)
+    coreperpgyro = np.zeros(shape)
+
     for _vparidx in range(len(corex)):
-        vperpgyro[_vparidx], corepargyro[_vparidx] = bin_integrate_gyro(vx[_vparidx], vy[_vparidx], corex[:,:,_vparidx], vmax, nrbins)
-        vperpgyro[_vparidx], coreperpgyro[_vparidx] = bin_integrate_gyro(vx[_vparidx], vy[_vparidx], coreperp[:,:,_vparidx], vmax, nrbins)
-        vpargyro[_vparidx][:] = vz[_vparidx,0,0]
+        vperpgyro[_vparidx], corepargyro[_vparidx] = bin_integrate_gyro(
+            vx[_vparidx], vy[_vparidx], corex[:, :, _vparidx], vmax, nrbins
+        )
+        _, coreperpgyro[_vparidx] = bin_integrate_gyro(
+            vx[_vparidx], vy[_vparidx], coreperp[:, :, _vparidx], vmax, nrbins
+        )
+        vpargyro[_vparidx, :] = vz[_vparidx, 0, 0]
 
-    return vpargyro,vperpgyro,corepargyro,coreperpgyro
+    return vpargyro, vperpgyro, corepargyro, coreperpgyro
 
-def compute_gyro_fpc_from_cart_fpc_single(vx,vy,vz,arr,vmax,nrbins):
+def compute_gyro_fpc_from_cart_fpc_single(vx, vy, vz, arr, vmax, nrbins):
     """
-    Note: x<-> perp1, y<->perp2, z<->par
-
-    However! the index structure of output is arr[perp1,perp2,par]
+    Converts a single Cartesian component into gyro-binned components.
     """
+    shape = (len(arr), nrbins)
+    vpargyro = np.zeros(shape)
+    vperpgyro = np.zeros(shape)
+    arrgyro = np.zeros(shape)
 
-    vpargyro = np.zeros((len(arr),nrbins)) #assumes symmetry in shape of corex
-    vperpgyro = np.zeros((len(arr),nrbins))
-    arrgyro = np.zeros((len(arr),nrbins))
     for _vparidx in range(len(arr)):
-        vperpgyro[_vparidx], arrgyro[_vparidx] = bin_integrate_gyro(vx[_vparidx], vy[_vparidx], arr[:,:,_vparidx], vmax, nrbins)
-        vpargyro[_vparidx][:] = vz[_vparidx,0,0]
+        vperpgyro[_vparidx], arrgyro[_vparidx] = bin_integrate_gyro(
+            vx[_vparidx], vy[_vparidx], arr[:, :, _vparidx], vmax, nrbins
+        )
+        vpargyro[_vparidx, :] = vz[_vparidx, 0, 0]
 
-    return vpargyro,vperpgyro,arrgyro
+    return vpargyro, vperpgyro, arrgyro
 
-def compute_compgyro_fpc_from_cart_fpc(vx,vy,vz,corez,corey,corex,vmax,nrbins):
+def compute_compgyro_fpc_from_cart_fpc(vx, vy, vz, corez, corey, corex, vmax, nrbins):
     """
-    Note: x<-> perp1, y<->perp2, z<->par
-
-    However! the index structure of corei[perp1,perp2,par]
+    Converts Cartesian FPC components into separate gyro-binned components.
     """
     coreperp1 = corey
     coreperp2 = corez
+    shape = (len(corex), nrbins)
 
-    vpargyro = np.zeros((len(corex),nrbins)) #assumes symmetry in shape of corex
-    vperpgyro = np.zeros((len(corex),nrbins))
-    corepargyro = np.zeros((len(corex),nrbins))
-    coreperp1gyro = np.zeros((len(corex),nrbins))
-    coreperp2gyro = np.zeros((len(corex),nrbins))
+    vpargyro = np.zeros(shape)
+    vperpgyro = np.zeros(shape)
+    corepargyro = np.zeros(shape)
+    coreperp1gyro = np.zeros(shape)
+    coreperp2gyro = np.zeros(shape)
+
     for _vparidx in range(len(corex)):
-        vperpgyro[_vparidx], corepargyro[_vparidx] = bin_integrate_gyro(vx[_vparidx], vy[_vparidx], corex[:,:,_vparidx], vmax, nrbins)
-        vperpgyro[_vparidx], coreperp1gyro[_vparidx] = bin_integrate_gyro(vx[_vparidx], vy[_vparidx], coreperp1[:,:,_vparidx], vmax, nrbins)
-        vperpgyro[_vparidx], coreperp2gyro[_vparidx] = bin_integrate_gyro(vx[_vparidx], vy[_vparidx], coreperp2[:,:,_vparidx], vmax, nrbins)
-        vpargyro[_vparidx][:]=vz[_vparidx,0,0]
+        vperpgyro[_vparidx], corepargyro[_vparidx] = bin_integrate_gyro(
+            vx[_vparidx], vy[_vparidx], corex[:, :, _vparidx], vmax, nrbins
+        )
+        _, coreperp1gyro[_vparidx] = bin_integrate_gyro(
+            vx[_vparidx], vy[_vparidx], coreperp1[:, :, _vparidx], vmax, nrbins
+        )
+        _, coreperp2gyro[_vparidx] = bin_integrate_gyro(
+            vx[_vparidx], vy[_vparidx], coreperp2[:, :, _vparidx], vmax, nrbins
+        )
+        vpargyro[_vparidx, :] = vz[_vparidx, 0, 0]
 
-    return vpargyro,vperpgyro,corepargyro,coreperp1gyro,coreperp2gyro
+    return vpargyro, vperpgyro, corepargyro, coreperp1gyro, coreperp2gyro
 
 def get_compression_ratio(dfields,upstreambound,downstreambound):
     """
@@ -2489,7 +2488,7 @@ def compute_electron_temp(dden,x1,x2,y1,y2,z1,z2,Te0=1.,gamma=1.66667,num_den_el
 
     print("WARNING THIS DOES NOT INCLUDE DRIFT VELOCITY YET")
 
-    from array_ops import get_average_in_box
+    from FPCAnalysis.array_ops import get_average_in_box
 
 
     num_den_elec = get_average_in_box(x1,x2,y1,y2,z1,z2,dden, 'den')
@@ -3638,6 +3637,80 @@ def compute_temp_1d(interpolxxs,params,dfields,dpar_ion,dpar_elec,vmaxion,vmaxel
     return 
 
 import numpy as np
+
+def split_by_init_speed(dpar0, dpar, speed, vkeys=None, verbose=False):
+    from FPCAnalysis.array_ops import find_indices
+
+    #figure out keys which together form unique particle
+    if('indi' in dpar0.keys()):
+        IDkey1 = 'indi'
+        IDkey2 = 'proci'
+    elif('inde' in dpar0.keys()):
+        IDkey1 = 'indi'
+        IDkey2 = 'proci'
+
+    #make array that has unique ID for each particle
+    dpar0['uniqueID']  = np.array([int(str(a1).replace('.', '') + str(a2).replace('.', '')) for a1, a2 in zip(dpar0[IDkey1], dpar0[IDkey2])])
+    dpar['uniqueID']  = np.array([int(str(a1).replace('.', '') + str(a2).replace('.', '')) for a1, a2 in zip(dpar[IDkey1], dpar[IDkey2])])
+    
+
+    keys = dpar.keys()
+    dpar_main = {}
+    dpar_ring = {}
+
+    # Copy non-particle keys and pre-allocate arrays for particle keys
+    pardatakeys = []
+    for ky in keys:
+        try:
+            if len(dpar[ky]) < 2:
+                dpar_main[ky] = dpar[ky]
+                dpar_ring[ky] = dpar[ky]
+            else:
+                dpar_main[ky] = np.empty_like(dpar[ky])
+                dpar_ring[ky] = np.empty_like(dpar[ky])
+                pardatakeys.append(ky)
+        except:
+            dpar_main[ky] = dpar[ky]
+            dpar_ring[ky] = dpar[ky]
+
+    if vkeys is None:
+        # Figure out velocity keys
+        vkeys = []
+        for pky in pardatakeys:
+            if 'u' in pky and not('ID' in pky):
+                vkeys.append(pky)
+            elif 'v' in pky:
+                vkeys.append(pky)
+            elif 'w' in pky:
+                vkeys.append(pky)
+                
+    if len(vkeys) != 3:
+        print("Error, was not able to determine velocity keys automatically... Please specify velocity keys as optional parameter vkey=[vkey1,vkey2,vkey3]")
+        print("Found vkeys: ", vkeys)
+        return
+
+    # Calculate speeds
+    speeds = np.sqrt(dpar0[vkeys[0]]**2 + dpar0[vkeys[1]]**2 + dpar0[vkeys[2]]**2)
+
+    # Create masks for main and ring particles
+    main_mask = speeds < speed
+    ring_mask = speeds >= speed
+
+    mainindexes0 = np.where(main_mask)
+    ringindexes0 = np.where(ring_mask)
+
+    UniqueIDs_in_main0 = dpar0['uniqueID'][mainindexes0]
+    UniqueIDs_in_ring0 = dpar0['uniqueID'][ringindexes0]
+
+    newmainindexes = find_indices(dpar['uniqueID'], UniqueIDs_in_main0)
+    newringindexes = find_indices(dpar['uniqueID'], UniqueIDs_in_ring0)
+    
+    # Split data
+    for pkey in pardatakeys:
+        dpar_main[pkey] = np.array([dpar[pkey][_i] for _i in newmainindexes])
+        dpar_ring[pkey] = np.array([dpar[pkey][_i] for _i in newringindexes])
+
+    return dpar_main, dpar_ring
 
 def split_by_speed(dpar, speed, vkeys=None, verbose=False):
     keys = dpar.keys()
