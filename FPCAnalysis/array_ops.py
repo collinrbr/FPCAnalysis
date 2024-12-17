@@ -776,3 +776,17 @@ def deposit_interpolate(xposes,yvals,newxposes,renormalize=False):
     if(renormalize):newyvals = newyvals*deltaxposes/newdeltaxposes
         
     return newxposes, newyvals
+
+def find_indices(array, elements):
+    """
+    Finds the indices of specified elements in an array.
+    If an element is not found, it is excluded.
+    """
+    
+    # Create a mapping of array values to their indices
+    array_index_map = {value: idx for idx, value in enumerate(array)}
+    
+    # Find indices for the elements, excluding those not in the array
+    indices = [array_index_map[element] for element in elements if element in array_index_map]
+    
+    return indices
