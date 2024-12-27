@@ -24,7 +24,7 @@
 
 ## About <a name = "about"></a>
 
-- This is the documentation for [Collin Brown's](https://sites.google.com/view/collin-brown-cv-resume/home) FPC Analysis Environment, Library and Analysis scripts. Here, we present the code needed to perform FPC analysis on dHybridR, Tristan, and Gkeyll data. While examples are provided that require only trivial alteration to perform the core of most FPC and IIM related analysis, this repo's primary goal is to be a python analysis environment/ library that has functions that one can build upon to perform their own analysis.
+- This is the documentation for [Collin Brown's](https://www.collinrbrown.com) FPC Analysis Environment, Library and Analysis scripts. Here, we present the code needed to perform FPC analysis on dHybridR, Tristan, and Gkeyll data. While examples are provided that require only trivial alteration to perform the core of most FPC and IIM related analysis, this repo's primary goal is to be a python analysis environment/ library that has functions that one can build upon to perform their own analysis.
 - Major contributions/ Special Thanks: [Greg Howes](https://physics.uiowa.edu/people/gregory-g-howes), [Jimmy Juno](https://scholar.google.com/citations?user=5xPBjHkAAAAJ&hl=en), [Colby Haggerty](https://colbyhaggerty.com/), Andrew McCubbin, Alberto Felix, Rui Huang, [Emily Lichko](https://scholar.google.com/citations?user=JUyCLu4AAAAJ&hl=en)
 
 
