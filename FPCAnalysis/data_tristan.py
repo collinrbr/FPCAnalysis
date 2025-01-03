@@ -154,6 +154,28 @@ def load_fields(path_fields, num, field_vars = 'ex ey ez bx by bz', normalizeFie
 
     return field
 
+def all_dfield_loader(path_fields, nums, field_vars = 'ex ey ez bx by bz', normalizeFields=False, normalizeGrid=True):
+
+    """
+    TODO: finish documentation
+
+    Returns
+    -------
+    alld : dict
+        dictionary containing all field information and location (for each time slice)
+        Fields are Ordered (z,y,x)
+        Contains key with frame number
+    """
+
+    alld= {'frame':[],'dfields':[]}
+    for _num in nums:
+        num = int(_num)
+        d = load_fields(path_fields,_num, field_vars = field_vars, normalizeFields=normalizeFields,normalizeGrid=normalizeGrid)
+        alld['dfields'].append(d)
+        alld['frame'].append(_num)
+
+    return alld
+
 def load_current(path, num,normalizeFields=False):
 
     flow_vars = 'jx jy jz'
@@ -246,6 +268,28 @@ def load_particles(path, num, normalizeVelocity=False,loaddebugsubset=False):
             pts_ion[k] /= (comp*np.sqrt(massratio))
 
     return pts_elc, pts_ion
+
+def load_spectra(path,num,debug=False):
+    """
+    WARNING: num should be a string. TODO: rename to something else
+    """
+
+    spectra = {}
+
+    with h5py.File(path + 'spect.' + num, 'r') as spectfl:
+        if(debug): print(list(spectfl.keys()))
+
+        spectra['gamma'] = spectfl['gamma'][:]
+        spectra['gmax'] = spectfl['gmax'][:]
+        spectra['gmin'] = spectfl['gmin'][:]
+        spectra['spece'] = spectfl['spece'][:]
+        spectra['specerest'] = spectfl['specerest'][:]
+        spectra['specp'] = spectfl['specp'][:]
+        spectra['specprest'] = spectfl['specprest'][:]
+        spectra['xsl'] = spectfl['xsl'][:]
+
+
+    return spectra
 
 def format_par_like_dHybridR(dpar):
     """

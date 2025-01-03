@@ -3289,3 +3289,200 @@ def plot_phaseposvsvx(dparticles,poskey,velkey,xmin,xmax,dx,vmax,dv,cbarmax=None
     else:
         plt.savefig('histxxvx.png',format='png',dpi=300,facecolor='white', transparent=False,bbox_inches='tight')
     plt.close()
+
+
+def plot_timeintegrate_fpc_timestack(nframeslength,tarray,corexs,coreys,corezs,hists,vx,vy,vz,projection,fieldcomponent,flnm = '',isIon=True):
+    #projection = xx yy zz par perp1 perp2
+    #fieldcomponent = xx yy zz par perp1 perp2 hist
+
+    import matplotlib.colors as mcolors
+
+    from FPCAnalysis.analysis import integrate_project_in_time_by_frame
+
+    if(isIon):
+        speednormlbl = 'v_{t,i,0}'
+    else:
+        speednormlbl = 'v_{t,e,0}'
+    
+    if(projection == 'xx' or projection == 'par'):
+        plotvv = vx[0,0,:]
+        projectiveaxes = (0,1)
+        if(projection == 'xx'):
+            xplotllbl = r'$v_x/'+speednormlbl+'$'
+        else:
+            xplotllbl = r'$v_{||}/'+speednormlbl+'$'
+    elif(projection == 'yy' or projection == 'perp1'):
+        plotvv = vy[0,:,0]
+        projectiveaxes = (0,2)
+        if(projection == 'yy'):
+            xplotllbl = r'$v_y/'+speednormlbl+'$'
+        else:
+            xplotllbl = r'$v_{\perp,1}/'+speednormlbl+'$'
+    elif(projection == 'zz' or projection == 'perp2'):
+        plotvv = vz[:,0,0]
+        projectiveaxes = (1,2)
+        if(projection == 'zz'):
+            xplotllbl = r'$v_z/'+speednormlbl+'$'
+        else:
+            xplotllbl = r'$v_{\perp,2}/'+speednormlbl+'$'
+    
+    corexsintegrated,coreysintegrated,corezsintegrated,histsintegrated = integrate_project_in_time_by_frame(corexs,coreys,corezs,hists,nframeslength,projectiveaxes=projectiveaxes)
+
+    if(fieldcomponent == 'xx' or fieldcomponent == 'par'):
+        coreplotintegrated = corexsintegrated
+        if(fieldcomponent == 'xx'):
+            pttlprojlbl = 'x'
+        else:
+            pttlprojlbl = '||'
+    elif(fieldcomponent == 'yy' or fieldcomponent == 'perp1'):
+        coreplotintegrated = coreysintegrated
+        if(fieldcomponent == 'xx'):
+            pttlprojlbl = 'y'
+        else:
+            pttlprojlbl = '\perp,1'
+    elif(fieldcomponent == 'zz' or fieldcomponent == 'perp2'):
+        coreplotintegrated = corezsintegrated
+        if(fieldcomponent == 'xx'):
+            pttlprojlbl = 'z'
+        else:
+            pttlprojlbl = '\perp,2'
+    elif(fieldcomponent == 'hist'):
+        coreplotintegrated = histsintegrated
+    if(fieldcomponent != 'hist'):
+        pttlcenter = 'C_{E_{'+pttlprojlbl+'}}(\mathbf{v})'
+    else:
+        pttlcenter = 'f(\mathbf{v})'
+
+    if(projection == 'xx'):
+        pttl = '$\int '+pttlcenter+'\, \, dv_{y} dv_{z}$'
+    if(projection == 'yy'):
+        pttl = '$\int '+pttlcenter+'\, \, dv_{x} dv_{z}$'
+    if(projection == 'zz'):
+        pttl = '$\int '+pttlcenter+'\, \, dv_{x} dv_{y}$'
+    if(projection == 'par'):
+        pttl = '$\int '+pttlcenter+'\, \, dv_{\perp,1} dv_{\perp,2}$'
+    if(projection == 'perp1'):
+        pttl = '$\int '+pttlcenter+'\, \, dv_{\perp,2} dv_{||}$'
+    if(projection == 'perp2'):
+        pttl = '$\int '+pttlcenter+'\, \, dv_{\perp,1} dv_{||}$'
+
+
+    if(fieldcomponent != 'hist'):
+        cmap = 'seismic'
+        absmax = np.max(np.abs(coreplotintegrated))
+        vmin = -absmax
+        vmax = absmax
+        logscaledcbar = False
+    else:
+        cmap = 'plasma'
+        absmax = np.max(np.abs(coreplotintegrated))
+        vmin = 1E0
+        vmax = absmax    
+        logscaledcbar = True                                                                                                                                                         
+    
+    plt.figure(figsize=(4.5, 5))
+    if(logscaledcbar):
+        # Mask zero values to make background white
+        masked_data = np.ma.masked_where(coreplotintegrated == 0, coreplotintegrated)  
+        plt.pcolormesh(plotvv, tarray, masked_data, cmap=cmap, 
+                       norm=mcolors.LogNorm(vmin=vmin, vmax=vmax))
+    else:
+        plt.pcolormesh(plotvv, tarray, coreplotintegrated, cmap=cmap, vmin=vmin, vmax=vmax)
+        
+
+    plt.xlabel(xplotllbl)
+    plt.ylabel('$t \, \omega_{lh}$')
+    plt.title(pttl)
+    
+    # Create the colorbar
+    plt.colorbar(pad=.1)
+    plt.grid()
+
+    if(flnm != ''):
+        plt.savefig(flnm,format='png',dpi=300,bbox_inches='tight')
+    else:
+        plt.show()
+
+    plt.close()
+
+def plot_timeintegrate_fpc_timestack_gyro(nframeslength, tarray, corepargyros, coreperpgyros, histgyros, vpargyro, vperpgyro, projection, fieldcomponent,flnm = '',isIon=True):
+
+    #projection = xx yy zz par perp1 perp2
+    #fieldcomponent = xx yy zz par perp1 perp2 hist
+
+    import matplotlib.colors as mcolors
+
+    from FPCAnalysis.analysis import integrate_project_in_time_by_frame_gyro
+
+    if(isIon):
+        speednormlbl = 'v_{t,i,0}'
+    else:
+        speednormlbl = 'v_{t,e,0}'
+    
+    if(projection == 'par'):
+        plotvv = vpargyro[:,0]
+        projectiveaxes = (1)
+        xplotllbl = r'$v_{||}/'+speednormlbl+'$'
+    elif(projection == 'perp'):
+        plotvv = vperpgyro[0,:]
+        projectiveaxes = (0)
+        xplotllbl = r'$v_{\perp}/'+speednormlbl+'$'
+    
+    coreparsintegrated,coreperpsintegrated,histsgyrointegrated = integrate_project_in_time_by_frame_gyro(corepargyros, coreperpgyros, histgyros, nframeslength,projectiveaxis=projectiveaxes)
+
+    if(fieldcomponent == 'par'):
+        coreplotintegrated = coreparsintegrated
+        pttlprojlbl = '||'
+    elif(fieldcomponent == 'perp'):
+        coreplotintegrated = coreperpsintegrated
+        pttlprojlbl = '\perp'
+    elif(fieldcomponent == 'hist'):
+        coreplotintegrated = histsgyrointegrated
+        
+    if(fieldcomponent != 'hist'):
+        pttlcenter = 'C^{gyro}_{E_{'+pttlprojlbl+'}}(v_{||},v_{\perp})'
+    else:
+        pttlcenter = 'f^{gyro}(v_{||},v_{\perp})'
+
+    if(projection == 'par'):
+        pttl = '$\int '+pttlcenter+'\, \, dv_{\perp}$'
+    if(projection == 'perp'):
+        pttl = '$\int '+pttlcenter+'\, \, dv_{||}$'
+
+    if(fieldcomponent != 'hist'):
+        cmap = 'seismic'
+        absmax = np.max(np.abs(coreplotintegrated))
+        vmin = -absmax
+        vmax = absmax
+        logscaledcbar = False
+    else:
+        cmap = 'plasma'
+        absmax = np.max(np.abs(coreplotintegrated))
+        vmin = 1E0
+        vmax = absmax 
+        logscaledcbar = True
+
+    plt.figure(figsize=(4.5, 5))
+    if(logscaledcbar):
+        # Mask zero values to make background white
+        masked_data = np.ma.masked_where(coreplotintegrated == 0, coreplotintegrated)  
+        plt.pcolormesh(plotvv, tarray, masked_data, cmap=cmap, 
+                       norm=mcolors.LogNorm(vmin=vmin, vmax=vmax))
+    else:
+        plt.pcolormesh(plotvv, tarray, coreplotintegrated, cmap=cmap, vmin=vmin, vmax=vmax)
+        
+
+    plt.xlabel(xplotllbl)
+    plt.ylabel('$t \, \omega_{lh}$')
+    plt.title(pttl)
+    
+    # Create the colorbar
+    plt.colorbar(pad=.1)
+    plt.grid()
+
+    if(flnm != ''):
+        plt.savefig(flnm,format='png',dpi=300,bbox_inches='tight')
+    else:
+        plt.show()
+
+    plt.close()

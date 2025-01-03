@@ -465,17 +465,27 @@ def bin_integrate_gyro(x_grid, y_grid, C_vals, rmax, nrbins):
 
     return r_bins, C_binned_out
 
-def compute_gyro_fpc_from_cart_fpc(vx, vy, vz, corez, corey, corex, vmax, nrbins):
+def compute_gyro_fpc_from_cart_fpc(vx, vy, vz, corez, corey, corex, vmax, nrbins, hist=None):
     """
+    However! the index structure of output is arr[par,perp]
+
     Converts Cartesian FPC components into gyro-binned components.
+
+    WARNING: assumes z is the parallel axis!
     """
     coreperp = corey + corez
+
     shape = (len(corex), nrbins)
 
     vpargyro = np.zeros(shape)
     vperpgyro = np.zeros(shape)
     corepargyro = np.zeros(shape)
     coreperpgyro = np.zeros(shape)
+    if hist.any():  # Check if any element in hist is not None 
+        histgyro = np.zeros(shape)
+        comphist = True
+    else:
+        comphist = False
 
     for _vparidx in range(len(corex)):
         vperpgyro[_vparidx], corepargyro[_vparidx] = bin_integrate_gyro(
@@ -485,11 +495,20 @@ def compute_gyro_fpc_from_cart_fpc(vx, vy, vz, corez, corey, corex, vmax, nrbins
             vx[_vparidx], vy[_vparidx], coreperp[:, :, _vparidx], vmax, nrbins
         )
         vpargyro[_vparidx, :] = vz[_vparidx, 0, 0]
+        if(comphist):
+            _, histgyro[_vparidx] = bin_integrate_gyro(
+                vx[_vparidx], vy[_vparidx], hist[:, :, _vparidx], vmax, nrbins
+            )
 
-    return vpargyro, vperpgyro, corepargyro, coreperpgyro
+    if(comphist):
+        return vpargyro, vperpgyro, corepargyro, coreperpgyro, histgyro
+    else:
+        return vpargyro, vperpgyro, corepargyro, coreperpgyro
 
 def compute_gyro_fpc_from_cart_fpc_single(vx, vy, vz, arr, vmax, nrbins):
     """
+    Note: x<-> perp1, y<->perp2, z<->par
+
     Converts a single Cartesian component into gyro-binned components.
     """
     shape = (len(arr), nrbins)
@@ -507,6 +526,8 @@ def compute_gyro_fpc_from_cart_fpc_single(vx, vy, vz, arr, vmax, nrbins):
 
 def compute_compgyro_fpc_from_cart_fpc(vx, vy, vz, corez, corey, corex, vmax, nrbins):
     """
+    Note: x<-> perp1, y<->perp2, z<->par
+
     Converts Cartesian FPC components into separate gyro-binned components.
     """
     coreperp1 = corey
@@ -3761,3 +3782,300 @@ def split_by_speed(dpar, speed, vkeys=None, verbose=False):
         dpar_ring[pkey] = dpar[pkey][ring_mask]
 
     return dpar_main, dpar_ring
+
+def integrate_in_time_by_frame(corexs,coreys,corezs,nframeslength):
+     #Here, we use a sliding window where at the edges, we just use what we have
+
+    corexsintegrated = []
+    coreysintegrated = []
+    corezsintegrated = []
+    
+    for _i in range(0,len(corexs)):
+        start = _i
+        end = _i + nframeslength
+
+        if(end >= len(corexs)):
+            end = len(corexs)-1
+
+        if(nframeslength > 1 and start != end):
+            corexsintegratedvals = np.mean(corexs[start:end],axis=0)
+            coreysintegratedvals = np.mean(coreys[start:end],axis=0)
+            corezsintegratedvals = np.mean(corezs[start:end],axis=0)
+        else: #redundant- TODO: optimize
+            corexsintegratedvals = corexs[_i]
+            coreysintegratedvals = coreys[_i]
+            corezsintegratedvals = corezs[_i]
+
+        corexsintegrated.append(corexsintegratedvals)
+        coreysintegrated.append(coreysintegratedvals)
+        corezsintegrated.append(corezsintegratedvals)
+
+    corexsintegrated = np.asarray(corexsintegrated)
+    coreysintegrated = np.asarray(coreysintegrated)
+    corezsintegrated = np.asarray(corezsintegrated)
+    
+    return corexsintegrated,coreysintegrated,corezsintegrated
+
+def integrate_project_in_time_by_frame(corexs,coreys,corezs,hist,nframeslength,projectiveaxes=(1,2)):
+    #sliding window where at the edges, we just use what we have
+
+    corexsintegrated = []
+    coreysintegrated = []
+    corezsintegrated = []
+    histintegrated = []
+    
+    for _i in range(0,len(corexs)):
+        start = _i
+        end = _i + nframeslength
+
+        if(end >= len(corexs)):
+            end = len(corexs)-1
+
+        if(nframeslength > 1 and start != end):
+            corexsintegratedvals = np.sum(np.mean(corexs[start:end],axis=0),axis=projectiveaxes)
+            coreysintegratedvals = np.sum(np.mean(coreys[start:end],axis=0),axis=projectiveaxes)
+            corezsintegratedvals = np.sum(np.mean(corezs[start:end],axis=0),axis=projectiveaxes)
+            histintegratedvals = np.sum(np.mean(hist[start:end],axis=0),axis=projectiveaxes)
+        else:
+            corexsintegratedvals = np.sum(corexs[_i],axis=projectiveaxes)
+            coreysintegratedvals = np.sum(coreys[_i],axis=projectiveaxes)
+            corezsintegratedvals = np.sum(corezs[_i],axis=projectiveaxes)
+            histintegratedvals = np.sum(hist[_i],axis=projectiveaxes)
+
+        corexsintegrated.append(corexsintegratedvals)
+        coreysintegrated.append(coreysintegratedvals)
+        corezsintegrated.append(corezsintegratedvals)
+        histintegrated.append(histintegratedvals)
+
+    corexsintegrated = np.asarray(corexsintegrated)
+    coreysintegrated = np.asarray(coreysintegrated)
+    corezsintegrated = np.asarray(corezsintegrated)
+    histintegrated = np.asarray(histintegrated)
+    
+    return corexsintegrated,coreysintegrated,corezsintegrated,histintegrated
+
+def integrate_project_in_time_by_frame_gyro(corepars,coreperps,histsgyro,nframeslength,projectiveaxis=(1)):
+    #sliding window where at the edges, we just use what we have
+
+    coreparsintegrated = []
+    coreperpsintegrated = []
+    histsgyrointegrated = []
+    
+    for _i in range(0,len(corepars)):
+        start = _i
+        end = _i + nframeslength
+
+        if(end >= len(corepars)):
+            end = len(corepars)-1
+
+        if(nframeslength > 1 and start != end):
+            coreparsintegratedvals = np.sum(np.mean(corepars[start:end],axis=0),axis=projectiveaxis)
+            coreperpsintegratedvals = np.sum(np.mean(coreperps[start:end],axis=0),axis=projectiveaxis)
+            histsgyrointegratedvals = np.sum(np.mean(histsgyro[start:end],axis=0),axis=projectiveaxis)
+        else:
+            coreparsintegratedvals = np.sum(corepars[_i],axis=projectiveaxis)
+            coreperpsintegratedvals = np.sum(coreperps[_i],axis=projectiveaxis)
+            histsgyrointegratedvals = np.sum(histsgyro[_i],axis=projectiveaxis)
+
+        coreparsintegrated.append(coreparsintegratedvals)
+        coreperpsintegrated.append(coreperpsintegratedvals)
+        histsgyrointegrated.append(histsgyrointegratedvals)
+
+    coreparsintegrated = np.asarray(coreparsintegrated)
+    coreperpsintegrated = np.asarray(coreperpsintegrated)
+    histsgyrointegrated = np.asarray(histsgyrointegrated)
+    
+    return coreparsintegrated,coreperpsintegrated,histsgyrointegrated
+
+
+def compute_fpc_timestack(path,vmax,dv,specname,picklename,x1,x2,y1,y2,z1,z2, splitspeed = 7.75, useFAC=False,frames=[1,350], forcecompute = False, verbose=True, isTristanData = True, loadpickledfieldsflnm = None, useloadedfieldsmatchcondlist = None):
+
+    #use loadpickledfieldsflnm is a hacky way to load some pickled fields i made. Not intended for end user
+
+    import pickle
+
+    from FPCAnalysis.data_tristan import load_particles
+    from FPCAnalysis.data_tristan import load_params
+    from FPCAnalysis.data_tristan import load_fields
+
+    from FPCAnalysis.fpc import compute_hist_and_cor
+
+
+    if(useFAC):
+        comps=['epar','eperp1','eperp2']
+    else:
+        comps=['ex','ey','ez']
+
+    import os
+    foundpick = os.path.exists(picklename)
+
+    if(foundpick and verbose and not(forcecompute)):
+        print("Found file! Loading ",picklename)
+    elif(verbose):
+        print("Computing!")
+
+    if(not(foundpick) or forcecompute):
+        corexs = []
+        coreys = []
+        corezs = []
+        hists = []
+        
+        numbers = [f"{i:04}" for i in range(frames[0], frames[1])]
+        for num in numbers:
+            if(verbose):print('Computing '+num)
+
+            if(isTristanData):
+                try:
+                    params = load_params(path,num)
+                    if(not(loadpickledfieldsflnm is None) and not(loadpickledfieldsflnm == '')):
+                        dfields = _load_cond_filter_pickle_fields(num, loadpickledfieldsflnm, useloadedfieldsmatchcondlist)
+                    else:
+                        dfields = load_fields(path,num,normalizeFields=True)
+                
+                    #load particles, with velocities normalzied to upstream thermal species velocity
+                    dpar_elec, dpar_ion = load_particles(path,num,normalizeVelocity=True)
+                except Exception as e:
+                    print(f"Got the error: {e}")
+                    print("Note, this block currently only works for Tristan MP 2 data, but can be modified to work with any code by calling the correct dfield loader and dpar loader in the else block below...")
+            else:
+                #TODO: load particle and fields data for your desired code.
+                pass
+
+            if(specname == 'ion'):
+                del dpar_elec
+                dpar = dpar_ion
+            elif(specname == 'elec'):
+                del dpar_ion
+                dpar = dpar_elec
+            elif(specname == 'ring'):
+                del dpar_elec
+                dpar_main, dpar_ring = split_by_speed(dpar_ion, splitspeed)
+                del dpar_main
+                dpar = dpar_ring
+            elif(specname == 'main'):
+                del dpar_elec
+                dpar_main, dpar_ring = split_by_speed(dpar_ion, splitspeed)
+                del dpar_ring
+                dpar = dpar_main
+
+            # compute the fpc (CEx) and hist for ions in simulation frame (FAC aligned, ring only)
+            vx, vy, vz, totalPtcl, hist, corex = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
+                                        dpar, dfields, comps[0])
+            vx, vy, vz, totalPtcl, hist, corey = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
+                                        dpar, dfields, comps[1])
+            vx, vy, vz, totalPtcl, hist, corez = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
+                                        dpar, dfields, comps[2])
+        
+            corexs.append(corex)
+            coreys.append(corey)
+            corezs.append(corez)
+            hists.append(hist)
+    
+        cordata = (corexs,coreys,corezs,hists,vx,vy,vz)
+        with open(picklename, 'wb') as handle:
+            pickle.dump(cordata, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    
+    
+    with open(picklename, 'rb') as handle:
+        cordata = pickle.load(handle)
+    corexs,coreys,corezs,hists,vx,vy,vz = cordata
+
+    return corexs,coreys,corezs,hists,vx,vy,vz
+
+def _load_cond_filter_pickle_fields(num, loadpickledfieldsflnm, useloadedfieldsmatchcondlist):
+    import glob
+    import re
+
+    ### ------------------------------- ###
+    ### Start find correct file to load ###
+    ### ------------------------------- ###
+    substring = loadpickledfieldsflnm
+    pattern = f"{substring}*.pickle"  # Match any file starting with the substring
+
+    for filename in glob.glob(pattern):
+        if(len(filename.split('_')) >= 2): #find filename 
+            numeric_part_lower = float(re.findall(r'\d+', filename.split('_')[-2])[-1])
+            numeric_part_upper = float(re.findall(r'\d+', filename.split('_')[-1])[-1])
+            if(numeric_part_lower <= float(num)-1 <= numeric_part_upper): #Don't forget the plus 1 as frame indexing starts at 1!
+                break
+        else: #return filename that matches if there is no underscore, indicating range of frames
+            break
+
+    #double check that we didnt just get the last one by default.
+    foundfile = False
+    if(len(filename.split('_')) >= 2): #find filename 
+        numeric_part_lower = float(re.findall(r'\d+', filename.split('_')[-2])[-1])
+        numeric_part_upper = float(re.findall(r'\d+', filename.split('_')[-1])[-1])
+        if(numeric_part_lower <= float(num)-1 <= numeric_part_upper): #Don't forget the plus 1 as frame indexing starts at 1!
+            foundfile = True
+    else:
+        foundfile = True
+
+    if(not(foundfile)):
+        return 
+
+    ### ----------------------------------- ###
+    ### END Start find correct file to load ###
+    ### ----------------------------------- ###
+
+    #load dfields pickle
+
+    import pickle
+    
+    with open(filename, 'rb') as handle:
+        (_alldfieldsmatchescondition,_alldfieldsinversecondition) = pickle.load(handle)
+
+
+    _j = (int(num)-1)-int(numeric_part_lower) #Don't forget the minus 1 as frame indexing starts at 1!
+
+    #hacky fix for pickle that I only saved match condition, and need to recompute inverse condition. (I tested and reconstruction works likes this!)
+    if(False):
+        num = f"{(_j+10*_tempidx)+1:04}" #Don't forget the plus 1 as frame indexing starts at 1!
+
+        params = FPCAnalysis.dtr.load_params(path,num)
+        dfields = FPCAnalysis.dtr.load_fields(path,num,normalizeFields=True)
+
+        import copy
+        _tempdfields = copy.deepcopy(dfields)
+
+        for ky in _tempdfields.keys():
+            if(ky in ['ex','ey','ez','bx','by','bz']):
+                _tempdfields[ky] = dfields[ky]-_alldfieldsmatchescondition[_j][ky]
+
+        dfieldsmatchescondition = _alldfieldsmatchescondition[_j]
+        dfieldsinversecondition = _tempdfields
+        
+    else:
+        dfieldsmatchescondition = _alldfieldsmatchescondition[_j]
+        dfieldsinversecondition = _alldfieldsinversecondition[_j]
+
+    if(useloadedfieldsmatchcondlist):
+        return dfieldsmatchescondition
+    else:
+        return dfieldsinversecondition
+
+def compute_gyro_LHWW(vx,vy,vz,corexs,coreys,corezs,hists,nrbinfrac=4):    
+    #WARNING, due to the weird ordering of my FAC coordinate system data inputs, this block only works if Bext = B0 xhat!!!! 
+    #I called a simulation that did this LHWW as it scatters Lower hybrid waves to whistler waves, thus the name.
+    
+    vrmax = np.max(vx)
+    nrbins = int(len(vx[:,0,0])/nrbinfrac)
+    
+    corepargyros = []
+    coreperpgyros = []
+    histgyros = []
+    for _i in range(0,len(corexs)):
+        corez = corezs[_i]
+        corey = coreys[_i]
+        corex = corexs[_i]
+        hist = hists[_i]
+    
+        #warning, this assumes a square velocity grid! 
+        #warning, the data axis are ordered weird. This block works (and has been tested) for the ring instability coordinate system (parallel axis is down the x axis)
+        vpargyro,vperpgyro,corepargyro,coreperpgyro,histgyro  = compute_gyro_fpc_from_cart_fpc(vx,vy,vz,corez,corey,corex,vrmax,nrbins,hist=hist) 
+    
+        corepargyros.append(corepargyro)
+        coreperpgyros.append(coreperpgyro)
+        histgyros.append(histgyro)
+
+    return corepargyros, coreperpgyros, histgyros, vpargyro, vperpgyro
