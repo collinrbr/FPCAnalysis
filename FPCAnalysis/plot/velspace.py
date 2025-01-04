@@ -3336,13 +3336,13 @@ def plot_timeintegrate_fpc_timestack(nframeslength,tarray,corexs,coreys,corezs,h
             pttlprojlbl = '||'
     elif(fieldcomponent == 'yy' or fieldcomponent == 'perp1'):
         coreplotintegrated = coreysintegrated
-        if(fieldcomponent == 'xx'):
+        if(fieldcomponent == 'yy'):
             pttlprojlbl = 'y'
         else:
             pttlprojlbl = '\perp,1'
     elif(fieldcomponent == 'zz' or fieldcomponent == 'perp2'):
         coreplotintegrated = corezsintegrated
-        if(fieldcomponent == 'xx'):
+        if(fieldcomponent == 'zz'):
             pttlprojlbl = 'z'
         else:
             pttlprojlbl = '\perp,2'

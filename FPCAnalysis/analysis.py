@@ -2607,7 +2607,6 @@ def compute_local_temp(dpar,dfields,params,x1,x2,y1,y2,z1,z2,vmax,dv,masspar):
         'Vframe_relative_to_sim': dpar['Vframe_relative_to_sim']
     }
 
-    useFAC=False
     hist,vx,vy,vz = compute_hist(dparsubset, dfields, vmax, dv, useFAC)
     
     pardens = np.sum(hist)
