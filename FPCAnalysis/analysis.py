@@ -195,9 +195,9 @@ def compute_beta0_tristanmp1(params,inputs):
         total plasma beta in far upstream region
     """
 
-    uinj = inputs['gamma0'] #injection velocity in units of v/c
+    gam0 = inputs['gamma0'] 
 
-    gam0 = 1./np.sqrt(1.-(uinj)**2)
+    gam0 = 1./np.sqrt(1.-(gam0)**2)
     beta0 = 4*gam0*params['delgam']/(params['sigma']*(gam0-1.)*(1.+params['me']/params['mi']))
 
     return beta0
