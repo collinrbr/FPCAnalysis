@@ -195,6 +195,8 @@ def compute_beta0_tristanmp1(params,inputs):
         total plasma beta in far upstream region
     """
 
+    print("warning: this is meant for use with Tran's shock simulation. Gamma0 seems to have different meanings in different tristan configurations...")
+
     gam0 = inputs['gamma0'] 
 
     gam0 = 1./np.sqrt(1.-(gam0)**2)
