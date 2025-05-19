@@ -20,7 +20,7 @@
 - [Premade Plot Functions](docs/plots.md)
 - [Regression and Unit Testing](docs/regression_unit_test.md)
 - [Development](docs/devnotes.md)
-- [Useful links](#scilinks)
+- [Useful Links](#scilinks)
 
 ## About <a name = "about"></a>
 
@@ -45,7 +45,7 @@ git clone https://github.com/collinrbr/FPCAnalysis.git
 ```
 This will create a folder 'FPCAnalysisenv' that contains the python environment for doing FPCAnalysis with these scripts.
 
-Note, if one wishes to use additional libraries, add them to the requirements.txt file, remove the FPCAnalysis environment folder, and rerun setup.py or install them using pip/conda while the environment is activated. This can also be used to update libraries although compatability is not guaranteed.
+Note, if one wishes to use additional libraries, add them to the requirements.txt file, remove the FPCAnalysis environment folder, and rerun setup.py or install them using pip/conda while the environment is activated. This can also be used to update libraries although compatibility is not guaranteed.
 
 
 3. Use the environment
@@ -60,7 +60,7 @@ conda activate /full/path/to/FPCAnalysisenv
 ```
 ** ONE MUST REACTIVATE THE ENVIRONMENT EVERY TIME A NEW TERMINAL IS OPENED TO USE THIS ENVIRONMENT **
 
-One can also add the following to the top of anyscripts that is written for this environment, in which case, it is no longer necessary to activate the environment when running any script with the following added to it:
+One can also add the following to the top of any script that is written for this environment, in which case, it is no longer necessary to activate the environment when running any script with the following added to it:
 ```
 #!FPCAnalysis/bin/python
 ```
@@ -90,7 +90,7 @@ Sample dHybridR data can be found at [https://doi.org/10.5281/zenodo.7901521](ht
 
 One can start using this analysis environment with the example data above or by running their own simulation (see [Running Simulations](docs/inputs.md)).
 
-Analysis begins by loading the data. In the first chapter found [here](docs/load.md), we discuss how data is loaded into a common data struture and how to use this common structure...
+Analysis begins by loading the data. In the first chapter found [here](docs/load.md), we discuss how data is loaded into a common data struture and how to use this common structure.
 
 There are many key features of this analysis environment:
 
