@@ -2,12 +2,12 @@
 
 *As always, please be sure to have installed and activated the environment to use FPCAnalysis.*
 
-Scripts are meant to be ran in the the main directory of FPCAnalysis. E.g.
+Scripts are meant to be ran in the main directory of FPCAnalysis. E.g.
 ```
 python scripts/*.py input1 input2 ....
 ```
 
-If you don't know the input of a particular scripts, just call
+If you don't know the input of a particular script, just call
 ```
 python scripts/*.py
 ```
@@ -15,11 +15,11 @@ And it will tell you what the inputs are.
 
 Scripts will typically generate larger data files and/or process them. Below we describe the scripts.
 
-Scripts were designed to work with macOS/linux and there may by some calls by the os.system(*cmd*) that may still need to be updated for other operating systems.
+Scripts were designed to work with macOS/linux and there may be some calls by the os.system(*cmd*) that may still need to be updated for other operating systems.
 
 ## Running FPC sweeps
 
-There are several scripts for generate sweeps of FPC data of dHybridR, Gkeyll, and Tristan shock simulations. They have names of the form generateFPC*.py.
+There are several scripts for generating sweeps of FPC data of dHybridR, Gkeyll, and Tristan shock simulations. They have names of the form generateFPC*.py.
 
 There are both serial and parallel ways of running this code.
 
