@@ -19,7 +19,7 @@ def plot_velsig(vx,vy,vz,dv,vmax,CEiproj,fieldkey,planename,ttl=r'$C_{E_i}(v_i,v
     CEiplot = CEiproj
     yplot, xplot = mesh_3d_to_2d(vx,vy,vz,planename)
 
-    plt.style.use('postgkyl.mplstyle')
+    plt.style.use('cb.mplstyle')
 
     if(maxCe == None):
         maxCe = max(np.max(CEiplot),abs(np.max(CEiplot)))
@@ -93,7 +93,7 @@ def plot_velsig_old(vx,vy,vmax,Ce,fieldkey,flnm = '',ttl=''):
     ttl : str, optional
         title of plot
     """
-    plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
+    plt.style.use("cb.mplstyle") #sets style parameters for matplotlib plots
 
     maxCe = max(np.max(Ce),abs(np.max(Ce)))
 
@@ -203,7 +203,7 @@ def plot_velsig_wEcrossB(vx,vy,vmax,Ce,ExBvx,ExBvy,fieldkey,flnm = '',ttl=''):
         title of plot
     """
 
-    plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
+    plt.style.use("cb.mplstyle") #sets style parameters for matplotlib plots
 
     maxCe = max(np.max(Ce),abs(np.min(Ce)))
 
@@ -346,7 +346,7 @@ def plot_dist(vx, vy, vmax, H,flnm = '',ttl=''):
     H : 2d array
         distribution data
     """
-    plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
+    plt.style.use("cb.mplstyle") #sets style parameters for matplotlib plots
 
     plt.figure(figsize=(6.5,6))
     plt.figure(figsize=(6.5,6))
@@ -397,7 +397,7 @@ def dist_log_plot_3dir(vx, vy, vz, vmax, H_in, flnm = '',ttl='',xlbl=r"$v_x/v_{t
         if true, will plot 'negative and positive logarithmic' with linear scale near zero
     """
 
-    plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
+    plt.style.use("cb.mplstyle") #sets style parameters for matplotlib plots
     from FPCAnalysis.array_ops import mesh_3d_to_2d
     import matplotlib
     from matplotlib.colors import LogNorm
@@ -446,7 +446,7 @@ def dist_log_plot_3dir_2v(vx, vy, vz, vmax, H_xy, H_xz, H_yz, flnm = '',ttl='',x
         if true, will plot 'negative and positive logarithmic' with linear scale near zero
     """
 
-    plt.style.use("postgkyl.mplstyle") #sets style parameters for matplotlib plots
+    plt.style.use("cb.mplstyle") #sets style parameters for matplotlib plots
     from FPCAnalysis.array_ops import mesh_3d_to_2d
     import matplotlib
     from matplotlib.colors import LogNorm
@@ -518,10 +518,10 @@ def dist_log_plot_3dir_2v(vx, vy, vz, vmax, H_xy, H_xz, H_yz, flnm = '',ttl='',x
 
     if(plotSymLog):
         _vmax = np.max([-1*np.min(H_yz),np.max(H_yz)])
-        pcm2 = axs[2].pcolormesh(vz_yz, vy_yz, H_yz, cmap='PiYG', shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-1*_vmax, vmax=_vmax))
+        pcm2 = axs[2].pcolormesh(vz_yz, vy_yz, H_yz.T, cmap='PiYG', shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-1*_vmax, vmax=_vmax))
     else:
         axs[2].set_facecolor(bkgcolor)
-        pcm2 = axs[2].pcolormesh(vz_yz,vy_yz,H_yz, cmap=cmap, shading="gouraud",norm=LogNorm(vmin=minval, vmax=maxval))
+        pcm2 = axs[2].pcolormesh(vz_yz,vy_yz,H_yz.T, cmap=cmap, shading="gouraud",norm=LogNorm(vmin=minval, vmax=maxval))
     axs[2].set_xlim(-vmax, vmax)
     axs[2].set_ylim(-vmax, vmax)
     axs[2].set_xticks(np.linspace(-vmax, vmax, numtks))
@@ -551,7 +551,8 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
                                 CEy_xy,CEy_xz, CEy_yz,
                                 CEz_xy,CEz_xz, CEz_yz,
                                 flnm = '', ttl = '', computeJdotE = True, params = None, metadata = None, xpos = None, plotLog = False, plotLogHist = True,
-                                plotFAC = False, plotFluc = False, plotAvg = False, isIon = True, listpos=False,xposval=None,normtoN = False,Nval = None, isLowPass=False,isHighPass=False,plotDiagJEOnly=True):
+                                plotFAC = False, plotFluc = False, plotAvg = False, isIon = True, listpos=False,xposval=None,normtoN = False,Nval = None, isLowPass=False,isHighPass=False,plotDiagJEOnly=True,
+				vxmin=None, vxmax=None, vymin=None, vymax=None, vzmin=None, vzmax=None):
     """
     Makes super figure of distribution and velocity sigantures from all different projections
     i.e. different viewing angles
@@ -601,7 +602,7 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
 
     plt.style.use("cb.mplstyle") #sets style parameters for matplotlib plots
 
-    fig, axs = plt.subplots(4,3,figsize=(4*5,3*5),sharex=True)
+    fig, axs = plt.subplots(4,3,figsize=(4*5,3*5),sharex=False)
 
     plt.rcParams['axes.titlepad'] = 8  # pad is in points...
 
@@ -620,9 +621,9 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     dv = vy_yz[1][1]-vy_yz[0][0] #assumes square velocity grid
 
     if(isIon):
-        vnormstr = 'v_{ti}'
+        vnormstr = 'v_{ti,0}'
     else:
-        vnormstr = 'v_{te}'
+        vnormstr = 'v_{te,0}'
 
     fig.suptitle(ttl)
 
@@ -660,17 +661,26 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         axs[0,0].set_ylabel(r"$v_{\perp,1}/"+vnormstr+"$")
     else:
         axs[0,0].set_ylabel(r"$v_y/"+vnormstr+"$")
-    axs[0,0].set_aspect('equal', 'box')
     axs[0,0].grid()
     clrbar00 = plt.colorbar(im00, ax=axs[0,0])#,format='%.1e')
     if(not(plotLogHist)):
         clrbar00.formatter.set_powerlimits((0, 0))
-    axs[0,0].text(-vmax*2.2,0, r"$f$", ha='center', rotation=90, wrap=False)
+    if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+        axs[0,0].text(-vmax*2.2,0, r"$f$", ha='center', rotation=90, wrap=False)
+    else:
+    	axs[0,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$f$", ha='center', rotation=90, wrap=False)
+    
     if(params != None):
-        axs[0,0].text(-vmax*2.6,0, '$M_A = $ ' + str(abs(params['MachAlfven'])), ha='center', rotation=90, wrap=False)
-
+        if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None): 
+            axs[0,0].text(-vmax*2.6,0, '$M_A = $ ' + str(abs(params['MachAlfven'])), ha='center', rotation=90, wrap=False)
+        else:
+            axs[0,0].text(-((np.abs(vxmax-vxmin)/2.))*2.6,0, '$M_A = $ ' + str(abs(params['MachAlfven'])), ha='center', rotation=90, wrap=False)
+	
     if(listpos):
-        axs[0,0].text(-vmax*2.6,0, '$x / d_i = $ ' + str("{:.4f}".format(xposval)), ha='center', rotation=90, wrap=False)
+        if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+            axs[0,0].text(-vmax*2.6,0, '$x / d_i = $ ' + str("{:.4f}".format(xposval)), ha='center', rotation=90, wrap=False)
+        else:
+            axs[0,0].text(-((np.abs(vxmax-vxmin)/2.))*2.6,0, '$x / d_i = $ ' + str("{:.4f}".format(xposval)), ha='center', rotation=90, wrap=False)
 
 
     #H_xz
@@ -683,7 +693,6 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         axs[0,1].set_ylabel(r"$v_{\perp,2}/"+vnormstr+"$")
     else:
         axs[0,1].set_ylabel(r"$v_z/"+vnormstr+"$")
-    axs[0,1].set_aspect('equal', 'box')
     axs[0,1].grid()
     clrbar01 = plt.colorbar(im01, ax=axs[0,1])#,format='%.1e')
     if(not(plotLogHist)):
@@ -699,7 +708,6 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         axs[0,2].set_ylabel(r"$v_{\perp,1}/"+vnormstr+"$")
     else:
         axs[0,2].set_ylabel(r"$v_y/"+vnormstr+"$")
-    axs[0,2].set_aspect('equal', 'box')
     axs[0,2].grid()
     clrbar02 = plt.colorbar(im02, ax=axs[0,2])#,format='%.1e')
     if(not(plotLogHist)):
@@ -716,32 +724,65 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         axs[1,0].set_ylabel(r"$v_{\perp,1}/"+vnormstr+"$")
     else:
         axs[1,0].set_ylabel(r"$v_y/"+vnormstr+"$")
-    axs[1,0].set_aspect('equal', 'box')
     axs[1,0].grid()
     if(plotFAC):
         if(plotAvg):
-            axs[1,0].text(-vmax*2.2,0, r"$\overline{C_{E_{||}}}$", ha='center', rotation=90, wrap=False)
+            if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                axs[1,0].text(-vmax*2.2,0, r"$\overline{C_{E_{||}}}$", ha='center', rotation=90, wrap=False)
+            else:
+                axs[1,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\overline{C_{E_{||}}}$", ha='center', rotation=90, wrap=False)
         elif(plotFluc):
             if(isLowPass):
-                axs[1,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{||}}}^{k_{||} d_i < 15}$", ha='center', rotation=90, wrap=False)
+                if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                    axs[1,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{||}}}^{k_{||} d_i < 15}$", ha='center', rotation=90, wrap=False)
+                else:
+                    axs[1,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\widetilde{C_{E_{||}}}^{k_{||} d_i < 15}$", ha='center', rotation=90, wrap=False)
+            
             elif(isHighPass):
-                axs[1,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{||}}}^{k_{||} d_i > 15}$", ha='center', rotation=90, wrap=False)
+                if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                    axs[1,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{||}}}^{k_{||} d_i > 15}$", ha='center', rotation=90, wrap=False)
+                else:
+                    axs[1,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\widetilde{C_{E_{||}}}^{k_{||} d_i > 15}$", ha='center', rotation=90, wrap=False)
+            
             else:
-                axs[1,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{||}}}$", ha='center', rotation=90, wrap=False)
+                if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                    axs[1,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{||}}}$", ha='center', rotation=90, wrap=False)
+                else:
+                    axs[1,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\widetilde{C_{E_{||}}}$", ha='center', rotation=90, wrap=False)
+
         else:
-            axs[1,0].text(-vmax*2.2,0, r"$C_{E_{||}}$", ha='center', rotation=90, wrap=False)
+            if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                axs[1,0].text(-vmax*2.2,0, r"$C_{E_{||}}$", ha='center', rotation=90, wrap=False)
+            else:
+                axs[1,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$C_{E_{||}}$", ha='center', rotation=90, wrap=False)
     else:
         if(plotAvg):
-            axs[1,0].text(-vmax*2.2,0, r"$\overline{C_{E_{x}}}$", ha='center', rotation=90, wrap=False)
+            if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                axs[1,0].text(-vmax*2.2,0, r"$\overline{C_{E_{x}}}$", ha='center', rotation=90, wrap=False)
+            else:
+                axs[1,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\overline{C_{E_{x}}}$", ha='center', rotation=90, wrap=False)
         elif(plotFluc):
             if(isLowPass):
-                axs[1,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{x}}}^{k_{||} d_i < 15}$", ha='center', rotation=90, wrap=False)
+                if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                    axs[1,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{x}}}^{k_{||} d_i < 15}$", ha='center', rotation=90, wrap=False)
+                else:
+                    axs[1,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\widetilde{C_{E_{x}}}^{k_{||} d_i < 15}$", ha='center', rotation=90, wrap=False)
             elif(isHighPass):
-                axs[1,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{x}}}^{k_{||} d_i > 15}$", ha='center', rotation=90, wrap=False)
+                if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                    axs[1,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{x}}}^{k_{||} d_i > 15}$", ha='center', rotation=90, wrap=False)
+                else:
+                    axs[1,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\widetilde{C_{E_{x}}}^{k_{||} d_i > 15}$", ha='center', rotation=90, wrap=False)
             else:
-                axs[1,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{x}}}$", ha='center', rotation=90, wrap=False)
+                if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                    axs[1,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{x}}}$", ha='center', rotation=90, wrap=False)
+                else:
+                    axs[1,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\widetilde{C_{E_{x}}}$", ha='center', rotation=90, wrap=False)
         else:
-            axs[1,0].text(-vmax*2.2,0, r"$C_{E_{x}}$", ha='center', rotation=90, wrap=False)
+            if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                axs[1,0].text(-vmax*2.2,0, r"$C_{E_{x}}$", ha='center', rotation=90, wrap=False)
+            else:
+                axs[1,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$C_{E_{x}}$", ha='center', rotation=90, wrap=False)
+
     if(params != None):
         axs[1,0].text(-vmax*2.6,0, '$\Theta_{Bn} = $ ' + str(params['thetaBn']), ha='center', rotation=90, wrap=False)
     if(computeJdotE):
@@ -786,7 +827,6 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         axs[1,1].set_ylabel(r"$v_{\perp,2}/"+vnormstr+"$")
     else:
         axs[1,1].set_ylabel(r"$v_z/"+vnormstr+"$")
-    axs[1,1].set_aspect('equal', 'box')
     axs[1,1].grid()
     if(computeJdotE):
         if(not(plotDiagJEOnly)):
@@ -830,7 +870,6 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         axs[1,2].set_ylabel(r"$v_{\perp,1}/"+vnormstr+"$")
     else:
         axs[1,2].set_ylabel(r"$v_y/"+vnormstr+"$")
-    axs[1,2].set_aspect('equal', 'box')
     axs[1,2].grid()
     if(computeJdotE):
         JdotE = compute_energization(CEx_yz.T,dv)
@@ -874,31 +913,60 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         axs[2,0].set_ylabel(r"$v_{\perp,1}/"+vnormstr+"$")
     else:
         axs[2,0].set_ylabel(r"$v_y/"+vnormstr+"$")
-    axs[2,0].set_aspect('equal', 'box')
     if(plotFAC):
-        if(plotAvg):
-            axs[2,0].text(-vmax*2.2,0, r"$\overline{C_{E_{\perp,1}}}$", ha='center', rotation=90, wrap=False)
+        if(plotAvg):          
+            if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                axs[2,0].text(-vmax*2.2,0, r"$\overline{C_{E_{\perp,1}}}$", ha='center', rotation=90, wrap=False)
+            else:
+                axs[2,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\overline{C_{E_{\perp,1}}}$", ha='center', rotation=90, wrap=False)
         elif(plotFluc):
             if(isLowPass):
-                axs[2,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{\perp,1}}}^{k_{||} d_i < 15}$", ha='center', rotation=90, wrap=False)
+                if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                    axs[2,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{\perp,1}}}^{k_{||} d_i < 15}$", ha='center', rotation=90, wrap=False)
+                else:
+                    axs[2,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\widetilde{C_{E_{\perp,1}}}^{k_{||} d_i < 15}$", ha='center', rotation=90, wrap=False)
             elif(isHighPass):
-                axs[2,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{\perp,1}}}^{k_{||} d_i > 15}$", ha='center', rotation=90, wrap=False)
+                if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                    axs[2,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{\perp,1}}}^{k_{||} d_i > 15}$", ha='center', rotation=90, wrap=False)
+                else:
+                    axs[2,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\widetilde{C_{E_{\perp,1}}}^{k_{||} d_i > 15}$", ha='center', rotation=90, wrap=False)
             else:
-                axs[2,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{\perp,1}}}$", ha='center', rotation=90, wrap=False)
+                if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                    axs[2,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{\perp,1}}}$", ha='center', rotation=90, wrap=False)
+                else:
+                    axs[2,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\widetilde{C_{E_{\perp,1}}}$", ha='center', rotation=90, wrap=False)
         else:
-            axs[2,0].text(-vmax*2.2,0, r"$C_{E_{\perp,1}}$", ha='center', rotation=90, wrap=False)
+            if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                axs[2,0].text(-vmax*2.2,0, r"$C_{E_{\perp,1}}$", ha='center', rotation=90, wrap=False)
+            else:
+                axs[2,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$C_{E_{\perp,1}}$", ha='center', rotation=90, wrap=False)
     else:
         if(plotAvg):
-            axs[2,0].text(-vmax*2.2,0, r"$\overline{C_{E_{y}}}$", ha='center', rotation=90, wrap=False)
+            if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                axs[2,0].text(-vmax*2.2,0, r"$\overline{C_{E_{y}}}$", ha='center', rotation=90, wrap=False)
+            else:
+                axs[2,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\overline{C_{E_{y}}}$", ha='center', rotation=90, wrap=False)
         elif(plotFluc):
             if(isLowPass):
-                 axs[2,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{y}}}^{k_{||} d_i < 15}$", ha='center', rotation=90, wrap=False)
+                if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                    axs[2,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{y}}}^{k_{||} d_i < 15}$", ha='center', rotation=90, wrap=False)
+                else:
+                    axs[2,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\widetilde{C_{E_{y}}}^{k_{||} d_i < 15}$", ha='center', rotation=90, wrap=False)
             elif(isHighPass):
-                axs[2,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{y}}}^{k_{||} d_i > 15}$", ha='center', rotation=90, wrap=False)
+                if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                    axs[2,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{y}}}^{k_{||} d_i > 15}$", ha='center', rotation=90, wrap=False)
+                else:
+                    axs[2,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\widetilde{C_{E_{y}}}^{k_{||} d_i > 15}$", ha='center', rotation=90, wrap=False)
             else:
-                axs[2,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{y}}}$", ha='center', rotation=90, wrap=False)
+                if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                    axs[2,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{y}}}$", ha='center', rotation=90, wrap=False)
+                else:
+                    axs[2,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\widetilde{C_{E_{y}}}$", ha='center', rotation=90, wrap=False)
         else:
-            axs[2,0].text(-vmax*2.2,0, r"$C_{E_{y}}$", ha='center', rotation=90, wrap=False)
+            if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                axs[2,0].text(-vmax*2.2,0, r"$C_{E_{y}}$", ha='center', rotation=90, wrap=False)
+            else:
+                axs[2,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$C_{E_{y}}$", ha='center', rotation=90, wrap=False)
     axs[2,0].grid()
     if(xpos != None):
         axs[2,0].text(-vmax*2.6,0,'$x/d_i = $' + str(xpos), ha='center', rotation=90, wrap=False)
@@ -946,7 +1014,6 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         axs[2,1].set_ylabel(r"$v_{\perp,2}/"+vnormstr+"$")
     else:
         axs[2,1].set_ylabel(r"$v_z/"+vnormstr+"$")
-    axs[2,1].set_aspect('equal', 'box')
     axs[2,1].grid()
     if(computeJdotE):
         JdotE = compute_energization(CEy_xz,dv)
@@ -992,7 +1059,6 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         axs[2,2].set_ylabel(r"$v_{\perp,1}/"+vnormstr+"$")
     else:
         axs[2,2].set_ylabel(r"$v_y/"+vnormstr+"$")
-    axs[2,2].set_aspect('equal', 'box')
     axs[2,2].grid()
     if(computeJdotE):
         JdotE = compute_energization(CEy_yz.T,dv)
@@ -1039,31 +1105,60 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     else:
         axs[3,0].set_xlabel(r"$v_x/"+vnormstr+"$")
         axs[3,0].set_ylabel(r"$v_y/"+vnormstr+"$")
-    axs[3,0].set_aspect('equal', 'box')
     if(plotFAC):
         if(plotAvg):
-            axs[3,0].text(-vmax*2.2,0, r"$\overline{C_{E_{\perp,2}}}$", ha='center', rotation=90, wrap=False)
+            if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                axs[3,0].text(-vmax*2.2,0, r"$\overline{C_{E_{\perp,2}}}$", ha='center', rotation=90, wrap=False)
+            else:
+                axs[3,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\overline{C_{E_{\perp,2}}}$", ha='center', rotation=90, wrap=False)
         elif(plotFluc):
             if(isLowPass):
-                axs[3,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{\perp,2}}}^{k_{||} d_i < 15}$", ha='center', rotation=90, wrap=False)
+                if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                    axs[3,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{\perp,2}}}^{k_{||} d_i < 15}$", ha='center', rotation=90, wrap=False)
+                else:
+                    axs[3,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\widetilde{C_{E_{\perp,2}}}^{k_{||} d_i < 15}$", ha='center', rotation=90, wrap=False)
             elif(isHighPass):
-                axs[3,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{\perp,2}}}^{k_{||} d_i > 15}$", ha='center', rotation=90, wrap=False)
+                if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                    axs[3,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{\perp,2}}}^{k_{||} d_i > 15}$", ha='center', rotation=90, wrap=False)
+                else:
+                    axs[3,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\widetilde{C_{E_{\perp,2}}}^{k_{||} d_i > 15}$", ha='center', rotation=90, wrap=False)
             else:
-                axs[3,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{\perp,2}}}$", ha='center', rotation=90, wrap=False)
+                if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                    axs[3,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{\perp,2}}}$", ha='center', rotation=90, wrap=False)
+                else:
+                    axs[3,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\widetilde{C_{E_{\perp,2}}}$", ha='center', rotation=90, wrap=False)
         else:
-            axs[3,0].text(-vmax*2.2,0, r"$C_{E_{\perp,2}}$", ha='center', rotation=90, wrap=False)
+            if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                axs[3,0].text(-vmax*2.2,0, r"$C_{E_{\perp,2}}$", ha='center', rotation=90, wrap=False)
+            else:
+                axs[3,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$C_{E_{\perp,2}}$", ha='center', rotation=90, wrap=False)
     else:
         if(plotAvg):
-            axs[3,0].text(-vmax*2.2,0, r"$\overline{C_{E_{z}}}$", ha='center', rotation=90, wrap=False)
+            if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                axs[3,0].text(-vmax*2.2,0, r"$\overline{C_{E_{z}}}$", ha='center', rotation=90, wrap=False)
+            else:
+                axs[3,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\overline{C_{E_{z}}}$", ha='center', rotation=90, wrap=False)
         elif(plotFluc):
             if(isLowPass):
-                axs[3,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{z}}}^{k_{||} d_i < 15}$", ha='center', rotation=90, wrap=False)
+                if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                    axs[3,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{z}}}^{k_{||} d_i < 15}$", ha='center', rotation=90, wrap=False)
+                else:
+                    axs[3,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\widetilde{C_{E_{z}}}^{k_{||} d_i < 15}$", ha='center', rotation=90, wrap=False)
             elif(isHighPass):
-                axs[3,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{z}}}^{k_{||} d_i > 15}$", ha='center', rotation=90, wrap=False)
+                if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                    axs[3,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{z}}}^{k_{||} d_i > 15}$", ha='center', rotation=90, wrap=False)
+                else:
+                    axs[3,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\widetilde{C_{E_{z}}}^{k_{||} d_i > 15}$", ha='center', rotation=90, wrap=False)
             else:
-                axs[3,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{z}}}$", ha='center', rotation=90, wrap=False)
+                if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                    axs[3,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{z}}}$", ha='center', rotation=90, wrap=False)
+                else:
+                    axs[3,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$\widetilde{C_{E_{z}}}$", ha='center', rotation=90, wrap=False)
         else:
-            axs[3,0].text(-vmax*2.2,0, r"$C_{E_{z}}$", ha='center', rotation=90, wrap=False)
+                if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                    axs[3,0].text(-vmax*2.2,0, r"$C_{E_{z}}$", ha='center', rotation=90, wrap=False)
+                else:
+                    axs[3,0].text(-np.abs((vxmax+vxmin)/2.-(vxmin))*2.2+(vxmax+vxmin)/2.,(vymax+vymin)/2.-.05*np.abs(vymax-vymin), r"$C_{E_{z}}$", ha='center', rotation=90, wrap=False)
     axs[3,0].grid()
     if(metadata != None):
         axs[3,0].text(-vmax*2.6,0, metadata, ha='center', rotation=90, wrap=False)
@@ -1112,7 +1207,6 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     else:
         axs[3,1].set_xlabel(r"$v_x/"+vnormstr+"$")
         axs[3,1].set_ylabel(r"$v_z/"+vnormstr+"$")
-    axs[3,1].set_aspect('equal', 'box')
     axs[3,1].grid()
     if(computeJdotE):
         JdotE = compute_energization(CEz_xz,dv)
@@ -1159,7 +1253,6 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
     else:
         axs[3,2].set_xlabel(r"$v_z/"+vnormstr+"$")
         axs[3,2].set_ylabel(r"$v_y/"+vnormstr+"$")
-    axs[3,2].set_aspect('equal', 'box')
     axs[3,2].grid()
     if(computeJdotE):
         JdotE = compute_energization(CEz_yz.T,dv)
@@ -1195,8 +1288,966 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
 
     for _i in range(0,4):
         for _j in range(0,3):
-            axs[_i,_j].set_xlim(-vmax,vmax)
-            axs[_i,_j].set_ylim(-vmax,vmax)
+            if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                axs[_i,_j].set_aspect('equal', 'box')
+            else:
+                axs[_i,_j].set_box_aspect(1) 
+                axs[_i,_j].set_aspect('auto')
+
+    for _i in range(0,4):
+        for _j in range(0,3):
+            if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+                axs[_i,_j].set_xlim(-vmax,vmax)
+                axs[_i,_j].set_ylim(-vmax,vmax)
+            else:
+                if(_j == 0):
+                    axs[_i,_j].set_xlim(vxmin,vxmax)
+                    axs[_i,_j].set_ylim(vymin,vymax)
+                elif(_j == 1):
+                    axs[_i,_j].set_xlim(vxmin,vxmax)
+                    axs[_i,_j].set_ylim(vzmin,vzmax)
+                elif(_j == 2):
+                    axs[_i,_j].set_xlim(vzmin,vzmax)
+                    axs[_i,_j].set_ylim(vymin,vymax)
+
+    #set ticks
+    intvl = 1.
+    if(vmax > 5):
+        intvl = 5.
+    if(vmax > 10):
+        intvl = 10.
+    if(vmax > 20):
+        intvl = 20.
+
+    if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None):
+        tcks = np.arange(0,vmax,intvl)
+        tcks = np.concatenate((-1*np.flip(tcks),tcks))
+        for _i in range(0,4):
+            for _j in range(0,3):
+                axs[_i,_j].set_xticks(tcks)
+                axs[_i,_j].set_yticks(tcks)
+    else:
+        intvlxx = 1.
+        if(np.abs(vxmax-vxmin)>5):intvlxx=5.
+        elif(np.abs(vxmax-vxmin)>10):intvlxx=10.
+        elif(np.abs(vxmax-vxmin)>20):intvlxx=15.
+        intvlyy = 1.
+        if(np.abs(vymax-vymin)>5):intvlyy=5.
+        elif(np.abs(vymax-vymin)>10):intvlyy=10.
+        elif(np.abs(vymax-vymin)>20):intvlxx=15.
+        intvlzz = 1.
+        if(np.abs(vzmax-vzmin)>5):intvlzz=5.
+        elif(np.abs(vzmax-vzmin)>10):intvlzz=10.
+        elif(np.abs(vzmax-vzmin)>20):intvlxx=15.
+
+        tcksxx = np.arange(vxmin,vxmax+intvlxx,intvlxx)
+        tcksyy = np.arange(vymin,vymax+intvlyy,intvlyy)
+        tckszz = np.arange(vzmin,vzmax+intvlzz,intvlzz)
+
+        for _i in range(0,4):
+             for _j in range(0,3):
+                 if(_j == 0):
+                     axs[_i,_j].set_xticks(tcksxx)
+                     axs[_i,_j].set_yticks(tcksyy)
+                 if(_j == 1):
+                     axs[_i,_j].set_xticks(tcksxx)
+                     axs[_i,_j].set_yticks(tckszz)
+                 if(_j == 2):
+                     axs[_i,_j].set_xticks(tckszz)
+                     axs[_i,_j].set_yticks(tcksyy)
+    
+    #plt.subplots_adjust(hspace=.5,wspace=-.3)
+
+
+    if(vxmin == None and vxmax == None and vymin == None and vymax == None and vzmin == None and vzmax == None): 
+        maxplotvvalxx = np.max(vz_yz) #Assumes square grid of even size
+        maxplotvvalyy = np.max(vz_yz) #Assumes square grid of even size
+        maxplotvvalzz = np.max(vz_yz) #Assumes square grid of even size
+        centerplotxx = 0.
+        centerplotyy = 0.
+        centerplotzz = 0.
+    else:
+        #TODO: rename this variable
+        maxplotvvalxx = vxmax-((vxmax+vxmin)/2.)
+        maxplotvvalyy = vymax-((vymax+vymin)/2.)
+        maxplotvvalzz = vzmax-((vzmax+vzmin)/2.)
+        centerplotxx = (vxmax+vxmin)/2.
+        centerplotyy = (vymax+vymin)/2.
+        centerplotzz = (vzmax+vzmin)/2.
+    if(flnm != ''):
+        plt.savefig(flnm+'.png',format='png',dpi=250,bbox_inches='tight')
+        #must make figure first to grab x10^val on top of color bar- after grabbing it, we can move it- a little wasteful but it was quick solution
+        clrbar10text = str(clrbar10.ax.yaxis.get_offset_text().get_text())
+        clrbar10.ax.yaxis.get_offset_text().set_visible(False)
+        axs[1,0].text(1.63*maxplotvvalxx+centerplotxx,-1.27*maxplotvvalyy+centerplotyy,clrbar10text, va='bottom', ha='center')
+        clrbar11text = str(clrbar11.ax.yaxis.get_offset_text().get_text())
+        clrbar11.ax.yaxis.get_offset_text().set_visible(False) 
+        axs[1,1].text(1.63*maxplotvvalxx+centerplotxx,-1.27*maxplotvvalzz+centerplotzz,clrbar11text, va='bottom', ha='center')
+        clrbar12text = str(clrbar12.ax.yaxis.get_offset_text().get_text())
+        clrbar12.ax.yaxis.get_offset_text().set_visible(False)
+        axs[1,2].text(1.63*maxplotvvalzz+centerplotzz,-1.27*maxplotvvalyy+centerplotyy,clrbar12text, va='bottom', ha='center')
+        clrbar20text = str(clrbar20.ax.yaxis.get_offset_text().get_text())
+        clrbar20.ax.yaxis.get_offset_text().set_visible(False)
+        axs[2,0].text(1.63*maxplotvvalxx+centerplotxx,-1.27*maxplotvvalyy+centerplotyy,clrbar20text, va='bottom', ha='center')
+        clrbar21text = str(clrbar21.ax.yaxis.get_offset_text().get_text())
+        clrbar21.ax.yaxis.get_offset_text().set_visible(False)
+        axs[2,1].text(1.63*maxplotvvalxx+centerplotxx,-1.27*maxplotvvalzz+centerplotzz,clrbar21text, va='bottom', ha='center')
+        clrbar22text = str(clrbar22.ax.yaxis.get_offset_text().get_text())
+        clrbar22.ax.yaxis.get_offset_text().set_visible(False)
+        axs[2,2].text(1.63*maxplotvvalzz+centerplotzz,-1.27*maxplotvvalyy+centerplotyy,clrbar22text, va='bottom', ha='center')
+        clrbar30text = str(clrbar30.ax.yaxis.get_offset_text().get_text())
+        clrbar30.ax.yaxis.get_offset_text().set_visible(False)
+        axs[3,0].text(1.63*maxplotvvalxx+centerplotxx,-1.27*maxplotvvalyy+centerplotyy,clrbar30text, va='bottom', ha='center')
+        clrbar31text = str(clrbar31.ax.yaxis.get_offset_text().get_text())
+        clrbar31.ax.yaxis.get_offset_text().set_visible(False)
+        axs[3,1].text(1.63*maxplotvvalxx+centerplotxx,-1.27*maxplotvvalzz+centerplotzz,clrbar31text, va='bottom', ha='center')
+        clrbar32text = str(clrbar32.ax.yaxis.get_offset_text().get_text())
+        clrbar32.ax.yaxis.get_offset_text().set_visible(False)
+        axs[3,2].text(1.63*maxplotvvalzz+centerplotzz,-1.27*maxplotvvalyy+centerplotyy,clrbar32text, va='bottom', ha='center')
+
+        plt.savefig(flnm+'.png',format='png',dpi=250,bbox_inches='tight')
+
+
+        plt.close('all') #saves RAM
+    else:
+        import os
+
+        #for some reason, we have to generate the plot to move the colorpower power elsewhere for some unknown reason
+        plt.savefig('_tempdelete.png',format='png',dpi=250,bbox_inches='tight')
+        os.remove('_tempdelete.png')
+
+        #must make figure first to grab x10^val on top of color bar- after grabbing it, we can move it- a little wasteful but it was quick solution
+        clrbar10text = str(clrbar10.ax.yaxis.get_offset_text().get_text())
+        clrbar10.ax.yaxis.get_offset_text().set_visible(False)
+        axs[1,0].text(1.63*maxplotvvalxx,-1.27*maxplotvvalyy,clrbar10text, va='bottom', ha='center')
+        clrbar11text = str(clrbar11.ax.yaxis.get_offset_text().get_text())
+        clrbar11.ax.yaxis.get_offset_text().set_visible(False) 
+        axs[1,1].text(1.63*maxplotvvalxx,-1.27*maxplotvvalzz,clrbar11text, va='bottom', ha='center')
+        clrbar12text = str(clrbar12.ax.yaxis.get_offset_text().get_text())
+        clrbar12.ax.yaxis.get_offset_text().set_visible(False)
+        axs[1,2].text(1.63*maxplotvvalzz,-1.27*maxplotvvalyy,clrbar12text, va='bottom', ha='center')
+        clrbar20text = str(clrbar20.ax.yaxis.get_offset_text().get_text())
+        clrbar20.ax.yaxis.get_offset_text().set_visible(False)
+        axs[2,0].text(1.63*maxplotvvalxx,-1.27*maxplotvvalyy,clrbar20text, va='bottom', ha='center')
+        clrbar21text = str(clrbar21.ax.yaxis.get_offset_text().get_text())
+        clrbar21.ax.yaxis.get_offset_text().set_visible(False)
+        axs[2,1].text(1.63*maxplotvvalxx,-1.27*maxplotvvalzz,clrbar21text, va='bottom', ha='center')
+        clrbar22text = str(clrbar22.ax.yaxis.get_offset_text().get_text())
+        clrbar22.ax.yaxis.get_offset_text().set_visible(False)
+        axs[2,2].text(1.63*maxplotvvalzz,-1.27*maxplotvvalyy,clrbar22text, va='bottom', ha='center')
+        clrbar30text = str(clrbar30.ax.yaxis.get_offset_text().get_text())
+        clrbar30.ax.yaxis.get_offset_text().set_visible(False)
+        axs[3,0].text(1.63*maxplotvvalxx,-1.27*maxplotvvalyy,clrbar30text, va='bottom', ha='center')
+        clrbar31text = str(clrbar31.ax.yaxis.get_offset_text().get_text())
+        clrbar31.ax.yaxis.get_offset_text().set_visible(False)
+        axs[3,1].text(1.63*maxplotvvalxx,-1.27*maxplotvvalzz,clrbar31text, va='bottom', ha='center')
+        clrbar32text = str(clrbar32.ax.yaxis.get_offset_text().get_text())
+        clrbar32.ax.yaxis.get_offset_text().set_visible(False)
+        axs[3,2].text(1.63*maxplotvvalzz,-1.27*maxplotvvalyy,clrbar32text, va='bottom', ha='center')
+
+        plt.show()
+    
+    plt.close()
+
+def plot_cor_and_dist_supergrid_row(vx, vy, vz, vmax,
+                                arr_xy,arr_xz, arr_yz,
+                                arrtype,
+                                flnm = '', ttl = '', computeJdotE = True, params = None, metadata = None, xpos = None, plotLog = False, plotLogHist = True,
+                                plotFAC = False, plotFluc = False, plotAvg = False, isIon = True, listpos=False,xposval=None,normtoN = False,Nval = None, isLowPass=False,isHighPass=False,plotDiagJEOnly=True):
+    """
+    Parameters
+    ----------
+    arrtype : string
+        type of array to be plotted ('CEx','CEy','CEz','Ctot','CEperp1','CEperp2','CEperp2','H','H_fac'); no need to specify here if avg or fluc
+
+    Otherwise, same as plot_cor_and_dist_supergrid, except it plots just one row
+    """
+    from matplotlib.colors import LogNorm
+    from FPCAnalysis.array_ops import mesh_3d_to_2d
+    from FPCAnalysis.analysis import compute_energization
+    import matplotlib.colors as colors
+
+    if(not(arrtype in ['CEx','CEy','CEz','Ctot','CEperp1','CEperp2','CEperp2','H'])):
+        print("Error! arrtype must be one of ('CEx','CEy','CEz','Ctot','CEperp1','CEperp2','CEperp2','H','H_fac').")
+        return
+
+    if(normtoN):
+        if(Nval == None):
+            Nval = np.sum(H_xy)
+        arr_xy/=Nval 
+        arr_xz/=Nval
+        arr_yz/=Nval
+
+    plt.style.use("cb.mplstyle") #sets style parameters for matplotlib plots
+
+    fig, axs = plt.subplots(1,3,figsize=(1*15,3*15))
+    axs = np.reshape(axs, (1, 3)) #Reshape so we can more easily reuse old code
+
+    cbarshrink = .075 #controls size of colorbar
+
+    plt.rcParams['axes.titlepad'] = 8  # pad is in points
+
+    _hspace = 0
+    _wspace = .4
+    if(computeJdotE):
+        _hspace+=0
+    if(plotLog):
+        _wspace+=.175
+    fig.subplots_adjust(hspace=_hspace,wspace=_wspace)
+
+    vx_xy, vy_xy = mesh_3d_to_2d(vx,vy,vz,'xy')
+    vx_xz, vz_xz = mesh_3d_to_2d(vx,vy,vz,'xz')
+    vy_yz, vz_yz = mesh_3d_to_2d(vx,vy,vz,'yz')
+
+    maxplotvval = np.max(vz_yz) #Assumes square grid of even size
+
+    dv = vy_yz[1][1]-vy_yz[0][0] #assumes square velocity grid
+
+    if(isIon):
+        vnormstr = 'v_{ti}'
+    else:
+        vnormstr = 'v_{te}'
+
+    fig.suptitle(ttl)
+
+    if(arrtype in ['H']):
+        try:
+            minHxyval = np.min(arr_xy[np.nonzero(arr_xy)])
+            minHxzval = np.min(arr_xz[np.nonzero(arr_xz)])
+            minHyzval = np.min(arr_yz[np.nonzero(arr_yz)])
+            maxH_xy = arr_xy.max()
+            maxH_xz = arr_xz.max()
+            maxH_yz = arr_yz.max()
+        except:
+            minHxyval = 0.00000000001
+            minHxzval = 0.00000000001
+            minHyzval = 0.00000000001
+            maxH_xy = 1.
+            maxH_xz = 1.
+            maxH_yz = 1.
+
+    if(arrtype == 'H'):
+        H_xy = arr_xy
+        H_xz = arr_xz
+        H_yz = arr_yz
+        #H_xy
+        if(plotLogHist):
+            im00= axs[0,0].pcolormesh(vy_xy, vx_xy, H_xy, cmap="plasma", shading="gouraud",norm=LogNorm(vmin=minHxyval, vmax=maxH_xy))
+        else:
+            im00= axs[0,0].pcolormesh(vy_xy, vx_xy, H_xy, cmap="plasma", shading="gouraud")
+
+        if(plotFAC):
+            axs[0,0].set_ylabel(r"$v_{\perp,1}/"+vnormstr+"$")
+        else:
+            axs[0,0].set_ylabel(r"$v_y/"+vnormstr+"$")
+        axs[0,0].set_aspect('equal', 'box')
+        axs[0,0].grid()
+        clrbar10 = plt.colorbar(im00, ax=axs[0,0],shrink = cbarshrink)#,format='%.1e')
+        if(not(plotLogHist)):
+            clrbar10.formatter.set_powerlimits((0, 0))
+        axs[0,0].text(-vmax*2.2,0, r"$f$", ha='center', rotation=90, wrap=False)
+        if(params != None):
+            axs[0,0].text(-vmax*2.9,0, '$M_A = $ ' + str(abs(params['MachAlfven'])), ha='center', rotation=90, wrap=False)
+
+        if(listpos):
+            axs[0,0].text(-vmax*2.9,0, '$x / d_i = $ ' + str("{:.4f}".format(xposval)), ha='center', rotation=90, wrap=False)
+
+
+        #H_xz
+        if(plotLogHist):
+            im01 = axs[0,1].pcolormesh(vz_xz, vx_xz, H_xz, cmap="plasma", shading="gouraud",norm=LogNorm(vmin=minHxzval, vmax=maxH_xz))
+        else:
+            im01 = axs[0,1].pcolormesh(vz_xz, vx_xz, H_xz, cmap="plasma", shading="gouraud")
+        #axs[0,1].set_title(r"$f(v_x, v_z)$")
+        if(plotFAC):
+            axs[0,1].set_ylabel(r"$v_{\perp,2}/"+vnormstr+"$")
+        else:
+            axs[0,1].set_ylabel(r"$v_z/"+vnormstr+"$")
+        axs[0,1].set_aspect('equal', 'box')
+        axs[0,1].grid()
+        clrbar11 = plt.colorbar(im01, ax=axs[0,1],shrink = cbarshrink)#,format='%.1e')
+        if(not(plotLogHist)):
+            clrbar11.formatter.set_powerlimits((0, 0))
+
+        #H_yz
+        if(plotLogHist):
+            im02 = axs[0,2].pcolormesh(vz_yz, vy_yz, H_yz.T, cmap="plasma", shading="gouraud",norm=LogNorm(vmin=minHyzval, vmax=maxH_yz))
+        else:
+            im02 = axs[0,2].pcolormesh(vz_yz, vy_yz, H_yz.T, cmap="plasma", shading="gouraud")
+        #axs[0,2].set_title(r"$f(v_y, v_z)$")
+        if(plotFAC):
+            axs[0,2].set_ylabel(r"$v_{\perp,1}/"+vnormstr+"$")
+        else:
+            axs[0,2].set_ylabel(r"$v_y/"+vnormstr+"$")
+        axs[0,2].set_aspect('equal', 'box')
+        axs[0,2].grid()
+        clrbar12 = plt.colorbar(im02, ax=axs[0,2], shrink = cbarshrink)#,format='%.1e')
+        if(not(plotLogHist)):
+            clrbar12.formatter.set_powerlimits((0, 0))
+
+    if(arrtype in ['CEx','CEpar']):
+        CEx_xy = arr_xy
+        CEx_xz = arr_xz
+        CEx_yz = arr_yz
+        maxCe = max(np.max(CEx_xy),abs(np.min(CEx_xy)))
+        if(plotLog):
+            im10 = axs[0,0].pcolormesh(vy_xy,vx_xy,CEx_xy,cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
+        else:
+            im10 = axs[0,0].pcolormesh(vy_xy,vx_xy,CEx_xy,vmax=maxCe,vmin=-maxCe,cmap="seismic", shading="gouraud")
+        if(plotFAC):
+            axs[0,0].set_ylabel(r"$v_{\perp,1}/"+vnormstr+"$")
+        else:
+            axs[0,0].set_ylabel(r"$v_y/"+vnormstr+"$")
+        axs[0,0].set_aspect('equal', 'box')
+        axs[0,0].grid()
+        if(plotFAC):
+            if(plotAvg):
+                axs[0,0].text(-vmax*2.2,0, r"$\overline{C_{E_{||}}}$", ha='center', rotation=90, wrap=False)
+            elif(plotFluc):
+                if(isLowPass):
+                    axs[0,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{||}}}^{k_{||} d_i < 15}$", ha='center', rotation=90, wrap=False)
+                elif(isHighPass):
+                    axs[0,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{||}}}^{k_{||} d_i > 15}$", ha='center', rotation=90, wrap=False)
+                else:
+                    axs[0,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{||}}}$", ha='center', rotation=90, wrap=False)
+            else:
+                axs[0,0].text(-vmax*2.2,0, r"$C_{E_{||}}$", ha='center', rotation=90, wrap=False)
+        else:
+            if(plotAvg):
+                axs[0,0].text(-vmax*2.2,0, r"$\overline{C_{E_{x}}}$", ha='center', rotation=90, wrap=False)
+            elif(plotFluc):
+                if(isLowPass):
+                    axs[0,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{x}}}^{k_{||} d_i < 15}$", ha='center', rotation=90, wrap=False)
+                elif(isHighPass):
+                    axs[0,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{x}}}^{k_{||} d_i > 15}$", ha='center', rotation=90, wrap=False)
+                else:
+                    axs[0,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{x}}}$", ha='center', rotation=90, wrap=False)
+            else:
+                axs[0,0].text(-vmax*2.2,0, r"$C_{E_{x}}$", ha='center', rotation=90, wrap=False)
+        if(params != None):
+            axs[0,0].text(-vmax*2.9,0, '$\Theta_{Bn} = $ ' + str(params['thetaBn']), ha='center', rotation=90, wrap=False)
+        if(computeJdotE):
+            if(not(plotDiagJEOnly)):
+                JdotE = compute_energization(CEx_xy,dv)
+                if(plotFAC):
+                    if(plotAvg):
+                        axs[0,0].set_title('$\overline{j_{||}}  \overline{E_{||}}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    elif(plotFluc):
+                        if(isLowPass):
+                            axs[0,0].set_title('$\widetilde{j_{||}}^{k_{||} d_i < 15}  \widetilde{E_{||}}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        elif(isHighPass):
+                            axs[0,0].set_title('$\widetilde{j_{||}}^{k_{||} d_i > 15}  \widetilde{E_{||}}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        else:
+                            axs[0,0].set_title('$\widetilde{j_{||}}  \widetilde{E_{||}}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    else:
+                        axs[0,0].set_title('$j_{||}  E_{||}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                else:
+                    if(plotAvg):
+                        axs[0,0].set_title('$\overline{j_x}  \overline{E_x}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    elif(plotFluc):
+                        if(isLowPass):
+                            axs[0,0].set_title('$\widetilde{j_x}^{k_{||} d_i > 15}  \widetilde{E_x}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        elif(isHighPass):
+                            axs[0,0].set_title('$\widetilde{j_x}^{k_{||} d_i > 15}  \widetilde{E_x}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        else:
+                            axs[0,0].set_title('$\widetilde{j_x}  \widetilde{E_x}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    else:
+                        axs[0,0].set_title('$j_x  E_x$ = ' + "{:.2e}".format(JdotE),loc='left')
+        clrbar10 = plt.colorbar(im10, ax=axs[1,0], shrink = cbarshrink)#,format='%.1e')
+        if(not(plotLog)):
+            clrbar10.formatter.set_powerlimits((0, 0))
+
+        #CEx_xz
+        maxCe = max(np.max(CEx_xz),abs(np.min(CEx_xz)))
+        if(plotLog):
+            im11 = axs[0,1].pcolormesh(vz_xz,vx_xz,CEx_xz, cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
+        else:
+            im11 = axs[0,1].pcolormesh(vz_xz,vx_xz,CEx_xz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
+
+        if(plotFAC):
+            axs[0,1].set_ylabel(r"$v_{\perp,2}/"+vnormstr+"$")
+        else:
+            axs[0,1].set_ylabel(r"$v_z/"+vnormstr+"$")
+        axs[0,1].set_aspect('equal', 'box')
+        axs[0,1].grid()
+        if(computeJdotE):
+            if(not(plotDiagJEOnly)):
+                JdotE = compute_energization(CEx_xz,dv)
+                if(plotFAC):
+                    if(plotAvg):
+                        axs[0,1].set_title('$\overline{j_{||}}  \overline{E_{||}}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    elif(plotFluc):
+                        if(isLowPass):
+                            axs[0,1].set_title('$\widetilde{j_{||}}^{k_{||} d_i < 15}  \widetilde{E_{||}}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        elif(isHighPass):
+                            axs[0,1].set_title('$\widetilde{j_{||}}^{k_{||} d_i > 15}  \widetilde{E_{||}}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        else:
+                            axs[0,1].set_title('$\widetilde{j_{||}}  \widetilde{E_{||}}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    else:
+                        axs[0,1].set_title('$j_{||}  E_{||}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                else:
+                    if(plotAvg):
+                        axs[0,1].set_title('$\overline{j_x}  \overline{E_x}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    elif(plotFluc):
+                        if(isLowPass):
+                            axs[0,1].set_title('$\widetilde{j_x}^{k_{||} d_i > 15}  \widetilde{E_x}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        elif(isHighPass):
+                            axs[0,1].set_title('$\widetilde{j_x}^{k_{||} d_i > 15}  \widetilde{E_x}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        else:
+                            axs[0,1].set_title('$\widetilde{j_x}  \widetilde{E_x}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    else:
+                        axs[0,1].set_title('$j_x  E_x$ = ' + "{:.2e}".format(JdotE),loc='left')
+        clrbar11 = plt.colorbar(im11, ax=axs[1,1], shrink = cbarshrink)#,format='%.1e')
+        if(not(plotLog)):
+            clrbar11.formatter.set_powerlimits((0, 0))
+
+        #CEx_yz
+        maxCe = max(np.max(CEx_yz),abs(np.min(CEx_yz)))
+        if(plotLog):
+            im12 = axs[0,2].pcolormesh(vz_yz,vy_yz,CEx_yz.T,cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
+        else:
+            im12 = axs[0,2].pcolormesh(vz_yz,vy_yz,CEx_yz.T,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
+
+        if(plotFAC):
+            axs[0,2].set_ylabel(r"$v_{\perp,1}/"+vnormstr+"$")
+        else:
+            axs[0,2].set_ylabel(r"$v_y/"+vnormstr+"$")
+        axs[0,2].set_aspect('equal', 'box')
+        axs[0,2].grid()
+        if(computeJdotE):
+            JdotE = compute_energization(CEx_yz.T,dv)
+            if(True):
+                if(plotFAC):
+                    if(plotAvg):
+                        axs[0,2].set_title('$\overline{j_{||}}  \overline{E_{||}}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    elif(plotFluc):
+                        if(isLowPass):
+                            axs[0,2].set_title('$\widetilde{j_{||}}^{k_{||} d_i < 15}  \widetilde{E_{||}}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        elif(isHighPass):
+                            axs[0,2].set_title('$\widetilde{j_{||}}^{k_{||} d_i > 15}  \widetilde{E_{||}}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        else:
+                            axs[0,2].set_title('$\widetilde{j_{||}}  \widetilde{E_{||}}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    else:
+                        axs[0,2].set_title('$j_{||}  E_{||}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                else:
+                    if(plotAvg):
+                        axs[0,2].set_title('$\overline{j_x}  \overline{E_x}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    elif(plotFluc):
+                        if(isLowPass):
+                            axs[0,2].set_title('$\widetilde{j_x}^{k_{||} d_i > 15}  \widetilde{E_x}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        elif(isHighPass):
+                            axs[0,2].set_title('$\widetilde{j_x}^{k_{||} d_i > 15}  \widetilde{E_x}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        else:
+                            axs[0,2].set_title('$\widetilde{j_x}  \widetilde{E_x}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    else:
+                        axs[0,2].set_title('$j_x  E_x$ = ' + "{:.2e}".format(JdotE),loc='left')
+        clrbar12 = plt.colorbar(im12, ax=axs[1,2], shrink = cbarshrink)#,format='%.1e')
+        if(not(plotLog)):
+            clrbar12.formatter.set_powerlimits((0, 0))
+    if(arrtype in ['CEy','CEperp1']):
+        CEy_xy = arr_xy
+        CEy_xz = arr_xz
+        CEy_yz = arr_yz
+
+        #CEy_xy
+        maxCe = max(np.max(CEy_xy),abs(np.min(CEy_xy)))
+        if(plotLog):
+            im20 = axs[0,0].pcolormesh(vy_xy,vx_xy,CEy_xy,cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
+        else:
+            im20 = axs[0,0].pcolormesh(vy_xy,vx_xy,CEy_xy,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
+
+        if(plotFAC):
+            axs[0,0].set_ylabel(r"$v_{\perp,1}/"+vnormstr+"$")
+        else:
+            axs[0,0].set_ylabel(r"$v_y/"+vnormstr+"$")
+        axs[0,0].set_aspect('equal', 'box')
+        if(plotFAC):
+            if(plotAvg):
+                axs[0,0].text(-vmax*2.2,0, r"$\overline{C_{E_{\perp,1}}}$", ha='center', rotation=90, wrap=False)
+            elif(plotFluc):
+                if(isLowPass):
+                    axs[0,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{\perp,1}}}^{k_{||} d_i < 15}$", ha='center', rotation=90, wrap=False)
+                elif(isHighPass):
+                    axs[0,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{\perp,1}}}^{k_{||} d_i > 15}$", ha='center', rotation=90, wrap=False)
+                else:
+                    axs[0,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{\perp,1}}}$", ha='center', rotation=90, wrap=False)
+            else:
+                axs[0,0].text(-vmax*2.2,0, r"$C_{E_{\perp,1}}$", ha='center', rotation=90, wrap=False)
+        else:
+            if(plotAvg):
+                axs[0,0].text(-vmax*2.2,0, r"$\overline{C_{E_{y}}}$", ha='center', rotation=90, wrap=False)
+            elif(plotFluc):
+                if(isLowPass):
+                    axs[0,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{y}}}^{k_{||} d_i < 15}$", ha='center', rotation=90, wrap=False)
+                elif(isHighPass):
+                    axs[0,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{y}}}^{k_{||} d_i > 15}$", ha='center', rotation=90, wrap=False)
+                else:
+                    axs[0,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{y}}}$", ha='center', rotation=90, wrap=False)
+            else:
+                axs[0,0].text(-vmax*2.2,0, r"$C_{E_{y}}$", ha='center', rotation=90, wrap=False)
+        axs[0,0].grid()
+        if(xpos != None):
+            axs[0,0].text(-vmax*2.2,0,'$x/d_i = $' + str(xpos), ha='center', rotation=90, wrap=False)
+        if(computeJdotE):
+            JdotE = compute_energization(CEy_xy,dv)
+            if(not(plotDiagJEOnly)):
+                JdotE = compute_energization(CEx_xz,dv)
+                if(plotFAC):
+                    if(plotAvg):
+                        axs[0,0].set_title('$\overline{j_{\perp,1}}  \overline{E_{\perp,1}}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    elif(plotFluc):
+                        if(isLowPass):
+                            axs[0,0].set_title('$\widetilde{j_{\perp,1}}^{k_{||} d_i < 15}  \widetilde{E_{\perp,1}}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        elif(isHighPass):
+                            axs[0,0].set_title('$\widetilde{j_{\perp,1}}^{k_{||} d_i > 15}  \widetilde{E_{\perp,1}}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        else:
+                            axs[0,0].set_title('$\widetilde{j_{\perp,1}}  \widetilde{E_{\perp,1}}$ = ' + "{:.2e}".format(JdotE),loc='left') 
+                    else:
+                        axs[0,0].set_title('$j_{\perp,1}  E_{\perp,1}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                else:
+                    if(plotAvg):
+                        axs[0,0].set_title('$\overline{j_y}  \overline{E_y}$ = ' + "{:.2e}".format(JdotE),loc='left')             
+                    elif(plotFluc):
+                        if(isLowPass):
+                            axs[0,0].set_title('$\widetilde{j_y}^{k_{||} d_i < 15}  \widetilde{E_y}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        elif(isHighPass):
+                            axs[0,0].set_title('$\widetilde{j_y}^{k_{||} d_i > 15}  \widetilde{E_y}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        else:
+                            axs[0,0].set_title('$\widetilde{j_y}  \widetilde{E_y}$ = ' + "{:.2e}".format(JdotE),loc='left')             
+                    else:
+                        axs[0,0].set_title('$j_y  E_y$ = ' + "{:.2e}".format(JdotE),loc='left')
+        
+        clrbar10 = plt.colorbar(im20, ax=axs[0,0], shrink = cbarshrink)#,format='%.1e')
+        if(not(plotLog)):
+            clrbar10.formatter.set_powerlimits((0, 0))
+
+        #CEy_xz
+        maxCe = max(np.max(CEy_xz),abs(np.min(CEy_xz)))
+        if(plotLog):
+            im21 = axs[0,1].pcolormesh(vz_xz,vx_xz,CEy_xz,cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
+        else:
+            im21 = axs[0,1].pcolormesh(vz_xz,vx_xz,CEy_xz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
+
+        if(plotFAC):
+            axs[0,1].set_ylabel(r"$v_{\perp,2}/"+vnormstr+"$")
+        else:
+            axs[0,1].set_ylabel(r"$v_z/"+vnormstr+"$")
+        axs[0,1].set_aspect('equal', 'box')
+        axs[0,1].grid()
+        if(computeJdotE):
+            JdotE = compute_energization(CEy_xz,dv)
+            if(True):
+                JdotE = compute_energization(CEy_xz,dv)
+                if(plotFAC):
+                    if(plotAvg):
+                        axs[0,1].set_title('$\overline{j_{\perp,1}}  \overline{E_{\perp,1}}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    elif(plotFluc):
+                        if(isLowPass):
+                            axs[0,1].set_title('$\widetilde{j_{\perp,1}}^{k_{||} d_i < 15}  \widetilde{E_{\perp,1}}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        elif(isHighPass):
+                            axs[0,1].set_title('$\widetilde{j_{\perp,1}}^{k_{||} d_i > 15}  \widetilde{E_{\perp,1}}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        else:
+                            axs[0,1].set_title('$\widetilde{j_{\perp,1}}  \widetilde{E_{\perp,1}}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    else:
+                        axs[0,1].set_title('$j_{\perp,1}  E_{\perp,1}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                else:
+                    if(plotAvg):
+                        axs[0,1].set_title('$\overline{j_y}  \overline{E_y}$ = ' + "{:.2e}".format(JdotE),loc='left')  
+                    elif(plotFluc):
+                        if(isLowPass):
+                            axs[0,1].set_title('$\widetilde{j_y}^{k_{||} d_i < 15}  \widetilde{E_y}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        elif(isHighPass):
+                            axs[0,1].set_title('$\widetilde{j_y}^{k_{||} d_i > 15}  \widetilde{E_y}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        else:
+                            axs[0,1].set_title('$\widetilde{j_y}  \widetilde{E_y}$ = ' + "{:.2e}".format(JdotE),loc='left')             
+                    else:
+                        axs[0,1].set_title('$j_y  E_y$ = ' + "{:.2e}".format(JdotE),loc='left')
+
+        clrbar11 = plt.colorbar(im21, ax=axs[0,1], shrink = cbarshrink)#,format='%.1e')
+        if(not(plotLog)):
+            clrbar11.formatter.set_powerlimits((0, 0))
+
+        #CEy_yz
+        maxCe = max(np.max(CEy_yz),abs(np.min(CEy_yz)))
+        if(plotLog):
+            im22 = axs[0,2].pcolormesh(vz_yz,vy_yz,CEy_yz.T, cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
+        else:
+            im22 = axs[0,2].pcolormesh(vz_yz,vy_yz,CEy_yz.T,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
+
+        if(plotFAC):
+            axs[0,2].set_ylabel(r"$v_{\perp,1}/"+vnormstr+"$")
+        else:
+            axs[0,2].set_ylabel(r"$v_y/"+vnormstr+"$")
+        axs[0,2].set_aspect('equal', 'box')
+        axs[0,2].grid()
+        if(computeJdotE):
+            JdotE = compute_energization(CEy_yz.T,dv)
+            if(not(plotDiagJEOnly)):
+                if(plotFAC):
+                    if(plotAvg):
+                        axs[0,2].set_title('$\overline{j_{\perp,1}}  \overline{E_{\perp,1}}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    elif(plotFluc):
+                        if(isLowPass):
+                            axs[0,2].set_title('$\widetilde{j_{\perp,1}}^{k_{||} d_i < 15}  \widetilde{E_{\perp,1}}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        elif(isHighPass):
+                            axs[0,2].set_title('$\widetilde{j_{\perp,1}}^{k_{||} d_i > 15}  \widetilde{E_{\perp,1}}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        else:
+                            axs[0,2].set_title('$\widetilde{j_{\perp,1}}  \widetilde{E_{\perp,1}}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    else:
+                        axs[0,2].set_title('$j_{\perp,1}  E_{\perp,1}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                else:
+                    if(plotAvg):
+                        axs[0,2].set_title('$\overline{j_y}  \overline{E_y}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    elif(plotFluc):
+                        if(isLowPass):
+                            axs[0,2].set_title('$\widetilde{j_y}^{k_{||} d_i < 15}  \widetilde{E_y}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        elif(isHighPass):
+                            axs[0,2].set_title('$\widetilde{j_y}^{k_{||} d_i > 15}  \widetilde{E_y}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        else:
+                            axs[0,2].set_title('$\widetilde{j_y}  \widetilde{E_y}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    else:
+                        axs[0,2].set_title('$j_y  E_y$ = ' + "{:.2e}".format(JdotE),loc='left')
+
+        clrbar12 = plt.colorbar(im22, ax=axs[2,2], shrink = cbarshrink)#,format='%.1e')
+        if(not(plotLog)):
+            clrbar12.formatter.set_powerlimits((0, 0))
+    
+    if(arrtype in ['CEz','CEperp2']):
+        CEz_xy = arr_xy
+        CEz_xz = arr_xz
+        CEz_yz = arr_yz
+
+        #CEz_xy
+        maxCe = max(np.max(CEz_xy),abs(np.min(CEz_xy)))
+        if(plotLog):
+            im30 = axs[0,0].pcolormesh(vy_xy,vx_xy,CEz_xy,cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
+        else:
+            im30 = axs[0,0].pcolormesh(vy_xy,vx_xy,CEz_xy,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
+
+        axs[0,0].set_aspect('equal', 'box')
+        if(plotFAC):
+            if(plotAvg):
+                axs[0,0].text(-vmax*2.2,0, r"$\overline{C_{E_{\perp,2}}}$", ha='center', rotation=90, wrap=False)
+            elif(plotFluc):
+                if(isLowPass):
+                    axs[0,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{\perp,2}}}^{k_{||} d_i < 15}$", ha='center', rotation=90, wrap=False)
+                elif(isHighPass):
+                    axs[0,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{\perp,2}}}^{k_{||} d_i > 15}$", ha='center', rotation=90, wrap=False)
+                else:
+                    axs[0,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{\perp,2}}}$", ha='center', rotation=90, wrap=False)
+            else:
+                axs[0,0].text(-vmax*2.2,0, r"$C_{E_{\perp,2}}$", ha='center', rotation=90, wrap=False)
+        else:
+            if(plotAvg):
+                axs[0,0].text(-vmax*2.2,0, r"$\overline{C_{E_{z}}}$", ha='center', rotation=90, wrap=False)
+            elif(plotFluc):
+                if(isLowPass):
+                    axs[0,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{z}}}^{k_{||} d_i < 15}$", ha='center', rotation=90, wrap=False)
+                elif(isHighPass):
+                    axs[0,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{z}}}^{k_{||} d_i > 15}$", ha='center', rotation=90, wrap=False)
+                else:
+                    axs[0,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{z}}}$", ha='center', rotation=90, wrap=False)
+            else:
+                axs[0,0].text(-vmax*2.2,0, r"$C_{E_{z}}$", ha='center', rotation=90, wrap=False)
+        axs[0,0].grid()
+        if(metadata != None):
+            axs[0,0].text(-vmax*2.2,0, metadata, ha='center', rotation=90, wrap=False)
+        if(computeJdotE):
+            JdotE = compute_energization(CEz_xy,dv)
+            if(True):
+                if(plotFAC):
+                    if(plotAvg):
+                        axs[0,0].set_title('$\overline{j_{\perp,2}}  \overline{E_{\perp,2}}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    elif(plotFluc):
+                        if(isLowPass):
+                            axs[0,0].set_title('$\widetilde{j_{\perp,2}}^{k_{||} d_i < 15}  \widetilde{E_{\perp,2}}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        elif(isHighPass):
+                            axs[0,0].set_title('$\widetilde{j_{\perp,2}}^{k_{||} d_i > 15}  \widetilde{E_{\perp,2}}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        else:
+                            axs[0,0].set_title('$\widetilde{j_{\perp,2}}  \widetilde{E_{\perp,2}}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    else:
+                        axs[0,0].set_title('$j_{\perp,2}  E_{\perp,2}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                else:
+                    if(plotAvg):
+                        axs[0,0].set_title('$\overline{j_z}  \overline{E_z}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    elif(plotFluc):
+                        if(isLowPass):
+                            axs[0,0].set_title('$\widetilde{j_z}^{k_{||} d_i < 15}  \widetilde{E_z}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        elif(isHighPass):
+                            axs[0,0].set_title('$\widetilde{j_z}^{k_{||} d_i > 15}  \widetilde{E_z}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        else:
+                            axs[0,0].set_title('$\widetilde{j_z}  \widetilde{E_z}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    else:
+                        axs[0,0].set_title('$j_z  E_z$ = ' + "{:.2e}".format(JdotE),loc='left')
+
+        clrbar10 = plt.colorbar(im30, ax=axs[0,0], shrink = cbarshrink)#,format='%.1e')
+        if(not(plotLog)):
+            clrbar10.formatter.set_powerlimits((0, 0))
+
+        #CEz_xz
+        maxCe = max(np.max(CEz_xz),abs(np.min(CEz_xz)))
+        if(plotLog):
+            im31 = axs[0,1].pcolormesh(vz_xz,vx_xz,CEz_xz,cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
+        else:
+            im31 = axs[0,1].pcolormesh(vz_xz,vx_xz,CEz_xz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
+        #axs[3,1].set_title('$C_{Ez}(v_x,v_z)$')
+
+        axs[0,1].set_aspect('equal', 'box')
+        axs[0,1].grid()
+        if(computeJdotE):
+            JdotE = compute_energization(CEz_xz,dv)
+            if(not(plotDiagJEOnly)):
+                if(plotFAC):
+                    if(plotAvg):
+                        axs[0,1].set_title('$\overline{j_{\perp,2}}  \overline{E_{\perp,2}}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    elif(plotFluc):
+                        if(isLowPass):
+                            axs[0,1].set_title('$\widetilde{j_{\perp,2}}^{k_{||} d_i < 15}  \widetilde{E_{\perp,2}}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        elif(isHighPass):
+                            axs[0,1].set_title('$\widetilde{j_{\perp,2}}^{k_{||} d_i > 15}  \widetilde{E_{\perp,2}}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        else:
+                            axs[0,1].set_title('$\widetilde{j_{\perp,2}}  \widetilde{E_{\perp,2}}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    else:
+                        axs[0,1].set_title('$j_{\perp,2}  E_{\perp,2}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                else:
+                    if(plotAvg):
+                        axs[0,1].set_title('$\overline{j_z}  \overline{E_z}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    elif(plotFluc):
+                        if(isLowPass):
+                            axs[0,1].set_title('$\widetilde{j_z}^{k_{||} d_i < 15}  \widetilde{E_z}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        elif(isHighPass):
+                            axs[0,1].set_title('$\widetilde{j_z}^{k_{||} d_i > 15}  \widetilde{E_z}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        else:
+                            axs[0,1].set_title('$\widetilde{j_z}  \widetilde{E_z}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    else:
+                        axs[0,1].set_title('$j_z  E_z$ = ' + "{:.2e}".format(JdotE),loc='left')
+
+        clrbar11 = plt.colorbar(im31, ax=axs[0,1], shrink = cbarshrink)#,format='%.1e')
+        if(not(plotLog)):
+            clrbar11.formatter.set_powerlimits((0, 0))
+
+        #CEz_yz
+        maxCe = max(np.max(CEz_yz),abs(np.min(CEz_yz)))
+        if(plotLog):
+            im32 = axs[0,2].pcolormesh(vz_yz,vy_yz,CEz_yz.T,cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
+        else:
+            im32 = axs[0,2].pcolormesh(vz_yz,vy_yz,CEz_yz.T,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
+
+        axs[0,2].set_aspect('equal', 'box')
+        axs[0,2].grid()
+        if(computeJdotE):
+            JdotE = compute_energization(CEz_yz.T,dv)
+            if(not(plotDiagJEOnly)):
+                if(plotFAC):
+                    if(plotAvg):
+                        axs[0,2].set_title('$\overline{j_{\perp,2}}  \overline{E_{\perp,2}}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    elif(plotFluc):
+                        if(isLowPass):
+                            axs[0,2].set_title('$\widetilde{j_{\perp,2}}^{k_{||} d_i < 15}  \widetilde{E_{\perp,2}}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        elif(isHighPass):
+                            axs[0,2].set_title('$\widetilde{j_{\perp,2}}^{k_{||} d_i > 15}  \widetilde{E_{\perp,2}}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        else:
+                            axs[0,2].set_title('$\widetilde{j_{\perp,2}}  \widetilde{E_{\perp,2}}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    else:
+                        axs[0,2].set_title('$j_{\perp,2}  E_{\perp,2}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                else:
+                    if(plotAvg):
+                        axs[0,2].set_title('$\overline{j_z}  \overline{E_z}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    elif(plotFluc):
+                        if(isLowPass):
+                            axs[0,2].set_title('$\widetilde{j_z}^{k_{||} d_i < 15}  \widetilde{E_z}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        elif(isHighPass):
+                            axs[0,2].set_title('$\widetilde{j_z}^{k_{||} d_i > 15}  \widetilde{E_z}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        else:
+                            axs[0,2].set_title('$\widetilde{j_z}  \widetilde{E_z}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    else:
+                        axs[0,2].set_title('$j_z  E_z$ = ' + "{:.2e}".format(JdotE),loc='left')
+
+        clrbar12 = plt.colorbar(im32, ax=axs[0,2], shrink = cbarshrink)#,format='%.1e')
+        if(not(plotLog)):
+            clrbar12.formatter.set_powerlimits((0, 0))
+
+    if(arrtype in ['Ctot']):
+        CEtot_xy = arr_xy
+        CEtot_xz = arr_xz
+        CEtot_yz = arr_yz
+
+        #CEtot_xy
+        maxCe = max(np.max(CEtot_xy),abs(np.min(CEtot_xy)))
+        if(plotLog):
+            im30 = axs[0,0].pcolormesh(vy_xy,vx_xy,CEtot_xy,cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
+        else:
+            im30 = axs[0,0].pcolormesh(vy_xy,vx_xy,CEtot_xy,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
+
+        axs[0,0].set_aspect('equal', 'box')
+        if(plotFAC):
+            if(plotAvg):
+                axs[0,0].text(-vmax*2.2,0, r"$\overline{C_{E_{tot}}}$", ha='center', rotation=90, wrap=False)
+            elif(plotFluc):
+                if(isLowPass):
+                    axs[0,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{tot}}}^{k_{||} d_i < 15}$", ha='center', rotation=90, wrap=False)
+                elif(isHighPass):
+                    axs[0,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{tot}}}^{k_{||} d_i > 15}$", ha='center', rotation=90, wrap=False)
+                else:
+                    axs[0,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{tot}}}$", ha='center', rotation=90, wrap=False)
+            else:
+                axs[0,0].text(-vmax*2.2,0, r"$C_{E_{tot}}$", ha='center', rotation=90, wrap=False)
+        else:
+            if(plotAvg):
+                axs[0,0].text(-vmax*2.2,0, r"$\overline{C_{E_{z}}}$", ha='center', rotation=90, wrap=False)
+            elif(plotFluc):
+                if(isLowPass):
+                    axs[0,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{tot}}}^{k_{||} d_i < 15}$", ha='center', rotation=90, wrap=False)
+                elif(isHighPass):
+                    axs[0,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{tot}}}^{k_{||} d_i > 15}$", ha='center', rotation=90, wrap=False)
+                else:
+                    axs[0,0].text(-vmax*2.2,0, r"$\widetilde{C_{E_{tot}}}$", ha='center', rotation=90, wrap=False)
+            else:
+                axs[0,0].text(-vmax*2.2,0, r"$C_{E_{tot}}$", ha='center', rotation=90, wrap=False)
+        axs[0,0].grid()
+        if(metadata != None):
+            axs[0,0].text(-vmax*2.2,0, metadata, ha='center', rotation=90, wrap=False)
+        if(computeJdotE):
+            JdotE = compute_energization(CEtot_xy,dv)
+            if(True):
+                if(plotFAC):
+                    if(plotAvg):
+                        axs[0,0].set_title('$\overline{\mathbf{j}} \cdot \overline{\mathbf{E}}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    elif(plotFluc):
+                        if(isLowPass):
+                            axs[0,0].set_title('$\widetilde{\mathbf{j}}^{k_{||} d_i < 15}  \cdot \widetilde{\mathbf{E}}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        elif(isHighPass):
+                            axs[0,0].set_title('$\widetilde{\mathbf{j}}^{k_{||} d_i > 15}  \cdot \widetilde{\mathbf{E}}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        else:
+                            axs[0,0].set_title('$\widetilde{\mathbf{j}} \cdot \widetilde{\mathbf{E}}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    else:
+                        axs[0,0].set_title('$\mathbf{j} \cdot  \mathbf{E}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                else:
+                    if(plotAvg):
+                        axs[0,0].set_title('$\overline{\mathbf{j}}  \cdot \overline{\mathbf{E}}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    elif(plotFluc):
+                        if(isLowPass):
+                            axs[0,0].set_title('$\widetilde{\mathbf{j}}^{k_{||} d_i < 15} \cdot \widetilde{\mathbf{E}}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        elif(isHighPass):
+                            axs[0,0].set_title('$\widetilde{\mathbf{j}}^{k_{||} d_i > 15} \cdot \widetilde{\mathbf{E}}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        else:
+                            axs[0,0].set_title('$\widetilde{\mathbf{j}} \cdot \widetilde{\mathbf{E}}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    else:
+                        axs[0,0].set_title('$\mathbf{j} \cdot  \mathbf{E}$ = ' + "{:.2e}".format(JdotE),loc='left')
+
+        clrbar10 = plt.colorbar(im30, ax=axs[0,0], shrink = cbarshrink)#,format='%.1e')
+        if(not(plotLog)):
+            clrbar10.formatter.set_powerlimits((0, 0))
+
+        #CEtot_xz
+        maxCe = max(np.max(CEtot_xz),abs(np.min(CEtot_xz)))
+        if(plotLog):
+            im31 = axs[0,1].pcolormesh(vz_xz,vx_xz,CEtot_xz,cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
+        else:
+            im31 = axs[0,1].pcolormesh(vz_xz,vx_xz,CEtot_xz,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
+        #axs[3,1].set_title('$C_{Ez}(v_x,v_z)$')
+
+        axs[0,1].set_aspect('equal', 'box')
+        axs[0,1].grid()
+        if(computeJdotE):
+            JdotE = compute_energization(CEtot_xz,dv)
+            if(not(plotDiagJEOnly)):
+                if(plotFAC):
+                    if(plotAvg):
+                        axs[0,1].set_title('$\overline{j_{\perp,2}}  \overline{E_{\perp,2}}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    elif(plotFluc):
+                        if(isLowPass):
+                            axs[0,1].set_title('$\widetilde{j_{\perp,2}}^{k_{||} d_i < 15}  \widetilde{E_{\perp,2}}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        elif(isHighPass):
+                            axs[0,1].set_title('$\widetilde{j_{\perp,2}}^{k_{||} d_i > 15}  \widetilde{E_{\perp,2}}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        else:
+                            axs[0,1].set_title('$\widetilde{j_{\perp,2}}  \widetilde{E_{\perp,2}}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    else:
+                        axs[0,1].set_title('$j_{\perp,2}  E_{\perp,2}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                else:
+                    if(plotAvg):
+                        axs[0,1].set_title('$\overline{j_z}  \overline{E_z}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    elif(plotFluc):
+                        if(isLowPass):
+                            axs[0,1].set_title('$\widetilde{j_z}^{k_{||} d_i < 15}  \widetilde{E_z}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        elif(isHighPass):
+                            axs[0,1].set_title('$\widetilde{j_z}^{k_{||} d_i > 15}  \widetilde{E_z}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        else:
+                            axs[0,1].set_title('$\widetilde{j_z}  \widetilde{E_z}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    else:
+                        axs[0,1].set_title('$j_z  E_z$ = ' + "{:.2e}".format(JdotE),loc='left')
+
+        clrbar11 = plt.colorbar(im31, ax=axs[0,1], shrink = cbarshrink)#,format='%.1e')
+        if(not(plotLog)):
+            clrbar11.formatter.set_powerlimits((0, 0))
+
+        #CEtot_yz
+        maxCe = max(np.max(CEtot_yz),abs(np.min(CEtot_yz)))
+        if(plotLog):
+            im32 = axs[0,2].pcolormesh(vz_yz,vy_yz,CEtot_yz.T,cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
+        else:
+            im32 = axs[0,2].pcolormesh(vz_yz,vy_yz,CEtot_yz.T,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
+
+        axs[0,2].set_aspect('equal', 'box')
+        axs[0,2].grid()
+        if(computeJdotE):
+            JdotE = compute_energization(CEtot_yz.T,dv)
+            if(not(plotDiagJEOnly)):
+                if(plotFAC):
+                    if(plotAvg):
+                        axs[0,2].set_title('$\overline{\mathbf{j}}  \cdot \overline{\mathbf{E}}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    elif(plotFluc):
+                        if(isLowPass):
+                            axs[0,2].set_title('$\widetilde{\mathbf{j}}^{k_{||} d_i < 15} \cdot \widetilde{\mathbf{E}}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        elif(isHighPass):
+                            axs[0,2].set_title('$\widetilde{\mathbf{j}}^{k_{||} d_i > 15} \cdot  \widetilde{\mathbf{E}}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        else:
+                            axs[0,2].set_title('$\widetilde{\mathbf{j}}  \cdot \widetilde{\mathbf{E}}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    else:
+                        axs[0,2].set_title('$\mathbf{j} \cdot  \cdot \mathbf{E}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                else:
+                    if(plotAvg):
+                        axs[0,2].set_title('$\overline{\mathbf{j}} \cdot  \overline{\mahtbf{E}}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    elif(plotFluc):
+                        if(isLowPass):
+                            axs[0,2].set_title('$\widetilde{\mathbf{j}}^{k_{||} d_i < 15}  \cdot \widetilde{\mathbf{E}}^{k_{||} d_i < 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        elif(isHighPass):
+                            axs[0,2].set_title('$\widetilde{\mathbf{j}}^{k_{||} d_i > 15}  \cdot \widetilde{\mathbf{E}}^{k_{||} d_i > 15}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                        else:
+                            axs[0,2].set_title('$\widetilde{\mathbf{j}} \cdot  \widetilde{\mathbf{E}}$ = ' + "{:.2e}".format(JdotE),loc='left')
+                    else:
+                        axs[0,2].set_title('$\mathbf{j} \cdot  \mathbf{E}$ = ' + "{:.2e}".format(JdotE),loc='left')
+
+        clrbar12 = plt.colorbar(im32, ax=axs[0,2], shrink = cbarshrink)#,format='%.1e')
+        if(not(plotLog)):
+            clrbar12.formatter.set_powerlimits((0, 0))
+
+
+    for _j in range(0,3):
+        axs[0,_j].set_xlim(-vmax,vmax)
+        axs[0,_j].set_ylim(-vmax,vmax)
+
+
+    if(plotFAC):
+        axs[0,0].set_xlabel(r"$v_{||}/"+vnormstr+"$")
+        axs[0,0].set_ylabel(r"$v_{\perp,1}/"+vnormstr+"$")
+    else:
+        axs[0,0].set_xlabel(r"$v_x/"+vnormstr+"$")
+        axs[0,0].set_ylabel(r"$v_y/"+vnormstr+"$")
+
+    if(plotFAC):
+        axs[0,1].set_xlabel(r"$v_{||}/"+vnormstr+"$")
+        axs[0,1].set_ylabel(r"$v_{\perp,2}/"+vnormstr+"$")
+    else:
+        axs[0,1].set_xlabel(r"$v_x/"+vnormstr+"$")
+        axs[0,1].set_ylabel(r"$v_z/"+vnormstr+"$")
+
+    if(plotFAC):
+        axs[0,2].set_xlabel(r"$v_{\perp,2}/"+vnormstr+"$")
+        axs[0,2].set_ylabel(r"$v_{\perp,1}/"+vnormstr+"$")
+    else:
+        axs[0,2].set_xlabel(r"$v_z/"+vnormstr+"$")
+        axs[0,2].set_ylabel(r"$v_y/"+vnormstr+"$")
 
     #set ticks
     intvl = 1.
@@ -1206,89 +2257,30 @@ def plot_cor_and_dist_supergrid(vx, vy, vz, vmax,
         intvl = 10.
     tcks = np.arange(0,vmax,intvl)
     tcks = np.concatenate((-1*np.flip(tcks),tcks))
-    for _i in range(0,4):
-        for _j in range(0,3):
-            axs[_i,_j].set_xticks(tcks)
-            axs[_i,_j].set_yticks(tcks)
 
-    #plt.subplots_adjust(hspace=.5,wspace=-.3)
+    for _j in range(0,3):
+        axs[0,_j].set_xticks(tcks)
+        axs[0,_j].set_yticks(tcks)
 
 
-    maxplotvval = np.max(vz_yz) #Assumes square grid of even size
     if(flnm != ''):
         plt.savefig(flnm+'.png',format='png',dpi=250,bbox_inches='tight')
-        
+            
         #must make figure first to grab x10^val on top of color bar- after grabbing it, we can move it- a little wasteful but it was quick solution
         clrbar10text = str(clrbar10.ax.yaxis.get_offset_text().get_text())
         clrbar10.ax.yaxis.get_offset_text().set_visible(False)
-        axs[1,0].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar10text, va='bottom', ha='center')
+        axs[0,0].text(1.63*maxplotvval,-1.27*maxplotvval,clrbar10text, va='bottom', ha='center')
         clrbar11text = str(clrbar11.ax.yaxis.get_offset_text().get_text())
         clrbar11.ax.yaxis.get_offset_text().set_visible(False) 
-        axs[1,1].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar11text, va='bottom', ha='center')
+        axs[0,1].text(1.63*maxplotvval,-1.27*maxplotvval,clrbar11text, va='bottom', ha='center')
         clrbar12text = str(clrbar12.ax.yaxis.get_offset_text().get_text())
         clrbar12.ax.yaxis.get_offset_text().set_visible(False)
-        axs[1,2].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar12text, va='bottom', ha='center')
-        clrbar20text = str(clrbar20.ax.yaxis.get_offset_text().get_text())
-        clrbar20.ax.yaxis.get_offset_text().set_visible(False)
-        axs[2,0].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar20text, va='bottom', ha='center')
-        clrbar21text = str(clrbar21.ax.yaxis.get_offset_text().get_text())
-        clrbar21.ax.yaxis.get_offset_text().set_visible(False)
-        axs[2,1].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar21text, va='bottom', ha='center')
-        clrbar22text = str(clrbar22.ax.yaxis.get_offset_text().get_text())
-        clrbar22.ax.yaxis.get_offset_text().set_visible(False)
-        axs[2,2].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar22text, va='bottom', ha='center')
-        clrbar30text = str(clrbar30.ax.yaxis.get_offset_text().get_text())
-        clrbar30.ax.yaxis.get_offset_text().set_visible(False)
-        axs[3,0].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar30text, va='bottom', ha='center')
-        clrbar31text = str(clrbar31.ax.yaxis.get_offset_text().get_text())
-        clrbar31.ax.yaxis.get_offset_text().set_visible(False)
-        axs[3,1].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar31text, va='bottom', ha='center')
-        clrbar32text = str(clrbar32.ax.yaxis.get_offset_text().get_text())
-        clrbar32.ax.yaxis.get_offset_text().set_visible(False)
-        axs[3,2].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar32text, va='bottom', ha='center')
-
+        axs[0,2].text(1.63*maxplotvval,-1.27*maxplotvval,clrbar12text, va='bottom', ha='center')
+ 
         plt.savefig(flnm+'.png',format='png',dpi=250,bbox_inches='tight')
-
-
-        plt.close('all') #saves RAM
     else:
-        import os
-
-        #for some reason, we have to generate the plot to move the colorpower power elseweher
-        plt.savefig('_tempdelete.png',format='png',dpi=250,bbox_inches='tight')
-        os.remove('_tempdelete.png')
-
-        #must make figure first to grab x10^val on top of color bar- after grabbing it, we can move it- a little wasteful but it was quick solution
-        clrbar10text = str(clrbar10.ax.yaxis.get_offset_text().get_text())
-        clrbar10.ax.yaxis.get_offset_text().set_visible(False)
-        axs[1,0].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar10text, va='bottom', ha='center')
-        clrbar11text = str(clrbar11.ax.yaxis.get_offset_text().get_text())
-        clrbar11.ax.yaxis.get_offset_text().set_visible(False) 
-        axs[1,1].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar11text, va='bottom', ha='center')
-        clrbar12text = str(clrbar12.ax.yaxis.get_offset_text().get_text())
-        clrbar12.ax.yaxis.get_offset_text().set_visible(False)
-        axs[1,2].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar12text, va='bottom', ha='center')
-        clrbar20text = str(clrbar20.ax.yaxis.get_offset_text().get_text())
-        clrbar20.ax.yaxis.get_offset_text().set_visible(False)
-        axs[2,0].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar20text, va='bottom', ha='center')
-        clrbar21text = str(clrbar21.ax.yaxis.get_offset_text().get_text())
-        clrbar21.ax.yaxis.get_offset_text().set_visible(False)
-        axs[2,1].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar21text, va='bottom', ha='center')
-        clrbar22text = str(clrbar22.ax.yaxis.get_offset_text().get_text())
-        clrbar22.ax.yaxis.get_offset_text().set_visible(False)
-        axs[2,2].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar22text, va='bottom', ha='center')
-        clrbar30text = str(clrbar30.ax.yaxis.get_offset_text().get_text())
-        clrbar30.ax.yaxis.get_offset_text().set_visible(False)
-        axs[3,0].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar30text, va='bottom', ha='center')
-        clrbar31text = str(clrbar31.ax.yaxis.get_offset_text().get_text())
-        clrbar31.ax.yaxis.get_offset_text().set_visible(False)
-        axs[3,1].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar31text, va='bottom', ha='center')
-        clrbar32text = str(clrbar32.ax.yaxis.get_offset_text().get_text())
-        clrbar32.ax.yaxis.get_offset_text().set_visible(False)
-        axs[3,2].text(1.5*maxplotvval,-1.3*maxplotvval,clrbar32text, va='bottom', ha='center')
-
         plt.show()
-    plt.close()
+    plt.close('all') #saves RAM
 
 def make_9panel_sweep_from_2v(Hist_vxvy, Hist_vxvz, Hist_vyvz,
                               C_Ex_vxvy, C_Ex_vxvz, C_Ex_vyvz,
@@ -1769,6 +2761,8 @@ def plot_dist_v_fields_supergrid(vx, vy, vz, vmax,
     plt.close()
 
 
+
+
 def plot_gyro(vpar,vperp,corepargyro,coreperpgyro,flnm='',isIon=True,plotLog=False,computeJdotE=True,npar=None,plotAvg = False, plotFluc = False,isLowPass=False,isHighPass=False):
     """
 
@@ -1916,6 +2910,111 @@ def plot_gyro(vpar,vperp,corepargyro,coreperpgyro,flnm='',isIon=True,plotLog=Fal
     else:
         plt.show()
     plt.close()
+
+def plot_gyro_single(vpar,vperp,coregyro,flnm='',coresubscript='tot',isIon=True,plotLog=False,computeJdotE=True,npar=None,plotAvg = False, plotFluc = False,isLowPass=False,isHighPass=False):
+    """
+
+    """
+    if(npar != None):
+        corepargyro /= npar
+        coreperpgyro /= npar
+
+    plt.style.use("cb.mplstyle") #sets style parameters for matplotlib plots
+
+    fig, axs = plt.subplots(1,1,figsize=(2*5,4*5),sharey=True)
+
+    vmax = np.max(vpar)
+
+    if(isIon):
+        vnormstr = 'v_{ti}'
+    else:
+        vnormstr = 'v_{te}'
+
+    clboffset = np.array([vmax*.15,-vmax*.15])
+
+    maxCe = np.max(coregyro)
+    if(plotLog):
+        im11 = axs.pcolormesh(vpar,vperp,coregyro, cmap="seismic", shading="gouraud",norm=colors.SymLogNorm(linthresh=1., linscale=1., vmin=-maxCe, vmax=maxCe))
+    else:
+        im11 = axs.pcolormesh(vpar,vperp,coregyro,vmax=maxCe,vmin=-maxCe, cmap="seismic", shading="gouraud")
+    axs.set_xlabel(r"$v_{||}/"+vnormstr+"$")
+    axs.set_ylabel(r"$v_{\perp}/"+vnormstr+"$")
+    axs.set_aspect('equal', 'box')
+    axs.grid()
+    if(plotFluc):
+        if(isLowPass):
+            axs.set_title(r'$\widetilde{C_{E_{'+coresubscript+'}}}^{k_{||} d_i < 15}(v_{||},v_{\perp})$', loc='right')
+        elif(isHighPass):
+            axs.set_title(r'$\widetilde{C_{E_{'+coresubscript+'}}}^{k_{||} d_i > 15}(v_{||},v_{\perp})$', loc='right')
+        else:
+            axs.set_title(r'$\widetilde{C_{E_{'+coresubscript+'}}}(v_{||},v_{\perp})$', loc='right')
+    elif(plotAvg):
+        axs.set_title(r'$\overline{C_{E_{'+coresubscript+'}}}(v_{||},v_{\perp})$', loc='right')
+    else:
+        axs.set_title(r'$C_{E_{'+coresubscript+'}}(v_{||},v_{\perp})$', loc='right')
+
+    if(computeJdotE):
+        JdotE = np.sum(coregyro)
+
+        sval = 'e'
+        if(isIon):
+            sval = 'i'
+
+            if(coresubscript=='tot'):
+                if(plotFluc):
+                    if(isLowPass):
+                        axs.text(-vmax*0.85,vmax*0.75,r'$\widetilde{\mathbf{j}_{'+sval+'}}^{k_{||} d_i < 15}  \cdot \widetilde{\mathbf{E}}^{k_{||} d_i < 15} = $'+ "{:.2e}".format(JdotE),fontsize=24)
+                    elif(isHighPass):
+                        axs.text(-vmax*0.85,vmax*0.75,r'$\widetilde{\mathbf{j}_{'+sval+'}}^{k_{||} d_i < 15} \cdot \widetilde{\mathbf{E}}^{k_{||} d_i > 15} = $'+ "{:.2e}".format(JdotE),fontsize=24)
+                    else:
+                        axs.text(-vmax*0.85,vmax*0.75,r'$\widetilde{\mathbf{j}_{'+sval+'}} \cdot \widetilde{\mathbf{E}} = $'+ "{:.2e}".format(JdotE),fontsize=24)
+                elif(plotAvg):
+                    axs.text(-vmax*0.85,vmax*0.75,r'$\overline{\mathbf{j}_{'+sval+'}} \cdot \overline{\mathbf{E}} = $'+ "{:.2e}".format(JdotE),fontsize=24)
+                else:
+                    axs.text(-vmax*0.85,vmax*0.75,r'$\mathbf{j}_{'+sval+'} \cdot \mathbf{E} = $'+ "{:.2e}".format(JdotE),fontsize=12)
+            else:
+                if(plotFluc):
+                    if(isLowPass):
+                        axs.text(-vmax*0.85,vmax*0.75,r'$\widetilde{j_{'+coresubscript+','+sval+'}}^{k_{||} d_i < 15}  \widetilde{E}_{'+coresubscript+'}^{k_{||} d_i < 15} = $'+ "{:.2e}".format(JdotE),fontsize=24)
+                    elif(isHighPass):
+                        axs.text(-vmax*0.85,vmax*0.75,r'$\widetilde{j_{'+coresubscript+','+sval+'}}^{k_{||} d_i < 15}  \widetilde{E}_{'+coresubscript+'}^{k_{||} d_i > 15} = $'+ "{:.2e}".format(JdotE),fontsize=24)
+                    else:
+                        axs.text(-vmax*0.85,vmax*0.75,r'$\widetilde{j_{'+coresubscript+','+sval+'}}  \widetilde{E}_{'+coresubscript+'} = $'+ "{:.2e}".format(JdotE),fontsize=24)
+                elif(plotAvg):
+                    axs.text(-vmax*0.85,vmax*0.75,r'$\overline{j_{'+coresubscript+','+sval+'}}  \overline{E}_{'+coresubscript+'} = $'+ "{:.2e}".format(JdotE),fontsize=24)
+                else:
+                    axs.text(-vmax*0.85,vmax*0.75,r'$j_{'+coresubscript+','+sval+'}  E_{'+coresubscript+'} = $'+ "{:.2e}".format(JdotE),fontsize=24)
+
+    # #set ticks
+    # intvl = 1.
+    # if(vmax > 5):
+    #     intvl = 5.
+    # if(vmax > 10):
+    #     intvl = 10.
+    # tcks = np.arange(0,vmax,intvl)
+    # tcks = np.concatenate((-1*np.flip(tcks),tcks))
+    # axs[0].set_xticks(tcks)
+    # axs[0].set_yticks(tcks)
+
+    clrbar11 = plt.colorbar(im11, ax=axs,fraction=0.024, pad=0.04)
+    if(not(plotLog)):
+        clrbar11.formatter.set_powerlimits((0, 0))
+
+    maxplotvval = np.max(vpar) #Assumes square grid of even size
+
+    if(flnm != ''):
+        plt.savefig(flnm+'.png',format='png',dpi=250,bbox_inches='tight') #for some reason this needs to be done to get the following lines to work...
+   
+        clrbar11text = str(clrbar11.ax.yaxis.get_offset_text().get_text())
+        clrbar11.ax.yaxis.get_offset_text().set_visible(False)
+        axs.text(1.25*maxplotvval,-0.175*maxplotvval,clrbar11text, va='bottom', ha='center')
+        
+        plt.savefig(flnm+'.png',format='png',dpi=250,bbox_inches='tight')
+        plt.close('all') #saves RAM
+    else:
+        plt.show()
+    plt.close()
+
 
 
 def plot_gyro_3comp(vpar,vperp,corepargyro,coreperp1gyro,coreperp2gyro,flnm='',isIon=True,plotLog=False,computeJdotE=True,npar=None,plotAvg = False, plotFluc = False,isLowPass=False,isHighPass=False):
@@ -2067,6 +3166,7 @@ def plot_gyro_3comp(vpar,vperp,corepargyro,coreperp1gyro,coreperp2gyro,flnm='',i
 #             axs[_i].set_xticks(tcks)
 #             axs[_i].set_yticks(tcks)
 
+
     clrbar11 = plt.colorbar(im11, ax=axs[0],fraction=0.024, pad=0.04)
     if(not(plotLog)):
         clrbar11.formatter.set_powerlimits((0, 0))
@@ -2107,7 +3207,7 @@ def plot_gyro_3comp(vpar,vperp,corepargyro,coreperp1gyro,coreperp2gyro,flnm='',i
         plt.show()
     plt.close()
 
-def project_and_plot_supergrid(vx,vy,vz,vmax,hist,corex,corey,corez,flnm,plotFAC=False,plotAvg=False,plotFluc=False,isIon=True,isLowPass=False,isHighPass=False):
+def project_and_plot_supergrid(vx,vy,vz,vmax,hist,corex,corey,corez,flnm,title=None,plotLog=False,plotFAC=False,plotAvg=False,plotFluc=False,isIon=True,isLowPass=False,isHighPass=False,vxmin=None,vxmax=None,vymin=None,vymax=None,vzmin=None,vzmax=None):
     from FPCAnalysis.array_ops import array_3d_to_2d
 
     H_xy = array_3d_to_2d(hist, 'xy')
@@ -2131,9 +3231,22 @@ def project_and_plot_supergrid(vx,vy,vz,vmax,hist,corex,corey,corez,flnm,plotFAC
                                 CEx_xy,CEx_xz, CEx_yz,
                                 CEy_xy,CEy_xz, CEy_yz,
                                 CEz_xy,CEz_xz, CEz_yz,
-                                flnm = flnm, computeJdotE = True, plotFAC = plotFAC, plotAvg = plotAvg, plotFluc = plotFluc, isIon = isIon, isLowPass=isLowPass,isHighPass=isHighPass)
+                                flnm = flnm, ttl=title, computeJdotE = True, plotLog=plotLog, plotFAC = plotFAC, plotAvg = plotAvg, plotFluc = plotFluc, isIon = isIon, isLowPass=isLowPass,isHighPass=isHighPass,vxmin=vxmin,vxmax=vxmax,vymin=vymin,vymax=vymax,vzmin=vzmin,vzmax=vzmax)
 
+def project_and_plot_supergrid_row(vx,vy,vz,vmax,arr,arrtype,flnm,plotFAC=False,plotAvg=False,plotLog=False,plotFluc=False,isIon=True,isLowPass=False,isHighPass=False):
+    
+    from FPCAnalysis.array_ops import array_3d_to_2d
 
+    arr_xy = array_3d_to_2d(arr, 'xy')
+    arr_xz = array_3d_to_2d(arr, 'xz')
+    arr_yz = array_3d_to_2d(arr, 'yz')
+
+    plot_cor_and_dist_supergrid_row(vx, vy, vz, vmax,
+                                arr_xy,arr_xz, arr_yz,
+                                arrtype,
+                                flnm = flnm, ttl = '', computeJdotE = True, params = None, metadata = None, xpos = None, plotLog = plotLog, plotLogHist = True,
+                                plotFAC = plotFAC, plotFluc = plotFluc, plotAvg = plotAvg, isIon = isIon, listpos=False,xposval=None,normtoN = False,Nval = None, isLowPass=isLowPass,isHighPass=isHighPass,plotDiagJEOnly=True)
+    
 def plot_phaseposvsvx(dparticles,poskey,velkey,xmin,xmax,dx,vmax,dv,cbarmax=None,flnm=''):
     velbins = np.arange(-vmax, vmax+dv, dv)
     velbins = (velbins[1:] + velbins[:-1])/2.
@@ -2175,4 +3288,201 @@ def plot_phaseposvsvx(dparticles,poskey,velkey,xmin,xmax,dx,vmax,dv,cbarmax=None
         plt.show()
     else:
         plt.savefig('histxxvx.png',format='png',dpi=300,facecolor='white', transparent=False,bbox_inches='tight')
+    plt.close()
+
+
+def plot_timeintegrate_fpc_timestack(nframeslength,tarray,corexs,coreys,corezs,hists,vx,vy,vz,projection,fieldcomponent,flnm = '',isIon=True):
+    #projection = xx yy zz par perp1 perp2
+    #fieldcomponent = xx yy zz par perp1 perp2 hist
+
+    import matplotlib.colors as mcolors
+
+    from FPCAnalysis.analysis import integrate_project_in_time_by_frame
+
+    if(isIon):
+        speednormlbl = 'v_{t,i,0}'
+    else:
+        speednormlbl = 'v_{t,e,0}'
+    
+    if(projection == 'xx' or projection == 'par'):
+        plotvv = vx[0,0,:]
+        projectiveaxes = (0,1)
+        if(projection == 'xx'):
+            xplotllbl = r'$v_x/'+speednormlbl+'$'
+        else:
+            xplotllbl = r'$v_{||}/'+speednormlbl+'$'
+    elif(projection == 'yy' or projection == 'perp1'):
+        plotvv = vy[0,:,0]
+        projectiveaxes = (0,2)
+        if(projection == 'yy'):
+            xplotllbl = r'$v_y/'+speednormlbl+'$'
+        else:
+            xplotllbl = r'$v_{\perp,1}/'+speednormlbl+'$'
+    elif(projection == 'zz' or projection == 'perp2'):
+        plotvv = vz[:,0,0]
+        projectiveaxes = (1,2)
+        if(projection == 'zz'):
+            xplotllbl = r'$v_z/'+speednormlbl+'$'
+        else:
+            xplotllbl = r'$v_{\perp,2}/'+speednormlbl+'$'
+    
+    corexsintegrated,coreysintegrated,corezsintegrated,histsintegrated = integrate_project_in_time_by_frame(corexs,coreys,corezs,hists,nframeslength,projectiveaxes=projectiveaxes)
+
+    if(fieldcomponent == 'xx' or fieldcomponent == 'par'):
+        coreplotintegrated = corexsintegrated
+        if(fieldcomponent == 'xx'):
+            pttlprojlbl = 'x'
+        else:
+            pttlprojlbl = '||'
+    elif(fieldcomponent == 'yy' or fieldcomponent == 'perp1'):
+        coreplotintegrated = coreysintegrated
+        if(fieldcomponent == 'yy'):
+            pttlprojlbl = 'y'
+        else:
+            pttlprojlbl = '\perp,1'
+    elif(fieldcomponent == 'zz' or fieldcomponent == 'perp2'):
+        coreplotintegrated = corezsintegrated
+        if(fieldcomponent == 'zz'):
+            pttlprojlbl = 'z'
+        else:
+            pttlprojlbl = '\perp,2'
+    elif(fieldcomponent == 'hist'):
+        coreplotintegrated = histsintegrated
+    if(fieldcomponent != 'hist'):
+        pttlcenter = 'C_{E_{'+pttlprojlbl+'}}(\mathbf{v})'
+    else:
+        pttlcenter = 'f(\mathbf{v})'
+
+    if(projection == 'xx'):
+        pttl = '$\int '+pttlcenter+'\, \, dv_{y} dv_{z}$'
+    if(projection == 'yy'):
+        pttl = '$\int '+pttlcenter+'\, \, dv_{x} dv_{z}$'
+    if(projection == 'zz'):
+        pttl = '$\int '+pttlcenter+'\, \, dv_{x} dv_{y}$'
+    if(projection == 'par'):
+        pttl = '$\int '+pttlcenter+'\, \, dv_{\perp,1} dv_{\perp,2}$'
+    if(projection == 'perp1'):
+        pttl = '$\int '+pttlcenter+'\, \, dv_{\perp,2} dv_{||}$'
+    if(projection == 'perp2'):
+        pttl = '$\int '+pttlcenter+'\, \, dv_{\perp,1} dv_{||}$'
+
+
+    if(fieldcomponent != 'hist'):
+        cmap = 'seismic'
+        absmax = np.max(np.abs(coreplotintegrated))
+        vmin = -absmax
+        vmax = absmax
+        logscaledcbar = False
+    else:
+        cmap = 'plasma'
+        absmax = np.max(np.abs(coreplotintegrated))
+        vmin = 1E0
+        vmax = absmax    
+        logscaledcbar = True                                                                                                                                                         
+    
+    plt.figure(figsize=(4.5, 5))
+    if(logscaledcbar):
+        # Mask zero values to make background white
+        masked_data = np.ma.masked_where(coreplotintegrated == 0, coreplotintegrated)  
+        plt.pcolormesh(plotvv, tarray, masked_data, cmap=cmap, 
+                       norm=mcolors.LogNorm(vmin=vmin, vmax=vmax))
+    else:
+        plt.pcolormesh(plotvv, tarray, coreplotintegrated, cmap=cmap, vmin=vmin, vmax=vmax)
+        
+
+    plt.xlabel(xplotllbl)
+    plt.ylabel('$t \, \omega_{lh}$')
+    plt.title(pttl)
+    
+    # Create the colorbar
+    plt.colorbar(pad=.1)
+    plt.grid()
+
+    if(flnm != ''):
+        plt.savefig(flnm,format='png',dpi=300,bbox_inches='tight')
+    else:
+        plt.show()
+
+    plt.close()
+
+def plot_timeintegrate_fpc_timestack_gyro(nframeslength, tarray, corepargyros, coreperpgyros, histgyros, vpargyro, vperpgyro, projection, fieldcomponent,flnm = '',isIon=True):
+
+    #projection = xx yy zz par perp1 perp2
+    #fieldcomponent = xx yy zz par perp1 perp2 hist
+
+    import matplotlib.colors as mcolors
+
+    from FPCAnalysis.analysis import integrate_project_in_time_by_frame_gyro
+
+    if(isIon):
+        speednormlbl = 'v_{t,i,0}'
+    else:
+        speednormlbl = 'v_{t,e,0}'
+    
+    if(projection == 'par'):
+        plotvv = vpargyro[:,0]
+        projectiveaxes = (1)
+        xplotllbl = r'$v_{||}/'+speednormlbl+'$'
+    elif(projection == 'perp'):
+        plotvv = vperpgyro[0,:]
+        projectiveaxes = (0)
+        xplotllbl = r'$v_{\perp}/'+speednormlbl+'$'
+    
+    coreparsintegrated,coreperpsintegrated,histsgyrointegrated = integrate_project_in_time_by_frame_gyro(corepargyros, coreperpgyros, histgyros, nframeslength,projectiveaxis=projectiveaxes)
+
+    if(fieldcomponent == 'par'):
+        coreplotintegrated = coreparsintegrated
+        pttlprojlbl = '||'
+    elif(fieldcomponent == 'perp'):
+        coreplotintegrated = coreperpsintegrated
+        pttlprojlbl = '\perp'
+    elif(fieldcomponent == 'hist'):
+        coreplotintegrated = histsgyrointegrated
+        
+    if(fieldcomponent != 'hist'):
+        pttlcenter = 'C^{gyro}_{E_{'+pttlprojlbl+'}}(v_{||},v_{\perp})'
+    else:
+        pttlcenter = 'f^{gyro}(v_{||},v_{\perp})'
+
+    if(projection == 'par'):
+        pttl = '$\int '+pttlcenter+'\, \, dv_{\perp}$'
+    if(projection == 'perp'):
+        pttl = '$\int '+pttlcenter+'\, \, dv_{||}$'
+
+    if(fieldcomponent != 'hist'):
+        cmap = 'seismic'
+        absmax = np.max(np.abs(coreplotintegrated))
+        vmin = -absmax
+        vmax = absmax
+        logscaledcbar = False
+    else:
+        cmap = 'plasma'
+        absmax = np.max(np.abs(coreplotintegrated))
+        vmin = 1E0
+        vmax = absmax 
+        logscaledcbar = True
+
+    plt.figure(figsize=(4.5, 5))
+    if(logscaledcbar):
+        # Mask zero values to make background white
+        masked_data = np.ma.masked_where(coreplotintegrated == 0, coreplotintegrated)  
+        plt.pcolormesh(plotvv, tarray, masked_data, cmap=cmap, 
+                       norm=mcolors.LogNorm(vmin=vmin, vmax=vmax))
+    else:
+        plt.pcolormesh(plotvv, tarray, coreplotintegrated, cmap=cmap, vmin=vmin, vmax=vmax)
+        
+
+    plt.xlabel(xplotllbl)
+    plt.ylabel('$t \, \omega_{lh}$')
+    plt.title(pttl)
+    
+    # Create the colorbar
+    plt.colorbar(pad=.1)
+    plt.grid()
+
+    if(flnm != ''):
+        plt.savefig(flnm,format='png',dpi=300,bbox_inches='tight')
+    else:
+        plt.show()
+
     plt.close()

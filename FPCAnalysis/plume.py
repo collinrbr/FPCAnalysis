@@ -106,7 +106,7 @@ def load_plume_sweep(flnm):
 
     return plume_sweep
 
-def rotate_and_norm_to_plume_basis(wavemode,epar,eperp1,eperp2,comp_error_prop=False):
+def rotate_and_norm_to_plume_basis(wavemode,epar,eperp1,eperp2,comp_error_prop=True):
     """
     Rotates wavemode around epar axis so that eperp2 = 0
 
@@ -121,7 +121,6 @@ def rotate_and_norm_to_plume_basis(wavemode,epar,eperp1,eperp2,comp_error_prop=F
         vectors of field aligned coordinate basis
     comp_error_prop : bool, opt
         when true, propogates error from delta_kx everywhere
-        WARNING: must manually assign delta_kx for wavemode before setting equal to True
     """
     from copy import deepcopy
     plume_basis_wavemode = deepcopy(wavemode)
@@ -465,7 +464,7 @@ def select_wavemodes(dwavemodes, depth, kpars, kperps, tol=0.05):
     #return
     return wavemodes_matching_kpar, wavemodes_matching_kperp #TODO: these are the same thing, only return 1 thing and fix elsewhere
 
-def get_freq_from_wvmd(wm,tol=0.01, comp_error_prop=False,debug=False):
+def get_freq_from_wvmd(wm, tol=0.01, comp_error_prop=True,debug=False, rotatebasis=True,epar=None,eperp1=None,eperp2=None):
     """
     Computes frequency using faradays law of given wavemode
 
@@ -478,14 +477,18 @@ def get_freq_from_wvmd(wm,tol=0.01, comp_error_prop=False,debug=False):
     Parameters
     ----------
     wm : dict
-        wavemode from rotate_and_norm_to_plume_basis
+        wavemode
     tol : float
         tolerance of agreement between omega1 and omega3
     comp_error_prop : bool, optional
         if true, propogates error
-        note: must propgate error in rotate_and_norm_to_plume_basis first
+        note: must propgate error in rotate_and_norm_to_plume_basis first (set rotatebasis=True to automatically do this)
     debug : bool, optional
         if true, will print debug statements
+
+    rotatebasis : bool, optional
+        call rotate_and_norm_to_plume_basis automatically- this should almost always be left on unless the wavemode is already in the basis where kperp2=0
+        Please provide vectors (i.e. [x1,x2,x3]) for epar eperp1/2 if this is True
 
     Returns (comp_eror_prop == True)
     --------------------------------
@@ -498,13 +501,24 @@ def get_freq_from_wvmd(wm,tol=0.01, comp_error_prop=False,debug=False):
     omega1, omega2, omega3 : float
         omega/Omega_i using different constraints
     """
+
+    if(rotatebasis):
+        if epar is not None and eperp1 is not None and eperp2 is not None:
+            import copy
+            wm = copy.deepcopy(rotate_and_norm_to_plume_basis(copy.deepcopy(wm),epar,eperp1,eperp2,comp_error_prop=True)) #probably dont need the deep copies here, but I dont want to accidentally change the original wavemode so we are being extra careful
+        else:
+            print("Warning, epar/eperp1/eperp2 were not set. Assuming wavemode is in correct basis and has correct normalization to compute frequency....")
+
     if(np.abs(wm['kperp2'])>tol):
         print("WARNING: not in correct basis... Please normalize such that kperp2 = 0 (see rotate_and_norm_to_plume_basis())...")
 
+    #Note! This was tested well, and this property largely holds. However, due to aliasing (and/or bc of sometimes from averaging the fields with their neighbors to reduce the number of gridpoints), sometimes this will trigger erroneously, so we have turned it off for now as it only causes confusion.
     #consistency check using div B = 0
-    kdotb=(wm['Bperp1']*wm['kperp1']+wm['Bpar']*wm['kpar'])/(np.linalg.norm([wm['kperp1'],wm['kperp2'],wm['kpar']])*np.linalg.norm([wm['Bperp1'],wm['Bperp2'],wm['Bpar']]))
-    if(np.abs(kdotb) > 0.1):
-        print("Warning, div B != 0: div B = " + str(kdotb))
+    # kdotb=(wm['Bperp1']*wm['kperp1']+wm['Bperp2']*wm['kperp2']+wm['Bpar']*wm['kpar'])/(np.linalg.norm([wm['kperp1'],wm['kperp2'],wm['kpar']])*np.linalg.norm([wm['Bperp1'],wm['Bperp2'],wm['Bpar']]))
+    # if(np.abs(kdotb) > 0.1):
+    #     print("Warning, div B != 0: div B = " + str(kdotb))
+    #     print("wm['Bperp1'],wm['kperp1'],wm['Bperp2'],wm['kperp2'],wm['Bpar'],wm['kpar']")
+    #     print(wm['Bperp1'],wm['kperp1'],wm['Bperp2'],wm['kperp2'],wm['Bpar'],wm['kpar'])
 
     if(comp_error_prop):
         from uncertainties import ufloat

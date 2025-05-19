@@ -625,3 +625,168 @@ def find_local_maxima(data, threshold=.05, pltdebug=False):
         plt.show()
 
     return peaks
+
+def interpolate(independent_vars, dependent_vars, locations):
+    independent_vars = np.array(independent_vars)
+    dependent_vars = np.array(dependent_vars)
+    locations = np.array(locations)
+    interpolated_values = np.interp(locations, independent_vars, dependent_vars)
+    return locations, interpolated_values
+
+def split_positive_negative(positions,arr,doublePosForZeros):
+    #assumes positions is evenly spaced
+
+    #conserves total value!
+
+    import copy
+
+    arr = np.array(arr)
+    dx = positions[1]-positions[0]
+    positionsout = copy.deepcopy(positions)
+    positive_array = np.where(arr > 0, arr, 0)
+    negative_array = np.where(arr < 0, arr, 0)
+
+    #since matplotlib draws straight lines from val to zero, if you plot the positive_array
+    # and negative_array on the same figure they will overlap by default.
+    # This doubles the length of the position array to prevent that
+    if(doublePosForZeros):
+        positive_array = np.asarray([val for val in positive_array for _ in range(2)]) #doubles length and copys data
+        negative_array = np.asarray([val for val in negative_array for _ in range(2)]) #doubles length and copys data
+
+        positionsout = np.asarray([float(val) for val in positionsout for _ in range(2)])  #doubles length and copys data
+
+        for _i in range(0,len(positionsout)):
+            if (_i % 2 == 1):
+                positionsout[_i] = positionsout[_i] + dx/2
+
+        #find indexes to make zero to fix overlap (arguably, we should find the exact zero rather than assuming its in the middle, but this is close enough for plotting! Array should be dense anyway so the error is small and only visual... (we would also need to align the different intercepts when making the stack plots, which would be hard!))
+        pos_trimidxes = [] 
+        for _i in range(len(positive_array)-1):
+            if(_i % 2 == 1):
+                if(positive_array[_i] !=0 and negative_array[_i+1] != 0): #checking the negative array checks to make sure the data wasnt actually zero at this point
+                    pos_trimidxes.append(_i) 
+
+        #find indexes to make zero to fix overlap
+        neg_trimidxes = [] 
+        for _i in range(len(negative_array)-1):
+            if(_i % 2 == 1):
+                if(negative_array[_i] !=0 and positive_array[_i+1] != 0): #checking the positive array checks to make sure the data wasnt actually zero at this point
+                    neg_trimidxes.append(_i) 
+
+        #set indexes to make zero to fix overlap
+        for idx in pos_trimidxes:
+            positive_array[idx] = 0.
+        for idx in neg_trimidxes:
+            negative_array[idx] = 0.
+
+        #interpolate new values
+        for _i in range(1,len(negative_array)-1):
+            if (_i % 2 == 1 and (negative_array[_i-1] != 0 and negative_array[_i+1] != 0)):
+                negative_array[_i] = (negative_array[_i+1]+negative_array[_i-1])/2.
+        for _i in range(1,len(positive_array)-1):
+            if (_i % 2 == 1 and (positive_array[_i-1] != 0 and positive_array[_i+1] != 0)):
+                positive_array[_i] = (positive_array[_i+1]+positive_array[_i-1])/2.
+
+        #divide by two to conserve total value!
+        positive_array /= 2.
+        negative_array /= 2.
+
+    return positionsout, positive_array, negative_array,
+    
+def deposit_interpolate(xposes,yvals,newxposes,renormalize=False):
+    #xposes and newxposes are bin centers of arrays
+    #xposes in indep array and yvals is dependent array
+
+    #Assumes arrays are evenly spaced!!!
+
+    #Assumes old xposes has smaller and more dense grids
+
+    if(len(xposes) < len(newxposes)):
+        print("Error, this function assumes that the original array was more dense than the new one!")
+        return
+
+    xposes = np.asarray(xposes)
+    deltaxposes = xposes[1]-xposes[0] #assumes uniform spacing
+    xposes_leftside = xposes-deltaxposes/2.
+    xposes_rightside =  xposes+deltaxposes/2.
+
+    newxposes = np.asarray(newxposes)
+    newdeltaxposes = newxposes[1]-newxposes[0] #assumes uniform spacing
+    newxposes_leftside = newxposes-newdeltaxposes/2.
+    newxposes_rightside =  newxposes+newdeltaxposes/2.
+
+    if(newdeltaxposes <= deltaxposes):
+        print("Error, this function assumes that the original array was more dense than the new one!")
+        return
+
+    newyvals = np.zeros(newxposes.shape)
+
+    #loop through each new bin, and find value that belongs in it
+    for _i in range(0,len(newxposes)): #We really don't need two imbedded loops assuming the array is ordered, but its find for our relatively small arrays
+        for _j in range(0,len(xposes)):
+
+            #if entirely in bin, simply put into bin
+            if(xposes_leftside[_j] >= newxposes_leftside[_i] and xposes_rightside[_j] <= newxposes_rightside[_i]):
+                newyvals[_i] += yvals[_j]
+                
+            #if shared with bin to left
+            elif((xposes[_j] >= newxposes_leftside[_i] and xposes[_j] < newxposes_rightside[_i]) and abs(xposes[_j]-newxposes_leftside[_i]) <= abs(xposes[_j]-newxposes_rightside[_i])): #>= in rightmost conditional is critical as we must favor left or right if it falls on wall!
+                    #Find proportion in this array and add to yvals
+                    proportion_in_bin = 1-((deltaxposes/2.-abs(xposes[_j]-newxposes_leftside[_i]))/(deltaxposes))
+                    newyvals[_i] += yvals[_j]*proportion_in_bin
+
+                    #Give other proportion to yvals - 1
+                    if(_i != 0):
+                        newyvals[_i-1] += yvals[_j]*(1.-proportion_in_bin)
+
+            
+            #if shared with bin to right
+            elif((xposes[_j] >= newxposes_leftside[_i] and xposes[_j] < newxposes_rightside[_i]) and abs(xposes[_j]-newxposes_leftside[_i]) > abs(xposes[_j]-newxposes_rightside[_i])): #if within bin and closer to right
+                    #Find proportion in this array and add to yvals
+                    proportion_in_bin = 1-((deltaxposes/2.-abs(xposes[_j]-newxposes_rightside[_i]))/(deltaxposes))
+                    newyvals[_i] += yvals[_j]*proportion_in_bin
+                
+                    #Give other proportion to yvals +1 1
+                    if(_i != len(newyvals)-1):
+                        newyvals[_i+1] += yvals[_j]*(1.-proportion_in_bin)
+
+
+    #---deposit any values that were skipped because they were not any bin center, but still overlap with final bins-------
+    #make `ghostbins' just outside the domain of interest
+    ghostleftbin_leftside = newxposes_leftside[0] - newdeltaxposes
+    ghostleftbin_rightside = newxposes_leftside[0]
+    ghostrightbin_leftside = newxposes_rightside[-1]
+    ghostrightbin_rightside = newxposes_rightside[-1] + newdeltaxposes
+
+    for _j in range(0,len(xposes)):
+        if ((xposes[_j] >= ghostleftbin_leftside and xposes[_j] < ghostleftbin_rightside) and abs(xposes[_j]-ghostleftbin_leftside) > abs(xposes[_j]-ghostleftbin_rightside)):
+            proportion_in_bin = 1.-((deltaxposes/2.-abs(xposes[_j]-ghostleftbin_rightside))/(deltaxposes))
+
+            #Give other proportion to leftmost yvals
+            if(abs(proportion_in_bin) < 1.): #unless it does not overlap
+                newyvals[0]+=yvals[_j]*(1-proportion_in_bin)
+        elif((xposes[_j] >= ghostrightbin_leftside and xposes[_j] < ghostrightbin_rightside) and abs(xposes[_j]-ghostrightbin_leftside) <= abs(xposes[_j]-ghostrightbin_rightside)):
+            proportion_in_bin = 1-((deltaxposes/2.-abs(xposes[_j]-ghostrightbin_leftside))/(deltaxposes))
+            
+            #Give other proportion to leftmost yvals
+            if(abs(proportion_in_bin) < 1.): #unless it does not overlap
+                newyvals[-1]+=yvals[_j]*(1-proportion_in_bin)
+
+    #renormalize the density! (note: for our flux analysis, we don't technically look at ener density, we look at ener density * volume, and let the volume terms 'cancel', hence why default is false as this function was written for use with the energy conservation/flux analysis
+    if(renormalize):newyvals = newyvals*deltaxposes/newdeltaxposes
+        
+    return newxposes, newyvals
+
+def find_indices(array, elements):
+    """
+    Finds the indices of specified elements in an array.
+    If an element is not found, it is excluded.
+    """
+    
+    # Create a mapping of array values to their indices
+    array_index_map = {value: idx for idx, value in enumerate(array)}
+    
+    # Find indices for the elements, excluding those not in the array
+    indices = [array_index_map[element] for element in elements if element in array_index_map]
+    
+    return indices

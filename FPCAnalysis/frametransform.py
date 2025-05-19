@@ -47,6 +47,8 @@ def lorentz_transform_vx_c(dfields, vx, c):
         field data dictionary from field_loader
     vx : float
         boost velocity along x in Ma (aka v / va)
+    c : float
+        speed of light in va
     """
 
     from copy import deepcopy
@@ -60,8 +62,8 @@ def lorentz_transform_vx_c(dfields, vx, c):
     dfieldslor['ez'] = gamma*(dfields['ez']+vx*dfields['by'])
 
     dfieldslor['bx'] = dfields['bx']
-    dfieldslor['by'] = gamma*(dfields['by']+vx/c**2*dfields['ez']) 
-    dfieldslor['bz'] = gamma*(dfields['bz']-vx/c**2*dfields['ey'])
+    dfieldslor['by'] = gamma*(dfields['by']+vx/c*dfields['ez']) 
+    dfieldslor['bz'] = gamma*(dfields['bz']-vx/c*dfields['ey'])
 
     dfieldslor['Vframe_relative_to_sim'] = (dfields['Vframe_relative_to_sim']+vx)/(1.+vx*dfields['Vframe_relative_to_sim']/c**2)
 
@@ -124,7 +126,7 @@ def transform_flow(dflow, vx):
     return dflowtransform
 
 
-def shift_particles(dparticles, vx, beta_s):
+def shift_particles(dparticles, vx, beta_s, c = None):
     """
     Transforms velocity frame of particles by vx
 
@@ -184,8 +186,17 @@ def shift_particles_tristan(dparticles, vx, betai, betae, mi_me, isIon, Ti_Te = 
         dparticlestransform['Vframe_relative_to_sim'] = dparticles['Vframe_relative_to_sim'] + vx
 
     else:
-        gamma = 1./np.sqrt(1.-(vx/c)**2)
-        pass
+        dparticlestransform = copy.deepcopy(dparticles)  # deep copy
+        vxaliases = ['p1','ui','ue','vx'] #names of keys that correspond to 'vx'
+        for key in vxaliases:
+            if(key in dparticles.keys()):
+                if(isIon):
+                    dparticlestransform[key] = (dparticles[key] - (vx*np.sqrt(2))/np.sqrt(betai))/(1.-(vx*np.sqrt(2)/np.sqrt(betai))*dparticles[key]/(c**2/np.sqrt(betai)**2))
+                else:
+                    dparticlestransform[key] = (dparticles[key] - (vx*np.sqrt(2))/(np.sqrt(betae)*(mi_me**0.5)))/(1.-(vx*np.sqrt(2)/(np.sqrt(betae)*(mi_me**0.5)))*dparticles[key]/(c**2/(np.sqrt(betae)*(mi_me**0.5))**2))
+                
+        dparticlestransform['Vframe_relative_to_sim'] = (dparticlestransform['Vframe_relative_to_sim']+vx)/(1.+vx*np.sqrt(2)*dparticlestransform['Vframe_relative_to_sim']/c**2)
+
 
     return dparticlestransform
 

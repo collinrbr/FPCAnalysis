@@ -64,7 +64,7 @@ for flnm in filenames:
     cmd = 'touch '  + logdir + flnm+'.output'
     print(cmd)
     os.system(cmd)
-    if(preslice_dir==None):
+    if(preslice_dir==None or float(numcores) == 1):
         print("Warning: multiprocessing requires preslicing...")
         cmd = 'python scripts/generateFPCfromdHybridR.py'+analysisinputdir+'/'+flnm+' T F  >> '+logdir+flnm+'.output'
     else:

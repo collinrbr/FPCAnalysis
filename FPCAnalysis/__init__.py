@@ -10,6 +10,7 @@ from . import metadata as md
 from . import plume as pl
 from . import supp as sp
 from . import wavemode as wv
+from . import flux as flx
 
 from .plot import debug as pltdebug
 from .plot import fourier as pltfr
@@ -19,6 +20,7 @@ from .plot import resultsmanager as prm
 from .plot import velspace as pltvv
 from .plot import twod as plt2d
 from .plot import oned as plt1d
+from .plot import fluxes as pltflx
 
 def version():
 	"""Return the version of the package."""
@@ -27,6 +29,6 @@ def version():
 		import pkg_resources
 		__version__ = pkg_resources.get_distribution(__name__).version
 	except:
-		print("Error, could not find version (likely because we are using a development version (created by pip install -e .)! Returning hard coded value of version...")
+		print("Error, could not find version... Returning hard coded value of version...")
 		__version__ = '1.0.1'
 	return __version__

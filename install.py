@@ -60,36 +60,36 @@ def install_required_libraries(env_name):
         print("Please remove FPCAnalysisenv, fix the error, and try again!!!")
         exit()
 
-    # Install postgkeyll
-    print("Installing postgkeyll into env... (Warning: we install a specific version- not the most current version!)")
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    os.chdir(os.path.join(script_dir, '..'))
-    subprocess.run(['git', 'clone', 'https://github.com/ammarhakim/postgkyl.git'])
-    os.chdir('postgkyl')
-    subprocess.run(['git', 'checkout', 'f876908d9e0969e7608100c7b769410e21c56549']) #Comment out this line to get most current version or update third element in arr to desired version
-    os.chdir(os.path.join(script_dir, '..'))
-    if os.path.exists('FPCAnalysis/postgkyl'):
-        confirmation = input("The directory 'FPCAnalysis/postgkyl' already exists. Do you want to overwrite it? (y/n): ")
-        if confirmation.lower() == 'y':
-            shutil.rmtree('FPCAnalysis/postgkyl', ignore_errors=True)
-            os.rename('postgkyl', 'FPCAnalysis/postgkyl')
-            print("Directory overwritten successfully.")
-        else:
-            print("Not overwriten! Will compile the postgkyl that is already there instead...")
-    else:
-        os.rename('postgkyl', 'FPCAnalysis/postgkyl')
-    os.chdir(os.path.join(script_dir, '..', 'FPCAnalysis'))
-    try:
-        subprocess.run([pip_executable, 'install', '-e', 'postgkyl', '--verbose'])
-    except subprocess.CalledProcessError as e:
-        print();print()
-        print('----------------------------')
-        print(f"Error: {e}")
-        print("Exiting...")
-        exit()
-
-        print("Please remove FPCAnalysisenv, fix the error, and try again!!!")
-        exit()
+    ## Install postgkeyll
+    #print("Installing postgkeyll into env... (Warning: we install a specific version- not the most current version!)")
+    #script_dir = os.path.dirname(os.path.abspath(__file__))
+    #os.chdir(os.path.join(script_dir, '..'))
+    #subprocess.run(['git', 'clone', 'https://github.com/ammarhakim/postgkyl.git'])
+    #os.chdir('postgkyl')
+    #subprocess.run(['git', 'checkout', 'f876908d9e0969e7608100c7b769410e21c56549']) #Comment out this line to get most current version or update third element in arr to desired version
+    #os.chdir(os.path.join(script_dir, '..'))
+    #if os.path.exists('FPCAnalysis/postgkyl'):
+    #    confirmation = input("The directory 'FPCAnalysis/postgkyl' already exists. Do you want to overwrite it? (y/n): ")
+    #    if confirmation.lower() == 'y':
+    #        shutil.rmtree('FPCAnalysis/postgkyl', ignore_errors=True)
+    #        os.rename('postgkyl', 'FPCAnalysis/postgkyl')
+    #        print("Directory overwritten successfully.")
+    #    else:
+    #        print("Not overwriten! Will compile the postgkyl that is already there instead...")
+    #else:
+    #    os.rename('postgkyl', 'FPCAnalysis/postgkyl')
+    #os.chdir(os.path.join(script_dir, '..', 'FPCAnalysis'))
+    #try:
+    #    subprocess.run([pip_executable, 'install', '-e', 'postgkyl', '--verbose'])
+    #except subprocess.CalledProcessError as e:
+    #    print();print()
+    #    print('----------------------------')
+    #    print(f"Error: {e}")
+    #    print("Exiting...")
+    #    exit()
+    #
+    #   print("Please remove FPCAnalysisenv, fix the error, and try again!!!")
+    #   exit()
 
     #Install FPCAnalysis lib
     print("Installing FPCAnalysis library into env!")

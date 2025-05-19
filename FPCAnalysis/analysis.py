@@ -5,6 +5,8 @@
 import numpy as np
 import math
 
+from numba import jit
+
 def norm_constants_tristanmp1(params,dt,inputs):
     """
     Normalizes time to inverse ion cyclotron and length to d_i
@@ -35,7 +37,7 @@ def norm_constants_tristanmp1(params,dt,inputs):
     wpe_over_wce = 1./(np.sqrt(sigma_ion)*np.sqrt(params['mi']/params['me']))
     wce_over_wci = params['mi']/params['me']
 
-    c = 1./np.sqrt(sigma_ion) #Assumes me << mi; returns c in unit of va #Assumes (gamma0-1) factor is neglible
+    c = 1./np.sqrt(sigma_ion) #Assumes me << mi; returns c in unit of va
 
     dt = stride*dt/(wpe_over_wce*wce_over_wci) #originally in wpe, now in units of wci
 
@@ -43,7 +45,7 @@ def norm_constants_tristanmp1(params,dt,inputs):
 
 def compute_dflow(dfields, dpar_ion, dpar_elec, is2D=True, debug=False, return_empty=False, return_bins=True):
     """
-    Compues velocity fluid moment for ions and electrons
+    Computes velocity fluid moment for ions and electrons
 
     Bins and then takes average velocity in each bin. Grid will match dfields
     
@@ -90,6 +92,10 @@ def compute_dflow(dfields, dpar_ion, dpar_elec, is2D=True, debug=False, return_e
     nz = len(dfields['ex_zz'])
     ion_bins = [[[ [] for _ in range(nx)] for _ in range(ny)] for _ in range(nz)]
     elec_bins = [[[ [] for _ in range(nx)] for _ in range(ny)] for _ in range(nz)]
+
+    if(is2D):
+        if(nz != 2 and nz != 1):
+            print("Warning: function was called with expectation that the simulation was 2D in the xy plane, but this seems to be false as nz != 1 or 2.")
 
     for _i in range(0,len(dpar_ion['xi'])):
         if(debug and _i % 100000 == 0): print("Binned: ", _i," ions of ", len(dpar_ion['xi']))
@@ -140,6 +146,8 @@ def compute_dflow(dfields, dpar_ion, dpar_elec, is2D=True, debug=False, return_e
                     else:
                         if(debug):print("Warning: no particles found in bin...")
                         dflow[outkeys[_keyidx]][_k,_j,_i] = 0.
+        if(is2D):dflow[outkeys[_keyidx]][1,:,:]=dflow[outkeys[_keyidx]][0,:,:]
+
     outkeys = 'numi nume'.split()
     for _keyidx in range(0,len(outkeys)):
         if(debug): print("Computing dens for key: ", outkeys[_keyidx])
@@ -187,9 +195,11 @@ def compute_beta0_tristanmp1(params,inputs):
         total plasma beta in far upstream region
     """
 
-    uinj = inputs['gamma0'] #injection velocity in units of v/c
+    print("warning: this is meant for use with Tran's shock simulation. Gamma0 seems to have different meanings in different tristan configurations...")
 
-    gam0 = 1./np.sqrt(1.-(uinj)**2)
+    gam0 = inputs['gamma0'] 
+
+    gam0 = 1./np.sqrt(1.-(gam0)**2)
     beta0 = 4*gam0*params['delgam']/(params['sigma']*(gam0-1.)*(1.+params['me']/params['mi']))
 
     return beta0
@@ -345,7 +355,7 @@ def compute_energization_over_x(Cor_array,dv):
 
     return np.asarray(C_E_out)
 
-def compute_gain_due_to_jdotE(dflow,xvals,jdotE,isIon,verbose=False):
+def compute_gain_due_to_jdotE(dflowavg,xvals,jdotE,isIon,verbose=False):
     """
     xvals and jdotE are parallel 1D arrays
     
@@ -359,8 +369,8 @@ def compute_gain_due_to_jdotE(dflow,xvals,jdotE,isIon,verbose=False):
 
     Parameters
     ----------
-    dflow : dict
-        flow dic
+    dflowavg : dict
+        yz avg flow dic
     xvals : array
         position data parallel to jdotE
     jdotE : array
@@ -377,8 +387,6 @@ def compute_gain_due_to_jdotE(dflow,xvals,jdotE,isIon,verbose=False):
     """
 
     from FPCAnalysis.array_ops import find_nearest
-
-    dflowavg = get_average_flow_over_yz(dflow)
 
     if(not(isIon)):
         flowcoordkey = 'ue_xx'
@@ -399,12 +407,12 @@ def compute_gain_due_to_jdotE(dflow,xvals,jdotE,isIon,verbose=False):
 
     for _i in range(0,len(Ener_due_to_jdotE)-1):
         delta_x = xvals[_i+1]-xvals[_i]
-        xcoord_Ener_due_to_jdotE[_i] = xvals[_i+1]
+        xcoord_Ener_due_to_jdotE[_i] = xvals[_i+1]-delta_x/2.
     
         leftidx = find_nearest(xvals[_i+1],dflowavg[flowcoordkey])
         rightidx = find_nearest(xvals[_i],dflowavg[flowcoordkey])
 
-        xvelocity = np.mean(dflowavg[flowvalkeyx][0,0,leftidx:rightidx+1])  #NOTE: if v varies a lot over the full box, this will be incorrect if the edges of this box don't fall on the edges of cells, as the edge cells will contribute more than they should. We assume this is small for simplicity 
+        xvelocity = np.mean(dflowavg[flowvalkeyx][0,0,leftidx:rightidx+1])  #NOTE: if v varies a lot over the range, this will be incorrect if the edges of this box don't fall on the edges of cells, as the edge cells will contribute more than they should. We assume this is small for simplicity 
 
         if(delta_x < 0):
             if(xvelocity >= 0):
@@ -438,79 +446,115 @@ def compute_gain_due_to_jdotE(dflow,xvals,jdotE,isIon,verbose=False):
 def bin_integrate_gyro(x_grid, y_grid, C_vals, rmax, nrbins):
     """
     Integrates along curves of constant radius along 360 degrees of angle.
-
-    For simplicity, we place value into bins based on bin center. If bin center is within r_n and r_n+dr, it goes into the nth bin. 
-    This most easily conserves total energization rate. (Otherwise, we would need to carefully interpolate and divide each our square grid!)
-
-    Bins based on location of bin center
-
-    Parameters
-    ----------
-    #TODO: finish!
-
+    Bins are determined based on the location of the bin center.
     """
-    from FPCAnalysis.array_ops import find_nearest
+    drval = float(rmax) / float(nrbins)
+    r_bins = np.arange(0, rmax, drval)  # Vectorized bin creation
+    dr = r_bins[1] - r_bins[0]
+    dx = x_grid[1, 1] - x_grid[0, 0]
 
-    drval = float(rmax)/float(nrbins)
-    r_bins = np.asarray([itemp*drval for itemp in range(nrbins)])
-    
-    dr = r_bins[1]-r_bins[0]
-    dx = x_grid[1][1]-x_grid[0][0]
-    
-    if(dr < dx):
-        print("Warning, probably should reduce nrbins")
-    
-    C_binned_out = np.zeros(r_bins.shape)
-    
-    for _idx in range(0,len(x_grid)):
-        for _jdx in range(0,len(x_grid[_idx])):
-            rpos =  np.sqrt(x_grid[_idx][_jdx]**2+y_grid[_idx][_jdx]**2)   
-            ridx = find_nearest(r_bins,rpos)  
-            C_binned_out[ridx] += C_vals[_idx][_jdx]
-    r_grid_out = np.zeros
-    
+    if dr < dx:
+        print(f"Warning: dr ({dr}) is smaller than dx ({dx}). Reduce nrbins for better accuracy.")
+
+    C_binned_out = np.zeros_like(r_bins)
+
+    # Vectorized calculation of radial positions
+    rpos = np.sqrt(x_grid**2 + y_grid**2)
+    ridx = np.digitize(rpos, r_bins) - 1  # Find bin indices
+
+    # Accumulate values into bins
+    np.add.at(C_binned_out, ridx.ravel(), C_vals.ravel())
+
     return r_bins, C_binned_out
 
-def compute_gyro_fpc_from_cart_fpc(vx,vy,vz,corez,corey,corex,vmax,nrbins):
+def compute_gyro_fpc_from_cart_fpc(vx, vy, vz, corez, corey, corex, vmax, nrbins, hist=None):
     """
-    Note: x<-> perp1, y<->perp2, z<->par
+    However! the index structure of output is arr[par,perp]
 
-    However! the index structure of corei[perp1,perp2,par]
+    Converts Cartesian FPC components into gyro-binned components.
+
+    WARNING: assumes z is the parallel axis!
     """
-    coreperp = corey+corez
+    coreperp = corey + corez
 
-    vpargyro = np.zeros((len(corex),nrbins)) #assumes symmetry in shape of corex
-    vperpgyro = np.zeros((len(corex),nrbins))
-    corepargyro = np.zeros((len(corex),nrbins))
-    coreperpgyro = np.zeros((len(corex),nrbins))
+    shape = (len(corex), nrbins)
+
+    vpargyro = np.zeros(shape)
+    vperpgyro = np.zeros(shape)
+    corepargyro = np.zeros(shape)
+    coreperpgyro = np.zeros(shape)
+    if hist.any():  # Check if any element in hist is not None 
+        histgyro = np.zeros(shape)
+        comphist = True
+    else:
+        comphist = False
+
     for _vparidx in range(len(corex)):
-        vperpgyro[_vparidx], corepargyro[_vparidx] = bin_integrate_gyro(vx[_vparidx], vy[_vparidx], corex[:,:,_vparidx], vmax, nrbins)
-        vperpgyro[_vparidx], coreperpgyro[_vparidx] = bin_integrate_gyro(vx[_vparidx], vy[_vparidx], coreperp[:,:,_vparidx], vmax, nrbins)
-        vpargyro[_vparidx][:]=vz[_vparidx,0,0]
+        vperpgyro[_vparidx], corepargyro[_vparidx] = bin_integrate_gyro(
+            vx[_vparidx], vy[_vparidx], corex[:, :, _vparidx], vmax, nrbins
+        )
+        _, coreperpgyro[_vparidx] = bin_integrate_gyro(
+            vx[_vparidx], vy[_vparidx], coreperp[:, :, _vparidx], vmax, nrbins
+        )
+        vpargyro[_vparidx, :] = vz[_vparidx, 0, 0]
+        if(comphist):
+            _, histgyro[_vparidx] = bin_integrate_gyro(
+                vx[_vparidx], vy[_vparidx], hist[:, :, _vparidx], vmax, nrbins
+            )
 
-    return vpargyro,vperpgyro,corepargyro,coreperpgyro
+    if(comphist):
+        return vpargyro, vperpgyro, corepargyro, coreperpgyro, histgyro
+    else:
+        return vpargyro, vperpgyro, corepargyro, coreperpgyro
 
-def compute_compgyro_fpc_from_cart_fpc(vx,vy,vz,corez,corey,corex,vmax,nrbins):
+def compute_gyro_fpc_from_cart_fpc_single(vx, vy, vz, arr, vmax, nrbins):
     """
     Note: x<-> perp1, y<->perp2, z<->par
 
-    However! the index structure of corei[perp1,perp2,par]
+    Converts a single Cartesian component into gyro-binned components.
+    """
+    shape = (len(arr), nrbins)
+    vpargyro = np.zeros(shape)
+    vperpgyro = np.zeros(shape)
+    arrgyro = np.zeros(shape)
+
+    for _vparidx in range(len(arr)):
+        vperpgyro[_vparidx], arrgyro[_vparidx] = bin_integrate_gyro(
+            vx[_vparidx], vy[_vparidx], arr[:, :, _vparidx], vmax, nrbins
+        )
+        vpargyro[_vparidx, :] = vz[_vparidx, 0, 0]
+
+    return vpargyro, vperpgyro, arrgyro
+
+def compute_compgyro_fpc_from_cart_fpc(vx, vy, vz, corez, corey, corex, vmax, nrbins):
+    """
+    Note: x<-> perp1, y<->perp2, z<->par
+
+    Converts Cartesian FPC components into separate gyro-binned components.
     """
     coreperp1 = corey
     coreperp2 = corez
+    shape = (len(corex), nrbins)
 
-    vpargyro = np.zeros((len(corex),nrbins)) #assumes symmetry in shape of corex
-    vperpgyro = np.zeros((len(corex),nrbins))
-    corepargyro = np.zeros((len(corex),nrbins))
-    coreperp1gyro = np.zeros((len(corex),nrbins))
-    coreperp2gyro = np.zeros((len(corex),nrbins))
+    vpargyro = np.zeros(shape)
+    vperpgyro = np.zeros(shape)
+    corepargyro = np.zeros(shape)
+    coreperp1gyro = np.zeros(shape)
+    coreperp2gyro = np.zeros(shape)
+
     for _vparidx in range(len(corex)):
-        vperpgyro[_vparidx], corepargyro[_vparidx] = bin_integrate_gyro(vx[_vparidx], vy[_vparidx], corex[:,:,_vparidx], vmax, nrbins)
-        vperpgyro[_vparidx], coreperp1gyro[_vparidx] = bin_integrate_gyro(vx[_vparidx], vy[_vparidx], coreperp1[:,:,_vparidx], vmax, nrbins)
-        vperpgyro[_vparidx], coreperp2gyro[_vparidx] = bin_integrate_gyro(vx[_vparidx], vy[_vparidx], coreperp2[:,:,_vparidx], vmax, nrbins)
-        vpargyro[_vparidx][:]=vz[_vparidx,0,0]
+        vperpgyro[_vparidx], corepargyro[_vparidx] = bin_integrate_gyro(
+            vx[_vparidx], vy[_vparidx], corex[:, :, _vparidx], vmax, nrbins
+        )
+        _, coreperp1gyro[_vparidx] = bin_integrate_gyro(
+            vx[_vparidx], vy[_vparidx], coreperp1[:, :, _vparidx], vmax, nrbins
+        )
+        _, coreperp2gyro[_vparidx] = bin_integrate_gyro(
+            vx[_vparidx], vy[_vparidx], coreperp2[:, :, _vparidx], vmax, nrbins
+        )
+        vpargyro[_vparidx, :] = vz[_vparidx, 0, 0]
 
-    return vpargyro,vperpgyro,corepargyro,coreperp1gyro,coreperp2gyro
+    return vpargyro, vperpgyro, corepargyro, coreperp1gyro, coreperp2gyro
 
 def get_compression_ratio(dfields,upstreambound,downstreambound):
     """
@@ -1022,9 +1066,12 @@ def get_average_fields_over_yz(dfields, Efield_only = False):
         dfieldavg['by'][:] = dfieldavg['by'].mean(axis=(0,1))
         dfieldavg['bz'][:] = dfieldavg['bz'].mean(axis=(0,1))
 
+    if('dens' in dfieldavg.keys()):
+        dfieldavg['dens'][:] = dfieldavg['dens'].mean(axis=(0,1))
+
     return dfieldavg
 
-def get_average_flow_over_yz(dflow):
+def get_average_flow_over_yz(dflow,verbose=False):
     """
     Gets yz average from flow data i.e. flow_avg(x,y,z) = <flow(x,y,z)>_(y,z)
 
@@ -1039,19 +1086,37 @@ def get_average_flow_over_yz(dflow):
         delta flow data dictionary
     """
     from copy import deepcopy
+    if(verbose):print("making copy ...")
     dflowavg = deepcopy(dflow)
 
+    # for key in dflowavg.keys():
+    #     if(verbose):print("computing ",key)
+    #     if(not('_xx' in key) and not('_yy' in key) and not('_zz' in key)):
+    #         for _idx in range(0,len(dflowavg[key][0,0,:])):
+    #             if(verbose):print('xx _idx:',_idx,' of ', len(dflowavg[key][0,0,:]))
+    #             for _jdx in range(0,len(dflowavg[key][0,:,_idx])):
+    #                 for _kdx in range(0,len(dflowavg[key][:,_jdx,_idx])):
+    #                     if('i' in key and not('num' in key)):
+    #                         dflowavg[key][_kdx,_jdx,_idx] = np.sum(dflowavg[key][:,:,_idx]*dflow['numi'][:,:,_idx])/np.sum(dflow['numi'][:,:,_idx])
+    #                     elif('e' in key and not('num' in key)):
+    #                         dflowavg[key][_kdx,_jdx,_idx] = np.sum(dflowavg[key][:,:,_idx]*dflow['nume'][:,:,_idx])/np.sum(dflow['nume'][:,:,_idx])
+    #                     elif('num' in key):
+    #                         dflowavg[key][_kdx,_jdx,_idx] = np.mean(dflow['nume'][:,:,_idx])
+
     for key in dflowavg.keys():
-        if(not('_xx' in key) and not('_yy' in key) and not('_zz' in key)):
-            for _idx in range(0,len(dflowavg[key][0,0,:])):
-                for _jdx in range(0,len(dflowavg[key][0,:,_idx])):
-                    for _kdx in range(0,len(dflowavg[key][:,_jdx,_idx])):
-                        if('i' in key and not('num' in key)):
-                            dflowavg[key][_kdx,_jdx,_idx] = np.sum(dflowavg[key][:,:,_idx]*dflow['numi'][:,:,_idx])/np.sum(dflow['numi'][:,:,_idx])
-                        elif('e' in key and not('num' in key)):
-                            dflowavg[key][_kdx,_jdx,_idx] = np.sum(dflowavg[key][:,:,_idx]*dflow['nume'][:,:,_idx])/np.sum(dflow['nume'][:,:,_idx])
-                        elif('num' in key):
-                            dflowavg[key][_kdx,_jdx,_idx] = np.mean(dflow['nume'][:,:,_idx])
+        if verbose:
+            print("computing ", key)
+        if not('_xx' in key or '_yy' in key or '_zz' in key):
+            if('i' in key and not('num' in key)):
+                for _idx in range(dflowavg[key].shape[2]):
+                    dflowavg[key][:, :, _idx] = np.sum(dflowavg[key][:, :, _idx] * dflow['numi'][:, :, _idx], axis=(0, 1)) / np.sum(dflow['numi'][:, :, _idx])
+            elif('e' in key and not('num' in key)):
+                for _idx in range(dflowavg[key].shape[2]):
+                    dflowavg[key][:, :, _idx] = np.sum(dflowavg[key][:, :, _idx] * dflow['nume'][:, :, _idx], axis=(0, 1)) / np.sum(dflow['nume'][:, :, _idx])
+            elif('num' in key):
+                for _idx in range(dflowavg[key].shape[2]):
+                    dflowavg[key][:, :, _idx] = np.mean(dflow[key][:, :, _idx])
+
 
     return dflowavg
 
@@ -1078,9 +1143,11 @@ def get_average_den_over_yz(dden):
 
     return ddenavg
 
-def remove_average_flow_over_yz(dflow):
+def remove_average_flow_over_yz(dflow,verbose=False):
     """
     Removes yz average from flow data i.e. delta_flow(x,y,z) = flow(x,y,z)-<flow(x,y,z)>_(y,z)
+
+    Warning: for use with dict from compute_dflow
 
     Parameters
     ----------
@@ -1094,9 +1161,20 @@ def remove_average_flow_over_yz(dflow):
     """
     from copy import deepcopy
     dflowfluc = deepcopy(dflow)
-    dflowfluc['ux'] = dflowfluc['ux']-dflowfluc['ux'].mean(axis=(0,1))
-    dflowfluc['uy'] = dflowfluc['uy']-dflowfluc['uy'].mean(axis=(0,1))
-    dflowfluc['uz'] = dflowfluc['uz']-dflowfluc['uz'].mean(axis=(0,1))
+
+    for key in dflowfluc.keys():
+        if verbose:
+            print("computing ", key)
+        if not('_xx' in key or '_yy' in key or '_zz' in key):
+            if('i' in key and not('num' in key)):
+                for _idx in range(dflowfluc[key].shape[2]):
+                    dflowfluc[key][:, :, _idx] = dflowfluc[key][:, :, _idx]-np.sum(dflow[key][:, :, _idx] * dflow['numi'][:, :, _idx], axis=(0, 1)) / np.sum(dflow['numi'][:, :, _idx])
+            elif('e' in key and not('num' in key)):
+                for _idx in range(dflowfluc[key].shape[2]):
+                    dflowfluc[key][:, :, _idx] = dflowfluc[key][:, :, _idx]-np.sum(dflow[key][:, :, _idx] * dflow['nume'][:, :, _idx], axis=(0, 1)) / np.sum(dflow['nume'][:, :, _idx])
+            elif('num' in key):
+                for _idx in range(dflowfluc[key].shape[2]):
+                    dflowfluc[key][:, :, _idx] = dflowfluc[key][:, :, _idx]-np.mean(dflow[key][:, :, _idx])
 
     return dflowfluc
 
@@ -1448,6 +1526,31 @@ def yz_fft_filter(dfields,ky0,kz0):
 
     return dfieldsfiltered
 
+def yz_fft_filter_range(dfields,kycutoff,filterabove,dontfilter=False,verbose=False,keys=['ex','ey','ez','bx','by','bz']):
+
+    import copy
+    filteredfields = copy.deepcopy(dfields)
+
+    for _key in keys:
+        if(verbose):print("yz_fft_filter is on key: ", _key)
+        kz, ky, filteredfields[_key] = _ffttransform_in_yz(filteredfields,_key) #compute A(x,kz,ky) 
+        
+        if(not(dontfilter)):
+            for _i in range(0,len(ky)):
+                if(filterabove):
+                    if(np.abs(ky[_i]) > kycutoff):
+                        filteredfields[_key][:,:,_i] = 0.
+                else:   
+                    if(np.abs(ky[_i]) <= kycutoff):
+                        filteredfields[_key][:,:,_i] = 0.
+
+        filteredfields[_key] = _iffttransform_in_yz(filteredfields,_key) #returns as A(x,z,y)
+        filteredfields[_key] = np.swapaxes(filteredfields[_key], 0, 1) #returns as A(z,x,y)
+        filteredfields[_key] = np.swapaxes(filteredfields[_key], 1, 2) #returns as A(z,y,x)
+        filteredfields[_key] = np.real(filteredfields[_key])
+
+    return filteredfields
+
 def xyz_wlt_fft_filter(kz,ky,kx,xx,bxkzkykxxx,bykzkykxxx,bzkzkykxxx,
                 exkzkykxxx,eykzkykxxx,ezkzkykxxx,
                 kx_center0,kx_width0,ky0,kz0,dontfilter=False):
@@ -1527,6 +1630,33 @@ def xyz_wlt_fft_filter(kz,ky,kx,xx,bxkzkykxxx,bykzkykxxx,bzkzkykxxx,
         filteredfields[key] = np.real(filteredfields[key])
 
     return filteredfields
+
+def compute_morletwlt_error(k,w):
+    """
+    Computes equation 3 (second one in line) from Najimi and Sadowsky 1997- the 'error' in the k measurement of the wlt
+    """
+
+    from scipy.integrate import quad
+
+    def window(x): #morlet window function (only shown here for reference)
+        return np.exp(-0.5 * (x * k / w)**2)
+    
+    def ft_of_window(f): #fourier transform of window functions
+        return np.sqrt(2 * np.pi) * w / k * np.exp(-2 * (np.pi * f * w / k)**2)
+    
+    def integrand_top(f):
+        return f**2 * ft_of_window(f)**2
+
+    def integrand_bot(f):
+        return ft_of_window(f)**2
+    
+    top, _ = quad(integrand_top, -np.inf, np.inf)
+    bot, _ = quad(integrand_bot, -np.inf, np.inf)
+    
+    # Compute the final result
+    err = 2*np.pi*np.sqrt(top / bot) / 2 #note: this extra 2pi is necessary due to the different definitions of the fourier transform-> when then divide by two as this computes the total range that delta K can be but we want to have +-delta k / 2 as it represents the error
+
+    return err
 
 # def find_potential_wavemodes(dfields,fieldkey,xpos,cutoffconst=.1):
 #     """
@@ -1865,7 +1995,7 @@ def _get_perp_component(x1,y1):
 #     #TODO: consider cleaning up computing delB (maybe move to own function)
 #     return results, kxexpected, delBlist, delElist
 
-def compute_field_aligned_coord(dfields,xlim,ylim,zlim):
+def compute_field_aligned_coord(dfields,xlim,ylim,zlim,verbose=False):
     """
     Computes field aligned coordinate basis using average B0 in provided box
 
@@ -1892,7 +2022,7 @@ def compute_field_aligned_coord(dfields,xlim,ylim,zlim):
     from FPCAnalysis.array_ops import find_nearest
     from copy import deepcopy
 
-    if(np.abs(xlim[1]-xlim[0]) > 4.):
+    if(np.abs(xlim[1]-xlim[0]) > 4. and verbose):
         print("Warning, when computing field aligned coordinates, we found that xlim[1]-xlim[0] is large. Consider reducing size...")
 
     xavg = (xlim[1]+xlim[0])/2.
@@ -1905,8 +2035,8 @@ def compute_field_aligned_coord(dfields,xlim,ylim,zlim):
     eperp2basis = np.cross([1.,0,0],B0) #x hat cross B0
     tol = 0.005
     _B0 = B0 / np.linalg.norm(B0)
-    if(np.abs(np.linalg.norm(np.cross([_B0[0],_B0[1],_B0[2]],[1.,0.,0.]))) < tol):
-        print("Warning, it seems B0 is parallel to xhat (typically the shock normal)...")
+    if(np.abs(np.linalg.norm(np.cross([_B0[0],_B0[1],_B0[2]],[1.,0.,0.]))) < tol and verbose):
+        print("Warning, it seems B0 is parallel to xhat..")
         print("(Bx,By,Bz): ", _B0[0],_B0[1],_B0[2])
         print("xhat: 1,0,0")
         return np.asarray([1.,0,0]),np.asarray([0,1.,0]),np.asarray([0,0,1.])
@@ -1943,9 +2073,6 @@ def change_velocity_basis(dfields,dpar,xlim,ylim,zlim,debug=False):
     """
     from copy import deepcopy
 
-    if(dfields['Vframe_relative_to_sim'] != dpar['Vframe_relative_to_sim']):
-        print("Warning, field data is not in the same frame as particle data...")
-
     vparbasis, vperp1basis, vperp2basis = compute_field_aligned_coord(dfields,xlim,ylim,zlim)
     #check orthogonality of these vectors
     if(debug):
@@ -1975,6 +2102,60 @@ def change_velocity_basis(dfields,dpar,xlim,ylim,zlim,debug=False):
 
     return dparnewbasis
 
+@jit(nopython=True)
+def _jitaux_linalgnorm(vec):
+    return (vec[0]**2+vec[1]**2+vec[2]**2)**(.5)
+
+from FPCAnalysis.fpc import weighted_field_average
+@jit(nopython=True)
+def _change_vel_basis_local_jitaux(dparnewbasisp1,dparnewbasisp2,dparnewbasisp3,dparx1,dparx2,dparx3,dfieldsbxfield,dfieldsbyfield,dfieldbzfield,dfieldsfieldxx,dfieldsfieldyy,dfieldsfieldzz):
+
+    dparnewbasisppar = np.zeros((len(dparnewbasisp1)))
+    dparnewbasispperp1 = np.zeros((len(dparnewbasisp1)))
+    dparnewbasispperp2 = np.zeros((len(dparnewbasisp1)))
+
+    changebasismatrixes = np.zeros((len(dparnewbasisp1), 3, 3), dtype=np.float64)
+    
+    for _idx in range(0,len(dparx1)):
+
+        bx = float(weighted_field_average(dparx1[_idx], dparx2[_idx], dparx3[_idx], 'bx', dfieldsbxfield, dfieldsbyfield, dfieldbzfield, dfieldsfieldxx,dfieldsfieldyy,dfieldsfieldzz, None))
+        by = float(weighted_field_average(dparx1[_idx], dparx2[_idx], dparx3[_idx], 'by', dfieldsbxfield, dfieldsbyfield, dfieldbzfield, dfieldsfieldxx,dfieldsfieldyy,dfieldsfieldzz, None))
+        bz = float(weighted_field_average(dparx1[_idx], dparx2[_idx], dparx3[_idx], 'bz', dfieldsbxfield, dfieldsbyfield, dfieldbzfield, dfieldsfieldxx,dfieldsfieldyy,dfieldsfieldzz, None))
+
+        #FROM COMPUTE FIELD ALIGNED
+        B0 = np.array([bx,by,bz], dtype=np.float64)
+
+        #this if statement prevents weird division by small number issues
+        tol = 0.005
+        _B0 = B0 / _jitaux_linalgnorm(B0)
+        if(np.abs(_jitaux_linalgnorm(np.cross([_B0[0],_B0[1],_B0[2]],[1.,0.,0.]))) < tol):
+            vparbasis = np.asarray([1.,0,0])
+            vperp1basis = np.asarray([0,1.,0])
+            vperp2basis = np.asarray([0,0,1.])
+        else:
+            #get normalized basis vectors
+            vparbasis = B0
+            vparbasis /= _jitaux_linalgnorm(vparbasis)
+            vperp2basis = np.cross([1.,0,0],B0) #x hat cross B0
+            
+            vperp2basis /= _jitaux_linalgnorm(vperp2basis)
+            vperp1basis = np.cross(vparbasis,vperp2basis)
+            vperp1basis /= _jitaux_linalgnorm(vperp1basis)
+
+        #_ = np.array([vparbasis,vperp1basis,vperp2basis]).T #doesn't work with jit
+        _ = np.array([[vparbasis[0],vperp1basis[0],vperp1basis[0]],[vparbasis[1],vperp1basis[1],vperp2basis[1]],[vparbasis[2],vperp1basis[2],vperp2basis[2]]])
+        changebasismatrix = np.linalg.inv(_)
+        _tempvector = np.array([dparnewbasisp1[_idx],dparnewbasisp2[_idx],dparnewbasisp3[_idx]], dtype=np.float64) #this is needed for jit typing
+        _ppar,_pperp1,_pperp2 = np.dot(changebasismatrix,_tempvector)
+
+        dparnewbasisppar[_idx] = _ppar
+        dparnewbasispperp1[_idx] = _pperp1
+        dparnewbasispperp2[_idx] =_pperp2
+
+        changebasismatrixes[_idx] = changebasismatrix
+
+    return dparnewbasisppar, dparnewbasispperp1, dparnewbasispperp2, changebasismatrixes
+
 def change_velocity_basis_local(dfields,dpar,loadfrac=1,debug=False):
     """
     Converts to field aligned coordinate system
@@ -1999,57 +2180,17 @@ def change_velocity_basis_local(dfields,dpar,loadfrac=1,debug=False):
     """
     from copy import deepcopy
 
-    if(dfields['Vframe_relative_to_sim'] != dpar['Vframe_relative_to_sim']):
-        print("Warning, field data is not in the same frame as particle data...")
-
     dparnewbasis = {}
-    dparnewbasis['x1'] = deepcopy(dpar['x1'][::loadfrac])
-    dparnewbasis['x2'] = deepcopy(dpar['x2'][::loadfrac])
-    dparnewbasis['x3'] = deepcopy(dpar['x3'][::loadfrac])
     dparnewbasis['ppar'] = np.zeros((len(dpar['x1'][::loadfrac])))
     dparnewbasis['pperp1'] = np.zeros((len(dpar['x1'][::loadfrac])))
     dparnewbasis['pperp2'] = np.zeros((len(dpar['x1'][::loadfrac])))
     dparnewbasis['q'] = dpar['q']
 
     for _ky in dpar.keys():
-        try:
+        if(_ky in ['ue','ui','ve','vi','we','wi','p1','p2','p3','x1','x2','x3','xi','yi','zi','xe','ye','ze']):
             dparnewbasis[_ky] = deepcopy(dpar[_ky][::loadfrac])
-        except:
-            pass
 
-    changebasismatrixes = []
-
-    for _idx in range(0,len(dparnewbasis['x1'])):
-        from FPCAnalysis.fpc import weighted_field_average
-
-        bx = weighted_field_average(dpar['x1'][_idx], dpar['x2'][_idx], dpar['x3'][_idx], dfields, 'bx')
-        by = weighted_field_average(dpar['x1'][_idx], dpar['x2'][_idx], dpar['x3'][_idx], dfields, 'by')
-        bz = weighted_field_average(dpar['x1'][_idx], dpar['x2'][_idx], dpar['x3'][_idx], dfields, 'bz')
-
-        #FROM COMPUTE FIELD ALIGNED
-        B0 = [bx,by,bz]
-
-        #get normalized basis vectors
-        vparbasis = deepcopy(B0)
-        vparbasis /= np.linalg.norm(vparbasis)
-        vperp2basis = np.cross([1.,0,0],B0) #x hat cross B0
-        tol = 0.005
-        _B0 = B0 / np.linalg.norm(B0)
-        
-        vperp2basis /= np.linalg.norm(vperp2basis)
-        vperp1basis = np.cross(vparbasis,vperp2basis)
-        vperp1basis /= np.linalg.norm(vperp1basis)
-
-        _ = np.asarray([vparbasis,vperp1basis,vperp2basis]).T
-        changebasismatrix = np.linalg.inv(_)
-
-        _ppar,_pperp1,_pperp2 = np.matmul(changebasismatrix,[dpar['p1'][_idx],dpar['p2'][_idx],dpar['p3'][_idx]])
-
-        dparnewbasis['ppar'][_idx] = _ppar
-        dparnewbasis['pperp1'][_idx] = _pperp1
-        dparnewbasis['pperp2'][_idx] =_pperp2
-
-        changebasismatrixes.append(changebasismatrix)
+    dparnewbasis['ppar'], dparnewbasis['pperp1'], dparnewbasis['pperp2'], changebasismatrixes = _change_vel_basis_local_jitaux(dparnewbasis['p1'],dparnewbasis['p2'],dparnewbasis['p3'],dpar['x1'],dpar['x2'],dpar['x3'],dfields['bx'],dfields['by'],dfields['bz'],dfields['bx_xx'],dfields['bx_yy'],dfields['bx_zz'])
 
     #check v^2 for both basis to make sure everything matches
     if(debug):
@@ -2148,6 +2289,8 @@ def transform_field_to_kzkykxxx(ddict,fieldkey,retstep=1):
 
     E.g. takes B(z,y,x) and computes B(kz,ky,kx;x)
 
+    Note- at one point, this was converted to use JIT, but there was practically no increase in speed, and the code lost a lot of flexibility.... So we reverted back
+
     Parameters
     ----------
     ddict : dict
@@ -2212,8 +2355,6 @@ def compute_vrms(dpar,vmax,dv,x1,x2,y1,y2,z1,z2):
     vzdrift = np.mean(dpar['p1'][gptsparticle])
     vydrift = np.mean(dpar['p2'][gptsparticle])
     vxdrift = np.mean(dpar['p3'][gptsparticle])
-
-    print('debug', vxdrift,vydrift,vzdrift)
 
     vxs = dpar['p1'][gptsparticle]-vxdrift
     vys = dpar['p2'][gptsparticle]-vydrift
@@ -2370,7 +2511,7 @@ def compute_electron_temp(dden,x1,x2,y1,y2,z1,z2,Te0=1.,gamma=1.66667,num_den_el
 
     print("WARNING THIS DOES NOT INCLUDE DRIFT VELOCITY YET")
 
-    from array_ops import get_average_in_box
+    from FPCAnalysis.array_ops import get_average_in_box
 
 
     num_den_elec = get_average_in_box(x1,x2,y1,y2,z1,z2,dden, 'den')
@@ -2423,6 +2564,61 @@ def compute_tau(dpar,dden,vmax,dv,x1,x2,y1,y2,z1,z2):
     tau = Te/Ti
 
     return tau
+
+def compute_local_temp(dpar,dfields,params,x1,x2,y1,y2,z1,z2,vmax,dv,masspar):
+    """
+    Warning, we do not include any 1/2 or 3/2 factors here!!!
+    """
+
+    from FPCAnalysis.fpc import compute_hist
+
+    #TODO: convert to same v normalization!!!!
+
+    #change keys for backwards compat
+    if('xi' in dpar.keys()):
+        dpar['x1'] = dpar['xi']
+        dpar['x2'] = dpar['yi']
+        dpar['x3'] = dpar['zi']
+        dpar['p1'] = dpar['ui']
+        dpar['p2'] = dpar['vi']
+        dpar['p3'] = dpar['wi']
+
+        conversionfac = 1.
+    if('xe' in dpar.keys()):
+        dpar['x1'] = dpar['xe']
+        dpar['x2'] = dpar['ye']
+        dpar['x3'] = dpar['ze']
+        dpar['p1'] = dpar['ue']
+        dpar['p2'] = dpar['ve']
+        dpar['p3'] = dpar['we']
+
+        vti0 = np.sqrt(params['delgam'])#Note: velocity is in units v_s/c
+        vte0 = np.sqrt(params['mi']/params['me'])*vti0 #WARNING: THIS ASSUME Ti/Te = 1, TODO: don't assume Ti/Te = 1
+        conversionfac = vte0/vti0
+
+    gptsparticle = (x1 <= dpar['x1']) & (dpar['x1'] <= x2) & (y1 <= dpar['x2']) & (dpar['x2'] <= y2) & (z1 <= dpar['x3']) & (dpar['x3'] <= z2)
+    import copy
+    dparsubset = {
+        'q': dpar['q'],
+        'p1': copy.deepcopy(np.asarray(dpar['p1'][gptsparticle][:]))*conversionfac,
+        'p2': copy.deepcopy(np.asarray(dpar['p2'][gptsparticle][:]))*conversionfac,
+        'p3': copy.deepcopy(np.asarray(dpar['p3'][gptsparticle][:]))*conversionfac,
+        'x1': dpar['x1'][gptsparticle][:],
+        'x2': dpar['x2'][gptsparticle][:],
+        'x3': dpar['x3'][gptsparticle][:],
+        'Vframe_relative_to_sim': dpar['Vframe_relative_to_sim']
+    }
+
+    hist,vx,vy,vz = compute_hist(dparsubset, dfields, vmax, dv, useFAC)
+    
+    pardens = np.sum(hist)
+    vxmean = np.sum(vx*hist)/pardens
+    vymean = np.sum(vy*hist)/pardens
+    vzmean = np.sum(vz*hist)/pardens
+    
+    localtemp = masspar*np.sum((((vx-vxmean)**2+(vy-vymean)**2+(vz-vzmean)**2)*hist)/pardens)
+
+    return localtemp
 
 def va_norm_to_vi_norm(dpar, v_w_anorm, vmax, x1, x2, y1, y2, z1, z2, vti = None):
     """
@@ -2652,7 +2848,7 @@ def get_path_of_particle(datapath,ind,proc,startframenum,endframenum,spec='ion',
             dpar = dpar_elec
             del dpar_ion
         else:
-            print("Spec is either ion or elec")
+            print("Spec must be either ion or elec")
             return
         
         candidate_inds = [ i for i, e in enumerate(dpar[indkey]) if (ind == e)] #find index of matches
@@ -3086,3 +3282,801 @@ def convert_fluc_to_local_par(dfields,dfluc):
     dfluc['eperp1_zz'] = dfields['ex_zz'][:]
 
     return dfluc
+
+def local_pearson_correlation(x, y, positions, window_size):
+    """
+    Computes the local Pearson correlation coefficient for two arrays using a sliding window.
+    
+    Parameters
+    -----------
+    x : 1d array
+        first array
+    y : 1d array
+        second array
+    window_size : int 
+        size of sliding window
+    
+    Returns
+    -------
+    positions : 
+        list of positions corresponding to the start of each window
+    local_corrs : arr
+        pearson correlation coeff at each position
+    """
+    
+    from scipy.stats import pearsonr
+
+    if len(x) != len(y):
+        raise ValueError("Input arrays must have the same length!!!")
+    
+    n = len(x)
+    local_corrs = []
+    positions_out = []
+    
+    for i in range(n - window_size + 1):
+        window_x = x[i:i + window_size]
+        window_y = y[i:i + window_size]
+        corr, _ = pearsonr(window_x, window_y)
+        local_corrs.append(corr)
+        positions_out.append(positions[i+int(np.floor(window_size/2))]) #assumes windowsize is odd (and that int rounds down)
+    
+    return positions_out, local_corrs
+
+#TODO: test this function (have only used load=True in this form)
+def compute_temp_1d(interpolxxs,params,dfields,dpar_ion,dpar_elec,vmaxion,vmaxelec,dvion,dvelec, pckname = 'temperaturedata.pickle' ,load=True):
+    """
+    Note, if pckname is true, we can pass none to everthing else!
+    """
+
+    import pickle
+
+    if(not(load)):
+        #TODO: clean this func up!
+        import FPCAnalysis
+
+        vti0 = np.sqrt(params['delgam'])
+        vte0 = np.sqrt(params['mi']/params['me'])*vti0 #WARNING: THIS ASSUME Ti/Te = 1, TODO: don't assume Ti/Te = 1
+        vte0_vti0 = vte0/vti0
+
+
+        #TODO: there is a lot of unused stuff in this block- delete or save somehow!
+        vmaxion = 12.
+        vmaxelec = 12.*vte0_vti0
+        dvion = 1.
+        dvelec = .1*vte0_vti0
+
+        verbose = True
+        loadfrac = 1 # =1 loads all particles, = N loads every nth particles
+        
+        me = params['me']
+        mi = params['mi']
+            
+        vti0 = np.sqrt(params['delgam'])
+        vte0 = np.sqrt(params['mi']/params['me'])*vti0 #WARNING: THIS ASSUME Ti/Te = 1, TODO: don't assume Ti/Te = 1
+        vte0_vti0 = vte0/vti0
+
+        oldkeysion = ['ui','vi','wi','xi','yi','zi']
+        oldkeyselec = ['ue','ve','we','xe','ye','ze']
+        newkeys = ['p1','p2','p3','x1','x2','x3'] #convert to legacy key names
+        for _tidx in range(len(oldkeysion)):
+            dpar_ion[newkeys[_tidx]] = dpar_ion[oldkeysion[_tidx]] 
+            dpar_elec[newkeys[_tidx]] = dpar_elec[oldkeyselec[_tidx]]
+
+
+        if(verbose):print("computing local fac for ions...")
+        dpar_ion,_ = FPCAnalysis.anl.change_velocity_basis_local(dfields,dpar_ion,loadfrac=loadfrac)
+        if(verbose):print("computing local fac for elecs...")
+        dpar_elec,_  = FPCAnalysis.anl.change_velocity_basis_local(dfields,dpar_elec,loadfrac=loadfrac)
+
+        #bin particles
+        nx = len(interpolxxs)-1
+        ion_bins = [[] for _ in range(nx)]
+        elec_bins = [[] for _ in range(nx)]
+
+        boxcenters = np.asarray([(interpolxxs[_index]+interpolxxs[_index+1])/2 for _index in range(nx)])
+
+        #compute matricies to transpose particles using box avg FAC
+        if(verbose):print("Computing box FACs")
+        boxavg_change_matricies = []
+        for _fidx in range(0,nx):
+            zlim = [-9999999,9999999]
+            ylim = [-9999999,9999999]
+            xlim = [interpolxxs[_fidx],interpolxxs[_fidx+1]]
+            vparbasis, vperp1basis, vperp2basis = FPCAnalysis.anl.compute_field_aligned_coord(dfields,xlim,ylim,zlim)
+            
+            #make change of basis matrix
+            _ = np.asarray([vparbasis,vperp1basis,vperp2basis]).T
+            changebasismatrix = np.linalg.inv(_)
+            boxavg_change_matricies.append(changebasismatrix)
+
+        ionxxs = []
+        if(verbose):print('changing vel basis and binning...')
+        for _i in range(0,int(len(dpar_ion['xi']))): 
+            if(verbose and _i % 100000 == 0): print("Binned: ", _i," ions of ", len(dpar_ion['xi']))
+            xx = dpar_ion['xi'][_i]
+            xidx = FPCAnalysis.ao.find_nearest(boxcenters, xx)
+            pparboxfac,pperp1boxfac,pperp2boxfac = np.matmul(boxavg_change_matricies[xidx],[dpar_ion['ui'][_i],dpar_ion['vi'][_i],dpar_ion['wi'][_i]])
+            ion_bins[xidx].append({'ui':dpar_ion['ui'][_i] ,'vi':dpar_ion['vi'][_i] ,'wi':dpar_ion['wi'][_i], 'pari':dpar_ion['ppar'][_i], 'perp1i':dpar_ion['pperp1'][_i], 'perp2i':dpar_ion['pperp2'][_i], 'pparboxfaci':pparboxfac, 'pperp1boxfaci':pperp1boxfac, 'pperp2boxfaci':pperp2boxfac})
+        ionxxs = boxcenters
+
+        elecxxs = []
+        for _i in range(0,int(len(dpar_elec['xe']))):
+            if(verbose and _i % 100000 == 0): print("Binned: ", _i," elecs of ", len(dpar_elec['xe']))
+            xx = dpar_elec['xe'][_i]
+            xidx = FPCAnalysis.ao.find_nearest(boxcenters, xx)
+            pparboxfac,pperp1boxfac,pperp2boxfac = np.matmul(boxavg_change_matricies[xidx],[dpar_elec['ue'][_i],dpar_elec['ve'][_i],dpar_elec['we'][_i]])
+            elec_bins[xidx].append({'ue':dpar_elec['ue'][_i]*vte0_vti0,'ve':dpar_elec['ve'][_i]*vte0_vti0,'we':dpar_elec['we'][_i]*vte0_vti0, 'pare':dpar_elec['ppar'][_i]*vte0_vti0, 'perp1e':dpar_elec['pperp1'][_i]*vte0_vti0, 'perp2e':dpar_elec['pperp2'][_i]*vte0_vti0,'pparboxface':pparboxfac*vte0_vti0, 'pperp1boxface':pperp1boxfac*vte0_vti0, 'pperp2boxface':pperp2boxfac*vte0_vti0})
+        elecxxs = boxcenters
+
+        vxbins = np.arange(-vmaxion, vmaxion+dvion, dvion)
+        vx = (vxbins[1:] + vxbins[:-1])/2.
+        vybins = np.arange(-vmaxion, vmaxion+dvion, dvion)
+        vy = (vybins[1:] + vybins[:-1])/2.
+        vzbins = np.arange(-vmaxion, vmaxion+dvion, dvion)
+        vz = (vzbins[1:] + vzbins[:-1])/2.
+        ionhists = [[] for _ in range(nx)]
+        ionhistfac = [[] for _ in range(nx)] 
+        ionhistboxfac = [[] for _ in range(nx)]
+        for _idx in range(0,len(ion_bins)):
+            if(verbose):print('binning ',_idx, 'of ',len(ion_bins),' ion')
+            tempuxs = np.asarray([ion_bins[_idx][_jdx]['ui'] for _jdx in range(0,len(ion_bins[_idx]))])
+            tempuys = np.asarray([ion_bins[_idx][_jdx]['wi'] for _jdx in range(0,len(ion_bins[_idx]))])
+            tempuzs = np.asarray([ion_bins[_idx][_jdx]['vi'] for _jdx in range(0,len(ion_bins[_idx]))])
+            hist,_ = np.histogramdd((tempuzs,tempuys,tempuxs), bins=[vzbins, vybins, vxbins]) #Index order is [_vz,_vy,_vx]
+            ionhists[_idx]=hist
+
+            tempuxs = np.asarray([ion_bins[_idx][_jdx]['perp1i'] for _jdx in range(0,len(ion_bins[_idx]))])
+            tempuys = np.asarray([ion_bins[_idx][_jdx]['perp2i'] for _jdx in range(0,len(ion_bins[_idx]))])
+            tempuzs = np.asarray([ion_bins[_idx][_jdx]['pari'] for _jdx in range(0,len(ion_bins[_idx]))])
+            hist,_ = np.histogramdd((tempuzs,tempuys,tempuxs), bins=[vzbins, vybins, vxbins]) #Index order is [_par,_perp2,_perp1]
+            ionhistfac[_idx]=hist
+
+            tempuxs = np.asarray([ion_bins[_idx][_jdx]['pperp1boxfaci'] for _jdx in range(0,len(ion_bins[_idx]))])
+            tempuys = np.asarray([ion_bins[_idx][_jdx]['pperp2boxfaci'] for _jdx in range(0,len(ion_bins[_idx]))])
+            tempuzs = np.asarray([ion_bins[_idx][_jdx]['pparboxfaci'] for _jdx in range(0,len(ion_bins[_idx]))])
+            hist,_ = np.histogramdd((tempuzs,tempuys,tempuxs), bins=[vzbins, vybins, vxbins]) #Index order is [_par,_perp2,_perp1]
+            ionhistboxfac[_idx]=hist
+        vxion = vx[:]
+        vyion = vy[:]
+        vzion = vz[:]
+        if(verbose):print("done binning ions into hists")
+
+
+        vxbins = np.arange(-vmaxelec, vmaxelec+dvelec, dvelec)
+        vx = (vxbins[1:] + vxbins[:-1])/2.
+        vybins = np.arange(-vmaxelec, vmaxelec+dvelec, dvelec)
+        vy = (vybins[1:] + vybins[:-1])/2.
+        vzbins = np.arange(-vmaxelec, vmaxelec+dvelec, dvelec)
+        vz = (vzbins[1:] + vzbins[:-1])/2.
+        elechists = [[] for _ in range(nx)] 
+        elechistfac = [[] for _ in range(nx)]
+        elechistboxfac = [[] for _ in range(nx)]
+        for _idx in range(0,len(elec_bins)):
+            if(verbose):print('binning ',_idx, 'of ',len(elec_bins),' elec')
+            tempuxs = [elec_bins[_idx][_jdx]['ue'] for _jdx in range(0,len(elec_bins[_idx]))]
+            tempuys = [elec_bins[_idx][_jdx]['we'] for _jdx in range(0,len(elec_bins[_idx]))]
+            tempuzs = [elec_bins[_idx][_jdx]['ve'] for _jdx in range(0,len(elec_bins[_idx]))]
+            hist,_ = np.histogramdd((tempuzs, tempuys, tempuxs), bins=[vzbins, vybins, vxbins])
+            elechists[_idx]=hist
+
+            tempuxs = [elec_bins[_idx][_jdx]['perp1e'] for _jdx in range(0,len(elec_bins[_idx]))]
+            tempuys = [elec_bins[_idx][_jdx]['perp2e'] for _jdx in range(0,len(elec_bins[_idx]))]
+            tempuzs = [elec_bins[_idx][_jdx]['pare'] for _jdx in range(0,len(elec_bins[_idx]))]
+            hist,_ = np.histogramdd((tempuzs, tempuys, tempuxs), bins=[vzbins, vybins, vxbins]) #Index order is [_par,_perp2,_perp1]
+            elechistfac[_idx]=hist
+
+            tempuxs = [elec_bins[_idx][_jdx]['pperp1boxface'] for _jdx in range(0,len(elec_bins[_idx]))]
+            tempuys = [elec_bins[_idx][_jdx]['pperp2boxface'] for _jdx in range(0,len(elec_bins[_idx]))]
+            tempuzs = [elec_bins[_idx][_jdx]['pparboxface'] for _jdx in range(0,len(elec_bins[_idx]))]
+            hist,_ = np.histogramdd((tempuzs, tempuys, tempuxs), bins=[vzbins, vybins, vxbins]) #Index order is [_par,_perp2,_perp1]
+            elechistboxfac[_idx]=hist
+        vxelec = vx[:]
+        vyelec = vy[:]
+        vzelec = vz[:]
+        
+        #TODO: remove!
+        distdata = {'elecxxs':elecxxs,'elechists':elechists,'elechistfac':elechistfac,'elechistboxfac':elechistboxfac,'vxelec':vxelec,'vyelec':vyelec,'vzelec':vzelec,'nx':nx,
+                'ionxxs':ionxxs,'ionhists':ionhists,'ionhistfac':ionhistfac,'ionhistboxfac':ionhistboxfac,'vxion':vxion,'vyion':vyion,'vzion':vzion}
+
+        vx_in = distdata['vxelec']
+        vy_in = distdata['vyelec']
+        vz_in = distdata['vzelec']
+        _vx = np.zeros((len(vz_in),len(vy_in),len(vx_in)))
+        _vy = np.zeros((len(vz_in),len(vy_in),len(vx_in)))
+        _vz = np.zeros((len(vz_in),len(vy_in),len(vx_in)))
+        for i in range(0,len(vx_in)):
+            for j in range(0,len(vy_in)):
+                for k in range(0,len(vz_in)):
+                    _vx[k][j][i] = vx_in[i]
+        for i in range(0,len(vx_in)):
+            for j in range(0,len(vy_in)):
+                for k in range(0,len(vz_in)):
+                    _vy[k][j][i] = vy_in[j]
+        for i in range(0,len(vx_in)):
+            for j in range(0,len(vy_in)):
+                for k in range(0,len(vz_in)):
+                    _vz[k][j][i] = vz_in[k]
+        vxelec = np.asarray(_vx)
+        vyelec = np.asarray(_vy)
+        vzelec = np.asarray(_vz)
+
+        vx_in = distdata['vxion']
+        vy_in = distdata['vyion']
+        vz_in = distdata['vzion']
+        _vx = np.zeros((len(vz_in),len(vy_in),len(vx_in)))
+        _vy = np.zeros((len(vz_in),len(vy_in),len(vx_in)))
+        _vz = np.zeros((len(vz_in),len(vy_in),len(vx_in)))
+        for i in range(0,len(vx_in)):
+            for j in range(0,len(vy_in)):
+                for k in range(0,len(vz_in)):
+                    _vx[k][j][i] = vx_in[i]
+        for i in range(0,len(vx_in)):
+            for j in range(0,len(vy_in)):
+                for k in range(0,len(vz_in)):
+                    _vy[k][j][i] = vy_in[j]
+        for i in range(0,len(vx_in)):
+            for j in range(0,len(vy_in)):
+                for k in range(0,len(vz_in)):
+                    _vz[k][j][i] = vz_in[k]
+        vxion = np.asarray(_vx)
+        vyion = np.asarray(_vy)
+        vzion = np.asarray(_vz)
+        #Note: vz<->vpar vy<->vperp2 vx<->vperp1
+
+
+        #compute 1D quants
+        if(verbose):print('computing 1d quants...')
+        ionparlocalfac = []
+        ionparboxfac = []
+        ionperplocalfac = []
+        ionperpboxfac = []
+        elecparlocalfac = []
+        elecparboxfac = []
+        elecperplocalfac = []
+        elecperpboxfac = []
+        iondens = []
+        elecdens = []
+        Tion_pred_idealadia = []
+        Tion_pred_doubleadia = []
+        Telec_pred_idealadia = []
+        Telec_pred_doubleadia = []
+        Btot = []
+        for _xidx in range(len(distdata['elecxxs'])):
+            if(verbose):print('computing 1d quants idx: ',_xidx,' of ',len(distdata['elecxxs']))
+            #grab wanted data
+            ionhist1d = np.sum(distdata['ionhists'][_xidx],axis=0)
+            elechist1d = distdata['elechists'][_xidx]
+            ionhistlocalfac1d = np.sum(distdata['ionhistfac'][_xidx],axis=0)
+            elechistlocalfac1d = distdata['elechistfac'][_xidx]
+            ionhistboxfac1d = np.sum(distdata['ionhistboxfac'][_xidx],axis=0)
+            elechistboxfac1d = distdata['elechistboxfac'][_xidx]
+        
+            idens = np.sum(ionhist1d)
+            edens = np.sum(elechist1d)
+            iondens.append(idens)
+            elecdens.append(edens)
+        
+            if(edens != 0):
+                vximeanlocal = np.sum(vxion*ionhistlocalfac1d)/idens
+                vyimeanlocal = np.sum(vyion*ionhistlocalfac1d)/idens
+                vzimeanlocal = np.sum(vzion*ionhistlocalfac1d)/idens
+        
+                vximeanbox = np.sum(vxion*ionhistboxfac1d)/idens
+                vyimeanbox = np.sum(vyion*ionhistboxfac1d)/idens
+                vzimeanbox = np.sum(vzion*ionhistboxfac1d)/idens
+        
+                vxemeanlocal = np.sum(vxelec*elechistlocalfac1d)/edens
+                vyemeanlocal = np.sum(vyelec*elechistlocalfac1d)/edens
+                vzemeanlocal = np.sum(vzelec*elechistlocalfac1d)/edens
+        
+                vxemeanbox = np.sum(vxelec*elechistboxfac1d)/edens
+                vyemeanbox = np.sum(vyelec*elechistboxfac1d)/edens
+                vzemeanbox = np.sum(vzelec*elechistboxfac1d)/edens
+            
+                ionparboxfac.append(mi*np.sum(((vzion-vzimeanbox)**2)*ionhistboxfac1d)/idens)
+                perpboxtemp = mi*np.sum(((vxion-vximeanbox)**2)*ionhistboxfac1d/idens)
+                perpboxtemp += mi*np.sum(((vyion-vyimeanbox)**2)*ionhistboxfac1d/idens) 
+                ionperpboxfac.append(perpboxtemp/2.) #TODO: remove this factor of 1/2!
+
+                ionparlocalfac.append(mi*np.sum((vzion-vzimeanlocal)**2*ionhistlocalfac1d)/idens)
+                perplocaltemp = mi*np.sum(((vxion-vximeanlocal)**2)*ionhistlocalfac1d/idens)
+                perplocaltemp += mi*np.sum(((vyion-vyimeanlocal)**2)*ionhistlocalfac1d/idens)
+                ionperplocalfac.append(perplocaltemp/2.) #TODO: remove this factor of 1/2!
+            else:
+                ionparboxfac.append(0)
+                ionparlocalfac.append(0)
+                ionperpboxfac.append(0)
+                ionperplocalfac.append(0)
+
+
+            if(edens != 0):
+                elecparboxfac.append(me*np.sum((vzelec-vzemeanbox)**2*elechistboxfac1d)/edens)
+                perpboxtemp = me*np.sum(((vxelec-vxemeanbox)**2)*elechistboxfac1d/edens)
+                perpboxtemp += me*np.sum(((vyelec-vyemeanbox)**2)*elechistboxfac1d/edens) 
+                elecperpboxfac.append(perpboxtemp) 
+
+                elecparlocalfac.append(me*np.sum(((vzelec-vzemeanlocal)**2)*elechistlocalfac1d/edens))
+                perplocaltemp = me*np.sum(((vxelec-vxemeanlocal)**2)*elechistlocalfac1d/edens)
+                perplocaltemp += me*np.sum(((vyelec-vyemeanlocal)**2)*elechistlocalfac1d/edens)
+                elecperplocalfac.append(perplocaltemp)
+            else:
+                elecparboxfac.append(0.)
+                elecparlocalfac.append(0.)
+                elecperpboxfac.append(0.)
+                elecperplocalfac.append(0.)
+
+        
+            _xidxbval = FPCAnalysis.ao.find_nearest(dfields['bx_xx'],distdata['elecxxs'][_xidx]) #Note: the input to ao.avg_dict should match the input used to create the loaded dataset, this is a quick approximate fix in case that is not true (but it's generally fine since this is just used for plotting
+            btotval = np.mean(np.sqrt(dfields['bx'][:,:,_xidxbval]**2+dfields['by'][:,:,_xidxbval]**2+dfields['bz'][:,:,_xidxbval]**2))
+            Btot.append(btotval)
+        
+            T0ion = 1.
+            T0elec = 1.
+            gammaval = 5./3.
+            Tion_pred_idealadia.append(T0ion*(idens)**(5./3.-1.))
+            Telec_pred_idealadia.append(T0elec*(edens)**(5./3.-1.))
+        
+            Tion_pred_doubleadia.append(btotval)
+            Telec_pred_doubleadia.append(btotval)
+
+        ionparlocalfac = np.asarray(ionparlocalfac)/3.#*dvion**3 WARNING: no dvion**3 factor as it cancels with dvion**3 factor when computing edens
+        ionparboxfac = np.asarray(ionparboxfac)/3.#*dvion**3
+        ionperplocalfac = np.asarray(ionperplocalfac)/3.#*dvion**3
+        ionperpboxfac = np.asarray(ionperpboxfac)/3.#*dvion**3
+
+        elecparlocalfac = np.asarray(elecparlocalfac)/3.#*dvelec**3
+        elecparboxfac = np.asarray(elecparboxfac)/3.#*dvelec**3
+        elecperplocalfac = np.asarray(elecperplocalfac)/3.#*dvelec**3
+        elecperpboxfac = np.asarray(elecperpboxfac)/3.#*dvelec**3
+
+        #TODO: rename output?
+        temperaturedata = {'ionparlocalfac': ionparlocalfac,
+                    'ionparboxfac': ionparboxfac,
+                    'ionperplocalfac':ionperplocalfac,
+                    'ionperpboxfac':ionperpboxfac,
+                    'elecparlocalfac':elecparlocalfac,
+                    'elecparboxfac':elecparboxfac,
+                    'elecperplocalfac':elecperplocalfac,
+                    'elecperpboxfac':elecperpboxfac,
+                    'iondens':iondens,
+                    'elecdens':elecdens,
+                    'Tion_pred_idealadia':Tion_pred_idealadia,
+                    'Tion_pred_doubleadia':Tion_pred_doubleadia,
+                    'Telec_pred_idealadia':Telec_pred_idealadia,
+                    'Telec_pred_doubleadia':Telec_pred_doubleadia,
+                    'Btot':Btot,
+                    'elecxxs':distdata['elecxxs'],
+                    'loadfrac':loadfrac}
+
+        with open(pckname, 'wb') as f:
+            pickle.dump(temperaturedata, f) 
+        
+    else:
+        filein = open(pckname, 'rb')
+        temperaturedata = pickle.load(filein)
+        filein.close()
+
+    return 
+
+import numpy as np
+
+def split_by_init_speed(dpar0, dpar, speed, vkeys=None, verbose=False):
+    from FPCAnalysis.array_ops import find_indices
+
+    #figure out keys which together form unique particle
+    if('indi' in dpar0.keys()):
+        IDkey1 = 'indi'
+        IDkey2 = 'proci'
+    elif('inde' in dpar0.keys()):
+        IDkey1 = 'indi'
+        IDkey2 = 'proci'
+
+    #make array that has unique ID for each particle
+    dpar0['uniqueID']  = np.array([int(str(a1).replace('.', '') + str(a2).replace('.', '')) for a1, a2 in zip(dpar0[IDkey1], dpar0[IDkey2])])
+    dpar['uniqueID']  = np.array([int(str(a1).replace('.', '') + str(a2).replace('.', '')) for a1, a2 in zip(dpar[IDkey1], dpar[IDkey2])])
+    
+
+    keys = dpar.keys()
+    dpar_main = {}
+    dpar_ring = {}
+
+    # Copy non-particle keys and pre-allocate arrays for particle keys
+    pardatakeys = []
+    for ky in keys:
+        try:
+            if len(dpar[ky]) < 2:
+                dpar_main[ky] = dpar[ky]
+                dpar_ring[ky] = dpar[ky]
+            else:
+                dpar_main[ky] = np.empty_like(dpar[ky])
+                dpar_ring[ky] = np.empty_like(dpar[ky])
+                pardatakeys.append(ky)
+        except:
+            dpar_main[ky] = dpar[ky]
+            dpar_ring[ky] = dpar[ky]
+
+    if vkeys is None:
+        # Figure out velocity keys
+        vkeys = []
+        for pky in pardatakeys:
+            if 'u' in pky and not('ID' in pky):
+                vkeys.append(pky)
+            elif 'v' in pky:
+                vkeys.append(pky)
+            elif 'w' in pky:
+                vkeys.append(pky)
+                
+    if len(vkeys) != 3:
+        print("Error, was not able to determine velocity keys automatically... Please specify velocity keys as optional parameter vkey=[vkey1,vkey2,vkey3]")
+        print("Found vkeys: ", vkeys)
+        return
+
+    # Calculate speeds
+    speeds = np.sqrt(dpar0[vkeys[0]]**2 + dpar0[vkeys[1]]**2 + dpar0[vkeys[2]]**2)
+
+    # Create masks for main and ring particles
+    main_mask = speeds < speed
+    ring_mask = speeds >= speed
+
+    mainindexes0 = np.where(main_mask)
+    ringindexes0 = np.where(ring_mask)
+
+    UniqueIDs_in_main0 = dpar0['uniqueID'][mainindexes0]
+    UniqueIDs_in_ring0 = dpar0['uniqueID'][ringindexes0]
+
+    newmainindexes = find_indices(dpar['uniqueID'], UniqueIDs_in_main0)
+    newringindexes = find_indices(dpar['uniqueID'], UniqueIDs_in_ring0)
+    
+    # Split data
+    for pkey in pardatakeys:
+        dpar_main[pkey] = np.array([dpar[pkey][_i] for _i in newmainindexes])
+        dpar_ring[pkey] = np.array([dpar[pkey][_i] for _i in newringindexes])
+
+    return dpar_main, dpar_ring
+
+def split_by_speed(dpar, speed, vkeys=None, verbose=False):
+    keys = dpar.keys()
+
+    dpar_main = {}
+    dpar_ring = {}
+
+    # Copy non-particle keys and pre-allocate arrays for particle keys
+    pardatakeys = []
+    for ky in keys:
+        try:
+            if len(dpar[ky]) < 2:
+                dpar_main[ky] = dpar[ky]
+                dpar_ring[ky] = dpar[ky]
+            else:
+                dpar_main[ky] = np.empty_like(dpar[ky])
+                dpar_ring[ky] = np.empty_like(dpar[ky])
+                pardatakeys.append(ky)
+        except:
+            dpar_main[ky] = dpar[ky]
+            dpar_ring[ky] = dpar[ky]
+
+    if vkeys is None:
+        # Figure out velocity keys
+        vkeys = []
+        for pky in pardatakeys:
+            if 'u' in pky:
+                vkeys.append(pky)
+            elif 'v' in pky:
+                vkeys.append(pky)
+            elif 'w' in pky:
+                vkeys.append(pky)
+    if len(vkeys) != 3:
+        print("Error, was not able to determine velocity keys automatically... Please specify velocity keys as optional parameter vkey=[vkey1,vkey2,vkey3]")
+        print("Found vkeys: ", vkeys)
+        return
+
+    # Calculate speeds
+    speeds = np.sqrt(dpar[vkeys[0]]**2 + dpar[vkeys[1]]**2 + dpar[vkeys[2]]**2)
+
+    # Create masks for main and ring particles
+    main_mask = speeds < speed
+    ring_mask = speeds >= speed
+
+    # Split data
+    for pkey in pardatakeys:
+        dpar_main[pkey] = dpar[pkey][main_mask]
+        dpar_ring[pkey] = dpar[pkey][ring_mask]
+
+    return dpar_main, dpar_ring
+
+def integrate_in_time_by_frame(corexs,coreys,corezs,nframeslength):
+     #Here, we use a sliding window where at the edges, we just use what we have
+
+    corexsintegrated = []
+    coreysintegrated = []
+    corezsintegrated = []
+    
+    for _i in range(0,len(corexs)):
+        start = _i
+        end = _i + nframeslength
+
+        if(end >= len(corexs)):
+            end = len(corexs)-1
+
+        if(nframeslength > 1 and start != end):
+            corexsintegratedvals = np.mean(corexs[start:end],axis=0)
+            coreysintegratedvals = np.mean(coreys[start:end],axis=0)
+            corezsintegratedvals = np.mean(corezs[start:end],axis=0)
+        else: #redundant- TODO: optimize
+            corexsintegratedvals = corexs[_i]
+            coreysintegratedvals = coreys[_i]
+            corezsintegratedvals = corezs[_i]
+
+        corexsintegrated.append(corexsintegratedvals)
+        coreysintegrated.append(coreysintegratedvals)
+        corezsintegrated.append(corezsintegratedvals)
+
+    corexsintegrated = np.asarray(corexsintegrated)
+    coreysintegrated = np.asarray(coreysintegrated)
+    corezsintegrated = np.asarray(corezsintegrated)
+    
+    return corexsintegrated,coreysintegrated,corezsintegrated
+
+def integrate_project_in_time_by_frame(corexs,coreys,corezs,hist,nframeslength,projectiveaxes=(1,2)):
+    #sliding window where at the edges, we just use what we have
+
+    corexsintegrated = []
+    coreysintegrated = []
+    corezsintegrated = []
+    histintegrated = []
+    
+    for _i in range(0,len(corexs)):
+        start = _i
+        end = _i + nframeslength
+
+        if(end >= len(corexs)):
+            end = len(corexs)-1
+
+        if(nframeslength > 1 and start != end):
+            corexsintegratedvals = np.sum(np.mean(corexs[start:end],axis=0),axis=projectiveaxes)
+            coreysintegratedvals = np.sum(np.mean(coreys[start:end],axis=0),axis=projectiveaxes)
+            corezsintegratedvals = np.sum(np.mean(corezs[start:end],axis=0),axis=projectiveaxes)
+            histintegratedvals = np.sum(np.mean(hist[start:end],axis=0),axis=projectiveaxes)
+        else:
+            corexsintegratedvals = np.sum(corexs[_i],axis=projectiveaxes)
+            coreysintegratedvals = np.sum(coreys[_i],axis=projectiveaxes)
+            corezsintegratedvals = np.sum(corezs[_i],axis=projectiveaxes)
+            histintegratedvals = np.sum(hist[_i],axis=projectiveaxes)
+
+        corexsintegrated.append(corexsintegratedvals)
+        coreysintegrated.append(coreysintegratedvals)
+        corezsintegrated.append(corezsintegratedvals)
+        histintegrated.append(histintegratedvals)
+
+    corexsintegrated = np.asarray(corexsintegrated)
+    coreysintegrated = np.asarray(coreysintegrated)
+    corezsintegrated = np.asarray(corezsintegrated)
+    histintegrated = np.asarray(histintegrated)
+    
+    return corexsintegrated,coreysintegrated,corezsintegrated,histintegrated
+
+def integrate_project_in_time_by_frame_gyro(corepars,coreperps,histsgyro,nframeslength,projectiveaxis=(1)):
+    #sliding window where at the edges, we just use what we have
+
+    coreparsintegrated = []
+    coreperpsintegrated = []
+    histsgyrointegrated = []
+    
+    for _i in range(0,len(corepars)):
+        start = _i
+        end = _i + nframeslength
+
+        if(end >= len(corepars)):
+            end = len(corepars)-1
+
+        if(nframeslength > 1 and start != end):
+            coreparsintegratedvals = np.sum(np.mean(corepars[start:end],axis=0),axis=projectiveaxis)
+            coreperpsintegratedvals = np.sum(np.mean(coreperps[start:end],axis=0),axis=projectiveaxis)
+            histsgyrointegratedvals = np.sum(np.mean(histsgyro[start:end],axis=0),axis=projectiveaxis)
+        else:
+            coreparsintegratedvals = np.sum(corepars[_i],axis=projectiveaxis)
+            coreperpsintegratedvals = np.sum(coreperps[_i],axis=projectiveaxis)
+            histsgyrointegratedvals = np.sum(histsgyro[_i],axis=projectiveaxis)
+
+        coreparsintegrated.append(coreparsintegratedvals)
+        coreperpsintegrated.append(coreperpsintegratedvals)
+        histsgyrointegrated.append(histsgyrointegratedvals)
+
+    coreparsintegrated = np.asarray(coreparsintegrated)
+    coreperpsintegrated = np.asarray(coreperpsintegrated)
+    histsgyrointegrated = np.asarray(histsgyrointegrated)
+    
+    return coreparsintegrated,coreperpsintegrated,histsgyrointegrated
+
+
+def compute_fpc_timestack(path,vmax,dv,specname,picklename,x1,x2,y1,y2,z1,z2, splitspeed = 7.75, useFAC=False,frames=[1,350], forcecompute = False, verbose=True, isTristanData = True, loadpickledfieldsflnm = None, useloadedfieldsmatchcondlist = None):
+
+    #use loadpickledfieldsflnm is a hacky way to load some pickled fields i made. Not intended for end user
+
+    import pickle
+
+    from FPCAnalysis.data_tristan import load_particles
+    from FPCAnalysis.data_tristan import load_params
+    from FPCAnalysis.data_tristan import load_fields
+
+    from FPCAnalysis.fpc import compute_hist_and_cor
+
+
+    if(useFAC):
+        comps=['epar','eperp1','eperp2']
+    else:
+        comps=['ex','ey','ez']
+
+    import os
+    foundpick = os.path.exists(picklename)
+
+    if(foundpick and verbose and not(forcecompute)):
+        print("Found file! Loading ",picklename)
+    elif(verbose):
+        print("Computing!")
+
+    if(not(foundpick) or forcecompute):
+        corexs = []
+        coreys = []
+        corezs = []
+        hists = []
+        
+        numbers = [f"{i:04}" for i in range(frames[0], frames[1])]
+        for num in numbers:
+            if(verbose):print('Computing '+num)
+
+            if(isTristanData):
+                try:
+                    params = load_params(path,num)
+                    if(not(loadpickledfieldsflnm is None) and not(loadpickledfieldsflnm == '')):
+                        dfields = _load_cond_filter_pickle_fields(num, loadpickledfieldsflnm, useloadedfieldsmatchcondlist)
+                    else:
+                        dfields = load_fields(path,num,normalizeFields=True)
+                
+                    #load particles, with velocities normalzied to upstream thermal species velocity
+                    dpar_elec, dpar_ion = load_particles(path,num,normalizeVelocity=True)
+                except Exception as e:
+                    print(f"Got the error: {e}")
+                    print("Note, this block currently only works for Tristan MP 2 data, but can be modified to work with any code by calling the correct dfield loader and dpar loader in the else block below...")
+            else:
+                #TODO: load particle and fields data for your desired code.
+                pass
+
+            if(specname == 'ion'):
+                del dpar_elec
+                dpar = dpar_ion
+            elif(specname == 'elec'):
+                del dpar_ion
+                dpar = dpar_elec
+            elif(specname == 'ring'):
+                del dpar_elec
+                dpar_main, dpar_ring = split_by_speed(dpar_ion, splitspeed)
+                del dpar_main
+                dpar = dpar_ring
+            elif(specname == 'main'):
+                del dpar_elec
+                dpar_main, dpar_ring = split_by_speed(dpar_ion, splitspeed)
+                del dpar_ring
+                dpar = dpar_main
+
+            # compute the fpc (CEx) and hist for ions in simulation frame (FAC aligned, ring only)
+            vx, vy, vz, totalPtcl, hist, corex = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
+                                        dpar, dfields, comps[0])
+            vx, vy, vz, totalPtcl, hist, corey = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
+                                        dpar, dfields, comps[1])
+            vx, vy, vz, totalPtcl, hist, corez = compute_hist_and_cor(vmax, dv, x1, x2, y1, y2, z1, z2,
+                                        dpar, dfields, comps[2])
+        
+            corexs.append(corex)
+            coreys.append(corey)
+            corezs.append(corez)
+            hists.append(hist)
+    
+        cordata = (corexs,coreys,corezs,hists,vx,vy,vz)
+        with open(picklename, 'wb') as handle:
+            pickle.dump(cordata, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    
+    
+    with open(picklename, 'rb') as handle:
+        cordata = pickle.load(handle)
+    corexs,coreys,corezs,hists,vx,vy,vz = cordata
+
+    return corexs,coreys,corezs,hists,vx,vy,vz
+
+def _load_cond_filter_pickle_fields(num, loadpickledfieldsflnm, useloadedfieldsmatchcondlist):
+    import glob
+    import re
+
+    ### ------------------------------- ###
+    ### Start find correct file to load ###
+    ### ------------------------------- ###
+    substring = loadpickledfieldsflnm
+    pattern = f"{substring}*.pickle"  # Match any file starting with the substring
+
+    for filename in glob.glob(pattern):
+        if(len(filename.split('_')) >= 2): #find filename 
+            numeric_part_lower = float(re.findall(r'\d+', filename.split('_')[-2])[-1])
+            numeric_part_upper = float(re.findall(r'\d+', filename.split('_')[-1])[-1])
+            if(numeric_part_lower <= float(num)-1 <= numeric_part_upper): #Don't forget the plus 1 as frame indexing starts at 1!
+                break
+        else: #return filename that matches if there is no underscore, indicating range of frames
+            break
+
+    #double check that we didnt just get the last one by default.
+    foundfile = False
+    if(len(filename.split('_')) >= 2): #find filename 
+        numeric_part_lower = float(re.findall(r'\d+', filename.split('_')[-2])[-1])
+        numeric_part_upper = float(re.findall(r'\d+', filename.split('_')[-1])[-1])
+        if(numeric_part_lower <= float(num)-1 <= numeric_part_upper): #Don't forget the plus 1 as frame indexing starts at 1!
+            foundfile = True
+    else:
+        foundfile = True
+
+    if(not(foundfile)):
+        return 
+
+    ### ----------------------------------- ###
+    ### END Start find correct file to load ###
+    ### ----------------------------------- ###
+
+    #load dfields pickle
+
+    import pickle
+    
+    with open(filename, 'rb') as handle:
+        (_alldfieldsmatchescondition,_alldfieldsinversecondition) = pickle.load(handle)
+
+
+    _j = (int(num)-1)-int(numeric_part_lower) #Don't forget the minus 1 as frame indexing starts at 1!
+
+    #hacky fix for pickle that I only saved match condition, and need to recompute inverse condition. (I tested and reconstruction works likes this!)
+    if(False):
+        num = f"{(_j+10*_tempidx)+1:04}" #Don't forget the plus 1 as frame indexing starts at 1!
+
+        params = FPCAnalysis.dtr.load_params(path,num)
+        dfields = FPCAnalysis.dtr.load_fields(path,num,normalizeFields=True)
+
+        import copy
+        _tempdfields = copy.deepcopy(dfields)
+
+        for ky in _tempdfields.keys():
+            if(ky in ['ex','ey','ez','bx','by','bz']):
+                _tempdfields[ky] = dfields[ky]-_alldfieldsmatchescondition[_j][ky]
+
+        dfieldsmatchescondition = _alldfieldsmatchescondition[_j]
+        dfieldsinversecondition = _tempdfields
+        
+    else:
+        dfieldsmatchescondition = _alldfieldsmatchescondition[_j]
+        dfieldsinversecondition = _alldfieldsinversecondition[_j]
+
+    if(useloadedfieldsmatchcondlist):
+        return dfieldsmatchescondition
+    else:
+        return dfieldsinversecondition
+
+def compute_gyro_LHWW(vx,vy,vz,corexs,coreys,corezs,hists,nrbinfrac=4):    
+    #WARNING, due to the weird ordering of my FAC coordinate system data inputs, this block only works if Bext = B0 xhat!!!! 
+    #I called a simulation that did this LHWW as it scatters Lower hybrid waves to whistler waves, thus the name.
+    
+    vrmax = np.max(vx)
+    nrbins = int(len(vx[:,0,0])/nrbinfrac)
+    
+    corepargyros = []
+    coreperpgyros = []
+    histgyros = []
+    for _i in range(0,len(corexs)):
+        corez = corezs[_i]
+        corey = coreys[_i]
+        corex = corexs[_i]
+        hist = hists[_i]
+    
+        #warning, this assumes a square velocity grid! 
+        #warning, the data axis are ordered weird. This block works (and has been tested) for the ring instability coordinate system (parallel axis is down the x axis)
+        vpargyro,vperpgyro,corepargyro,coreperpgyro,histgyro  = compute_gyro_fpc_from_cart_fpc(vx,vy,vz,corez,corey,corex,vrmax,nrbins,hist=hist) 
+    
+        corepargyros.append(corepargyro)
+        coreperpgyros.append(coreperpgyro)
+        histgyros.append(histgyro)
+
+    return corepargyros, coreperpgyros, histgyros, vpargyro, vperpgyro
