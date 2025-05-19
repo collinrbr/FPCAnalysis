@@ -1,6 +1,6 @@
 # Plots
 
-There are many example plots that one can use, copy paste, and/or modify as desired. They are found [here](FPCAnalysis/plots) They are categorized roughly by purpose. Here we describe the categories.
+There are many example plots that one can use, copy/paste, and/or modify as desired. They are found [here](FPCAnalysis/plots). They are categorized roughly by purpose. Here we describe the categories.
 
 ## oned
 
@@ -16,7 +16,7 @@ For plots that involve frequency or wavenumber. For example, the wavelet transfo
 
 ## plotplume
 
-For plots related to dispersion relations (often ossciated with the dispersion relation solver by Kris Klein et al called PLUME).
+For plots related to dispersion relations (often associated with the dispersion relation solver by Kris Klein et al called PLUME).
 
 ## table
 

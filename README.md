@@ -20,12 +20,12 @@
 - [Premade Plot Functions](docs/plots.md)
 - [Regression and Unit Testing](docs/regression_unit_test.md)
 - [Development](docs/devnotes.md)
-- [Useful links](#scilinks)
+- [Useful Links](#scilinks)
 
 ## About <a name = "about"></a>
 
-- This is the documentation for Collin Brown's FPC Analysis Environment, Library and Analysis scripts. Here, we present the code needed to perform FPC analysis on dHybridR, Tristan, and Gkeyll data. While examples are provided that require only trivial alteration to perform the core of most FPC and IIM related analysis, this repo's primary goal is to be a python analysis environment/ library that has functions that one can build upon to perform their own analysis.
-- Major contributions/ Special Thanks: Greg Howes, Jimmy Juno, Colby Haggerty, Andrew McCubbin, Alberto Felix, Rui Huang, Emily Lichko
+- This is the documentation for [Collin Brown's](https://www.collinrbrown.com) FPC Analysis Environment, Library and Analysis scripts. Here, we present the code needed to perform FPC analysis on dHybridR, Tristan, and Gkeyll data. While examples are provided that require only trivial alteration to perform the core of most FPC and IIM related analysis, this repo's primary goal is to be a python analysis environment/ library that has functions that one can build upon to perform their own analysis.
+- Major contributions/ Special Thanks: [Greg Howes](https://physics.uiowa.edu/people/gregory-g-howes), [Jimmy Juno](https://scholar.google.com/citations?user=5xPBjHkAAAAJ&hl=en), [Colby Haggerty](https://colbyhaggerty.com/), Andrew McCubbin, Alberto Felix, Rui Huang, [Emily Lichko](https://scholar.google.com/citations?user=JUyCLu4AAAAJ&hl=en)
 
 
 ## Setup <a name = "setup"></a>
@@ -45,7 +45,7 @@ git clone https://github.com/collinrbr/FPCAnalysis.git
 ```
 This will create a folder 'FPCAnalysisenv' that contains the python environment for doing FPCAnalysis with these scripts.
 
-Note, if one wishes to use additional libraries, add them to the requirements.txt file, remove the FPCAnalysis environment folder, and rerun setup.py or install them using pip/conda while the environment is activated. This can also be used to update libraries although compatability is not guaranteed.
+Note, if one wishes to use additional libraries, add them to the requirements.txt file, remove the FPCAnalysis environment folder, and rerun setup.py or install them using pip/conda while the environment is activated. This can also be used to update libraries although compatibility is not guaranteed.
 
 
 3. Use the environment
@@ -60,7 +60,7 @@ conda activate /full/path/to/FPCAnalysisenv
 ```
 ** ONE MUST REACTIVATE THE ENVIRONMENT EVERY TIME A NEW TERMINAL IS OPENED TO USE THIS ENVIRONMENT **
 
-One can also add the following to the top of anyscripts that is written for this environment, in which case, it is no longer necessary to activate the environment when running any script with the following added to it:
+One can also add the following to the top of any script that is written for this environment, in which case, it is no longer necessary to activate the environment when running any script with the following added to it:
 ```
 #!FPCAnalysis/bin/python
 ```
@@ -90,7 +90,7 @@ Sample dHybridR data can be found at [https://doi.org/10.5281/zenodo.7901521](ht
 
 One can start using this analysis environment with the example data above or by running their own simulation (see [Running Simulations](docs/inputs.md)).
 
-Analysis begins by loading the data. In the first chapter found [here](docs/load.md), we discuss how data is loaded into a common data struture and how to use this common structure...
+Analysis begins by loading the data. In the first chapter found [here](docs/load.md), we discuss how data is loaded into a common data struture and how to use this common structure.
 
 There are many key features of this analysis environment:
 
